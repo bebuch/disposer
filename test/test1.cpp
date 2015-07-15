@@ -82,6 +82,9 @@ struct x2{
 
 
 int main(){
+	std::function< void(log_tag&) > stdf_r = [](log_tag& os){ os << "stdf_r"; };
+	auto lambda_r = [](log_tag& os){ os << "lambda_r"; };
+
 	// log function types
 	disposer::log([](log_tag& os){ os << "lambda"; });
 	disposer::log(fo1());
@@ -92,6 +95,9 @@ int main(){
 	disposer::log(&fp);
 	disposer::log(p);
 	disposer::log(r);
+	disposer::log(std::function< void(log_tag&) >([](log_tag& os){ os << "stdf"; }));
+	disposer::log(stdf_r);
+	disposer::log(lambda_r);
 
 
 	// body return type

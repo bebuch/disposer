@@ -50,6 +50,11 @@ namespace disposer{
 			using type = typename extract_log_from_function< decltype(&Function::operator()) >::type;
 		};
 
+		template < typename Function >
+		struct extract_log< Function& >{
+			using type = typename extract_log< Function >::type;
+		};
+
 		template < typename Log, typename R >
 		struct extract_log< R(Log&) >{
 			using type = Log;
@@ -57,16 +62,6 @@ namespace disposer{
 
 		template < typename Log, typename R >
 		struct extract_log< R(*)(Log&) >{
-			using type = Log;
-		};
-
-		template < typename Log, typename R >
-		struct extract_log< R(&)(Log&) >{
-			using type = Log;
-		};
-
-		template < typename Log, typename R >
-		struct extract_log< R(*&)(Log&) >{
 			using type = Log;
 		};
 
