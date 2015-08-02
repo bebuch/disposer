@@ -128,13 +128,13 @@ namespace disposer{
 		}
 
 		template < typename Log >
-		std::unique_ptr< Log > make_log(){
-			auto has_factory = boost::hana::is_valid([](auto t)->decltype((void)decltype(t)::type::factory){});
+		auto make_log(){
+			auto has_factory = boost::hana::is_valid([](auto t)->decltype((void)decltype(t)::type::factory()){});
 
 			return boost::hana::if_(has_factory(boost::hana::type< Log >),
-				[](auto&&){ return Log::factory(); },
-				[](auto&&){ return std::make_unique< Log >(); }
-			)(int());
+				[](auto t){ return decltype(t)::type::factory(); },
+				[](auto t){ return std::make_unique< typename decltype(t)::type >(); }
+			)(boost::hana::type< Log >);
 		}
 
 		auto has_exec = boost::hana::is_valid([](auto&& x)->decltype((void)x->exec()){});
