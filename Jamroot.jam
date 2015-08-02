@@ -7,10 +7,12 @@ use-project /boost
 	: $(LIBRARIES)/boost
 	;
 
-lib disposer
+project disposer
 	:
-	[ glob src/*.cpp ]
+	source-location src
 	:
+	requirements <include>include
+
 	<warnings>all
 	<c++-template-depth>1024
 
@@ -33,9 +35,15 @@ lib disposer
 	<toolset>clang:<linkflags>-lc++abi
 	<toolset>clang:<linkflags>-fopenmp
 	<toolset>clang:<linkflags>-stdlib=libc++
-	:
-	<include>./include
+
 	<include>$(LIBRARIES)/hana/include
 	<include>$(LIBRARIES)/spirit/include
 	<include>$(LIBRARIES)/boost
+	:
+	usage-requirements <include>include
+	;
+
+lib disposer
+	:
+	[ glob *.cpp ]
 	;
