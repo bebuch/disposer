@@ -9,6 +9,7 @@
 #ifndef _disposer_log_tag_hpp_INCLUDED_
 #define _disposer_log_tag_hpp_INCLUDED_
 
+#include "log_base.hpp"
 #include "time_to_string.hpp"
 
 #include <boost/type_index.hpp>
@@ -17,9 +18,9 @@
 namespace disposer{
 
 
-	class log_tag{
+	class log_tag_base{
 	public:
-		log_tag():
+		log_tag_base():
 			start_(std::chrono::system_clock::now()),
 			body_(false),
 			exception_(false)
@@ -63,7 +64,7 @@ namespace disposer{
 		}
 
 		template < typename T >
-		friend log_tag& operator<<(log_tag& log, T&& data){
+		friend log_tag_base& operator<<(log_tag_base& log, T&& data){
 			log.os_ << static_cast< T&& >(data);
 			return log;
 		}
@@ -75,6 +76,53 @@ namespace disposer{
 		bool body_;
 		bool exception_;
 	};
+
+
+	class log_tag: public log_base, protected log_tag_base{
+	public:
+		void pre()override{
+			log_tag_base::pre();
+		}
+
+		void post()override{
+			log_tag_base::post();
+		}
+
+		void failed()override{
+			log_tag_base::failed();
+		}
+
+		void set_exception(std::exception const& error)override{
+			log_tag_base::set_exception(error);
+		}
+
+		void unknown_exception()override{
+			log_tag_base::unknown_exception();
+		}
+
+		void have_body()override{
+			log_tag_base::have_body();
+		}
+
+		void exec()const override{
+			log_tag_base::exec();
+		}
+
+		template < typename T >
+		friend log_tag& operator<<(log_tag& log, T&& data){
+			log.os() << static_cast< T&& >(data);
+			return log;
+		}
+
+
+	protected:
+		std::ostream& os()override{
+			return os_;
+		}
+	};
+
+
+	extern std::function< log_tag() > make_log_tag;
 
 
 }
