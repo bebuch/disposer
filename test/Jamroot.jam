@@ -1,15 +1,20 @@
 path-constant LIBRARIES
 	# path to your libraries directory
 	: /media/data/libraries/src
-	; 
+	;
 
 use-project /boost
 	: $(LIBRARIES)/boost
 	;
 
+use-project /disposer
+	: ..
+	;
+
 exe test1
 	:
 	test1.cpp
+	/disposer//disposer
 	:
 	<warnings>all
 	<c++-template-depth>1024
