@@ -10,6 +10,7 @@
 #define _disposer_log_base_hpp_INCLUDED_
 
 #include <ostream>
+#include <memory>
 
 
 namespace disposer{
@@ -17,6 +18,8 @@ namespace disposer{
 
 	class log_base{
 	public:
+		static std::function< std::unique_ptr< log_base >() > factory;
+
 		virtual ~log_base(){}
 
 		virtual void pre(){}

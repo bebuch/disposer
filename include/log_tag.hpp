@@ -122,9 +122,6 @@ namespace disposer{
 	};
 
 
-	extern std::function< log_tag() > make_log_tag;
-
-
 }
 
 #endif

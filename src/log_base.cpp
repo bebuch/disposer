@@ -6,13 +6,15 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
+
+#include "log_base.hpp"
 #include "log_tag.hpp"
 
 
 namespace disposer{
 
 
-	std::function< log_tag() > make_log_tag([]{ return log_tag(); });
+	std::function< std::unique_ptr< log_base >() > log_base::factory([]{ return std::make_unique< log_tag >(); });
 
 
 }

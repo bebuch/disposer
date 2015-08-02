@@ -10,7 +10,7 @@
 #define _disposer_chain_hpp_INCLUDED_
 
 #include "module_base.hpp"
-#include "log_tag.hpp"
+#include "log_base.hpp"
 #include "log.hpp"
 
 #include <mutex>
@@ -63,7 +63,7 @@ namespace disposer{
 				return previous_id;
 			}();
 
-			log([this, id](log_tag& os){
+			log([this, id](log_base& os){
 				os << "id(" << id << ") chain '" << modules[0]->chain << "'";
 			}, [this, id]{
 				try{
@@ -93,7 +93,7 @@ namespace disposer{
 			cv.wait(lock, [this, i, id]{return ready_id[i] == id - 1;});
 
 			// Cleanup the module
-			log([this, i, id, action_name](log_tag& os){
+			log([this, i, id, action_name](log_base& os){
 				os << "id(" << id << "." << i << ") " << action_name << " chain '" << modules[i]->chain << "' module '" << modules[i]->name << "'";
 			}, action);
 

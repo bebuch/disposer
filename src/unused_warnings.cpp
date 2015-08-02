@@ -8,7 +8,7 @@
 //-----------------------------------------------------------------------------
 #include "unused_warnings.hpp"
 
-#include "log_tag.hpp"
+#include "log_base.hpp"
 #include "log.hpp"
 
 #include <map>
@@ -35,7 +35,7 @@ namespace disposer{
 		for(auto const& set: parameter_sets){
 			if(set.second) continue;
 
-			log([&set](log_tag& os){
+			log([&set](log_base& os){
 				os << "parameter_set '" + set.first + "' is not used";
 			});
 		}
@@ -57,7 +57,7 @@ namespace disposer{
 			for(auto const& var: variables){
 				if(var.second) continue;
 
-				log([&var, &chain](log_tag& os){
+				log([&var, &chain](log_base& os){
 					os << "In chain '" + chain.name + "': variable '" + var.first + "' is not used";
 				});
 			}
@@ -66,7 +66,7 @@ namespace disposer{
 		for(auto const& module: modules){
 			if(module.second) continue;
 
-			log([&module](log_tag& os){
+			log([&module](log_base& os){
 				os << "module '" + module.first + "' is not used";
 			});
 		}

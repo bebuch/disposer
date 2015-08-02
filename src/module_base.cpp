@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include "module_base.hpp"
-#include "log_tag.hpp"
+#include "log_base.hpp"
 #include "log.hpp"
 
 #include <unordered_map>
@@ -38,7 +38,7 @@ namespace disposer{
 		try{
 			auto result = iter->second(type, chain, name, inputs, outputs, parameters, is_start);
 			for(auto const& param: parameters.unused_parameters()){
-				log([&param, &chain, &name](log_tag& os){ os << "In chain '" << chain << "' module '" << name << ": Unused parameter '" << param.first << "'='" << param.second << "'"; });
+				log([&param, &chain, &name](log_base& os){ os << "In chain '" << chain << "' module '" << name << ": Unused parameter '" << param.first << "'='" << param.second << "'"; });
 			}
 			return result;
 		}catch(std::exception const& error){
