@@ -6,12 +6,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include "config.hpp"
+#include <disposer/config.hpp>
 
-#include "module_base.hpp"
-#include "check_semantic.hpp"
-#include "unused_warnings.hpp"
-#include "merge.hpp"
+#include <disposer/module_base.hpp>
+#include <disposer/check_semantic.hpp>
+#include <disposer/unused_warnings.hpp>
+#include <disposer/merge.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 

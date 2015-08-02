@@ -6,10 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include "unused_warnings.hpp"
+#include <disposer/unused_warnings.hpp>
 
-#include "log_base.hpp"
-#include "log.hpp"
+#include <disposer/log_base.hpp>
+#include <disposer/log.hpp>
 
 #include <map>
 
