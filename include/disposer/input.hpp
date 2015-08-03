@@ -10,10 +10,12 @@
 #define _disposer_input_hpp_INCLUDED_
 
 #include <boost/type_index.hpp>
+#include <boost/variant.hpp>
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/type_traits.hpp>
 
 #include <unordered_map>
+#include <type_traits>
 #include <future>
 #include <string>
 #include <mutex>
@@ -97,6 +99,20 @@ namespace disposer{
 			std::future< void > future_;
 			std::atomic< bool > called_;
 		};
+
+
+		template < typename T >
+		struct future_wrap{
+			using type = T;
+		};
+		
+		template < typename T >
+		struct future_wrap< std::future< T > >{
+			using type = future_type< T >;
+		};
+
+		template < typename T >
+		using future_wrap_t = typename future_wrap< T >::type;
 
 
 	} }
@@ -190,10 +206,10 @@ namespace disposer{
 	};
 
 
-	template < typename T >
+	template < typename T, typename ... U >
 	class module_input: public impl::input::module_input_base{
 	public:
-		using value_type = T;
+		using value_type = std::conditional_t< sizeof...(U) == 0, T, boost::variant< T, U ... > >;
 
 		module_input(std::string const& name): name(name) {}
 
@@ -206,10 +222,21 @@ namespace disposer{
 		std::string const name;
 
 		virtual void add(std::size_t id, impl::input::any_type const& value, bool last_use)override{
-			auto data = reinterpret_cast< std::shared_ptr< T > const& >(value);
+			using data_type =
+				std::conditional_t<
+					sizeof...(U) == 0,
+					impl::input::future_wrap_t< T >,
+					boost::variant<
+						impl::input::future_wrap_t< T >,
+						impl::input::future_wrap_t< U >
+						...
+					>
+				>;
+
+			auto data = reinterpret_cast< std::shared_ptr< data_type > const& >(value);
 
 			std::lock_guard< std::mutex > lock(mutex_);
-			data_.emplace(id, input_data< T >(data, last_use));
+			data_.emplace(id, input_data< value_type >(data, last_use));
 		}
 
 		virtual void cleanup(std::size_t id)noexcept override{
@@ -219,12 +246,12 @@ namespace disposer{
 			data_.erase(from, to);
 		}
 
-		std::multimap< std::size_t, input_data< T > > get(std::size_t id){
+		std::multimap< std::size_t, input_data< value_type > > get(std::size_t id){
 			std::lock_guard< std::mutex > lock(mutex_);
 			auto from = data_.begin();
 			auto to = data_.upper_bound(id);
 
-			std::multimap< std::size_t, input_data< T > > result(std::make_move_iterator(from), std::make_move_iterator(to));
+			std::multimap< std::size_t, input_data< value_type > > result(std::make_move_iterator(from), std::make_move_iterator(to));
 			data_.erase(from, to);
 
 			return result;
@@ -233,54 +260,7 @@ namespace disposer{
 	private:
 		std::mutex mutex_;
 
-		std::multimap< std::size_t, input_data< T > > data_;
-	};
-
-
-	template < typename T >
-	class module_input< std::future< T > >: public impl::input::module_input_base{
-	public:
-		using value_type = std::future< T >;
-
-		module_input(std::string const& name): name(name) {}
-
-		module_input(module_input const&) = delete;
-		module_input(module_input&&) = delete;
-
-		module_input& operator=(module_input const&) = delete;
-		module_input& operator=(module_input&&) = delete;
-
-		std::string const name;
-
-		virtual void add(std::size_t id, impl::input::any_type const& value, bool last_use)override{
-			auto data = reinterpret_cast< std::shared_ptr< impl::input::future_type< T > > const& >(value);
-
-			std::lock_guard< std::mutex > lock(mutex_);
-			data_.emplace(id, input_data< std::future< T > >(data, last_use));
-		}
-
-		virtual void cleanup(std::size_t id)noexcept override{
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-			data_.erase(from, to);
-		}
-
-		std::multimap< std::size_t, input_data< std::future< T > > > get(std::size_t id){
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-
-			std::multimap< std::size_t, input_data< std::future< T > > > result(std::make_move_iterator(from), std::make_move_iterator(to));
-			data_.erase(from, to);
-
-			return result;
-		}
-
-	private:
-		std::mutex mutex_;
-
-		std::multimap< std::size_t, input_data< std::future< T > > > data_;
+		std::multimap< std::size_t, input_data< value_type > > data_;
 	};
 
 
