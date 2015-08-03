@@ -16,12 +16,19 @@
 
 #include <unordered_map>
 #include <type_traits>
+#include <functional>
 #include <future>
 #include <string>
 #include <mutex>
 
 
 namespace disposer{
+
+
+	namespace hana = boost::hana;
+
+	using boost::typeindex::type_index;
+	using boost::typeindex::type_id_with_cvr;
 
 
 	namespace impl{ namespace input{
@@ -32,13 +39,14 @@ namespace disposer{
 		struct module_input_base{
 			virtual ~module_input_base() = default;
 
-			virtual void add(std::size_t id, any_type const& value, bool last_use) = 0;
+			virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
 			virtual void cleanup(std::size_t id)noexcept = 0;
+
+			type_index type;
 		};
 
 		struct input_entry{
 			module_input_base& object;
-			boost::typeindex::type_index const type;
 		};
 
 		template < typename T >
@@ -139,7 +147,7 @@ namespace disposer{
 			if(last_use_){
 				return std::move(data_);
 			}else{
-				return boost::hana::if_(boost::hana::traits::is_copy_constructible(boost::hana::type< T >),
+				return hana::if_(hana::traits::is_copy_constructible(hana::type< T >),
 					[](auto& data){ return std::make_shared< T >(data); },
 					[](auto&)->std::shared_ptr< T >{ throw std::logic_error("Type '" + boost::typeindex::type_id< T >().pretty_name() + "' is not copy constructible"); }
 				)(data());
@@ -171,7 +179,7 @@ namespace disposer{
 			if(last_use_){
 				return std::move(data_->get());
 			}else{
-				return boost::hana::if_(boost::hana::traits::is_copy_constructible(boost::hana::type< T >),
+				return hana::if_(hana::traits::is_copy_constructible(hana::type< T >),
 					[](auto& data){ return std::make_shared< T >(data); },
 					[](auto&)->std::shared_ptr< T >{ throw std::logic_error("Type '" + boost::typeindex::type_id< T >().pretty_name() + "' is not copy constructible"); }
 				)(data());
@@ -209,7 +217,25 @@ namespace disposer{
 	template < typename T, typename ... U >
 	class module_input: public impl::input::module_input_base{
 	public:
-		using value_type = std::conditional_t< sizeof...(U) == 0, T, boost::variant< T, U ... > >;
+		static constexpr auto value_types = hana::tuple_t< T, U ... >;
+
+		using value_type = std::conditional_t<
+			sizeof...(U) == 0,
+			input_data< T >,
+			boost::variant< input_data< T >, input_data< U > ... >
+		>;
+
+		static_assert(
+			!hana::fold(hana::transform(value_types, hana::traits::is_const), false, std::logical_or<>()),
+			"module_input types are not allowed to be const"
+		);
+
+		static_assert(
+			!hana::fold(hana::transform(value_types, hana::traits::is_reference), false, std::logical_or<>()),
+			"module_input types are not allowed to be references"
+		);
+
+		// TODO: distict types
 
 		module_input(std::string const& name): name(name) {}
 
@@ -219,25 +245,21 @@ namespace disposer{
 		module_input& operator=(module_input const&) = delete;
 		module_input& operator=(module_input&&) = delete;
 
+
 		std::string const name;
 
-		virtual void add(std::size_t id, impl::input::any_type const& value, bool last_use)override{
-			using data_type =
-				std::conditional_t<
-					sizeof...(U) == 0,
-					impl::input::future_wrap_t< T >,
-					boost::variant<
-						impl::input::future_wrap_t< T >,
-						impl::input::future_wrap_t< U >
-						...
-					>
-				>;
 
-			auto data = reinterpret_cast< std::shared_ptr< data_type > const& >(value);
-
-			std::lock_guard< std::mutex > lock(mutex_);
-			data_.emplace(id, input_data< value_type >(data, last_use));
+		virtual void add(std::size_t id, impl::input::any_type const& value, type_index const& type, bool last_use)override{
+			// TODO:something like
+			/*
+				switch(type){
+					case type_id_with_cvr< T >: add< T >(id, value, last_use);
+					...
+					default: throw std::logic_error("unknown add type '" + type.pretty_name() + "' in module_input + '" + name + "'");
+				}
+			 */
 		}
+
 
 		virtual void cleanup(std::size_t id)noexcept override{
 			std::lock_guard< std::mutex > lock(mutex_);
@@ -246,21 +268,32 @@ namespace disposer{
 			data_.erase(from, to);
 		}
 
-		std::multimap< std::size_t, input_data< value_type > > get(std::size_t id){
+
+		std::multimap< std::size_t, value_type > get(std::size_t id){
 			std::lock_guard< std::mutex > lock(mutex_);
 			auto from = data_.begin();
 			auto to = data_.upper_bound(id);
 
-			std::multimap< std::size_t, input_data< value_type > > result(std::make_move_iterator(from), std::make_move_iterator(to));
+			std::multimap< std::size_t, value_type > result(std::make_move_iterator(from), std::make_move_iterator(to));
 			data_.erase(from, to);
 
 			return result;
 		}
 
+
 	private:
+		template < typename V >
+		void add(std::size_t id, impl::input::any_type const& value, bool last_use){
+			auto data = reinterpret_cast< std::shared_ptr< V > const& >(value);
+
+			std::lock_guard< std::mutex > lock(mutex_);
+			data_.emplace(id, input_data< V >(data, last_use));
+		}
+
+
 		std::mutex mutex_;
 
-		std::multimap< std::size_t, input_data< value_type > > data_;
+		std::multimap< std::size_t, value_type > data_;
 	};
 
 
@@ -270,8 +303,7 @@ namespace disposer{
 			{                // initializer_list
 				inputs.name, // name as string
 				impl::input::input_entry{
-					inputs,
-					boost::typeindex::type_id_with_cvr< typename Inputs::value_type >()
+					inputs
 				}
 			} ...
 		}, sizeof...(Inputs));

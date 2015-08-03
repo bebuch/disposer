@@ -84,13 +84,13 @@ namespace disposer{ namespace config{
 
 					auto& input = input_iter->second;
 
-					if(output.type != input.type){
+					if(output.type != input.object.type){
 						throw std::runtime_error(
 							"In chain '" + chain.name +
 							"' module '" + module_ptr->name +
 							"': Variable '" + input_name_and_var.variable +
 							"' is incompatible with input '" + input_name_and_var.name +
-							"' (input type: '" + input.type.pretty_name() +
+							"' (input type: '" + input.object.type.pretty_name() +
 							"'; variable type: '" + output.type.pretty_name() +
 							"')");
 					}
