@@ -40,7 +40,7 @@ namespace disposer{
 
 		void cleanup(std::size_t id)noexcept{
 			for(auto& input: inputs){
-				input.second.object.cleanup(id);
+				input.second.cleanup(id);
 			}
 		}
 

@@ -19,6 +19,8 @@
 #include <functional>
 #include <future>
 #include <string>
+#include <vector>
+#include <map>
 #include <mutex>
 
 
@@ -37,16 +39,22 @@ namespace disposer{
 		struct any_type;
 
 		struct module_input_base{
+			module_input_base(std::string const& name): name(name) {}
+
+			module_input_base(module_input_base const&) = delete;
+			module_input_base(module_input_base&&) = delete;
+
+			module_input_base& operator=(module_input_base const&) = delete;
+			module_input_base& operator=(module_input_base&&) = delete;
+
+
 			virtual ~module_input_base() = default;
 
 			virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
 			virtual void cleanup(std::size_t id)noexcept = 0;
+			virtual bool does_accept(std::vector< type_index > const& types)const noexcept = 0;
 
-			type_index type;
-		};
-
-		struct input_entry{
-			module_input_base& object;
+			std::string const name;
 		};
 
 		template < typename T >
@@ -126,7 +134,7 @@ namespace disposer{
 	} }
 
 
-	using input_list = std::unordered_map< std::string, impl::input::input_entry >;
+	using input_list = std::unordered_map< std::string, impl::input::module_input_base& >;
 
 
 	template < typename T >
@@ -237,27 +245,18 @@ namespace disposer{
 
 		// TODO: distict types
 
-		module_input(std::string const& name): name(name) {}
 
-		module_input(module_input const&) = delete;
-		module_input(module_input&&) = delete;
-
-		module_input& operator=(module_input const&) = delete;
-		module_input& operator=(module_input&&) = delete;
-
-
-		std::string const name;
+		using impl::input::module_input_base::module_input_base;
 
 
 		virtual void add(std::size_t id, impl::input::any_type const& value, type_index const& type, bool last_use)override{
-			// TODO:something like
-			/*
-				switch(type){
-					case type_id_with_cvr< T >: add< T >(id, value, last_use);
-					...
-					default: throw std::logic_error("unknown add type '" + type.pretty_name() + "' in module_input + '" + name + "'");
-				}
-			 */
+			auto iter = type_map_.find(type);
+			if(iter == type_map_.end()){
+				throw std::logic_error("unknown add type '" + type.pretty_name() + "' in module_input + '" + name + "'");
+			}
+
+			// Call add< type >(id, value, last_use)
+			(this->*(iter->second))(id, value, last_use);
 		}
 
 
@@ -280,31 +279,46 @@ namespace disposer{
 			return result;
 		}
 
+		bool does_accept(std::vector< type_index > const& types)const noexcept override{
+			static auto const input_types = hana::make_tuple(type_id_with_cvr< T >(), type_id_with_cvr< U >() ...);
+
+			for(auto& type: types){
+				if(!hana::contains(input_types, type)) return false;
+			}
+
+			return true;
+		}
+
 
 	private:
 		template < typename V >
 		void add(std::size_t id, impl::input::any_type const& value, bool last_use){
-			auto data = reinterpret_cast< std::shared_ptr< V > const& >(value);
+			auto data = reinterpret_cast< std::shared_ptr< impl::input::future_wrap_t< V > > const& >(value);
 
 			std::lock_guard< std::mutex > lock(mutex_);
 			data_.emplace(id, input_data< V >(data, last_use));
 		}
 
 
+		static std::map< type_index, void(module_input::*)(std::size_t, impl::input::any_type const&, bool) > const type_map_;
+
 		std::mutex mutex_;
 
 		std::multimap< std::size_t, value_type > data_;
 	};
 
+	template < typename T, typename ... U >
+	std::map< type_index, void(module_input< T, U ... >::*)(std::size_t, impl::input::any_type const&, bool) > const module_input< T, U ... >::type_map_ = {
+			{ type_id_with_cvr< T >(), &module_input< T, U ... >::add< T > },
+			{ type_id_with_cvr< U >(), &module_input< T, U ... >::add< U > } ...
+		};
 
 	template < typename ... Inputs >
 	input_list make_input_list(Inputs& ... inputs){
 		input_list result({
 			{                // initializer_list
 				inputs.name, // name as string
-				impl::input::input_entry{
-					inputs
-				}
+				inputs
 			} ...
 		}, sizeof...(Inputs));
 

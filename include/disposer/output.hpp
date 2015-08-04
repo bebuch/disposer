@@ -24,31 +24,45 @@ namespace disposer{
 		public:
 			void operator()(std::size_t id, input::any_type const& data, type_index const& type)const{
 				for(auto& target: targets_){
-					target.first.object.add(id, data, type, target.second);
+					target.first.add(id, data, type, target.second);
 				}
 			}
 
 		private:
-			void connect(input::input_entry& input, bool last_use){
+			void connect(input::module_input_base& input, bool last_use){
 				targets_.emplace_back(input, last_use);
 			}
 
-			std::vector< std::pair< input::input_entry&, bool > > targets_;
+			std::vector< std::pair< input::module_input_base&, bool > > targets_;
 
 			friend struct output_entry;
 		};
 
 		struct output_entry{
 			signal_t& signal;
-			type_index const& type;
+			std::vector< type_index > const& types;
 
-			void connect(input::input_entry& input, bool last_use){
+			void connect(input::module_input_base& input, bool last_use){
 				signal.connect(input, last_use);
 			}
 		};
 
 
 	} }
+
+
+	template < typename T, typename ... U >
+	auto make_type_map(){
+		return hana::make_map(
+			hana::make_pair(hana::type< T >, false),
+			hana::make_pair(hana::type< U >, false) ...
+		);
+	}
+
+	template < typename T, typename ... U >
+	struct type_t{
+		decltype(make_type_map< T, U ... >()) map = make_type_map< T, U ... >();
+	};
 
 
 	using output_list = std::unordered_map< std::string, impl::output::output_entry >;
@@ -66,7 +80,7 @@ namespace disposer{
 			using value_type = T;
 
 
-			module_output_interface(signal_t& signal, type_index const& type): signal(signal), type(type) {}
+			module_output_interface(signal_t& signal, type_index&& type): signal_(signal), type_(std::move(type)) {}
 
 
 			void operator()(std::size_t id, value_type&& value){
@@ -87,11 +101,11 @@ namespace disposer{
 
 
 		private:
-			signal_t& signal;
-			type_index const& type;
+			signal_t& signal_;
+			type_index type_;
 
 			void trigger_signal(std::size_t id, std::shared_ptr< value_type > const& value){
-				signal(id, reinterpret_cast< impl::input::any_type const& >(value), type);
+				signal_(id, reinterpret_cast< impl::input::any_type const& >(value), type_);
 			}
 		};
 
@@ -102,18 +116,18 @@ namespace disposer{
 			using value_type = std::future< T >;
 
 
-			module_output_interface(signal_t& signal, type_index const& type): signal(signal), type(type) {}
+			module_output_interface(signal_t& signal, type_index&& type): signal_(signal), type_(std::move(type)) {}
 
 
 			void operator()(std::size_t id, value_type&& value){
 				auto val = std::make_shared< impl::input::future_type< T > >(std::move(value));
-				signal(id, reinterpret_cast< impl::input::any_type const& >(val), type);
+				signal_(id, reinterpret_cast< impl::input::any_type const& >(val), type_);
 			}
 
 
 		private:
-			signal_t& signal;
-			type_index const& type;
+			signal_t& signal_;
+			type_index type_;
 		};
 
 
@@ -154,21 +168,22 @@ namespace disposer{
 			auto put(std::size_t id, W&& value){
 				static_assert(hana::contains(value_types, hana::type< V >), "type V in put< V > is not a module_output type");
 
-				if(type != type_id_with_cvr< V >()){
+				if(type_.map[hana::type< V >]){
 					throw std::logic_error(
-						"module_output '" + name + "' put type '" +
-						type_id_with_cvr< V >().pretty_name() +
-						"', but active type is '" + type.pretty_name() + "'"
+						"module_output '" + name + "' put inactive type '" + type_id_with_cvr< V >().pretty_name() + "'"
 					);
 				}
 
-				return module_output_interface< V >(signal, type)(id, static_cast< W&& >(value));
+				return module_output_interface< V >(signal_, type_id_with_cvr< V >())(id, static_cast< W&& >(value));
 			}
 
 
 		private:
-			signal_t signal;
-			type_index type;
+			signal_t signal_;
+
+			std::vector< type_index > active_types_;
+
+			type_t< T, U ... > type_;
 
 			template < typename ... Outputs >
 			friend output_list disposer::make_output_list(Outputs& ... outputs);
@@ -202,8 +217,8 @@ namespace disposer{
 			{                 // initializer_list
 				outputs.name, // name as string
 				impl::output::output_entry{
-					outputs.signal, // reference to signal object
-					outputs.type
+					outputs.signal_, // reference to signal object
+					outputs.active_types_
 				}
 			} ...
 		}, sizeof...(Outputs));
