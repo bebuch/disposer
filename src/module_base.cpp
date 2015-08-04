@@ -34,7 +34,11 @@ namespace disposer{
 
 	module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start){
 		auto iter = maker_list().find(type);
-		if(iter == maker_list().end()) throw std::runtime_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
+
+		if(iter == maker_list().end()){
+			throw std::runtime_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
+		}
+
 		try{
 			auto result = iter->second(type, chain, name, inputs, outputs, parameters, is_start);
 			for(auto const& param: parameters.unused_parameters()){

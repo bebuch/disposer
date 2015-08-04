@@ -67,22 +67,25 @@ namespace disposer{ namespace config{
 				first = false;
 			}
 
-			auto module_ptr_iter = modules.end();
-			for(auto& module: boost::adaptors::reverse(chain.modules)){
-				--module_ptr_iter;
-				auto& module_ptr = *module_ptr_iter;
+			auto module_ptr_iter = modules.begin();
+			for(auto& module: chain.modules){
+				auto& module_ptr = *module_ptr_iter++;
 
 				for(auto& input_name_and_var: module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
-					auto& last_use = output_iter->second.second;
 
 					auto input_iter = module_ptr->inputs.find(input_name_and_var.name);
 					assert(input_iter != module_ptr->inputs.end());
 
 					auto& input = input_iter->second;
+
+					if(output.types.empty()){
+						// TODO: Beschwere dich über die Zeile, in der die Variable deklariert wurde, nicht bei ihrer ersten Verwendung
+						throw std::runtime_error("In chain '" + chain.name + "' module '" + module_ptr->name + "': Variable '" + input_name_and_var.variable + "' has no output types");
+					}
 
 					if(!input.does_accept(output.types)){
 						std::ostringstream os;
@@ -98,6 +101,25 @@ namespace disposer{ namespace config{
 
 						throw std::runtime_error(os.str());
 					}
+				}
+			}
+
+			module_ptr_iter = modules.end();
+			for(auto& module: boost::adaptors::reverse(chain.modules)){
+				--module_ptr_iter;
+				auto& module_ptr = *module_ptr_iter;
+
+				for(auto& input_name_and_var: module.inputs){
+					auto output_iter = variables.find(input_name_and_var.variable);
+					assert(output_iter != variables.end());
+
+					auto& output = output_iter->second.first;
+					auto& last_use = output_iter->second.second;
+
+					auto input_iter = module_ptr->inputs.find(input_name_and_var.name);
+					assert(input_iter != module_ptr->inputs.end());
+
+					auto& input = input_iter->second;
 
 					output.connect(input, last_use);
 					last_use = false;
