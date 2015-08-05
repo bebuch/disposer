@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer_module_output_data_hpp_INCLUDED_
-#define _disposer_module_output_data_hpp_INCLUDED_
+#ifndef _disposer_output_data_hpp_INCLUDED_
+#define _disposer_output_data_hpp_INCLUDED_
 
 #include <memory>
 #include <future>
@@ -18,20 +18,20 @@ namespace disposer{
 
 
 	template < typename T >
-	class module_output_data;
+	class output_data;
 
 	template < typename T >
-	using module_output_data_ptr = std::shared_ptr< module_output_data< T > >;
+	using output_data_ptr = std::shared_ptr< output_data< T > >;
 
 
 	template < typename T >
-	class module_output_data{
+	class output_data{
 	public:
-		module_output_data(T&& data): data_(std::move(data)) {}
-		module_output_data(T const& data): data_(data) {}
+		output_data(T&& data): data_(std::move(data)) {}
+		output_data(T const& data): data_(data) {}
 
-		module_output_data_ptr< T > get(){
-			return std::make_shared< module_output_data< T > >(std::move(data_));
+		output_data_ptr< T > get(){
+			return std::make_shared< output_data< T > >(std::move(data_));
 		}
 
 		T& data(){
@@ -47,13 +47,13 @@ namespace disposer{
 	};
 
 	template < typename T >
-	class module_output_data< std::future< T > >{
+	class output_data< std::future< T > >{
 	public:
-		module_output_data(std::future< T >&& future): future_(std::move(future)), called_(false) {}
+		output_data(std::future< T >&& future): future_(std::move(future)), called_(false) {}
 
-		module_output_data_ptr< T > get(){
+		output_data_ptr< T > get(){
 			get_future();
-			return std::make_shared< module_output_data< T > >(std::move(data_));
+			return std::make_shared< output_data< T > >(std::move(data_));
 		}
 
 		T& data(){
@@ -84,9 +84,9 @@ namespace disposer{
 	};
 
 	template <>
-	class module_output_data< std::future< void > >{
+	class output_data< std::future< void > >{
 	public:
-		module_output_data(std::future< void >&& future): future_(std::move(future)), called_(false) {}
+		output_data(std::future< void >&& future): future_(std::move(future)), called_(false) {}
 
 		void wait()const{
 			std::lock_guard< std::mutex > lock(mutex_);
@@ -106,7 +106,7 @@ namespace disposer{
 
 
 	template < typename T >
-	using module_output_data_ptr = std::shared_ptr< module_output_data< T > >;
+	using output_data_ptr = std::shared_ptr< output_data< T > >;
 
 
 }

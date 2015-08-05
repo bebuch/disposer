@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer_module_input_base_hpp_INCLUDED_
-#define _disposer_module_input_base_hpp_INCLUDED_
+#ifndef _disposer_input_base_hpp_INCLUDED_
+#define _disposer_input_base_hpp_INCLUDED_
 
 #include <boost/type_index.hpp>
 
@@ -25,18 +25,18 @@ namespace disposer{
 
 	struct any_type;
 
-	class module_input_base{
+	class input_base{
 	public:
-		module_input_base(std::string const& name): name(name) {}
+		input_base(std::string const& name): name(name) {}
 
-		module_input_base(module_input_base const&) = delete;
-		module_input_base(module_input_base&&) = delete;
+		input_base(input_base const&) = delete;
+		input_base(input_base&&) = delete;
 
-		module_input_base& operator=(module_input_base const&) = delete;
-		module_input_base& operator=(module_input_base&&) = delete;
+		input_base& operator=(input_base const&) = delete;
+		input_base& operator=(input_base&&) = delete;
 
 
-		virtual ~module_input_base() = default;
+		virtual ~input_base() = default;
 
 
 		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
@@ -48,7 +48,7 @@ namespace disposer{
 	};
 
 
-	using input_list = std::unordered_map< std::string, module_input_base& >;
+	using input_list = std::unordered_map< std::string, input_base& >;
 
 	template < typename ... Inputs >
 	input_list make_input_list(Inputs& ... inputs){

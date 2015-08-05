@@ -33,7 +33,7 @@ namespace disposer{ namespace config{
 		for(auto& chain: merged_config.chains){
 			std::vector< module_ptr > modules;
 
-			std::map< std::string, std::pair< module_output_base&, bool > > variables;
+			std::map< std::string, std::pair< output_base&, bool > > variables;
 
 			bool first = true;
 			for(auto& module: chain.modules){
@@ -61,7 +61,7 @@ namespace disposer{ namespace config{
 					auto entry = modules.back()->outputs.find(output.name);
 					assert(entry != modules.back()->outputs.end());
 
-					variables.emplace(output.variable, std::pair< module_output_base&, bool >(entry->second, true));
+					variables.emplace(output.variable, std::pair< output_base&, bool >(entry->second, true));
 				}
 
 				first = false;

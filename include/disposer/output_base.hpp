@@ -6,10 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer_module_output_base_hpp_INCLUDED_
-#define _disposer_module_output_base_hpp_INCLUDED_
+#ifndef _disposer_output_base_hpp_INCLUDED_
+#define _disposer_output_base_hpp_INCLUDED_
 
-#include "module_input_base.hpp"
+#include "input_base.hpp"
 
 #include <utility>
 
@@ -25,24 +25,24 @@ namespace disposer{
 			}
 		}
 
-		void connect(module_input_base& input, bool last_use){
+		void connect(input_base& input, bool last_use){
 			targets_.emplace_back(input, last_use);
 		}
 
 	private:
-		std::vector< std::pair< module_input_base&, bool > > targets_;
+		std::vector< std::pair< input_base&, bool > > targets_;
 	};
 
 
-	class module_output_base{
+	class output_base{
 	public:
-		module_output_base(std::string const& name): name(name) {}
+		output_base(std::string const& name): name(name) {}
 
-		module_output_base(module_output_base const&) = delete;
-		module_output_base(module_output_base&&) = delete;
+		output_base(output_base const&) = delete;
+		output_base(output_base&&) = delete;
 
-		module_output_base& operator=(module_output_base const&) = delete;
-		module_output_base& operator=(module_output_base&&) = delete;
+		output_base& operator=(output_base const&) = delete;
+		output_base& operator=(output_base&&) = delete;
 
 
 		std::string const name;
@@ -53,7 +53,7 @@ namespace disposer{
 	};
 
 
-	using output_list = std::unordered_map< std::string, module_output_base& >;
+	using output_list = std::unordered_map< std::string, output_base& >;
 
 	template < typename ... Outputs >
 	output_list make_output_list(Outputs& ... outputs){
