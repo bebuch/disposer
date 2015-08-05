@@ -1,0 +1,73 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2015 Benjamin Buch
+//
+// https://github.com/bebuch/disposer
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
+//-----------------------------------------------------------------------------
+#ifndef _disposer_module_input_base_hpp_INCLUDED_
+#define _disposer_module_input_base_hpp_INCLUDED_
+
+#include <boost/type_index.hpp>
+
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <unordered_map>
+
+
+namespace disposer{
+
+
+	using boost::typeindex::type_index;
+
+
+	struct any_type;
+
+	class module_input_base{
+	public:
+		module_input_base(std::string const& name): name(name) {}
+
+		module_input_base(module_input_base const&) = delete;
+		module_input_base(module_input_base&&) = delete;
+
+		module_input_base& operator=(module_input_base const&) = delete;
+		module_input_base& operator=(module_input_base&&) = delete;
+
+
+		virtual ~module_input_base() = default;
+
+
+		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
+		virtual void cleanup(std::size_t id)noexcept = 0;
+		virtual bool does_accept(std::vector< type_index > const& types)const noexcept = 0;
+
+
+		std::string const name;
+	};
+
+
+	using input_list = std::unordered_map< std::string, module_input_base& >;
+
+	template < typename ... Inputs >
+	input_list make_input_list(Inputs& ... inputs){
+		input_list result({
+			{                // initializer_list
+				inputs.name, // name as string; TODO: Use a reference for initialization via initializer_list???
+				inputs       // reference to object
+			} ...
+		}, sizeof...(Inputs));
+
+		if(result.size() < sizeof...(Inputs)){
+			throw std::logic_error("duplicate output variable name");
+		}
+
+		return result;
+	}
+
+
+}
+
+
+#endif

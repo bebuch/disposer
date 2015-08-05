@@ -33,7 +33,7 @@ namespace disposer{ namespace config{
 		for(auto& chain: merged_config.chains){
 			std::vector< module_ptr > modules;
 
-			std::map< std::string, std::pair< impl::output::output_entry&, bool > > variables;
+			std::map< std::string, std::pair< module_output_base&, bool > > variables;
 
 			bool first = true;
 			for(auto& module: chain.modules){
@@ -61,7 +61,7 @@ namespace disposer{ namespace config{
 					auto entry = modules.back()->outputs.find(output.name);
 					assert(entry != modules.back()->outputs.end());
 
-					variables.emplace(output.variable, std::pair< impl::output::output_entry&, bool >(entry->second, true));
+					variables.emplace(output.variable, std::pair< module_output_base&, bool >(entry->second, true));
 				}
 
 				first = false;
@@ -82,18 +82,18 @@ namespace disposer{ namespace config{
 
 					auto& input = input_iter->second;
 
-					if(output.types.empty()){
+					if(output.active_types.empty()){
 						// TODO: Beschwere dich über die Zeile, in der die Variable deklariert wurde, nicht bei ihrer ersten Verwendung
 						throw std::runtime_error("In chain '" + chain.name + "' module '" + module_ptr->name + "': Variable '" + input_name_and_var.variable + "' has no output types");
 					}
 
-					if(!input.does_accept(output.types)){
+					if(!input.does_accept(output.active_types)){
 						std::ostringstream os;
 						os
 							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable << "' "
 							<< "(types:";
 
-						for(auto& type: output.types){
+						for(auto& type: output.active_types){
 							os << " '" << type.pretty_name() << "'";
 						}
 
@@ -121,7 +121,7 @@ namespace disposer{ namespace config{
 
 					auto& input = input_iter->second;
 
-					output.connect(input, last_use);
+					output.signal.connect(input, last_use);
 					last_use = false;
 				}
 			}

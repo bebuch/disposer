@@ -10,8 +10,8 @@
 #define _disposer_module_base_hpp_INCLUDED_
 
 #include "parameter_processor.hpp"
-#include "output.hpp"
-#include "input.hpp"
+#include "module_output.hpp"
+#include "module_input.hpp"
 
 #include <functional>
 
