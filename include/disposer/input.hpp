@@ -86,11 +86,13 @@ namespace disposer{
 			return result;
 		}
 
-		bool does_accept(std::vector< type_index > const& types)const noexcept override{
-			static auto const input_types = hana::make_tuple(type_id_with_cvr< T >(), type_id_with_cvr< U >() ...);
-
+		bool activate_types(std::vector< type_index > const& types)noexcept override{
 			for(auto& type: types){
-				if(!hana::contains(input_types, type)) return false;
+				auto iter = active_map_.find(type);
+
+				if(iter == active_map_.end()) return false;
+
+				iter->second = true;
 			}
 
 			return true;
@@ -108,6 +110,11 @@ namespace disposer{
 
 
 		static std::map< type_index, void(input::*)(std::size_t, any_type const&, bool) > const type_map_;
+
+		std::map< type_index, bool > active_map_ = {
+			{ type_id_with_cvr< T >(), false },
+			{ type_id_with_cvr< U >(), false } ...
+		};
 
 		std::mutex mutex_;
 

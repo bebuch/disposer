@@ -71,6 +71,24 @@ namespace disposer{ namespace config{
 			for(auto& module: chain.modules){
 				auto& module_ptr = *module_ptr_iter++;
 
+				// module.outputs containes all active output names
+				for(auto& output_name_and_var: module.outputs){
+					auto output_iter = variables.find(output_name_and_var.variable);
+					assert(output_iter != variables.end());
+
+					auto& output = output_iter->second.first;
+
+					if(output.active_types.empty()){
+						throw std::runtime_error(
+							"In chain '" + chain.name + "' module '" +
+							module_ptr->name + "': Output '" +
+							output_name_and_var.name + "' (Variable: '" +
+							output_name_and_var.variable + "') has no active output types"
+						);
+					}
+				}
+
+				// module.inputs containes all active inputs names
 				for(auto& input_name_and_var: module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
@@ -82,12 +100,7 @@ namespace disposer{ namespace config{
 
 					auto& input = input_iter->second;
 
-					if(output.active_types.empty()){
-						// TODO: Beschwere dich über die Zeile, in der die Variable deklariert wurde, nicht bei ihrer ersten Verwendung
-						throw std::runtime_error("In chain '" + chain.name + "' module '" + module_ptr->name + "': Variable '" + input_name_and_var.variable + "' has no output types");
-					}
-
-					if(!input.does_accept(output.active_types)){
+					if(!input.activate_types(output.active_types)){
 						std::ostringstream os;
 						os
 							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable << "' "
