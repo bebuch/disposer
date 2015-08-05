@@ -12,6 +12,7 @@
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
+#include "is_type_unique.hpp"
 
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/type_traits.hpp>
@@ -91,10 +92,7 @@ namespace disposer{
 				"output types are not allowed to be references"
 			);
 
-	// 		static_assert(
-	// 			hana::unique(hana::tuple_t< T, U ... >),
-	// 			"output must have distict types"
-	// 		);
+			static_assert(is_type_unique< T, U ... >, "output must have distict types");
 
 
 			using output_base::output_base;

@@ -11,6 +11,7 @@
 
 #include "input_base.hpp"
 #include "input_data.hpp"
+#include "is_type_unique.hpp"
 
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/type_traits.hpp>
@@ -49,7 +50,7 @@ namespace disposer{
 			"input types are not allowed to be references"
 		);
 
-		// TODO: distict types
+		static_assert(is_type_unique< T, U ... >, "input must have distict types");
 
 
 		using input_base::input_base;
