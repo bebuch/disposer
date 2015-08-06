@@ -95,7 +95,7 @@ namespace disposer{
 			return result;
 		}
 
-		bool activate_types(std::vector< type_index > const& types)noexcept override{
+		virtual bool activate_types(std::vector< type_index > const& types)noexcept override{
 			for(auto& type: types){
 				auto iter = active_map_.find(type);
 

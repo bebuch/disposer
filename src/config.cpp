@@ -110,7 +110,12 @@ namespace disposer{ namespace config{
 
 						bool first = true;
 						for(auto& type: output.active_types()){
-							if(!first) os << ", ";
+							if(first){
+								first = false;
+							}else{
+								os << ", ";
+							}
+
 							os << "'" << type.pretty_name() << "'";
 						}
 
@@ -118,7 +123,12 @@ namespace disposer{ namespace config{
 
 						first = true;
 						for(auto& type: output.active_types()){
-							if(!first) os << ", ";
+							if(first){
+								first = false;
+							}else{
+								os << ", ";
+							}
+
 							os << "'" << type.pretty_name() << "'";
 						}
 
