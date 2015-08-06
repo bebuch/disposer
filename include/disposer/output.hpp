@@ -176,7 +176,20 @@ namespace disposer{
 	};
 
 	template < template< typename > class Container, typename ... T >
-	using container_output = output< Container< T > ... >;
+	class container_output: public output< Container< T > ... >{
+	public:
+		using output< Container< T > ... >::output;
+
+		template < typename V >
+		void activate(){
+			output< Container< T > ... >::template activate< Container< V > >();
+		}
+
+		template < typename V, typename W, typename ... X >
+		void activate(){
+			output< Container< T > ... >::template activate< Container< V >, Container< W >, Container< X > ... >();
+		}
+	};
 
 
 }
