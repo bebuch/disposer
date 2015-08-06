@@ -78,7 +78,7 @@ namespace disposer{ namespace config{
 
 					auto& output = output_iter->second.first;
 
-					if(output.active_types.empty()){
+					if(output.active_types().empty()){
 						throw std::runtime_error(
 							"In chain '" + chain.name + "' module '" +
 							module_ptr->name + "': Output '" +
@@ -100,13 +100,13 @@ namespace disposer{ namespace config{
 
 					auto& input = input_iter->second;
 
-					if(!input.activate_types(output.active_types)){
+					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
 							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable << "' "
 							<< "(types:";
 
-						for(auto& type: output.active_types){
+						for(auto& type: output.active_types()){
 							os << " '" << type.pretty_name() << "'";
 						}
 

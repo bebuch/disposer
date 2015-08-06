@@ -18,6 +18,7 @@
 #include <boost/variant.hpp>
 
 #include <functional>
+#include <set>
 #include <map>
 
 
@@ -96,6 +97,14 @@ namespace disposer{
 			}
 
 			return true;
+		}
+
+		std::set< type_index > active_types()const{
+			std::set< type_index > result;
+			for(auto& pair: active_map_){
+				if(pair.second) result.insert(pair.first);
+			}
+			return result;
 		}
 
 

@@ -53,7 +53,7 @@ namespace disposer{
 	};
 
 
-	using module_ptr = std::shared_ptr< module_base >;
+	using module_ptr = std::unique_ptr< module_base >;
 
 
 	using io_list = std::set< std::string >;

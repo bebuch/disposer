@@ -28,20 +28,6 @@ namespace disposer{
 	using boost::typeindex::type_id_with_cvr;
 
 
-	template < typename T, typename ... U >
-	auto make_type_map(){
-		return hana::make_map(
-			hana::make_pair(hana::type< T >, false),
-			hana::make_pair(hana::type< U >, false) ...
-		);
-	}
-
-	template < typename T, typename ... U >
-	struct type_t{
-		decltype(make_type_map< T, U ... >()) map = make_type_map< T, U ... >();
-	};
-
-
 	template < typename T >
 	class output_interface{
 	public:
@@ -76,6 +62,26 @@ namespace disposer{
 	namespace impl{ namespace output{
 
 
+		template < typename Ref >
+		constexpr std::size_t type_position(std::size_t pos){
+			return 0;
+		}
+
+		template < typename Ref, typename Test, typename ... Tests >
+		constexpr std::size_t type_position(std::size_t pos){
+			static_assert(sizeof...(Tests) > 0 || std::is_same< Ref, Test >::value, "type_position< Ref, Tests ... >(): Ref is not in Tests");
+			return std::is_same< Ref, Test >::value ? pos : type_position< Ref, Tests ... >(pos + 1);
+		}
+
+		template < typename Ref, typename ... Tests >
+		constexpr std::size_t type_position(){
+			static_assert(sizeof...(Tests) > 0, "type_position< Ref, Tests ... >(): Ref is not in Tests");
+			return type_position< Ref, Tests ... >(0);
+		}
+
+		template < typename Ref, typename ... Tests >
+		constexpr std::size_t type_position_v = type_position< Ref, Tests ... >();
+
 
 		template < typename T, typename ... U >
 		class output: public output_base{
@@ -98,11 +104,21 @@ namespace disposer{
 			using output_base::output_base;
 
 
+			std::vector< type_index > active_types()const override{
+				std::vector< type_index > result;
+				result.reserve(1 + sizeof...(U));
+				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){
+					if(active_types_[i]) result.push_back(type_indices_[i]);
+				}
+				return result;
+			}
+
+
 			template < typename V, typename W >
 			auto put(std::size_t id, W&& value){
 				static_assert(hana::contains(value_types, hana::type< V >), "type V in put< V > is not a output type");
 
-				if(type_.map[hana::type< V >]){
+				if(!active_types_[type_position_v< V, T, U ... >]){
 					throw std::logic_error(
 						"output '" + name + "' put inactive type '" + type_id_with_cvr< V >().pretty_name() + "'"
 					);
@@ -111,10 +127,27 @@ namespace disposer{
 				return output_interface< V >(signal)(id, static_cast< W&& >(value));
 			}
 
+			template < typename V >
+			auto activate(){
+				static_assert(hana::contains(value_types, hana::type< V >), "type V in activate< V > is not a output type");
+
+				active_types_[type_position_v< V, T, U ... >] = true;
+			}
+
+// 			template < typename ... V >
+// 			auto activate(){
+// 				(activate< V >() ...);
+// 			}
+
 
 		private:
-			type_t< T, U ... > type_;
+			static std::array< type_index, 1 + sizeof...(U) > const type_indices_;
+
+			std::array< bool, 1 + sizeof...(U) > active_types_;
 		};
+
+		template < typename T, typename ... U >
+		std::array< type_index, 1 + sizeof...(U) > const output< T, U ... >::type_indices_{{ type_id_with_cvr< T >(), type_id_with_cvr< U >() ... }};
 
 
 	} }
