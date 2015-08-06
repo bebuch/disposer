@@ -148,7 +148,7 @@ namespace disposer{
 		private:
 			static std::array< type_index, 1 + sizeof...(U) > const type_indices_;
 
-			std::array< bool, 1 + sizeof...(U) > active_types_;
+			std::array< bool, 1 + sizeof...(U) > active_types_{{false}};
 		};
 
 		template < typename T, typename ... U >
