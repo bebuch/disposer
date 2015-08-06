@@ -42,7 +42,7 @@ namespace disposer{
 		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
 		virtual void cleanup(std::size_t id)noexcept = 0;
 		virtual bool activate_types(std::vector< type_index > const& types) noexcept = 0;
-		virtual std::vector< type_index > active_types()const = 0;
+		virtual std::vector< type_index > types()const = 0;
 
 
 		std::string const name;

@@ -122,7 +122,7 @@ namespace disposer{ namespace config{
 						os << "; possible '" << input_name_and_var.name << "' types: ";
 
 						first = true;
-						for(auto& type: output.active_types()){
+						for(auto& type: input.types()){
 							if(first){
 								first = false;
 							}else{

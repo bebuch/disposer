@@ -75,10 +75,11 @@ namespace disposer{
 			data_.erase(from, to);
 		}
 
-		virtual std::vector< type_index > active_types()const override{
+		virtual std::vector< type_index > types()const override{
 			std::vector< type_index > result;
+			result.reserve(active_map_.size());
 			for(auto& pair: active_map_){
-				if(pair.second) result.push_back(pair.first);
+				result.push_back(pair.first);
 			}
 			return result;
 		}
