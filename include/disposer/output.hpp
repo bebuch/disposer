@@ -128,16 +128,17 @@ namespace disposer{
 			}
 
 			template < typename V >
-			auto activate(){
+			void activate(){
 				static_assert(hana::contains(value_types, hana::type< V >), "type V in activate< V > is not a output type");
 
 				active_types_[type_position_v< V, T, U ... >] = true;
 			}
 
-// 			template < typename ... V >
-// 			auto activate(){
-// 				(activate< V >() ...);
-// 			}
+			template < typename V, typename W, typename ... X >
+			void activate(){
+				activate< V >();
+				activate< W, X ... >();
+			}
 
 
 		private:
@@ -169,6 +170,9 @@ namespace disposer{
 			impl::output::output< T >::template put< T >(id, static_cast< W&& >(value));
 		}
 	};
+
+	template < template< typename > class Container, typename ... T >
+	using container_output = output< Container< T > ... >;
 
 
 }
