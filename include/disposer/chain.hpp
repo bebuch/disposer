@@ -41,7 +41,7 @@ namespace disposer{
 		chain(std::vector< module_ptr >&& modules, std::size_t counter_increase):
 			counter_increase(counter_increase),
 			modules(std::move(modules)),
-			previous_id{},
+			next_id{},
 			ready_id(modules.size()),
 			mutexes(modules.size())
 			{}
@@ -49,18 +49,17 @@ namespace disposer{
 		chain(chain&& c):
 			counter_increase(c.counter_increase),
 			modules(std::move(c.modules)),
-			previous_id{},
+			next_id{},
 			ready_id(modules.size()),
 			mutexes(modules.size())
 			{}
 
 
 		void trigger(){
-			// Get ID and increase previous_id
+			// Get ID and increase next_id
 			std::size_t id = [this]{
 				std::lock_guard< std::mutex > lock(mutex);
-				++previous_id;
-				return previous_id;
+				return next_id++;
 			}();
 
 			log([this, id](log_base& os){
@@ -74,7 +73,7 @@ namespace disposer{
 					// cleanup and unlock all triggers
 					for(std::size_t i = 0; i < ready_id.size(); ++i){
 						// Trigger was successful
-						if(ready_id[i] >= id) continue;
+						if(ready_id[i] >= id + 1) continue;
 
 						process_module(i, id, [this, i, id]{ modules[i]->cleanup(id); }, "cleanup");
 					}
@@ -90,7 +89,7 @@ namespace disposer{
 		void process_module(std::size_t i, std::size_t id, Action&& action, ActionName action_name){
 			// Lock mutex and wait for the previous id to be ready
 			std::unique_lock< std::mutex > lock(mutexes[i]);
-			cv.wait(lock, [this, i, id]{return ready_id[i] == id - 1;});
+			cv.wait(lock, [this, i, id]{return ready_id[i] == id;});
 
 			// Cleanup the module
 			log([this, i, id, action_name](log_base& os){
@@ -100,7 +99,7 @@ namespace disposer{
 			// Make module ready
 			{
 				std::lock_guard < std::mutex > lock(mutex);
-				ready_id[i] = id;
+				ready_id[i] = id + 1;
 			}
 			cv.notify_all();
 		}
@@ -108,7 +107,7 @@ namespace disposer{
 		std::size_t counter_increase;
 		std::vector< module_ptr > modules;
 
-		std::size_t previous_id;
+		std::size_t next_id;
 
 		std::vector< std::size_t > ready_id;
 		std::vector< std::mutex > mutexes;
