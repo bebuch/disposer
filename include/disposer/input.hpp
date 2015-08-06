@@ -75,6 +75,14 @@ namespace disposer{
 			data_.erase(from, to);
 		}
 
+		virtual std::vector< type_index > active_types()const override{
+			std::vector< type_index > result;
+			for(auto& pair: active_map_){
+				if(pair.second) result.push_back(pair.first);
+			}
+			return result;
+		}
+
 
 		std::multimap< std::size_t, value_type > get(std::size_t id){
 			std::lock_guard< std::mutex > lock(mutex_);
@@ -97,14 +105,6 @@ namespace disposer{
 			}
 
 			return true;
-		}
-
-		std::set< type_index > active_types()const{
-			std::set< type_index > result;
-			for(auto& pair: active_map_){
-				if(pair.second) result.insert(pair.first);
-			}
-			return result;
 		}
 
 

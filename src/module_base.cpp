@@ -36,7 +36,7 @@ namespace disposer{
 		auto iter = maker_list().find(type);
 
 		if(iter == maker_list().end()){
-			throw std::runtime_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
+			throw std::logic_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
 		}
 
 		try{

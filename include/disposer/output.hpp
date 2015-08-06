@@ -108,7 +108,7 @@ namespace disposer{
 			using output_base::output_base;
 
 
-			std::vector< type_index > active_types()const override{
+			virtual std::vector< type_index > active_types()const override{
 				std::vector< type_index > result;
 				result.reserve(1 + sizeof...(U));
 				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){

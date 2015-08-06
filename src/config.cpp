@@ -79,12 +79,12 @@ namespace disposer{ namespace config{
 					auto& output = output_iter->second.first;
 
 					if(output.active_types().empty()){
-						throw std::runtime_error(
-							"In chain '" + chain.name + "' module '" +
-							module_ptr->name + "': Output '" +
-							output_name_and_var.name + "' (Variable: '" +
-							output_name_and_var.variable + "') has no active output types"
-						);
+						std::ostringstream os;
+						os
+							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Output '" + output_name_and_var.name
+							<< "' (Variable: '" << output_name_and_var.variable << "') has no active output types";
+
+						throw std::logic_error(os.str());
 					}
 				}
 
@@ -103,16 +103,28 @@ namespace disposer{ namespace config{
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
-							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable << "' "
-							<< "(types:";
+							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable
+							<< "' is incompatible with input '" << input_name_and_var.name << "'";
 
+						os << " (active '" << input_name_and_var.variable << "' types: ";
+
+						bool first = true;
 						for(auto& type: output.active_types()){
-							os << " '" << type.pretty_name() << "'";
+							if(!first) os << ", ";
+							os << "'" << type.pretty_name() << "'";
 						}
 
-						os << ") is incompatible with input '" << input_name_and_var.name << "' (TODO: print input types)";
+						os << "; possible '" << input_name_and_var.name << "' types: ";
 
-						throw std::runtime_error(os.str());
+						first = true;
+						for(auto& type: output.active_types()){
+							if(!first) os << ", ";
+							os << "'" << type.pretty_name() << "'";
+						}
+
+						os << ")";
+
+						throw std::logic_error(os.str());
 					}
 				}
 			}
