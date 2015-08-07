@@ -155,6 +155,23 @@ namespace disposer{
 		std::array< type_index, 1 + sizeof...(U) > const output< T, U ... >::type_indices_{{ type_id_with_cvr< T >(), type_id_with_cvr< U >() ... }};
 
 
+		template < template< typename > class Container, typename ... T >
+		class container_output: public output< Container< T > ... >{
+		public:
+			using output< Container< T > ... >::output;
+
+			template < typename V >
+			void activate(){
+				output< Container< T > ... >::template activate< Container< V > >();
+			}
+
+			template < typename V, typename W, typename ... X >
+			void activate(){
+				output< Container< T > ... >::template activate< Container< V >, Container< W >, Container< X > ... >();
+			}
+		};
+
+
 	} }
 
 
@@ -175,21 +192,29 @@ namespace disposer{
 		}
 	};
 
-	template < template< typename > class Container, typename ... T >
-	class container_output: public output< Container< T > ... >{
+
+	template < template< typename > class Container, typename T, typename ... U >
+	class container_output: public impl::output::container_output< Container, T, U ... >{
 	public:
-		using output< Container< T > ... >::output;
+		using impl::output::container_output< Container, T, U ... >::container_output;
 
-		template < typename V >
-		void activate(){
-			output< Container< T > ... >::template activate< Container< V > >();
-		}
-
-		template < typename V, typename W, typename ... X >
-		void activate(){
-			output< Container< T > ... >::template activate< Container< V >, Container< W >, Container< X > ... >();
+		template < typename V, typename W >
+		auto put(std::size_t id, W&& value){
+			impl::output::container_output< Container, T, U ... >::template put< Container< V > >(id, static_cast< W&& >(value));
 		}
 	};
+
+	template < template< typename > class Container, typename T >
+	class container_output< Container, T >: public impl::output::container_output< Container, T >{
+	public:
+		using impl::output::container_output< Container, T >::container_output;
+
+		template < typename W >
+		auto put(std::size_t id, W&& value){
+			impl::output::container_output< Container, T >::template put< Container< T > >(id, static_cast< W&& >(value));
+		}
+	};
+
 
 
 }
