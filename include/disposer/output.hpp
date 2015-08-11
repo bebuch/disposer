@@ -155,7 +155,7 @@ namespace disposer{
 		std::array< type_index, 1 + sizeof...(U) > const output< T, U ... >::type_indices_{{ type_id_with_cvr< T >(), type_id_with_cvr< U >() ... }};
 
 
-		template < template< typename > class Container, typename ... T >
+		template < template< typename, typename ... > class Container, typename ... T >
 		class container_output: public output< Container< T > ... >{
 		public:
 			using output< Container< T > ... >::output;
@@ -193,7 +193,7 @@ namespace disposer{
 	};
 
 
-	template < template< typename > class Container, typename T, typename ... U >
+	template < template< typename, typename ... > class Container, typename T, typename ... U >
 	class container_output: public impl::output::container_output< Container, T, U ... >{
 	public:
 		using impl::output::container_output< Container, T, U ... >::container_output;
@@ -204,7 +204,7 @@ namespace disposer{
 		}
 	};
 
-	template < template< typename > class Container, typename T >
+	template < template< typename, typename ... > class Container, typename T >
 	class container_output< Container, T >: public impl::output::container_output< Container, T >{
 	public:
 		using impl::output::container_output< Container, T >::container_output;
