@@ -137,7 +137,7 @@ namespace disposer{
 			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
 		};
 
-	template < template< typename > class Container, typename ... T >
+	template < template< typename, typename ... > class Container, typename ... T >
 	using container_input = input< Container< T > ... >;
 
 
