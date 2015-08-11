@@ -9,6 +9,7 @@
 #ifndef _disposer_output_hpp_INCLUDED_
 #define _disposer_output_hpp_INCLUDED_
 
+#include "container_lists.hpp"
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
@@ -176,14 +177,12 @@ namespace disposer{
 
 
 	template < typename T, typename ... U >
-	class output: public impl::output::output< T, U ... >{
-	public:
+	struct output: impl::output::output< T, U ... >{
 		using impl::output::output< T, U ... >::output;
 	};
 
 	template < typename T >
-	class output< T >: public impl::output::output< T >{
-	public:
+	struct output< T >: impl::output::output< T >{
 		using impl::output::output< T >::output;
 
 		template < typename W >
@@ -192,27 +191,37 @@ namespace disposer{
 		}
 	};
 
+	template < typename T, typename ... U >
+	struct output< type_list< T, U ... > >: output< T, U ... >{
+		using output< T, U ... >::output;
+	};
 
-	template < template< typename, typename ... > class Container, typename T, typename ... U >
-	class container_output: public impl::output::container_output< Container, T, U ... >{
+
+
+	template < template< typename, typename ... > class Container, typename ... T >
+	struct container_output: impl::output::container_output< Container, T ... >{
 	public:
-		using impl::output::container_output< Container, T, U ... >::container_output;
+		using impl::output::container_output< Container, T ... >::container_output;
 
 		template < typename V, typename W >
 		auto put(std::size_t id, W&& value){
-			impl::output::container_output< Container, T, U ... >::template put< Container< V > >(id, static_cast< W&& >(value));
+			impl::output::container_output< Container, T ... >::template put< Container< V > >(id, static_cast< W&& >(value));
 		}
 	};
 
 	template < template< typename, typename ... > class Container, typename T >
-	class container_output< Container, T >: public impl::output::container_output< Container, T >{
-	public:
+	struct container_output< Container, T >: impl::output::container_output< Container, T >{
 		using impl::output::container_output< Container, T >::container_output;
 
 		template < typename W >
 		auto put(std::size_t id, W&& value){
 			impl::output::container_output< Container, T >::template put< Container< T > >(id, static_cast< W&& >(value));
 		}
+	};
+
+	template < template< typename, typename ... > class Container, typename ... T >
+	struct container_output< Container, type_list< T ... > >: container_output< Container, T ... >{
+		using container_output< Container, T ... >::container_output;
 	};
 
 

@@ -9,6 +9,7 @@
 #ifndef _disposer_input_hpp_INCLUDED_
 #define _disposer_input_hpp_INCLUDED_
 
+#include "container_lists.hpp"
 #include "input_base.hpp"
 #include "input_data.hpp"
 #include "is_type_unique.hpp"
@@ -132,13 +133,23 @@ namespace disposer{
 	};
 
 	template < typename T, typename ... U >
+	class input< type_list< T, U ... > >: public input< T, U ... >{};
+
+	template < typename T, typename ... U >
 	std::map< type_index, void(input< T, U ... >::*)(std::size_t, any_type const&, bool) > const input< T, U ... >::type_map_ = {
 			{ type_id_with_cvr< T >(), &input< T, U ... >::add< T > },
 			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
 		};
 
 	template < template< typename, typename ... > class Container, typename ... T >
-	using container_input = input< Container< T > ... >;
+	struct container_input: input< Container< T > ... >{
+		using input< Container< T > ... >::input;
+	};
+
+	template < template< typename, typename ... > class Container, typename ... T >
+	struct container_input< Container, type_list< T ... > >: container_input< Container, T ... >{
+		using container_input< Container, T ... >::container_input;
+	};
 
 
 }
