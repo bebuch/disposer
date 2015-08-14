@@ -25,7 +25,7 @@ namespace disposer{
 		virtual void pre(){}
 		virtual void post(){}
 		virtual void failed(){}
-		virtual void set_exception(std::exception const& error){}
+		virtual void set_exception(std::exception const&){}
 		virtual void unknown_exception(){}
 		virtual void have_body(){}
 		virtual void exec()const{}

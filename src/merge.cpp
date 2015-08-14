@@ -24,7 +24,7 @@ namespace disposer{
 		types::merge::config result;
 
 		for(auto& module: config.modules){
-			auto pair = result.modules.emplace(std::move(module.name), types::merge::module{std::move(module.type)});
+			auto pair = result.modules.emplace(std::move(module.name), types::merge::module{std::move(module.type), {}});
 
 			// successfully inserted
 			assert(pair.second);
@@ -52,7 +52,7 @@ namespace disposer{
 
 		for(auto& chain: config.chains){
 			std::size_t increase = chain.increase ? *chain.increase : 1;
-			result.chains.emplace_back(types::merge::chain{std::move(chain.name), increase});
+			result.chains.emplace_back(types::merge::chain{std::move(chain.name), increase, {}});
 
 			auto& result_chain = result.chains.back();
 

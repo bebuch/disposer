@@ -105,8 +105,8 @@ namespace disposer{
 			throw;
 		}
 
-		template < typename F, typename Body, typename Log >
-		inline auto exec_exception_catching_body(F& f, Body& body, Log& log){
+		template < typename Body, typename Log >
+		inline auto exec_exception_catching_body(Body& body, Log& log){
 			constexpr auto is_void = boost::hana::traits::is_void(boost::hana::type< decltype(body()) >);
 
 			try{
@@ -209,7 +209,7 @@ namespace disposer{
 			[](auto&){}
 		)(log);
 
-		auto result = impl::log::exec_exception_catching_body(f, body, log);
+		auto result = impl::log::exec_exception_catching_body(body, log);
 		impl::log::exec_log(f, log);
 		return result;
 	}

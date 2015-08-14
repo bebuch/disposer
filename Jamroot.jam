@@ -19,6 +19,8 @@ project disposer
 	<toolset>gcc:<cxxflags>-std=c++14
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
 	<toolset>gcc:<cxxflags>-fopenmp
+	<toolset>gcc:<cxxflags>-Wall
+	<toolset>gcc:<cxxflags>-Wextra
 	<toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
 	<toolset>gcc:<cxxflags>-Wno-deprecated-declarations
 	<toolset>gcc:<linkflags>-lpthread
@@ -27,6 +29,8 @@ project disposer
 	<toolset>clang:<cxxflags>-std=c++14
 	<toolset>clang:<cxxflags>-fconstexpr-depth=1024
 	<toolset>clang:<cxxflags>-fopenmp
+	<toolset>clang:<cxxflags>-Wall
+	<toolset>clang:<cxxflags>-Wextra
 	<toolset>clang:<cxxflags>-Wno-deprecated-register
 	<toolset>clang:<cxxflags>-Wno-unused-local-typedef
 	<toolset>clang:<cxxflags>-stdlib=libc++

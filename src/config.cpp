@@ -22,7 +22,7 @@ namespace disposer{ namespace config{
 
 
 	chain_list load(std::string const& filename){
-		auto config = parse("plan.ini");
+		auto config = parse(filename);
 
 		disposer::check_semantic(config);
 		disposer::unused_warnings(config);
