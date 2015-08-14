@@ -14,8 +14,6 @@
 #include "input_data.hpp"
 #include "is_type_unique.hpp"
 
-#include <boost/hana.hpp>
-#include <boost/hana/ext/std/type_traits.hpp>
 #include <boost/variant.hpp>
 
 #include <functional>
@@ -25,8 +23,6 @@
 
 namespace disposer{
 
-
-	namespace hana = boost::hana;
 
 	using boost::typeindex::type_id_with_cvr;
 
@@ -44,15 +40,15 @@ namespace disposer{
 
 		static_assert(
 			!hana::fold(hana::transform(value_types, hana::traits::is_const), false, std::logical_or<>()),
-			"input types are not allowed to be const"
+			"disposer::input types are not allowed to be const"
 		);
 
 		static_assert(
 			!hana::fold(hana::transform(value_types, hana::traits::is_reference), false, std::logical_or<>()),
-			"input types are not allowed to be references"
+			"disposer::input types are not allowed to be references"
 		);
 
-		static_assert(is_type_unique< T, U ... >, "input must have distict types");
+		static_assert(is_type_unique< T, U ... >, "disposer::input must have distict types");
 
 
 		using input_base::input_base;

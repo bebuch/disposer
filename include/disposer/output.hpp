@@ -71,15 +71,15 @@ namespace disposer{
 
 			static_assert(
 				!hana::fold(hana::transform(value_types, hana::traits::is_const), false, std::logical_or<>()),
-				"output types are not allowed to be const"
+				"disposer::output types are not allowed to be const"
 			);
 
 			static_assert(
 				!hana::fold(hana::transform(value_types, hana::traits::is_reference), false, std::logical_or<>()),
-				"output types are not allowed to be references"
+				"disposer::output types are not allowed to be references"
 			);
 
-			static_assert(is_type_unique< T, U ... >, "output must have distict types");
+			static_assert(is_type_unique< T, U ... >, "disposer::output must have distict types");
 
 
 			using output_base::output_base;
