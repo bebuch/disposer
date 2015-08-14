@@ -9,6 +9,8 @@
 #ifndef _disposer_type_position_hpp_INCLUDED_
 #define _disposer_type_position_hpp_INCLUDED_
 
+#include "container_lists.hpp"
+
 #include <type_traits>
 
 
@@ -35,6 +37,9 @@ namespace disposer{
 		std::integral_constant< std::size_t, Index >,
 		type_position< Ref, 1 + Index, Tests ... >
 	>{};
+
+	template < typename Ref, std::size_t Index, typename ... Tests >
+	struct type_position< Ref, Index, type_list< Tests ... > >: type_position< Ref, Index, Tests ... >{};
 
 	template < typename Ref, typename ... Tests >
 	constexpr std::size_t type_position_v = type_position< Ref, 0, Tests ... >::value;
