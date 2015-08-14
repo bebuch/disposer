@@ -7,6 +7,7 @@ A dynamic module management system
 
 - Boost.TypeIndex
 - Boost.Optional
+- Boost.Variant
 - Boost.Lexical_Cast
 - Boost.Range
 - Boost.Hana (will be part of boost soon)
