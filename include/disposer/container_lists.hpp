@@ -21,18 +21,25 @@ namespace disposer{
 	namespace hana = boost::hana;
 
 	template < typename T, typename ... U >
-	struct type_list{
-		static constexpr auto hana_list = hana::tuple_t< T, U ... >;
+	struct type_list;
 
+	template < typename T, typename ... U >
+	constexpr auto hana_type_list = hana::tuple_t< T, U ... >;
+
+	template < typename T, typename ... U >
+	constexpr auto hana_type_list< type_list< T, U ... > > = hana::tuple_t< T, U ... >;
+
+	template < typename T, typename ... U >
+	struct type_list{
 		static constexpr std::size_t size = 1 + sizeof...(U);
 
 		static_assert(
-			!hana::fold(hana::transform(hana_list, hana::traits::is_const), false, std::logical_or<>()),
+			!hana::fold(hana::transform(hana_type_list< T, U ... >, hana::traits::is_const), false, std::logical_or<>()),
 			"disposer::type_list types are not allowed to be const"
 		);
 
 		static_assert(
-			!hana::fold(hana::transform(hana_list, hana::traits::is_reference), false, std::logical_or<>()),
+			!hana::fold(hana::transform(hana_type_list< T, U ... >, hana::traits::is_reference), false, std::logical_or<>()),
 			"disposer::type_list types are not allowed to be references"
 		);
 
