@@ -3,16 +3,44 @@ A dynamic module management system
 
 <b>This software is highly experimental. Do not use it in production code!</b>
 
-## Dependencies
+## Direct dependencies
 
-- Boost.TypeIndex
-- Boost.Optional
-- Boost.Variant
-- Boost.Lexical_Cast
-- Boost.Range
-- Boost.Hana (will be part of boost soon)
-- Boost.Spirit X3 (will be part of boost soon)
-- Boost.Fusion (as long as X3 does not support Hana)
+- boost.type_index
+- boost.optional
+- boost.lexical_cast
+- boost.variant
+- boost.range
+- boost.hana (will be part of boost soon)
+- boost.spirit (develop branch of X3)
+- boost.fusion (as long as Sprit X3 does not support boost.hana)
+
+## Indirect dependencies
+
+- boost.array
+- boost.assert
+- boost.concept_check
+- boost.config
+- boost.container
+- boost.core
+- boost.detail
+- boost.exception
+- boost.function_types
+- boost.functional
+- boost.integer
+- boost.iterator
+- boost.math
+- boost.move
+- boost.mpl
+- boost.numeric_conversion
+- boost.predef
+- boost.preprocessor
+- boost.regex
+- boost.smart_ptr
+- boost.static_assert
+- boost.throw_exception
+- boost.type_traits
+- boost.typeof
+- boost.utility
 
 ## Definition
 
