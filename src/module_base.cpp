@@ -28,8 +28,10 @@ namespace disposer{
 	}
 
 	void add_module_maker(std::string const& type, maker_function&& function){
-		auto iter = maker_list().insert(std::make_pair(type, std::move(function)));
-		if(!iter.second) throw std::logic_error("Module type '" + type + "' is double registered!");
+		log([&type](log_base& os){ os << "register module type '" << type << "'"; }, [&]{
+			auto iter = maker_list().insert(std::make_pair(type, std::move(function)));
+			if(!iter.second) throw std::logic_error("Module type '" + type + "' is double registered!");
+		});
 	}
 
 	module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start){
