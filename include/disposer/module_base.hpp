@@ -10,8 +10,8 @@
 #define _disposer_module_base_hpp_INCLUDED_
 
 #include "parameter_processor.hpp"
-#include "output.hpp"
-#include "input.hpp"
+#include "output_base.hpp"
+#include "input_base.hpp"
 
 #include <functional>
 
@@ -54,15 +54,6 @@ namespace disposer{
 
 
 	using module_ptr = std::unique_ptr< module_base >;
-
-
-	using io_list = std::set< std::string >;
-
-	using maker_function = std::function< module_ptr(std::string const& type, std::string const&, std::string const&, io_list const&, io_list const&, parameter_processor&, bool is_start) >;
-
-	void add_module_maker(std::string const& type, maker_function&& function);
-
-	module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start);
 
 
 }

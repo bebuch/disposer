@@ -6,9 +6,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/config.hpp>
-
-#include <disposer/module_base.hpp>
+#include <disposer/disposer.hpp>
 #include <disposer/check_semantic.hpp>
 #include <disposer/unused_warnings.hpp>
 #include <disposer/merge.hpp>
@@ -18,16 +16,41 @@
 #include <cassert>
 
 
-namespace disposer{ namespace config{
+namespace disposer{
 
 
-	chain_list load(std::string const& filename){
+	void disposer::add_module_maker(std::string const& type, maker_function&& function){
+		log([&type](log_base& os){ os << "register module type '" << type << "'"; }, [&]{
+			auto iter = maker_list.insert(std::make_pair(type, std::move(function)));
+			if(!iter.second) throw std::logic_error("Module type '" + type + "' is double registered!");
+		});
+	}
+
+	module_ptr disposer::make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start){
+		auto iter = maker_list.find(type);
+
+		if(iter == maker_list.end()){
+			throw std::logic_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
+		}
+
+		try{
+			auto result = iter->second(type, chain, name, inputs, outputs, parameters, is_start);
+			for(auto const& param: parameters.unused_parameters()){
+				log([&param, &chain, &name](log_base& os){ os << "In chain '" << chain << "' module '" << name << ": Unused parameter '" << param.first << "'='" << param.second << "'"; });
+			}
+			return result;
+		}catch(std::exception const& error){
+			throw std::runtime_error("Module '" + chain + "." + name + "': " + error.what());
+		}
+	}
+
+	chain_list disposer::load(std::string const& filename){
 		auto config = parse(filename);
 
-		disposer::check_semantic(config);
-		disposer::unused_warnings(config);
+		check_semantic(config);
+		unused_warnings(config);
 
-		auto merged_config = disposer::merge(std::move(config));
+		auto merged_config = merge(std::move(config));
 
 		chain_list result;
 		for(auto& chain: merged_config.chains){
@@ -161,11 +184,11 @@ namespace disposer{ namespace config{
 				}
 			}
 
-			result.emplace(chain.name, disposer::chain(std::move(modules), chain.increase));
+			result.emplace(chain.name, ::disposer::chain(std::move(modules), chain.increase));
 		}
 
 		return result;
 	}
 
 
-} }
+}
