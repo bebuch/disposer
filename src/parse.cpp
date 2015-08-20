@@ -13,6 +13,7 @@
 #include <boost/spirit/home/x3/directive.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/fusion/include/vector.hpp>
+// #include <boost/hana/adapt_struct.hpp>
 
 #include <fstream>
 #include <string>
@@ -21,52 +22,52 @@
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::parameter,
-	(std::string, key)
-	(std::string, value)
+	key,
+	value
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::parameter_set,
-	(std::string, name)
-	(std::vector< disposer::types::parse::parameter >, parameters)
+	name,
+	parameters
 )
 
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::module,
-	(std::string, name)
-	(std::string, type)
-	(std::vector< std::string >, parameter_sets)
-	(std::vector< disposer::types::parse::parameter >, parameters)
+	name,
+	type,
+	parameter_sets,
+	parameters
 )
 
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::io,
-	(std::string, name)
-	(std::string, variable)
+	name,
+	variable
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::chain_module,
-	(std::string, name)
-	(std::vector< disposer::types::parse::io >, inputs)
-	(std::vector< disposer::types::parse::io >, outputs)
+	name,
+	inputs,
+	outputs
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::chain,
-	(std::string, name)
-	(boost::optional< std::size_t >, increase)
-	(std::vector< disposer::types::parse::chain_module >, modules)
+	name,
+	increase,
+	modules
 )
 
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::config,
-	(disposer::types::parse::parameter_sets, sets)
-	(disposer::types::parse::modules, modules)
-	(disposer::types::parse::chains, chains)
+	sets,
+	modules,
+	chains
 )
 
 
