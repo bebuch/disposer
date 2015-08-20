@@ -12,8 +12,6 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/spirit/home/x3/directive.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/fusion/include/vector.hpp>
-// #include <boost/hana/adapt_struct.hpp>
 
 #include <fstream>
 #include <string>
