@@ -13,13 +13,13 @@
 #include "chain.hpp"
 
 #include <unordered_map>
-#include <set>
+#include <unordered_set>
 
 
 namespace disposer{
 
 
-	using io_list = std::set< std::string >;
+	using io_list = std::unordered_set< std::string >;
 
 	class disposer{
 	public:
@@ -27,13 +27,20 @@ namespace disposer{
 
 		void add_module_maker(std::string const& type, maker_function&& function);
 
-		module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start);
+		void load(std::string const& filename);
 
-		chain_list load(std::string const& filename);
+		void trigger(std::string const& chain);
+
+		std::unordered_set< std::string > chains()const;
 
 
 	private:
-		std::unordered_map< std::string, maker_function > maker_list;
+		module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start);
+
+
+		std::unordered_map< std::string, maker_function > maker_list_;
+
+		chain_list chains_;
 	};
 
 

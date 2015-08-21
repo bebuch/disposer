@@ -21,15 +21,15 @@ namespace disposer{
 
 	void disposer::add_module_maker(std::string const& type, maker_function&& function){
 		log([&type](log_base& os){ os << "register module type '" << type << "'"; }, [&]{
-			auto iter = maker_list.insert(std::make_pair(type, std::move(function)));
+			auto iter = maker_list_.insert(std::make_pair(type, std::move(function)));
 			if(!iter.second) throw std::logic_error("Module type '" + type + "' is double registered!");
 		});
 	}
 
 	module_ptr disposer::make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start){
-		auto iter = maker_list.find(type);
+		auto iter = maker_list_.find(type);
 
-		if(iter == maker_list.end()){
+		if(iter == maker_list_.end()){
 			throw std::logic_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
 		}
 
@@ -44,7 +44,7 @@ namespace disposer{
 		}
 	}
 
-	chain_list disposer::load(std::string const& filename){
+	void disposer::load(std::string const& filename){
 		auto config = parse(filename);
 
 		check_semantic(config);
@@ -187,8 +187,23 @@ namespace disposer{
 			result.emplace(chain.name, ::disposer::chain(std::move(modules), chain.increase));
 		}
 
+		chains_ = std::move(result);
+	}
+
+	void disposer::trigger(std::string const& chain){
+		auto iter = chains_.find(chain);
+		if(iter == chains_.end()){
+			throw std::logic_error("triggered chain '" + chain + "' does not exist");
+		}
+		iter->second.trigger();
+	}
+
+	std::unordered_set< std::string > disposer::chains()const{
+		std::unordered_set< std::string > result;
+		for(auto& chain: chains_) result.emplace(chain.first);
 		return result;
 	}
+
 
 
 }
