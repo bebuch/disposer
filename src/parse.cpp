@@ -14,6 +14,7 @@
 #include <fstream>
 #include <string>
 #include <complex>
+#include <iostream>
 
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -244,22 +245,7 @@ namespace disposer{
 		}
 
 
-		struct config_class{
-			template < typename Iterator, typename Exception, typename Context >
-			x3::error_handler_result on_error(Iterator&, Iterator const&, Exception const&, Context const&){
-	// 			std::cout
-	// 				<< "Error! Expecting: "
-	// 				<< x.which()
-	// 				<< " here: '"
-	// 				<< std::string(x.where(), last)
-	// 				<< "'"
-	// 				<< std::endl;
-
-				return x3::error_handler_result::fail;
-			}
-		};
-
-		x3::rule< config_class, types::parse::config > const config("config");
+		x3::rule< class config_class, types::parse::config > const config("config");
 
 		auto const config_def = x3::no_skip[x3::expect[
 			empty_lines >> comment >>
@@ -280,14 +266,17 @@ namespace disposer{
 
 
 	types::parse::config parse(std::istream& is){
+		namespace x3 = boost::spirit::x3;
+
 		std::string str{std::istreambuf_iterator< char >{is}, std::istreambuf_iterator< char >{}};
 
 		types::parse::config config;
 
 		auto iter = str.begin();
 		auto end = str.end();
-		boost::spirit::x3::ascii::space_type space;
-		bool match = phrase_parse(iter, end, parser::grammar, space, config);
+
+		x3::ascii::space_type space;
+		bool const match = phrase_parse(iter, end, parser::grammar, space, config);
 
 		if(!match || iter != end){
 			throw std::runtime_error("Syntax error");

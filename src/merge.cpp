@@ -35,7 +35,7 @@ namespace disposer{
 			for(auto& parameter: boost::adaptors::reverse(module.parameters)){
 				result_module.parameters.emplace(std::move(parameter.key), std::move(parameter.value));
 			}
-// 
+
 			// add all parameters from the last to the first parameter set (skip already existing ones)
 			for(auto& set: boost::adaptors::reverse(module.parameter_sets)){
 				auto iter = parameter_sets.find(set);
