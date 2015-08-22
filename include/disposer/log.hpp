@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _tools_log_hpp_INCLUDED_
-#define _tools_log_hpp_INCLUDED_
+#ifndef _disposer__log_hpp_INCLUDED_
+#define _disposer__log_hpp_INCLUDED_
 
 #include <boost/hana.hpp>
 #include <boost/hana/ext/std/utility.hpp>
