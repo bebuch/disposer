@@ -12,10 +12,11 @@
 namespace disposer{
 
 
-	module_base::module_base(std::string const& type, std::string const& chain, std::string const& name):
-		type(type),
-		chain(chain),
-		name(name)
+	module_base::module_base(make_data const& data):
+		type_name(data.type_name),
+		chain(data.chain),
+		name(data.name),
+		number(data.number)
 		{}
 
 

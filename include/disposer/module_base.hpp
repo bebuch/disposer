@@ -9,7 +9,7 @@
 #ifndef _disposer_module_base_hpp_INCLUDED_
 #define _disposer_module_base_hpp_INCLUDED_
 
-#include "parameter_processor.hpp"
+#include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 
@@ -20,13 +20,13 @@ namespace disposer{
 
 
 	struct module_not_as_start: std::logic_error{
-		module_not_as_start(std::string const& type, std::string const& chain):
-			std::logic_error("module type '" + type + "' can not be used as start of chain '" + chain + "'"){}
+		module_not_as_start(make_data const& data):
+			std::logic_error("module type '" + data.type_name + "' can not be used as start of chain '" + data.chain + "'"){}
 	};
 
 
 	struct module_base{
-		module_base(std::string const& type, std::string const& chain, std::string const& name);
+		module_base(make_data const& data);
 
 		module_base(module_base const&) = delete;
 		module_base(module_base&&) = delete;
@@ -44,9 +44,10 @@ namespace disposer{
 			}
 		}
 
-		std::string const type;
+		std::string const type_name;
 		std::string const chain;
 		std::string const name;
+		std::size_t const number;
 
 		output_list outputs;
 		input_list inputs;

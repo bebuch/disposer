@@ -19,28 +19,28 @@
 namespace disposer{
 
 
-	void disposer::add_module_maker(std::string const& type, maker_function&& function){
-		log([&type](log_base& os){ os << "register module type '" << type << "'"; }, [&]{
-			auto iter = maker_list_.insert(std::make_pair(type, std::move(function)));
-			if(!iter.second) throw std::logic_error("Module type '" + type + "' is double registered!");
+	void disposer::add_module_maker(std::string const& type_name, maker_function&& function){
+		log([&type_name](log_base& os){ os << "register module type name '" << type_name << "'"; }, [&]{
+			auto iter = maker_list_.insert(std::make_pair(type_name, std::move(function)));
+			if(!iter.second) throw std::logic_error("Module type name '" + type_name + "' is double registered!");
 		});
 	}
 
-	module_ptr disposer::make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start){
-		auto iter = maker_list_.find(type);
+	module_ptr disposer::make_module(make_data&& data){
+		auto iter = maker_list_.find(data.type_name);
 
 		if(iter == maker_list_.end()){
-			throw std::logic_error("Module '" + chain + "." + name + "': " + "Type '" + type + "' is unknown!");
+			throw std::logic_error("Module '" + data.chain + "." + data.name + "': " + "Type '" + data.type_name + "' is unknown!");
 		}
 
 		try{
-			auto result = iter->second(type, chain, name, inputs, outputs, parameters, is_start);
-			for(auto const& param: parameters.unused_parameters()){
-				log([&param, &chain, &name](log_base& os){ os << "In chain '" << chain << "' module '" << name << ": Unused parameter '" << param.first << "'='" << param.second << "'"; });
+			auto result = iter->second(data);
+			for(auto const& param: data.params.unused()){
+				log([&data, &param](log_base& os){ os << "In chain '" << data.chain << "' module '" << data.name << ": Unused data '" << param.first << "'='" << param.second << "'"; });
 			}
 			return result;
 		}catch(std::exception const& error){
-			throw std::runtime_error("Module '" + chain + "." + name + "': " + error.what());
+			throw std::runtime_error("Module '" + data.chain + "." + data.name + "': " + error.what());
 		}
 	}
 
@@ -59,27 +59,28 @@ namespace disposer{
 
 			std::map< std::string, std::pair< output_base&, bool > > variables;
 
-			bool first = true;
-			for(auto& module: chain.modules){
+			for(std::size_t i = 0; i < chain.modules.size(); ++i){
+				auto& module = chain.modules[i];
+
 				io_list inputs;
 				for(auto& input: module.inputs){
-					inputs.insert(input.name);
+					inputs.emplace(input.name);
 				}
 
 				io_list outputs;
 				for(auto& output: module.outputs){
-					outputs.insert(output.name);
+					outputs.emplace(output.name);
 				}
 
-				modules.push_back(make_module(
-					module.module.second.type,
+				modules.push_back(make_module({
+					module.module.second.type_name,
 					chain.name,
 					module.module.first,
-					inputs,
-					outputs,
-					parameter_processor(module.module.second.parameters),
-					first
-				));
+					i,
+					std::move(inputs),
+					std::move(outputs),
+					module.module.second.parameters
+				}));
 
 				for(auto& output: module.outputs){
 					auto entry = modules.back()->outputs.find(output.name);
@@ -87,8 +88,6 @@ namespace disposer{
 
 					variables.emplace(output.variable, std::pair< output_base&, bool >(entry->second, true));
 				}
-
-				first = false;
 			}
 
 			auto module_ptr_iter = modules.begin();

@@ -36,7 +36,7 @@ namespace disposer{
 
 		struct module{
 			std::string name;
-			std::string type;
+			std::string type_name;
 			std::vector< std::string > parameter_sets;
 			std::vector< parameter > parameters;
 		};

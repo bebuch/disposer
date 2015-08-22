@@ -33,7 +33,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::module,
 	name,
-	type,
+	type_name,
 	parameter_sets,
 	parameters
 )

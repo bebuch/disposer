@@ -24,7 +24,7 @@ namespace disposer{
 		types::merge::config result;
 
 		for(auto& module: config.modules){
-			auto pair = result.modules.emplace(std::move(module.name), types::merge::module{std::move(module.type), {}});
+			auto pair = result.modules.emplace(std::move(module.name), types::merge::module{std::move(module.type_name), {}});
 
 			// successfully inserted
 			assert(pair.second);

@@ -21,7 +21,7 @@ namespace disposer{
 
 
 		struct module{
-			std::string type;
+			std::string type_name;
 			std::map< std::string, std::string > parameters;
 		};
 
