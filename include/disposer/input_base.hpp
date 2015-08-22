@@ -55,7 +55,7 @@ namespace disposer{
 	input_list make_input_list(Inputs& ... inputs){
 		input_list result({
 			{                // initializer_list
-				inputs.name, // name as string; TODO: Use a reference for initialization via initializer_list???
+				inputs.name, // name as string;
 				inputs       // reference to object
 			} ...
 		}, sizeof...(Inputs));
