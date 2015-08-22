@@ -25,6 +25,15 @@ namespace disposer{
 	public:
 		using maker_function = std::function< module_ptr(std::string const& type, std::string const&, std::string const&, io_list const&, io_list const&, parameter_processor&, bool is_start) >;
 
+		disposer() = default;
+
+		disposer(disposer const&) = delete;
+		disposer(disposer&&) = delete;
+
+		disposer& operator=(disposer const&) = delete;
+		disposer& operator=(disposer&&) = delete;
+	
+
 		void add_module_maker(std::string const& type, maker_function&& function);
 
 		void load(std::string const& filename);
