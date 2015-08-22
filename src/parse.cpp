@@ -56,6 +56,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::chain,
 	name,
 	increase,
+	id_generator,
 	modules
 )
 
@@ -224,6 +225,7 @@ namespace disposer{
 
 			auto const chain_def =
 				'\t' >> keyword >> *space >> -('=' >> *space >> x3::uint_parser< std::size_t >()) >> separator >>
+				-("\t\tid_generator" >> *space >> '=' >> *space >> value >> separator) >>
 				*chain_module
 			;
 

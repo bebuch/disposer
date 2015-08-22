@@ -51,8 +51,7 @@ namespace disposer{
 		}
 
 		for(auto& chain: config.chains){
-			std::size_t increase = chain.increase ? *chain.increase : 1;
-			result.chains.emplace_back(types::merge::chain{std::move(chain.name), "default", increase, {}});
+			result.chains.emplace_back(types::merge::chain{std::move(chain.name), std::move(chain.id_generator).value_or("default"), chain.increase.value_or(1), {}});
 
 			auto& result_chain = result.chains.back();
 
