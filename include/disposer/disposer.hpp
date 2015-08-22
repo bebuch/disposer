@@ -38,9 +38,11 @@ namespace disposer{
 		module_ptr make_module(std::string const& type, std::string const& chain, std::string const& name, io_list const& inputs, io_list const& outputs, parameter_processor&& parameters, bool is_start);
 
 
+		std::unordered_map< std::string, id_generator > id_generators_;
+
 		std::unordered_map< std::string, maker_function > maker_list_;
 
-		chain_list chains_;
+		std::unordered_map< std::string, chain > chains_;
 	};
 
 

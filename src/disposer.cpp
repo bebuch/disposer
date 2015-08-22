@@ -52,7 +52,8 @@ namespace disposer{
 
 		auto merged_config = merge(std::move(config));
 
-		chain_list result;
+		std::unordered_map< std::string, chain > chains;
+		std::unordered_map< std::string, id_generator > id_generators;
 		for(auto& chain: merged_config.chains){
 			std::vector< module_ptr > modules;
 
@@ -184,10 +185,11 @@ namespace disposer{
 				}
 			}
 
-			result.emplace(chain.name, ::disposer::chain(std::move(modules), chain.increase));
+			chains.emplace(std::piecewise_construct, std::make_tuple(chain.name), std::forward_as_tuple(std::move(modules), id_generators[chain.id_generator], chain.increase));
 		}
 
-		chains_ = std::move(result);
+		chains_ = std::move(chains);
+		id_generators_ = std::move(id_generators);
 	}
 
 	void disposer::trigger(std::string const& chain){
