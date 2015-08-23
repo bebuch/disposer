@@ -31,7 +31,8 @@ namespace disposer{
 		}, [this, id, run]{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
-					process_module(i, id, run, &module_base::trigger, "trigger");
+					modules_[i]->id = id;
+					process_module(i, run, [](chain& c, std::size_t i){ c.modules_[i]->trigger(); }, "trigger");
 				}
 			}catch(...){
 				// cleanup and unlock all triggers
@@ -39,7 +40,7 @@ namespace disposer{
 					// Trigger was successful
 					if(ready_run_[i] >= run + 1) continue;
 
-					process_module(i, id, run, &module_base::cleanup, "cleanup");
+					process_module(i, run, [id](chain& c, std::size_t i){ c.modules_[i]->cleanup(id); }, "cleanup");
 				}
 
 				// rethrow exception
@@ -48,15 +49,15 @@ namespace disposer{
 		});
 	}
 
-	void chain::process_module(std::size_t i, std::size_t id, std::size_t run, void(module_base::* action)(std::size_t), char const* action_name){
+	void chain::process_module(std::size_t i, std::size_t run, std::function< void(chain&, std::size_t) >&& action, char const* action_name){
 		// Lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(mutexes_[i]);
 		cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });
 
 		// Cleanup the module
-		log([this, i, id, action_name](log_base& os){
-			os << "id(" << id << "." << i << ") " << action_name << " chain '" << modules_[i]->chain << "' module '" << modules_[i]->name << "'";
-		}, [this, i, id, action]{ ((*modules_[i]).*action)(id); });
+		log([this, i, action_name](log_base& os){
+			os << "id(" << modules_[i]->id << "." << i << ") " << action_name << " chain '" << modules_[i]->chain << "' module '" << modules_[i]->name << "'";
+		}, [this, i, action]{ action(*this, i); });
 
 		// Make module ready
 		ready_run_[i] = run + 1;

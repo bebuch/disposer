@@ -61,7 +61,7 @@ namespace disposer{
 
 		virtual ~module_base() = default;
 
-		virtual void trigger(std::size_t id) = 0;
+		virtual void trigger() = 0;
 
 		void cleanup(std::size_t id)noexcept{
 			for(auto& input: inputs){
@@ -71,12 +71,12 @@ namespace disposer{
 
 		template < typename Log >
 		void log(Log&& f)const{
-			disposer::log(impl::module_base::make_module_log(f, 0, number));
+			disposer::log(impl::module_base::make_module_log(f, id, number));
 		}
 
 		template < typename Log, typename Body >
 		decltype(auto) log(Log&& f, Body&& body)const{
-			return disposer::log(impl::module_base::make_module_log(f, 0, number), static_cast< Body&& >(body));
+			return disposer::log(impl::module_base::make_module_log(f, id, number), static_cast< Body&& >(body));
 		}
 
 		std::string const type_name;
@@ -86,6 +86,8 @@ namespace disposer{
 
 		output_list outputs;
 		input_list inputs;
+
+		std::size_t id;
 	};
 
 
