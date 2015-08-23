@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__log_base_hpp_INCLUDED_
-#define _disposer__log_base_hpp_INCLUDED_
+#ifndef _disposer__log_base__hpp_INCLUDED_
+#define _disposer__log_base__hpp_INCLUDED_
 
 #include <ostream>
 #include <memory>

@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__log_tag_hpp_INCLUDED_
-#define _disposer__log_tag_hpp_INCLUDED_
+#ifndef _disposer__log_tag__hpp_INCLUDED_
+#define _disposer__log_tag__hpp_INCLUDED_
 
 #include "log_base.hpp"
 #include "time_to_string.hpp"
