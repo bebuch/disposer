@@ -19,5 +19,11 @@ namespace disposer{
 		number(data.number)
 		{}
 
+	void module_base::cleanup(std::size_t id)noexcept{
+		for(auto& input: inputs){
+			input.second.cleanup(id);
+		}
+	}
+
 
 }

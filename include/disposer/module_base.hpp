@@ -63,11 +63,7 @@ namespace disposer{
 
 		virtual void trigger() = 0;
 
-		void cleanup(std::size_t id)noexcept{
-			for(auto& input: inputs){
-				input.second.cleanup(id);
-			}
-		}
+		void cleanup(std::size_t id)noexcept;
 
 		template < typename Log >
 		void log(Log&& f)const{
