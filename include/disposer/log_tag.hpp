@@ -14,20 +14,30 @@
 
 #include <boost/type_index.hpp>
 
+#include <atomic>
+
 
 namespace disposer{
 
 
 	class log_tag_base{
 	public:
+		static std::size_t unique_id(){
+			static std::atomic< std::size_t > next_id(0);
+			return next_id++;
+		}
+
 		log_tag_base():
-			start_(std::chrono::system_clock::now()),
 			body_(false),
-			exception_(false)
+			exception_(false),
+			id_(unique_id()),
+			start_(std::chrono::system_clock::now())
 			{}
 
 		void pre(){
 			auto end = std::chrono::system_clock::now();
+
+			os_ << std::setfill('0') << std::setw(6) << id_ << ' ';
 
 			time_to_string(os_, start_);
 
@@ -71,10 +81,11 @@ namespace disposer{
 
 	protected:
 		std::ostringstream os_;
-		std::chrono::system_clock::time_point const start_;
 		std::string exception_text_;
 		bool body_;
 		bool exception_;
+		std::size_t id_;
+		std::chrono::system_clock::time_point const start_;
 	};
 
 

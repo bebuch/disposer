@@ -12,11 +12,36 @@
 #include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
+#include "log.hpp"
 
 #include <functional>
 
 
 namespace disposer{
+
+
+	namespace impl{ namespace module_base{
+
+
+		template < typename Log >
+		struct module_log{
+			using log_t = impl::log::extract_log_t< Log >;
+
+			void operator()(log_t& os)const{
+				os << "id(" << id << '.' << number << ") "; log(os);
+			}
+
+			Log& log;
+			std::size_t id;
+			std::size_t number;
+		};
+
+		template < typename Log >
+		inline auto make_module_log(Log& log, std::size_t id, std::size_t number){
+			return module_log< Log >{log, id, number};
+		}
+
+	} }
 
 
 	struct module_not_as_start: std::logic_error{
@@ -42,6 +67,16 @@ namespace disposer{
 			for(auto& input: inputs){
 				input.second.cleanup(id);
 			}
+		}
+
+		template < typename Log >
+		void log(Log&& f)const{
+			disposer::log(impl::module_base::make_module_log(f, 0, number));
+		}
+
+		template < typename Log, typename Body >
+		decltype(auto) log(Log&& f, Body&& body)const{
+			return disposer::log(impl::module_base::make_module_log(f, 0, number), static_cast< Body&& >(body));
 		}
 
 		std::string const type_name;
