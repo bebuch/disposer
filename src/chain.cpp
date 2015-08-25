@@ -31,7 +31,7 @@ namespace disposer{
 		}, [this, id, run]{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
-					modules_[i]->id = id;
+					modules_[i]->id_ = id;
 					process_module(i, run, [](chain& c, std::size_t i){ c.modules_[i]->trigger(); }, "trigger");
 				}
 			}catch(...){

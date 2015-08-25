@@ -16,7 +16,9 @@ namespace disposer{
 		type_name(data.type_name),
 		chain(data.chain),
 		name(data.name),
-		number(data.number)
+		number(data.number),
+		id(id_),
+		id_(0)
 		{}
 
 	void module_base::cleanup(std::size_t id)noexcept{

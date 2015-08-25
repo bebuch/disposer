@@ -51,7 +51,8 @@ namespace disposer{
 	};
 
 
-	struct module_base{
+	class module_base{
+	public:
 		module_base(make_data const& data);
 
 		module_base(module_base const&) = delete;
@@ -81,10 +82,17 @@ namespace disposer{
 		std::string const name;
 		std::size_t const number;
 
+		std::size_t const& id;
+
+	protected:
 		output_list outputs;
 		input_list inputs;
 
-		std::size_t id;
+	private:
+		std::size_t id_;
+
+	friend class chain;
+	friend class disposer;
 	};
 
 
