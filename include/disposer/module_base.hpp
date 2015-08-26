@@ -20,31 +20,6 @@
 namespace disposer{
 
 
-	namespace impl{ namespace module_base{
-
-
-		template < typename Log >
-		struct module_log{
-			using log_t = impl::log::extract_log_t< Log >;
-
-			void operator()(log_t& os)const{
-				os << "id(" << id << '.' << number << ") "; log(os);
-			}
-
-			Log& log;
-			std::size_t id;
-			std::size_t number;
-		};
-
-		template < typename Log >
-		inline auto make_module_log(Log& log, std::size_t id, std::size_t number){
-			return module_log< Log >{log, id, number};
-		}
-
-
-	} }
-
-
 	struct module_not_as_start: std::logic_error{
 		module_not_as_start(make_data const& data):
 			std::logic_error("module type '" + data.type_name + "' can not be used as start of chain '" + data.chain + "'"){}
@@ -69,12 +44,12 @@ namespace disposer{
 
 		template < typename Log >
 		void log(Log&& f)const{
-			disposer::log(impl::module_base::make_module_log(f, id, number));
+			disposer::log(module_log(f));
 		}
 
 		template < typename Log, typename Body >
 		decltype(auto) log(Log&& f, Body&& body)const{
-			return disposer::log(impl::module_base::make_module_log(f, id, number), static_cast< Body&& >(body));
+			return disposer::log(module_log(f), static_cast< Body&& >(body));
 		}
 
 		std::string const type_name;
@@ -90,6 +65,15 @@ namespace disposer{
 
 	private:
 		std::size_t id_;
+
+		template < typename Log >
+		auto module_log(Log& log)const{
+			using log_t = impl::log::extract_log_t< Log >;
+			return [&](log_t& os){
+				os << "id(" << id << '.' << number << ") ";
+				log(os);
+			};
+		}
 
 	friend class chain;
 	friend class disposer;
