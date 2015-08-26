@@ -54,11 +54,11 @@ namespace disposer{
 	};
 
 
-	using output_list = std::unordered_map< std::string, output_base& >;
+	using output_list_data = std::unordered_map< std::string, output_base& >;
 
 	template < typename ... Outputs >
-	output_list make_output_list(Outputs& ... outputs){
-		output_list result({
+	output_list_data make_output_list(Outputs& ... outputs){
+		output_list_data result({
 			{                 // initializer_list
 				outputs.name, // name as string
 				outputs       // reference to object
@@ -71,6 +71,15 @@ namespace disposer{
 
 		return result;
 	}
+
+	struct output_list{
+		template < typename ... T >
+		output_list(T& ... v):
+			value(make_output_list(v ...))
+			{}
+
+		output_list_data value;
+	};
 
 
 }

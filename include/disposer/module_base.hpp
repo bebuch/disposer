@@ -60,8 +60,13 @@ namespace disposer{
 		std::size_t const& id;
 
 	protected:
-		output_list outputs;
-		input_list inputs;
+		virtual output_list outputs()noexcept{
+			return {};
+		}
+
+		virtual input_list inputs()noexcept{
+			return {};
+		}
 
 	private:
 		std::size_t id_;

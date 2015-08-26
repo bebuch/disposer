@@ -22,7 +22,7 @@ namespace disposer{
 		{}
 
 	void module_base::cleanup(std::size_t id)noexcept{
-		for(auto& input: inputs){
+		for(auto& input: inputs().value){
 			input.second.cleanup(id);
 		}
 	}

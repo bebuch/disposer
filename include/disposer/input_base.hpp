@@ -49,11 +49,11 @@ namespace disposer{
 	};
 
 
-	using input_list = std::unordered_map< std::string, input_base& >;
+	using input_list_data = std::unordered_map< std::string, input_base& >;
 
 	template < typename ... Inputs >
-	input_list make_input_list(Inputs& ... inputs){
-		input_list result({
+	input_list_data make_input_list(Inputs& ... inputs){
+		input_list_data result({
 			{                // initializer_list
 				inputs.name, // name as string;
 				inputs       // reference to object
@@ -66,6 +66,15 @@ namespace disposer{
 
 		return result;
 	}
+
+	struct input_list{
+		template < typename ... T >
+		input_list(T& ... v):
+			value(make_input_list(v ...))
+			{}
+
+		input_list_data value;
+	};
 
 
 }

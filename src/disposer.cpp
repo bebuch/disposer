@@ -83,8 +83,8 @@ namespace disposer{
 				}));
 
 				for(auto& output: module.outputs){
-					auto entry = modules.back()->outputs.find(output.name);
-					assert(entry != modules.back()->outputs.end());
+					auto entry = modules.back()->outputs().value.find(output.name);
+					assert(entry != modules.back()->outputs().value.end());
 
 					variables.emplace(output.variable, std::pair< output_base&, bool >(entry->second, true));
 				}
@@ -118,8 +118,8 @@ namespace disposer{
 
 					auto& output = output_iter->second.first;
 
-					auto input_iter = module_ptr->inputs.find(input_name_and_var.name);
-					assert(input_iter != module_ptr->inputs.end());
+					auto input_iter = module_ptr->inputs().value.find(input_name_and_var.name);
+					assert(input_iter != module_ptr->inputs().value.end());
 
 					auto& input = input_iter->second;
 
@@ -174,8 +174,8 @@ namespace disposer{
 					auto& output = output_iter->second.first;
 					auto& last_use = output_iter->second.second;
 
-					auto input_iter = module_ptr->inputs.find(input_name_and_var.name);
-					assert(input_iter != module_ptr->inputs.end());
+					auto input_iter = module_ptr->inputs().value.find(input_name_and_var.name);
+					assert(input_iter != module_ptr->inputs().value.end());
 
 					auto& input = input_iter->second;
 
