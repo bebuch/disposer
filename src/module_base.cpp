@@ -23,6 +23,10 @@ namespace disposer{
 		outputs_(std::move(outputs))
 		{}
 
+	module_base::module_base(make_data const& data, std::vector< std::reference_wrapper< output_base > >&& outputs, std::vector< std::reference_wrapper< input_base > >&& inputs):
+		module_base(data, std::move(inputs), std::move(outputs)){}
+
+
 	void module_base::cleanup(std::size_t id)noexcept{
 		for(auto& input: inputs_){
 			input.get().cleanup(id);

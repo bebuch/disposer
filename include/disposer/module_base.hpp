@@ -28,7 +28,8 @@ namespace disposer{
 
 	class module_base{
 	public:
-		module_base(make_data const& data, std::vector< std::reference_wrapper< input_base > >&& inputs, std::vector< std::reference_wrapper< output_base > >&& outputs);
+		module_base(make_data const& data, std::vector< std::reference_wrapper< input_base > >&& inputs, std::vector< std::reference_wrapper< output_base > >&& outputs = {});
+		module_base(make_data const& data, std::vector< std::reference_wrapper< output_base > >&& outputs, std::vector< std::reference_wrapper< input_base > >&& inputs = {});
 
 		module_base(module_base const&) = delete;
 		module_base(module_base&&) = delete;
