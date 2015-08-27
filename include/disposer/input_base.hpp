@@ -49,34 +49,6 @@ namespace disposer{
 	};
 
 
-	using input_list_data = std::unordered_map< std::string, input_base& >;
-
-	template < typename ... Inputs >
-	input_list_data make_input_list(Inputs& ... inputs){
-		input_list_data result({
-			{                // initializer_list
-				inputs.name, // name as string;
-				inputs       // reference to object
-			} ...
-		}, sizeof...(Inputs));
-
-		if(result.size() < sizeof...(Inputs)){
-			throw std::logic_error("duplicate output variable name");
-		}
-
-		return result;
-	}
-
-	struct input_list{
-		template < typename ... T >
-		input_list(T& ... v):
-			value(make_input_list(v ...))
-			{}
-
-		input_list_data value;
-	};
-
-
 }
 
 

@@ -52,50 +52,58 @@ namespace disposer{
 
 		auto merged_config = merge(std::move(config));
 
+		auto find = [](auto& container, std::string const& data){
+			for(auto& value: container){
+				if(value.get().name == data) return value;
+			}
+			throw std::logic_error("programming error in disposer: '" + data + "' is not in input or output");
+		};
+
 		std::unordered_map< std::string, chain > chains;
 		std::unordered_map< std::string, id_generator > id_generators;
-		for(auto& chain: merged_config.chains){
+		for(auto& config_chain: merged_config.chains){
 			std::vector< module_ptr > modules;
 
 			std::map< std::string, std::pair< output_base&, bool > > variables;
 
-			for(std::size_t i = 0; i < chain.modules.size(); ++i){
-				auto& module = chain.modules[i];
+			for(std::size_t i = 0; i < config_chain.modules.size(); ++i){
+				auto& config_module = config_chain.modules[i];
 
-				io_list inputs;
-				for(auto& input: module.inputs){
-					inputs.emplace(input.name);
+				io_list config_inputs;
+				for(auto& config_input: config_module.inputs){
+					config_inputs.emplace(config_input.name);
 				}
 
-				io_list outputs;
-				for(auto& output: module.outputs){
-					outputs.emplace(output.name);
+				io_list config_outputs;
+				for(auto& config_output: config_module.outputs){
+					config_outputs.emplace(config_output.name);
 				}
 
 				modules.push_back(make_module({
-					module.module.second.type_name,
-					chain.name,
-					module.module.first,
+					config_module.module.second.type_name,
+					config_chain.name,
+					config_module.module.first,
 					i,
-					std::move(inputs),
-					std::move(outputs),
-					module.module.second.parameters
+					std::move(config_inputs),
+					std::move(config_outputs),
+					config_module.module.second.parameters
 				}));
 
-				for(auto& output: module.outputs){
-					auto entry = modules.back()->outputs().value.find(output.name);
-					assert(entry != modules.back()->outputs().value.end());
+				auto& module = *modules.back();
 
-					variables.emplace(output.variable, std::pair< output_base&, bool >(entry->second, true));
+				for(auto& config_output: config_module.outputs){
+					auto& output = find(module.outputs_, config_output.name).get();
+
+					variables.emplace(config_output.variable, std::pair< output_base&, bool >(output, true));
 				}
 			}
 
 			auto module_ptr_iter = modules.begin();
-			for(auto& module: chain.modules){
+			for(auto& config_module: config_chain.modules){
 				auto& module_ptr = *module_ptr_iter++;
 
 				// module.outputs containes all active output names
-				for(auto& output_name_and_var: module.outputs){
+				for(auto& output_name_and_var: config_module.outputs){
 					auto output_iter = variables.find(output_name_and_var.variable);
 					assert(output_iter != variables.end());
 
@@ -104,7 +112,7 @@ namespace disposer{
 					if(output.active_types().empty()){
 						std::ostringstream os;
 						os
-							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Output '" + output_name_and_var.name
+							<< "In chain '" << config_chain.name << "' module '" << module_ptr->name << "': Output '" + output_name_and_var.name
 							<< "' (Variable: '" << output_name_and_var.variable << "') has no active output types";
 
 						throw std::logic_error(os.str());
@@ -112,21 +120,17 @@ namespace disposer{
 				}
 
 				// module.inputs containes all active inputs names
-				for(auto& input_name_and_var: module.inputs){
+				for(auto& input_name_and_var: config_module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
-
-					auto input_iter = module_ptr->inputs().value.find(input_name_and_var.name);
-					assert(input_iter != module_ptr->inputs().value.end());
-
-					auto& input = input_iter->second;
+					auto& input = find(module_ptr->inputs_, input_name_and_var.name).get();
 
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
-							<< "In chain '" << chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable
+							<< "In chain '" << config_chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable
 							<< "' is incompatible with input '" << input_name_and_var.name << "'";
 
 						os << " (active '" << input_name_and_var.variable << "' types: ";
@@ -163,28 +167,25 @@ namespace disposer{
 			}
 
 			module_ptr_iter = modules.end();
-			for(auto& module: boost::adaptors::reverse(chain.modules)){
+			for(auto& config_module: boost::adaptors::reverse(config_chain.modules)){
 				--module_ptr_iter;
 				auto& module_ptr = *module_ptr_iter;
 
-				for(auto& input_name_and_var: module.inputs){
+				for(auto& input_name_and_var: config_module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
 					auto& last_use = output_iter->second.second;
 
-					auto input_iter = module_ptr->inputs().value.find(input_name_and_var.name);
-					assert(input_iter != module_ptr->inputs().value.end());
-
-					auto& input = input_iter->second;
+					auto& input = find(module_ptr->inputs_, input_name_and_var.name).get();
 
 					output.signal.connect(input, last_use);
 					last_use = false;
 				}
 			}
 
-			chains.emplace(std::piecewise_construct, std::make_tuple(chain.name), std::forward_as_tuple(std::move(modules), id_generators[chain.id_generator], chain.increase));
+			chains.emplace(std::piecewise_construct, std::make_tuple(config_chain.name), std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.increase));
 		}
 
 		chains_ = std::move(chains);

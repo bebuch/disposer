@@ -28,7 +28,7 @@ namespace disposer{
 
 	class module_base{
 	public:
-		module_base(make_data const& data);
+		module_base(make_data const& data, std::vector< std::reference_wrapper< input_base > >&& inputs, std::vector< std::reference_wrapper< output_base > >&& outputs);
 
 		module_base(module_base const&) = delete;
 		module_base(module_base&&) = delete;
@@ -38,9 +38,11 @@ namespace disposer{
 
 		virtual ~module_base() = default;
 
+
 		virtual void trigger() = 0;
 
 		void cleanup(std::size_t id)noexcept;
+
 
 		template < typename Log >
 		void log(Log&& f)const{
@@ -52,6 +54,7 @@ namespace disposer{
 			return disposer::log(module_log(f), static_cast< Body&& >(body));
 		}
 
+
 		std::string const type_name;
 		std::string const chain;
 		std::string const name;
@@ -59,17 +62,13 @@ namespace disposer{
 
 		std::size_t const& id;
 
-	protected:
-		virtual output_list outputs()noexcept{
-			return {};
-		}
-
-		virtual input_list inputs()noexcept{
-			return {};
-		}
 
 	private:
 		std::size_t id_;
+
+		std::vector< std::reference_wrapper< input_base > > inputs_;
+		std::vector< std::reference_wrapper< output_base > > outputs_;
+
 
 		template < typename Log >
 		auto module_log(Log& log)const{
@@ -79,6 +78,7 @@ namespace disposer{
 				log(os);
 			};
 		}
+
 
 	friend class chain;
 	friend class disposer;

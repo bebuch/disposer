@@ -12,18 +12,20 @@
 namespace disposer{
 
 
-	module_base::module_base(make_data const& data):
+	module_base::module_base(make_data const& data, std::vector< std::reference_wrapper< input_base > >&& inputs, std::vector< std::reference_wrapper< output_base > >&& outputs):
 		type_name(data.type_name),
 		chain(data.chain),
 		name(data.name),
 		number(data.number),
 		id(id_),
-		id_(0)
+		id_(0),
+		inputs_(std::move(inputs)),
+		outputs_(std::move(outputs))
 		{}
 
 	void module_base::cleanup(std::size_t id)noexcept{
-		for(auto& input: inputs().value){
-			input.second.cleanup(id);
+		for(auto& input: inputs_){
+			input.get().cleanup(id);
 		}
 	}
 
