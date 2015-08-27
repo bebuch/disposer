@@ -11,5 +11,7 @@
 
 #include "input.hpp"
 #include "output.hpp"
+#include "module_base.hpp"
+#include "disposer.hpp"
 
 #endif
