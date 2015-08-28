@@ -85,16 +85,6 @@ namespace disposer{
 			using output_base::output_base;
 
 
-			virtual std::vector< type_index > active_types()const override{
-				std::vector< type_index > result;
-				result.reserve(1 + sizeof...(U));
-				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){
-					if(active_types_[i]) result.push_back(type_indices_[i]);
-				}
-				return result;
-			}
-
-
 			template < typename V, typename W >
 			auto put(std::size_t id, W&& value){
 				static_assert(hana::contains(value_types, hana::type< V >), "type V in put< V > is not a output type");
@@ -108,6 +98,7 @@ namespace disposer{
 				return output_interface< V >(signal)(id, static_cast< W&& >(value));
 			}
 
+
 			template < typename V >
 			void activate(){
 				static_assert(hana::contains(value_types, hana::type< V >), "type V in activate< V > is not a output type");
@@ -119,6 +110,17 @@ namespace disposer{
 			void activate(){
 				activate< V >();
 				activate< W, X ... >();
+			}
+
+
+		protected:
+			virtual std::vector< type_index > active_types()const override{
+				std::vector< type_index > result;
+				result.reserve(1 + sizeof...(U));
+				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){
+					if(active_types_[i]) result.push_back(type_indices_[i]);
+				}
+				return result;
 			}
 
 
@@ -136,6 +138,7 @@ namespace disposer{
 		class container_output: public output< Container< T > ... >{
 		public:
 			using output< Container< T > ... >::output;
+
 
 			template < typename V >
 			void activate(){

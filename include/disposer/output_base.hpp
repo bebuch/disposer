@@ -45,12 +45,16 @@ namespace disposer{
 		output_base& operator=(output_base&&) = delete;
 
 
+	protected:
 		virtual std::vector< type_index > active_types()const = 0;
 
 
 		std::string const name;
 
 		signal_t signal;
+
+
+	friend class disposer;
 	};
 
 

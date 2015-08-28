@@ -54,6 +54,19 @@ namespace disposer{
 		using input_base::input_base;
 
 
+		std::multimap< std::size_t, value_type > get(std::size_t id){
+			std::lock_guard< std::mutex > lock(mutex_);
+			auto from = data_.begin();
+			auto to = data_.upper_bound(id);
+
+			std::multimap< std::size_t, value_type > result(std::make_move_iterator(from), std::make_move_iterator(to));
+			data_.erase(from, to);
+
+			return result;
+		}
+
+
+	private:
 		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use)override{
 			auto iter = type_map_.find(type);
 			if(iter == type_map_.end()){
@@ -81,18 +94,6 @@ namespace disposer{
 			return result;
 		}
 
-
-		std::multimap< std::size_t, value_type > get(std::size_t id){
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-
-			std::multimap< std::size_t, value_type > result(std::make_move_iterator(from), std::make_move_iterator(to));
-			data_.erase(from, to);
-
-			return result;
-		}
-
 		virtual bool activate_types(std::vector< type_index > const& types)noexcept override{
 			for(auto& type: types){
 				auto iter = active_map_.find(type);
@@ -106,7 +107,6 @@ namespace disposer{
 		}
 
 
-	private:
 		template < typename V >
 		void add(std::size_t id, any_type const& value, bool last_use){
 			auto data = reinterpret_cast< output_data_ptr< V > const& >(value);

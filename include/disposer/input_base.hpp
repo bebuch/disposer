@@ -25,6 +25,7 @@ namespace disposer{
 
 	struct any_type;
 
+
 	class input_base{
 	public:
 		input_base(std::string const& name): name(name) {}
@@ -39,6 +40,7 @@ namespace disposer{
 		virtual ~input_base() = default;
 
 
+	protected:
 		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use) = 0;
 		virtual void cleanup(std::size_t id)noexcept = 0;
 		virtual bool activate_types(std::vector< type_index > const& types) noexcept = 0;
@@ -46,6 +48,11 @@ namespace disposer{
 
 
 		std::string const name;
+
+
+	friend class signal_t;
+	friend class module_base;
+	friend class disposer;
 	};
 
 
