@@ -93,14 +93,13 @@ namespace disposer{
 
 				for(auto& config_output: config_module.outputs){
 					auto& output = find(module.outputs_, config_output.name).get();
-
 					variables.emplace(config_output.variable, std::pair< output_base&, bool >(output, true));
 				}
 			}
 
 			auto module_ptr_iter = modules.begin();
 			for(auto& config_module: config_chain.modules){
-				auto& module_ptr = *module_ptr_iter++;
+				auto& module = **module_ptr_iter++;
 
 				// module.outputs containes all active output names
 				for(auto& output_name_and_var: config_module.outputs){
@@ -112,7 +111,7 @@ namespace disposer{
 					if(output.active_types().empty()){
 						std::ostringstream os;
 						os
-							<< "In chain '" << config_chain.name << "' module '" << module_ptr->name << "': Output '" + output_name_and_var.name
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Output '" + output_name_and_var.name
 							<< "' (Variable: '" << output_name_and_var.variable << "') has no active output types";
 
 						throw std::logic_error(os.str());
@@ -125,12 +124,12 @@ namespace disposer{
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
-					auto& input = find(module_ptr->inputs_, input_name_and_var.name).get();
+					auto& input = find(module.inputs_, input_name_and_var.name).get();
 
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
-							<< "In chain '" << config_chain.name << "' module '" << module_ptr->name << "': Variable '" + input_name_and_var.variable
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Variable '" + input_name_and_var.variable
 							<< "' is incompatible with input '" << input_name_and_var.name << "'";
 
 						os << " (active '" << input_name_and_var.variable << "' types: ";
@@ -169,7 +168,7 @@ namespace disposer{
 			module_ptr_iter = modules.end();
 			for(auto& config_module: boost::adaptors::reverse(config_chain.modules)){
 				--module_ptr_iter;
-				auto& module_ptr = *module_ptr_iter;
+				auto& module = **module_ptr_iter;
 
 				for(auto& input_name_and_var: config_module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
@@ -178,7 +177,7 @@ namespace disposer{
 					auto& output = output_iter->second.first;
 					auto& last_use = output_iter->second.second;
 
-					auto& input = find(module_ptr->inputs_, input_name_and_var.name).get();
+					auto& input = find(module.inputs_, input_name_and_var.name).get();
 
 					output.signal.connect(input, last_use);
 					last_use = false;
