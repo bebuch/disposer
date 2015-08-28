@@ -56,7 +56,8 @@ namespace disposer{
 			for(auto& value: container){
 				if(value.get().name == data) return value;
 			}
-			throw std::logic_error("programming error in disposer: '" + data + "' is not in input or output");
+			assert(false);
+			std::exit(1);
 		};
 
 		std::unordered_map< std::string, chain > chains;
