@@ -40,11 +40,6 @@ namespace disposer{
 		virtual ~module_base() = default;
 
 
-		virtual void trigger() = 0;
-
-		void cleanup(std::size_t id)noexcept;
-
-
 		template < typename Log >
 		void log(Log&& f)const{
 			disposer::log(module_log(f));
@@ -64,11 +59,18 @@ namespace disposer{
 		std::size_t const& id;
 
 
+	protected:
+		virtual void trigger() = 0;
+
+
 	private:
 		std::size_t id_;
 
 		std::vector< std::reference_wrapper< input_base > > inputs_;
 		std::vector< std::reference_wrapper< output_base > > outputs_;
+
+
+		void cleanup(std::size_t id)noexcept;
 
 
 		template < typename Log >
