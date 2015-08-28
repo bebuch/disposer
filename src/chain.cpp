@@ -49,7 +49,8 @@ namespace disposer{
 		});
 	}
 
-	void chain::process_module(std::size_t i, std::size_t run, std::function< void(chain&, std::size_t) >&& action, char const* action_name){
+	template < typename F >
+	void chain::process_module(std::size_t i, std::size_t run, F const& action, char const* action_name){
 		// Lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(mutexes_[i]);
 		cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });

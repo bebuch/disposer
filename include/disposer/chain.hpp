@@ -41,7 +41,8 @@ namespace disposer{
 
 
 	private:
-		void process_module(std::size_t i, std::size_t run, std::function< void(chain&, std::size_t) >&& action, char const* action_name);
+		template < typename F >
+		void process_module(std::size_t i, std::size_t run, F const& action, char const* action_name);
 
 		std::vector< module_ptr > modules_;
 
