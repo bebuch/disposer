@@ -36,6 +36,9 @@ namespace disposer{
 		chain(chain const&) = delete;
 		chain(chain&&) = delete;
 
+		chain& operator=(chain const&) = delete;
+		chain& operator=(chain&&) = delete;
+
 
 		void trigger();
 
