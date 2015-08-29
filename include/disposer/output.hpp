@@ -112,6 +112,17 @@ namespace disposer{
 				activate< W, X ... >();
 			}
 
+			void activate_types(std::vector< type_index > const& types){
+				for(auto& type: types){
+					auto iter = std::find(type_indices_.begin(), type_indices_.end(), type);
+					if(iter == type_indices_.end()){
+						throw std::runtime_error("type '" + type.pretty_name() + "' is not an output type of '" + name + "'");
+					}
+					auto index = iter - type_indices_.begin();
+					active_types_[index] = true;
+				}
+			}
+
 
 		protected:
 			virtual std::vector< type_index > active_types()const override{

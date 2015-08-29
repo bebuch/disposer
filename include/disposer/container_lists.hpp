@@ -50,6 +50,18 @@ namespace disposer{
 	struct container_types;
 
 
+	template < template< typename ... > class target, typename T >
+	struct type_unroll;
+
+	template < template< typename ... > class target, typename ... T >
+	struct type_unroll< target, type_list< T ... > >{
+		using type = target< T ... >;
+	};
+
+	template < template< typename ... > class target, typename T >
+	using type_unroll_t = typename type_unroll< target, T >::type;
+
+
 }
 
 

@@ -63,6 +63,9 @@ namespace disposer{
 		virtual void trigger() = 0;
 
 
+		virtual void input_ready(){}
+
+
 	private:
 		std::size_t id_;
 

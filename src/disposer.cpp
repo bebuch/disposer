@@ -106,23 +106,6 @@ namespace disposer{
 			for(auto& config_module: config_chain.modules){
 				auto& module = **module_ptr_iter++;
 
-				// config_module.outputs containes all active output names
-				for(auto& config_output: config_module.outputs){
-					auto output_iter = variables.find(config_output.variable);
-					assert(output_iter != variables.end());
-
-					auto& output = output_iter->second.first;
-
-					if(output.active_types().empty()){
-						std::ostringstream os;
-						os
-							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Output '" + config_output.name
-							<< "' (Variable: '" << config_output.variable << "') has no active output types";
-
-						throw std::logic_error(os.str());
-					}
-				}
-
 				// config_module.inputs containes all active input names
 				for(auto& config_input: config_module.inputs){
 					auto output_iter = variables.find(config_input.variable);
@@ -165,6 +148,25 @@ namespace disposer{
 						}
 
 						os << ")";
+
+						throw std::logic_error(os.str());
+					}
+				}
+
+				module.input_ready();
+
+				// config_module.outputs containes all active output names
+				for(auto& config_output: config_module.outputs){
+					auto output_iter = variables.find(config_output.variable);
+					assert(output_iter != variables.end());
+
+					auto& output = output_iter->second.first;
+
+					if(output.active_types().empty()){
+						std::ostringstream os;
+						os
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Output '" + config_output.name
+							<< "' (Variable: '" << config_output.variable << "') has no active output types";
 
 						throw std::logic_error(os.str());
 					}
