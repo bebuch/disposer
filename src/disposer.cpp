@@ -107,8 +107,8 @@ namespace disposer{
 				auto& module = **module_ptr_iter++;
 
 				// config_module.outputs containes all active output names
-				for(auto& output_name_and_var: config_module.outputs){
-					auto output_iter = variables.find(output_name_and_var.variable);
+				for(auto& config_output: config_module.outputs){
+					auto output_iter = variables.find(config_output.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
@@ -116,29 +116,29 @@ namespace disposer{
 					if(output.active_types().empty()){
 						std::ostringstream os;
 						os
-							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Output '" + output_name_and_var.name
-							<< "' (Variable: '" << output_name_and_var.variable << "') has no active output types";
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Output '" + config_output.name
+							<< "' (Variable: '" << config_output.variable << "') has no active output types";
 
 						throw std::logic_error(os.str());
 					}
 				}
 
 				// config_module.inputs containes all active input names
-				for(auto& input_name_and_var: config_module.inputs){
-					auto output_iter = variables.find(input_name_and_var.variable);
+				for(auto& config_inputs: config_module.inputs){
+					auto output_iter = variables.find(config_inputs.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
-					auto& input = find(module.inputs_, input_name_and_var.name).get();
+					auto& input = find(module.inputs_, config_inputs.name).get();
 
 					// try to activate the types from output in input
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
-							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Variable '" + input_name_and_var.variable
-							<< "' is incompatible with input '" << input_name_and_var.name << "'";
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Variable '" + config_inputs.variable
+							<< "' is incompatible with input '" << config_inputs.name << "'";
 
-						os << " (active '" << input_name_and_var.variable << "' types: ";
+						os << " (active '" << config_inputs.variable << "' types: ";
 
 						bool first = true;
 						for(auto& type: output.active_types()){
@@ -151,7 +151,7 @@ namespace disposer{
 							os << "'" << type.pretty_name() << "'";
 						}
 
-						os << "; possible '" << input_name_and_var.name << "' types: ";
+						os << "; possible '" << config_inputs.name << "' types: ";
 
 						first = true;
 						for(auto& type: input.types()){
@@ -178,14 +178,14 @@ namespace disposer{
 				auto& module = **module_ptr_iter;
 
 				// config_module.inputs containes all active input names
-				for(auto& input_name_and_var: config_module.inputs){
-					auto output_iter = variables.find(input_name_and_var.variable);
+				for(auto& config_inputs: config_module.inputs){
+					auto output_iter = variables.find(config_inputs.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
 					auto& last_use = output_iter->second.second;
 
-					auto& input = find(module.inputs_, input_name_and_var.name).get();
+					auto& input = find(module.inputs_, config_inputs.name).get();
 
 					// connect input to output
 					output.signal.connect(input, last_use);
