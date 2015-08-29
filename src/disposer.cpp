@@ -124,21 +124,21 @@ namespace disposer{
 				}
 
 				// config_module.inputs containes all active input names
-				for(auto& config_inputs: config_module.inputs){
-					auto output_iter = variables.find(config_inputs.variable);
+				for(auto& config_input: config_module.inputs){
+					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
-					auto& input = find(module.inputs_, config_inputs.name).get();
+					auto& input = find(module.inputs_, config_input.name).get();
 
 					// try to activate the types from output in input
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
-							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Variable '" + config_inputs.variable
-							<< "' is incompatible with input '" << config_inputs.name << "'";
+							<< "In chain '" << config_chain.name << "' module '" << module.name << "': Variable '" + config_input.variable
+							<< "' is incompatible with input '" << config_input.name << "'";
 
-						os << " (active '" << config_inputs.variable << "' types: ";
+						os << " (active '" << config_input.variable << "' types: ";
 
 						bool first = true;
 						for(auto& type: output.active_types()){
@@ -151,7 +151,7 @@ namespace disposer{
 							os << "'" << type.pretty_name() << "'";
 						}
 
-						os << "; possible '" << config_inputs.name << "' types: ";
+						os << "; possible '" << config_input.name << "' types: ";
 
 						first = true;
 						for(auto& type: input.types()){
@@ -178,14 +178,14 @@ namespace disposer{
 				auto& module = **module_ptr_iter;
 
 				// config_module.inputs containes all active input names
-				for(auto& config_inputs: config_module.inputs){
-					auto output_iter = variables.find(config_inputs.variable);
+				for(auto& config_input: config_module.inputs){
+					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
 					auto& last_use = output_iter->second.second;
 
-					auto& input = find(module.inputs_, config_inputs.name).get();
+					auto& input = find(module.inputs_, config_input.name).get();
 
 					// connect input to output
 					output.signal.connect(input, last_use);
