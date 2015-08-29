@@ -65,8 +65,10 @@ namespace disposer{
 		for(auto& config_chain: merged_config.chains){
 			std::vector< module_ptr > modules;
 
+			// variable name = { output&, is_last_use? }
 			std::map< std::string, std::pair< output_base&, bool > > variables;
 
+			// create modules
 			for(std::size_t i = 0; i < config_chain.modules.size(); ++i){
 				auto& config_module = config_chain.modules[i];
 
@@ -92,17 +94,19 @@ namespace disposer{
 
 				auto& module = *modules.back();
 
+				// save output variable names
 				for(auto& config_output: config_module.outputs){
 					auto& output = find(module.outputs_, config_output.name).get();
 					variables.emplace(config_output.variable, std::pair< output_base&, bool >(output, true));
 				}
 			}
 
+			// go through all modules and activate output typs in the target inputs
 			auto module_ptr_iter = modules.begin();
 			for(auto& config_module: config_chain.modules){
 				auto& module = **module_ptr_iter++;
 
-				// module.outputs containes all active output names
+				// config_module.outputs containes all active output names
 				for(auto& output_name_and_var: config_module.outputs){
 					auto output_iter = variables.find(output_name_and_var.variable);
 					assert(output_iter != variables.end());
@@ -119,7 +123,7 @@ namespace disposer{
 					}
 				}
 
-				// module.inputs containes all active inputs names
+				// config_module.inputs containes all active input names
 				for(auto& input_name_and_var: config_module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
@@ -127,6 +131,7 @@ namespace disposer{
 					auto& output = output_iter->second.first;
 					auto& input = find(module.inputs_, input_name_and_var.name).get();
 
+					// try to activate the types from output in input
 					if(!input.activate_types(output.active_types())){
 						std::ostringstream os;
 						os
@@ -166,11 +171,13 @@ namespace disposer{
 				}
 			}
 
+			// go backward through all modules, because of the last_use information
 			module_ptr_iter = modules.end();
 			for(auto& config_module: boost::adaptors::reverse(config_chain.modules)){
 				--module_ptr_iter;
 				auto& module = **module_ptr_iter;
 
+				// config_module.inputs containes all active input names
 				for(auto& input_name_and_var: config_module.inputs){
 					auto output_iter = variables.find(input_name_and_var.variable);
 					assert(output_iter != variables.end());
@@ -180,14 +187,19 @@ namespace disposer{
 
 					auto& input = find(module.inputs_, input_name_and_var.name).get();
 
+					// connect input to output
 					output.signal.connect(input, last_use);
+
+					// the next one is no more the last use of the variable
 					last_use = false;
 				}
 			}
 
+			// emplace the new process chain
 			chains.emplace(std::piecewise_construct, std::make_tuple(config_chain.name), std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.increase));
 		}
 
+		// move the generated data to the class members
 		chains_ = std::move(chains);
 		id_generators_ = std::move(id_generators);
 	}
