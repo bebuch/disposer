@@ -24,10 +24,10 @@
 namespace disposer{
 
 
-	/* Eigenschaften:
+	/* properties:
 	* 
-	* - keine 2 identischen Module (Trigger) laufen gleichzeitig
-	* - es darf nicht überholt werden
+	* - no 2 identical modules (trigger) running simultaneously
+	* - it must not be overtaken
 	*/
 	class chain{
 	public:
