@@ -107,7 +107,7 @@ namespace disposer{
 
 		template < typename Body, typename Log >
 		inline auto exec_exception_catching_body(Body& body, Log& log){
-			constexpr auto is_void = boost::hana::traits::is_void(boost::hana::type< decltype(body()) >);
+			constexpr auto is_void = boost::hana::traits::is_void(boost::hana::type_c< decltype(body()) >);
 
 			try{
 				return boost::hana::if_(is_void,
@@ -131,10 +131,10 @@ namespace disposer{
 		auto make_log(){
 			auto has_factory = boost::hana::is_valid([](auto t)->decltype((void)decltype(t)::type::factory()){});
 
-			return boost::hana::if_(has_factory(boost::hana::type< Log >),
+			return boost::hana::if_(has_factory(boost::hana::type_c< Log >),
 				[](auto t){ return decltype(t)::type::factory(); },
 				[](auto t){ return std::make_unique< typename decltype(t)::type >(); }
-			)(boost::hana::type< Log >);
+			)(boost::hana::type_c< Log >);
 		}
 
 		auto has_exec = boost::hana::is_valid([](auto&& x)->decltype((void)x->exec()){});
@@ -168,7 +168,7 @@ namespace disposer{
 			[](auto&){}
 		)(log);
 
-		return boost::hana::if_(boost::hana::traits::is_void(boost::hana::type< decltype(body()) >),
+		return boost::hana::if_(boost::hana::traits::is_void(boost::hana::type_c< decltype(body()) >),
 			[](auto&& f, auto&& body, auto& log){
 				impl::log::exec_body(f, body, log);
 				impl::log::exec_log(f, log);

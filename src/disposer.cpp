@@ -215,7 +215,7 @@ namespace disposer{
 					}
 
 					// emplace the new process chain
-					chains.emplace(std::piecewise_construct, std::make_tuple(config_chain.name), std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.increase));
+					chains.emplace(std::piecewise_construct, std::make_tuple(config_chain.name), std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.group));
 				});
 			}
 

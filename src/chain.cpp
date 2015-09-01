@@ -8,14 +8,24 @@
 //-----------------------------------------------------------------------------
 #include <disposer/chain.hpp>
 
+#include <numeric>
+
 
 namespace disposer{
 
 
-	chain::chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::size_t counter_increase):
+	chain::chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& group):
 		modules_(std::move(modules)),
-		counter_increase_(counter_increase),
+		id_increase_(std::accumulate(
+			modules_.cbegin(),
+			modules_.cend(),
+			std::size_t(1),
+			[](std::size_t increase, module_ptr const& module){
+				return increase * module->id_increase;
+			}
+		)),
 		generate_id_(generate_id),
+		group_(group),
 		next_run_(0),
 		ready_run_(modules_.size()),
 		mutexes_(modules_.size())
@@ -23,7 +33,7 @@ namespace disposer{
 
 
 	void chain::trigger(){
-		std::size_t id = generate_id_(counter_increase_);
+		std::size_t id = generate_id_(id_increase_);
 		std::size_t run = next_run_++;
 
 		log([this, id](log_base& os){

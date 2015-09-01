@@ -56,6 +56,7 @@ namespace disposer{
 		std::string const name;
 		std::size_t const number;
 
+		std::size_t const id_increase;
 		std::size_t const& id;
 
 

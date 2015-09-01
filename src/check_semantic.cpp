@@ -60,10 +60,6 @@ namespace disposer{
 				throw std::logic_error("In chain list: Duplicate name '" + chain.name + "'");
 			}
 
-			if(chain.increase && *chain.increase == 0){
-				throw std::logic_error("In chain '" + chain.name + "': increase must be greater than 0");
-			}
-
 			std::set< std::string > variables;
 			std::set< std::string > chain_modules;
 			for(auto& module: chain.modules){

@@ -17,6 +17,7 @@ namespace disposer{
 		chain(data.chain),
 		name(data.name),
 		number(data.number),
+		id_increase(1),
 		id(id_),
 		id_(0),
 		inputs_(std::move(inputs)),

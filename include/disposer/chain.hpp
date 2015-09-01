@@ -31,7 +31,7 @@ namespace disposer{
 	*/
 	class chain{
 	public:
-		chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::size_t counter_increase);
+		chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& group);
 
 		chain(chain const&) = delete;
 		chain(chain&&) = delete;
@@ -42,6 +42,10 @@ namespace disposer{
 
 		void trigger();
 
+		std::string group()const{
+			return group_;
+		}
+
 
 	private:
 		template < typename F >
@@ -49,8 +53,10 @@ namespace disposer{
 
 		std::vector< module_ptr > modules_;
 
-		std::size_t counter_increase_;
+		std::size_t id_increase_;
 		id_generator& generate_id_;
+
+		std::string const group_;
 
 		std::atomic< std::size_t > next_run_;
 		std::vector< std::size_t > ready_run_;

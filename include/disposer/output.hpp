@@ -87,7 +87,7 @@ namespace disposer{
 
 			template < typename V, typename W >
 			auto put(std::size_t id, W&& value){
-				static_assert(hana::contains(value_types, hana::type< V >), "type V in put< V > is not a output type");
+				static_assert(hana::contains(value_types, hana::type_c< V >), "type V in put< V > is not a output type");
 
 				if(!active_types_[type_position_v< V, T, U ... >]){
 					throw std::logic_error(
@@ -101,7 +101,7 @@ namespace disposer{
 
 			template < typename V >
 			void activate(){
-				static_assert(hana::contains(value_types, hana::type< V >), "type V in activate< V > is not a output type");
+				static_assert(hana::contains(value_types, hana::type_c< V >), "type V in activate< V > is not a output type");
 
 				active_types_[type_position_v< V, T, U ... >] = true;
 			}
