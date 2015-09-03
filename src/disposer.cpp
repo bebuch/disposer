@@ -72,6 +72,7 @@ namespace disposer{
 
 			std::unordered_map< std::string, chain > chains;
 			std::unordered_map< std::string, id_generator > id_generators;
+			std::unordered_map< std::string, std::vector< std::reference_wrapper< chain > > > groups;
 			for(auto& config_chain: merged_config.chains){
 				log([&config_chain](log_base& os){ os << "create chain '" << config_chain.name << "'"; }, [&](){
 					std::vector< module_ptr > modules;
@@ -215,13 +216,26 @@ namespace disposer{
 					}
 
 					// emplace the new process chain
-					chains.emplace(std::piecewise_construct, std::make_tuple(config_chain.name), std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.group));
+					auto group_iter = groups.emplace(
+						std::piecewise_construct,
+						std::make_tuple(config_chain.group),
+						std::make_tuple()
+					).first;
+
+					auto chain_iter = chains.emplace(
+						std::piecewise_construct,
+						std::make_tuple(config_chain.name),
+						std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.name, group_iter->first)
+					).first;
+
+					group_iter->second.push_back(chain_iter->second);
 				});
 			}
 
 			// move the generated data to the class members
 			chains_ = std::move(chains);
 			id_generators_ = std::move(id_generators);
+			groups_ = std::move(groups);
 		});
 	}
 
@@ -239,6 +253,21 @@ namespace disposer{
 		return result;
 	}
 
+	std::unordered_set< std::string > disposer::chains(std::string const& group)const{
+		std::unordered_set< std::string > result;
+
+		auto iter = groups_.find(group);
+		if(iter == groups_.end()) return result;
+
+		for(auto& chain: iter->second) result.emplace(chain.get().name);
+		return result;
+	}
+
+	std::unordered_set< std::string > disposer::groups()const{
+		std::unordered_set< std::string > result;
+		for(auto& group: groups_) result.emplace(group.first);
+		return result;
+	}
 
 
 }

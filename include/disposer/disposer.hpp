@@ -39,12 +39,18 @@ namespace disposer{
 
 		std::unordered_set< std::string > chains()const;
 
+		std::unordered_set< std::string > chains(std::string const& group)const;
+
+		std::unordered_set< std::string > groups()const;
+
 
 	private:
 		module_ptr make_module(make_data&& data);
 
 
 		std::unordered_map< std::string, id_generator > id_generators_;
+
+		std::unordered_map< std::string, std::vector< std::reference_wrapper< chain > > > groups_;
 
 		std::unordered_map< std::string, maker_function > maker_list_;
 

@@ -14,7 +14,9 @@
 namespace disposer{
 
 
-	chain::chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& group):
+	chain::chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& name, std::string const& group):
+		name(name),
+		group(group),
 		modules_(std::move(modules)),
 		id_increase_(std::accumulate(
 			modules_.cbegin(),
@@ -25,7 +27,6 @@ namespace disposer{
 			}
 		)),
 		generate_id_(generate_id),
-		group_(group),
 		next_run_(0),
 		ready_run_(modules_.size()),
 		mutexes_(modules_.size())
