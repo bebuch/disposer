@@ -39,7 +39,7 @@ namespace disposer{
 
 		std::unordered_set< std::string > chains()const;
 
-		std::unordered_set< std::string > chains(std::string const& group)const;
+		std::vector< std::string > chains(std::string const& group)const;
 
 		std::unordered_set< std::string > groups()const;
 

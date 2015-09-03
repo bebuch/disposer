@@ -215,19 +215,21 @@ namespace disposer{
 						});
 					}
 
-					// emplace the new process chain
+					// add the new group if not exist and get pointer
 					auto group_iter = groups.emplace(
 						std::piecewise_construct,
 						std::make_tuple(config_chain.group),
 						std::make_tuple()
 					).first;
 
+					// emplace the new process chain
 					auto chain_iter = chains.emplace(
 						std::piecewise_construct,
 						std::make_tuple(config_chain.name),
 						std::forward_as_tuple(std::move(modules), id_generators[config_chain.id_generator], config_chain.name, group_iter->first)
 					).first;
 
+					// add chain to group
 					group_iter->second.push_back(chain_iter->second);
 				});
 			}
@@ -253,13 +255,13 @@ namespace disposer{
 		return result;
 	}
 
-	std::unordered_set< std::string > disposer::chains(std::string const& group)const{
-		std::unordered_set< std::string > result;
-
+	std::vector< std::string > disposer::chains(std::string const& group)const{
 		auto iter = groups_.find(group);
-		if(iter == groups_.end()) return result;
+		if(iter == groups_.end()) return {};
 
-		for(auto& chain: iter->second) result.emplace(chain.get().name);
+		std::vector< std::string > result;
+		result.reserve(iter->second.size());
+		for(auto& chain: iter->second) result.emplace_back(chain.get().name);
 		return result;
 	}
 
