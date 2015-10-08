@@ -17,7 +17,6 @@
 #include "type_position.hpp"
 
 #include <boost/hana.hpp>
-#include <boost/hana/ext/std/type_traits.hpp>
 
 #include <functional>
 

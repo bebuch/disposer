@@ -12,7 +12,6 @@
 #include "is_type_unique.hpp"
 
 #include <boost/hana.hpp>
-#include <boost/hana/ext/std/type_traits.hpp>
 
 
 namespace disposer{
