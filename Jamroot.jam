@@ -15,17 +15,14 @@ project disposer
 
 	<toolset>gcc:<cxxflags>-std=c++14
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
-	<toolset>gcc:<cxxflags>-fopenmp
 	<toolset>gcc:<cxxflags>-Wall
 	<toolset>gcc:<cxxflags>-Wextra
 	<toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
 	<toolset>gcc:<cxxflags>-Wno-deprecated-declarations
 	<toolset>gcc:<linkflags>-lpthread
-	<toolset>gcc:<linkflags>-fopenmp
 
 	<toolset>clang:<cxxflags>-std=c++14
 	<toolset>clang:<cxxflags>-fconstexpr-depth=1024
-	<toolset>clang:<cxxflags>-fopenmp
 	<toolset>clang:<cxxflags>-Wall
 	<toolset>clang:<cxxflags>-Wextra
 	<toolset>clang:<cxxflags>-Wno-deprecated-register
@@ -34,8 +31,8 @@ project disposer
 	<toolset>clang:<cxxflags>-DBOOST_ASIO_HAS_STD_CHRONO
 	<toolset>clang:<linkflags>-lpthread
 	<toolset>clang:<linkflags>-lc++abi
-	<toolset>clang:<linkflags>-fopenmp
 	<toolset>clang:<linkflags>-stdlib=libc++
+	<toolset>clang:<include>/usr/include/libcxxabi
 
 	<include>$(LIBRARIES)/boost_dev/type_index/include
 	<include>$(LIBRARIES)/boost_dev/optional/include
