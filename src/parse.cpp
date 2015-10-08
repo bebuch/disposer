@@ -128,7 +128,8 @@ namespace disposer{
 		;
 
 		auto const parameter_def = 
-			"\t\t" >> !("parameter_set" >> *space >> '=') >> keyword  >> *space >> '=' >> *space >> value >> separator
+			"\t\t" >> !("parameter_set" >> *space >> '=') >> keyword  >>
+			*space >> '=' >> *space >> value >> separator
 		;
 
 		BOOST_SPIRIT_DEFINE(
@@ -224,7 +225,7 @@ namespace disposer{
 			;
 
 			auto const chain_def =
-				'\t' >> keyword >> *space >> -('=' >> *space >> value >> separator) >>
+				'\t' >> keyword >> *space >> -('=' >> *space >> value) >> separator >>
 				-("\t\tid_generator" >> *space >> '=' >> *space >> value >> separator) >>
 				*chain_module
 			;
@@ -270,7 +271,10 @@ namespace disposer{
 	types::parse::config parse(std::istream& is){
 		namespace x3 = boost::spirit::x3;
 
-		std::string str{std::istreambuf_iterator< char >{is}, std::istreambuf_iterator< char >{}};
+		std::string str{
+			std::istreambuf_iterator< char >{is},
+			std::istreambuf_iterator< char >{}
+		};
 
 		types::parse::config config;
 
@@ -278,10 +282,20 @@ namespace disposer{
 		auto end = str.end();
 
 		x3::ascii::space_type space;
-		bool const match = phrase_parse(iter, end, parser::grammar, space, config);
+		bool const match =
+			phrase_parse(iter, end, parser::grammar, space, config);
 
 		if(!match || iter != end){
-			throw std::runtime_error("Syntax error");
+			// FIXME: eol can be '\n', '\r' or "\r\n"
+			auto line = 1 + std::count(str.begin(), iter, '\n');
+			auto pos =
+				std::find(std::make_reverse_iterator(iter), str.rend(), '\n') -
+				std::make_reverse_iterator(iter);
+
+			throw std::runtime_error(
+				"Syntax error, near line:charakter " +
+				std::to_string(line) + ":" + std::to_string(pos)
+			);
 		}
 
 		return config;
