@@ -34,5 +34,15 @@ namespace disposer{
 		}
 	}
 
+	void module_base::set_id(std::size_t id){
+		id_ = id;
+		for(auto& input: inputs_){
+			input.get().id_ = id;
+		}
+		for(auto& output: outputs_){
+			output.get().id_ = id;
+		}
+	}
+
 
 }

@@ -36,7 +36,7 @@ namespace disposer{
 
 	class output_base{
 	public:
-		output_base(std::string const& name): name(name) {}
+		output_base(std::string const& name): name(name), id(id_), id_(0) {}
 
 		output_base(output_base const&) = delete;
 		output_base(output_base&&) = delete;
@@ -53,7 +53,14 @@ namespace disposer{
 
 		signal_t signal;
 
+		std::size_t const& id;
 
+
+	private:
+		std::size_t id_;
+
+
+	friend class module_base;
 	friend class disposer;
 	};
 

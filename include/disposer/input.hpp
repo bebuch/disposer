@@ -54,7 +54,7 @@ namespace disposer{
 		using input_base::input_base;
 
 
-		std::multimap< std::size_t, value_type > get(std::size_t id){
+		std::multimap< std::size_t, value_type > get(){
 			std::lock_guard< std::mutex > lock(mutex_);
 			auto from = data_.begin();
 			auto to = data_.upper_bound(id);

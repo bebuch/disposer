@@ -70,6 +70,8 @@ namespace disposer{
 	private:
 		std::size_t id_;
 
+		void set_id(std::size_t id);
+
 		std::vector< std::reference_wrapper< input_base > > inputs_;
 		std::vector< std::reference_wrapper< output_base > > outputs_;
 

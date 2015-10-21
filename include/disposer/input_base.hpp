@@ -28,7 +28,7 @@ namespace disposer{
 
 	class input_base{
 	public:
-		input_base(std::string const& name): name(name) {}
+		input_base(std::string const& name): name(name), id(id_), id_(0) {}
 
 		input_base(input_base const&) = delete;
 		input_base(input_base&&) = delete;
@@ -48,6 +48,12 @@ namespace disposer{
 
 
 		std::string const name;
+
+		std::size_t const& id;
+
+
+	private:
+		std::size_t id_;
 
 
 	friend class signal_t;

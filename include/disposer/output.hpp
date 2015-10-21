@@ -85,7 +85,7 @@ namespace disposer{
 
 
 			template < typename V, typename W >
-			auto put(std::size_t id, W&& value){
+			auto put(W&& value){
 				static_assert(hana::contains(value_types, hana::type_c< V >), "type V in put< V > is not a output type");
 
 				if(!active_types_[type_position_v< V, T, U ... >]){
@@ -175,8 +175,8 @@ namespace disposer{
 		using impl::output::output< T >::output;
 
 		template < typename W >
-		auto put(std::size_t id, W&& value){
-			impl::output::output< T >::template put< T >(id, static_cast< W&& >(value));
+		auto put(W&& value){
+			impl::output::output< T >::template put< T >(static_cast< W&& >(value));
 		}
 	};
 
@@ -193,8 +193,8 @@ namespace disposer{
 		using impl::output::container_output< Container, T ... >::container_output;
 
 		template < typename V, typename W >
-		auto put(std::size_t id, W&& value){
-			impl::output::container_output< Container, T ... >::template put< Container< V > >(id, static_cast< W&& >(value));
+		auto put(W&& value){
+			impl::output::container_output< Container, T ... >::template put< Container< V > >(static_cast< W&& >(value));
 		}
 	};
 
@@ -203,8 +203,8 @@ namespace disposer{
 		using impl::output::container_output< Container, T >::container_output;
 
 		template < typename W >
-		auto put(std::size_t id, W&& value){
-			impl::output::container_output< Container, T >::template put< Container< T > >(id, static_cast< W&& >(value));
+		auto put(W&& value){
+			impl::output::container_output< Container, T >::template put< Container< T > >(static_cast< W&& >(value));
 		}
 	};
 
