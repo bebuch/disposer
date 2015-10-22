@@ -9,7 +9,7 @@
 #ifndef _disposer__chain__hpp_INCLUDED_
 #define _disposer__chain__hpp_INCLUDED_
 
-#include "module_base.hpp"
+#include "module_ptr.hpp"
 #include "id_generator.hpp"
 #include "log_base.hpp"
 #include "log.hpp"

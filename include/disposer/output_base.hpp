@@ -61,7 +61,7 @@ namespace disposer{
 
 
 	friend class module_base;
-	friend class disposer;
+	friend class disposer::impl;
 	};
 
 

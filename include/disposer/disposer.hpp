@@ -9,14 +9,18 @@
 #ifndef _disposer__disposer__hpp_INCLUDED_
 #define _disposer__disposer__hpp_INCLUDED_
 
-#include "module_base.hpp"
 #include "chain.hpp"
 
 #include <unordered_map>
+#include <unordered_set>
+#include <functional>
+#include <vector>
 
 
 namespace disposer{
 
+
+	struct make_data;
 
 	class disposer{
 	public:
@@ -29,7 +33,7 @@ namespace disposer{
 
 		disposer& operator=(disposer const&) = delete;
 		disposer& operator=(disposer&&) = delete;
-	
+
 
 		void add_module_maker(std::string const& type, maker_function&& function);
 
@@ -44,10 +48,10 @@ namespace disposer{
 		std::unordered_set< std::string > groups()const;
 
 
+		class impl;
+
+
 	private:
-		module_ptr make_module(make_data&& data);
-
-
 		std::unordered_map< std::string, id_generator > id_generators_;
 
 		std::unordered_map< std::string, std::vector< std::reference_wrapper< chain > > > groups_;

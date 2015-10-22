@@ -7,6 +7,7 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include <disposer/chain.hpp>
+#include <disposer/module_base.hpp>
 
 #include <numeric>
 
@@ -14,7 +15,12 @@
 namespace disposer{
 
 
-	chain::chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& name, std::string const& group):
+	chain::chain(
+		std::vector< module_ptr >&& modules,
+		id_generator& generate_id,
+		std::string const& name,
+		std::string const& group
+	):
 		name(name),
 		group(group),
 		modules_(std::move(modules)),
@@ -43,7 +49,9 @@ namespace disposer{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(id);
-					process_module(i, run, [](chain& c, std::size_t i){ c.modules_[i]->trigger(); }, "trigger");
+					process_module(i, run, [](chain& c, std::size_t i){
+						c.modules_[i]->trigger();
+					}, "trigger");
 				}
 			}catch(...){
 				// cleanup and unlock all triggers
@@ -51,7 +59,9 @@ namespace disposer{
 					// Trigger was successful
 					if(ready_run_[i] >= run + 1) continue;
 
-					process_module(i, run, [id](chain& c, std::size_t i){ c.modules_[i]->cleanup(id); }, "cleanup");
+					process_module(i, run, [id](chain& c, std::size_t i){
+						c.modules_[i]->cleanup(id);
+					}, "cleanup");
 				}
 
 				// rethrow exception
@@ -61,14 +71,21 @@ namespace disposer{
 	}
 
 	template < typename F >
-	void chain::process_module(std::size_t i, std::size_t run, F const& action, char const* action_name){
+	void chain::process_module(
+		std::size_t i,
+		std::size_t run,
+		F const& action,
+		char const* action_name
+	){
 		// Lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(mutexes_[i]);
 		cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });
 
 		// Cleanup the module
 		log([this, i, action_name](log_base& os){
-			os << "id(" << modules_[i]->id << "." << i << ") " << action_name << " chain '" << modules_[i]->chain << "' module '" << modules_[i]->name << "'";
+			os << "id(" << modules_[i]->id << "." << i << ") " << action_name
+				<< " chain '" << modules_[i]->chain << "' module '"
+				<< modules_[i]->name << "'";
 		}, [this, i, action]{ action(*this, i); });
 
 		// Make module ready

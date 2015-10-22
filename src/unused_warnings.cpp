@@ -58,7 +58,8 @@ namespace disposer{
 				if(var.second) continue;
 
 				log([&var, &chain](log_base& os){
-					os << "In chain '" + chain.name + "': variable '" + var.first + "' is not used";
+					os << "In chain '" << chain.name << "': variable '"
+						<< var.first << "' is not used";
 				});
 			}
 		}

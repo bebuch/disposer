@@ -9,6 +9,7 @@
 #ifndef _disposer__module_base__hpp_INCLUDED_
 #define _disposer__module_base__hpp_INCLUDED_
 
+#include "disposer.hpp"
 #include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
@@ -42,12 +43,12 @@ namespace disposer{
 
 		template < typename Log >
 		void log(Log&& f)const{
-			disposer::log(module_log(f));
+			::disposer::log(module_log(f));
 		}
 
 		template < typename Log, typename Body >
 		decltype(auto) log(Log&& f, Body&& body)const{
-			return disposer::log(module_log(f), static_cast< Body&& >(body));
+			return ::disposer::log(module_log(f), static_cast< Body&& >(body));
 		}
 
 
@@ -90,11 +91,8 @@ namespace disposer{
 
 
 	friend class chain;
-	friend class disposer;
+	friend class ::disposer::disposer::impl;
 	};
-
-
-	using module_ptr = std::unique_ptr< module_base >;
 
 
 }

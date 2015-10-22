@@ -9,6 +9,8 @@
 #ifndef _disposer__input_base__hpp_INCLUDED_
 #define _disposer__input_base__hpp_INCLUDED_
 
+#include "disposer.hpp"
+
 #include <boost/type_index.hpp>
 
 #include <string>
@@ -58,7 +60,7 @@ namespace disposer{
 
 	friend class signal_t;
 	friend class module_base;
-	friend class disposer;
+	friend class disposer::impl;
 	};
 
 
