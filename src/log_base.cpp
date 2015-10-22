@@ -13,7 +13,9 @@
 namespace disposer{
 
 
-	std::function< std::unique_ptr< log_base >() > log_base::factory([]{ return std::make_unique< log_tag >(); });
+	std::function< std::unique_ptr< log_base >() > log_base::factory(
+		[]{ return std::make_unique< log_tag >(); }
+	);
 
 
 }

@@ -24,7 +24,10 @@ namespace disposer{
 		types::merge::config result;
 
 		for(auto& module: config.modules){
-			auto pair = result.modules.emplace(std::move(module.name), types::merge::module{std::move(module.type_name), {}});
+			auto pair = result.modules.emplace(
+				std::move(module.name),
+				types::merge::module{std::move(module.type_name), {}}
+			);
 
 			// successfully inserted
 			assert(pair.second);
@@ -33,10 +36,14 @@ namespace disposer{
 
 			// add all parameters from module
 			for(auto& parameter: boost::adaptors::reverse(module.parameters)){
-				result_module.parameters.emplace(std::move(parameter.key), std::move(parameter.value));
+				result_module.parameters.emplace(
+					std::move(parameter.key),
+					std::move(parameter.value)
+				);
 			}
 
-			// add all parameters from the last to the first parameter set (skip already existing ones)
+			// add all parameters from the last to the first parameter set
+			// (skip already existing ones)
 			for(auto& set: boost::adaptors::reverse(module.parameter_sets)){
 				auto iter = parameter_sets.find(set);
 
@@ -44,15 +51,23 @@ namespace disposer{
 				assert(iter != parameter_sets.end());
 
 				for(auto& parameter: iter->second.parameters){
-					// parameter set parameters can not be moved (multiple use!)
-					result_module.parameters.emplace(parameter.key, parameter.value);
+					// parameter set parameters can not be moved
+					// (multiple use!)
+					result_module.parameters.emplace(
+						parameter.key,
+						parameter.value
+					);
 				}
 			}
 		}
 
 		for(auto& chain: config.chains){
 			auto group = chain.group.value_or("default");
-			result.chains.emplace_back(types::merge::chain{std::move(chain.name), std::move(chain.id_generator).value_or(group), group, {}});
+			result.chains.emplace_back(types::merge::chain{
+				std::move(chain.name),
+				std::move(chain.id_generator).value_or(group),
+				group, {}
+			});
 
 			auto& result_chain = result.chains.back();
 
@@ -62,7 +77,9 @@ namespace disposer{
 				// module was found
 				assert(iter != result.modules.end());
 
-				result_chain.modules.emplace_back(types::merge::chain_module{*iter, std::move(module.inputs), std::move(module.outputs)});
+				result_chain.modules.emplace_back(types::merge::chain_module{
+					*iter, std::move(module.inputs), std::move(module.outputs)
+				});
 			}
 		}
 

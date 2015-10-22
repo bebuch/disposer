@@ -84,14 +84,26 @@ namespace disposer{
 
 
 		x3::rule< class space > const space("space");
+
 		x3::rule< class empty_lines > const empty_lines("empty_lines");
+
 		x3::rule< class separator > const separator("separator");
+
 		x3::rule< class comment > const comment("comment");
-		x3::rule< class keyword_spaces, std::string > const keyword_spaces("keyword_spaces");
+
+		x3::rule< class keyword_spaces, std::string > const
+			keyword_spaces("keyword_spaces");
+
 		x3::rule< class keyword, std::string > const keyword("keyword");
-		x3::rule< class value_spaces, std::string > const value_spaces("value_spaces");
+
+		x3::rule< class value_spaces, std::string > const
+			value_spaces("value_spaces");
+
 		x3::rule< class value, std::string > const value("value");
-		x3::rule< class parameter, types::parse::parameter > const parameter("parameter");
+
+		x3::rule< class parameter, types::parse::parameter > const
+			parameter("parameter");
+
 
 		auto const space_def =
 			lit(' ') | '\t'
@@ -132,6 +144,7 @@ namespace disposer{
 			*space >> '=' >> *space >> value >> separator
 		;
 
+
 		BOOST_SPIRIT_DEFINE(
 			space,
 			empty_lines,
@@ -148,8 +161,14 @@ namespace disposer{
 		namespace set{
 
 
-			x3::rule< class parameter_set, types::parse::parameter_set > const parameter_set("parameter_set");
-			x3::rule< class parameter_sets, types::parse::parameter_sets > const parameter_sets("parameter_sets");
+			x3::rule<
+				class parameter_set, types::parse::parameter_set
+			> const parameter_set("parameter_set");
+
+			x3::rule<
+				class parameter_sets, types::parse::parameter_sets
+			> const parameter_sets("parameter_sets");
+
 
 			auto const parameter_set_def = 
 				'\t' >> keyword >> separator >>
@@ -161,10 +180,12 @@ namespace disposer{
 				*parameter_set
 			;
 
+
 			BOOST_SPIRIT_DEFINE(
 				parameter_set,
 				parameter_sets
 			)
+
 
 			auto grammar = parameter_sets;
 
@@ -175,12 +196,18 @@ namespace disposer{
 		namespace module{
 
 
-			x3::rule< class module, types::parse::module > const module("module");
-			x3::rule< class modules, types::parse::modules > const modules("modules");
+			x3::rule< class module, types::parse::module > const
+				module("module");
+
+			x3::rule< class modules, types::parse::modules > const
+				modules("modules");
+
 
 			auto const module_def = 
-				'\t' >> keyword >> *space >> '=' >> *space >> value >> separator >>
-				*("\t\tparameter_set" >> *space >> '=' >> *space >> value >> separator) >>
+				'\t' >> keyword >> *space >>
+					'=' >> *space >> value >> separator >>
+				*("\t\tparameter_set" >> *space >>
+					'=' >> *space >> value >> separator) >>
 				*parameter
 			;
 
@@ -204,12 +231,19 @@ namespace disposer{
 
 
 			x3::rule< class io, types::parse::io > const io("io");
-			x3::rule< class chain_module, types::parse::chain_module > const chain_module("chain_module");
+
+			x3::rule< class chain_module, types::parse::chain_module > const
+				chain_module("chain_module");
+
 			x3::rule< class chain, types::parse::chain > const chain("chain");
-			x3::rule< class chains, types::parse::chains > const chains("chains");
+
+			x3::rule< class chains, types::parse::chains > const
+				chains("chains");
+
 
 			auto const io_def =
-				"\t\t\t\t" >> keyword >> *space >> '=' >> *space >> value >> separator
+				"\t\t\t\t" >> keyword >> *space >>
+					 '=' >> *space >> value >> separator
 			;
 
 			auto const chain_module_def =
@@ -225,8 +259,10 @@ namespace disposer{
 			;
 
 			auto const chain_def =
-				'\t' >> keyword >> *space >> -('=' >> *space >> value) >> separator >>
-				-("\t\tid_generator" >> *space >> '=' >> *space >> value >> separator) >>
+				'\t' >> keyword >> *space >>
+					-('=' >> *space >> value) >> separator >>
+				-("\t\tid_generator" >> *space >>
+					'=' >> *space >> value >> separator) >>
 				*chain_module
 			;
 
@@ -235,6 +271,7 @@ namespace disposer{
 				*chain
 			;
 
+
 			BOOST_SPIRIT_DEFINE(
 				io,
 				chain_module,
@@ -242,13 +279,16 @@ namespace disposer{
 				chains
 			)
 
+
 			auto grammar = chains;
 
 
 		}
 
 
-		x3::rule< class config_class, types::parse::config > const config("config");
+		x3::rule< class config_class, types::parse::config >
+			const config("config");
+
 
 		auto const config_def = x3::no_skip[x3::expect[
 			empty_lines >> comment >>
@@ -256,6 +296,7 @@ namespace disposer{
 			module::grammar >>
 			chain::grammar
 		]];
+
 
 		BOOST_SPIRIT_DEFINE(
 			config
