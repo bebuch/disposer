@@ -21,12 +21,31 @@ namespace disposer{
 
 
 	struct make_data;
+	class disposer;
 
-	class disposer{
+	class module_adder{
 	public:
 		using maker_function = std::function< module_ptr(make_data&) >;
 
-		disposer() = default;
+		void operator()(std::string const& type, maker_function&& function);
+
+
+	private:
+		module_adder(disposer& disposer): disposer_(disposer) {}
+
+		module_adder(module_adder const&) = delete;
+		module_adder(module_adder&&) = delete;
+
+		disposer& disposer_;
+
+	friend class disposer;
+	};
+
+	class disposer{
+	public:
+		using maker_function = module_adder::maker_function;
+
+		disposer();
 
 		disposer(disposer const&) = delete;
 		disposer(disposer&&) = delete;
@@ -35,7 +54,7 @@ namespace disposer{
 		disposer& operator=(disposer&&) = delete;
 
 
-		void add_module_maker(std::string const& type, maker_function&& function);
+		module_adder& adder();
 
 		void load(std::string const& filename);
 
@@ -54,11 +73,17 @@ namespace disposer{
 	private:
 		std::unordered_map< std::string, id_generator > id_generators_;
 
-		std::unordered_map< std::string, std::vector< std::reference_wrapper< chain > > > groups_;
+		std::unordered_map<
+			std::string, std::vector< std::reference_wrapper< chain > >
+		> groups_;
 
 		std::unordered_map< std::string, maker_function > maker_list_;
 
 		std::unordered_map< std::string, chain > chains_;
+
+		module_adder adder_;
+
+	friend class module_adder;
 	};
 
 

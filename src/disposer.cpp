@@ -18,14 +18,17 @@
 #include <cassert>
 
 
-void disposer::disposer::add_module_maker(
+disposer::disposer::disposer():
+	adder_(*this) {}
+
+void disposer::module_adder::operator()(
 	std::string const& type_name,
 	maker_function&& function
 ){
 	log([&type_name](log_base& os){
 		os << "register module type name '" << type_name << "'";
 	}, [&]{
-		auto iter = maker_list_.insert(
+		auto iter = disposer_.maker_list_.insert(
 			std::make_pair(type_name, std::move(function))
 		);
 
@@ -35,6 +38,11 @@ void disposer::disposer::add_module_maker(
 			);
 		}
 	});
+}
+
+
+disposer::module_adder& disposer::disposer::adder(){
+	return adder_;
 }
 
 
