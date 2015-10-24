@@ -45,7 +45,10 @@ namespace disposer{
 
 		template < typename Function >
 		struct extract_log{
-			using type = typename extract_log_from_function< decltype(&Function::operator()) >::type;
+			using type =
+				typename extract_log_from_function<
+					decltype(&Function::operator())
+				>::type;
 		};
 
 		template < typename Function >
@@ -69,8 +72,13 @@ namespace disposer{
 
 		template < typename F, typename Log >
 		inline void exec_log(F& f, Log& log){
-			auto has_pre = boost::hana::is_valid([](auto&& x)->decltype((void)x->pre()){});
-			auto has_post = boost::hana::is_valid([](auto&& x)->decltype((void)x->post()){});
+			auto has_pre = boost::hana::is_valid(
+				[](auto&& x)->decltype((void)x->pre()){}
+			);
+
+			auto has_post = boost::hana::is_valid(
+				[](auto&& x)->decltype((void)x->post()){}
+			);
 
 			boost::hana::if_(has_pre(log),
 				[](auto& log){ log->pre(); },
@@ -91,7 +99,9 @@ namespace disposer{
 		inline decltype(auto) exec_body(F& f, Body& body, Log& log)try{
 			return body();
 		}catch(...){
-			auto has_failed = boost::hana::is_valid([](auto&& x)->decltype((void)x->failed()){});
+			auto has_failed = boost::hana::is_valid(
+				[](auto&& x)->decltype((void)x->failed()){}
+			);
 
 			boost::hana::if_(has_failed(log),
 				[](auto& log){ log->failed(); },
@@ -105,12 +115,16 @@ namespace disposer{
 
 		template < typename Body, typename Log >
 		inline auto exec_exception_catching_body(Body& body, Log& log){
-			constexpr auto is_void = boost::hana::traits::is_void(boost::hana::type_c< decltype(body()) >);
+			constexpr auto is_void = boost::hana::traits::is_void(
+				boost::hana::type_c< decltype(body()) >
+			);
 
 			try{
 				return boost::hana::if_(is_void,
 					[](auto&& body){ body(); return true; },
-					[](auto&& body){ return boost::optional< decltype(body()) >(body()); }
+					[](auto&& body){
+						return boost::optional< decltype(body()) >(body());
+					}
 				)(static_cast< Body&& >(body));
 			}catch(std::exception const& error){
 				log->set_exception(error);
@@ -120,23 +134,34 @@ namespace disposer{
 
 			return boost::hana::if_(is_void,
 				[](auto&&){ return false; },
-				[](auto&& body){ return boost::optional< decltype(body()) >(); }
+				[](auto&& body){
+					return boost::optional< decltype(body()) >();
+				}
 			)(static_cast< Body&& >(body));
 
 		}
 
 		template < typename Log >
 		auto make_log(){
-			auto has_factory = boost::hana::is_valid([](auto t)->decltype((void)decltype(t)::type::factory()){});
+			auto has_factory = boost::hana::is_valid(
+				[](auto t)->decltype((void)decltype(t)::type::factory()){}
+			);
 
 			return boost::hana::if_(has_factory(boost::hana::type_c< Log >),
 				[](auto t){ return decltype(t)::type::factory(); },
-				[](auto t){ return std::make_unique< typename decltype(t)::type >(); }
+				[](auto t){
+					return std::make_unique< typename decltype(t)::type >();
+				}
 			)(boost::hana::type_c< Log >);
 		}
 
-		auto has_exec = boost::hana::is_valid([](auto&& x)->decltype((void)x->exec()){});
-		auto has_have_body = boost::hana::is_valid([](auto&& x)->decltype((void)x->have_body()){});
+		auto has_exec = boost::hana::is_valid(
+			[](auto&& x)->decltype((void)x->exec()){}
+		);
+
+		auto has_have_body = boost::hana::is_valid(
+			[](auto&& x)->decltype((void)x->have_body()){}
+		);
 
 
 	} }
@@ -148,7 +173,11 @@ namespace disposer{
 
 		auto log = impl::log::make_log< log_t >();
 
-		static_assert(impl::log::has_exec(log), "In 'log([](Log& os){ ... })' have 'os.exec()' to be a callable expression.");
+		static_assert(
+			impl::log::has_exec(log),
+			"In 'log([](Log& os){ ... })' have 'os.exec()' to be a callable "
+			"expression."
+		);
 
 		impl::log::exec_log(f, log);
 	}
@@ -159,14 +188,21 @@ namespace disposer{
 
 		auto log = impl::log::make_log< log_t >();
 
-		static_assert(impl::log::has_exec(log), "In 'log([](Log& os){ ... }, []{ ... })' have 'os.exec()' to be a callable expression.");
+		static_assert(
+			impl::log::has_exec(log),
+			"In 'log([](Log& os){ ... }, []{ ... })' have 'os.exec()' to be a "
+			"callable expression."
+		);
 
 		boost::hana::if_(impl::log::has_have_body(log),
 			[](auto& log){ log->have_body(); },
 			[](auto&){}
 		)(log);
 
-		return boost::hana::if_(boost::hana::traits::is_void(boost::hana::type_c< decltype(body()) >),
+		return boost::hana::if_(
+			boost::hana::traits::is_void(
+				boost::hana::type_c< decltype(body()) >
+			),
 			[](auto&& f, auto&& body, auto& log){
 				impl::log::exec_body(f, body, log);
 				impl::log::exec_log(f, log);
@@ -180,27 +216,55 @@ namespace disposer{
 	}
 
 	/// \brief Catch all exceptions
-	/// Call the function and catch all exceptions throwing by the function. The name is emited
-	/// via error_log together with the exception message.
+	/// Call the function and catch all exceptions throwing by the function.
+	/// The name is emited via error_log together with the exception message.
 	///
-	/// As function the usage of a Lambda function is possible, which captures all variables by reference. ([&]{/* ... */})
+	/// As function the usage of a Lambda function is possible, which captures
+	/// all variables by reference. ([&]{/* ... */})
 	///
-	/// If the Lambda function does not return anything, result will be a bool, indicating with false whether
-	/// an exception appeared. Otherwise, the result will be a type that is convertible to bool. If and only
-	/// if the conversion becomes true, accessability to the function result using member-function result()
-	/// is permitted. Otherwise, result() will throw a std::logic_error.
+	/// If the Lambda function does not return anything, result will be a bool,
+	/// indicating with false whether an exception appeared. Otherwise, the
+	/// result will be a type that is convertible to bool. If and only if the
+	/// conversion becomes true, accessability to the function result using
+	/// member-function result() is permitted. Otherwise, result() will throw
+	/// a std::logic_error.
 	template < typename Log, typename Body >
 	inline auto exception_catching_log(Log&& f, Body&& body){
 		using log_t = impl::log::extract_log_t< Log >;
 
 		auto log = impl::log::make_log< log_t >();
 
-		auto has_set_exception = boost::hana::is_valid([](auto&& x)->decltype((void)x->set_exception(std::declval< std::exception >())){});
-		auto has_unknown_exception = boost::hana::is_valid([](auto&& x)->decltype((void)x->unknown_exception()){});
 
-		static_assert(impl::log::has_exec(log), "In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have 'os.exec()' to be a callable expression.");
-		static_assert(has_set_exception(log), "In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have 'os.set_exception(std::declval< std::exception >())' to be a callable expression.");
-		static_assert(has_unknown_exception(log), "In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have 'os.unknown_exception()' to be a callable expression.");
+		auto has_set_exception = boost::hana::is_valid(
+			[](auto&& x)->decltype(
+				(void)x->set_exception(std::declval< std::exception >())
+			){}
+		);
+
+		auto has_unknown_exception = boost::hana::is_valid(
+			[](auto&& x)->decltype((void)x->unknown_exception()){}
+		);
+
+
+		static_assert(
+			impl::log::has_exec(log),
+			"In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have "
+			"'os.exec()' to be a callable expression."
+		);
+
+		static_assert(
+			has_set_exception(log),
+			"In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have "
+			"'os.set_exception(std::declval< std::exception >())' to be a "
+			"callable expression."
+		);
+
+		static_assert(
+			has_unknown_exception(log),
+			"In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have "
+			"'os.unknown_exception()' to be a callable expression."
+		);
+
 
 		boost::hana::if_(impl::log::has_have_body(log),
 			[](auto& log){ log->have_body(); },

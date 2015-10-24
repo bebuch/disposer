@@ -39,14 +39,22 @@ namespace disposer{
 
 
 		void operator()(std::size_t id, value_type&& value){
-			trigger_signal(id, std::make_shared< output_data< value_type > >(std::move(value)));
+			trigger_signal(
+				id,
+				std::make_shared< output_data< value_type > >(std::move(value))
+			);
 		}
 
 		void operator()(std::size_t id, value_type const& value){
-			trigger_signal(id, std::make_shared< output_data< value_type > >(value));
+			trigger_signal(
+				id,
+				std::make_shared< output_data< value_type > >(value)
+			);
 		}
 
-		void operator()(std::size_t id, output_data_ptr< value_type > const& value){
+		void operator()(
+			std::size_t id, output_data_ptr< value_type > const& value
+		){
 			trigger_signal(id, value);
 		}
 
@@ -54,8 +62,14 @@ namespace disposer{
 	private:
 		signal_t& signal_;
 
-		void trigger_signal(std::size_t id, output_data_ptr< value_type > const& value){
-			signal_(id, reinterpret_cast< any_type const& >(value), type_id_with_cvr< T >());
+		void trigger_signal(
+			std::size_t id, output_data_ptr< value_type > const& value
+		){
+			signal_(
+				id,
+				reinterpret_cast< any_type const& >(value),
+				type_id_with_cvr< T >()
+			);
 		}
 	};
 
@@ -69,16 +83,25 @@ namespace disposer{
 			static constexpr auto value_types = hana::tuple_t< T, U ... >;
 
 			static_assert(
-				!hana::fold(hana::transform(value_types, hana::traits::is_const), false, std::logical_or<>()),
+				!hana::fold(hana::transform(
+					value_types,
+					hana::traits::is_const
+				), false, std::logical_or<>()),
 				"disposer::output types are not allowed to be const"
 			);
 
 			static_assert(
-				!hana::fold(hana::transform(value_types, hana::traits::is_reference), false, std::logical_or<>()),
+				!hana::fold(hana::transform(
+					value_types,
+					hana::traits::is_reference
+				), false, std::logical_or<>()),
 				"disposer::output types are not allowed to be references"
 			);
 
-			static_assert(is_type_unique< T, U ... >, "disposer::output must have distict types");
+			static_assert(
+				is_type_unique< T, U ... >,
+				 "disposer::output must have distict types"
+			);
 
 
 			using output_base::output_base;
@@ -86,21 +109,30 @@ namespace disposer{
 
 			template < typename V, typename W >
 			auto put(W&& value){
-				static_assert(hana::contains(value_types, hana::type_c< V >), "type V in put< V > is not a output type");
+				static_assert(
+					hana::contains(value_types, hana::type_c< V >),
+					"type V in put< V > is not a output type"
+				);
 
 				if(!active_types_[type_position_v< V, T, U ... >]){
 					throw std::logic_error(
-						"output '" + name + "' put inactive type '" + type_id_with_cvr< V >().pretty_name() + "'"
+						"output '" + name + "' put inactive type '" +
+						type_id_with_cvr< V >().pretty_name() + "'"
 					);
 				}
 
-				return output_interface< V >(signal)(id, static_cast< W&& >(value));
+				return output_interface< V >(signal)(
+					id, static_cast< W&& >(value)
+				);
 			}
 
 
 			template < typename V >
 			void activate(){
-				static_assert(hana::contains(value_types, hana::type_c< V >), "type V in activate< V > is not a output type");
+				static_assert(
+					hana::contains(value_types, hana::type_c< V >),
+					"type V in activate< V > is not a output type"
+				);
 
 				active_types_[type_position_v< V, T, U ... >] = true;
 			}
@@ -113,10 +145,19 @@ namespace disposer{
 
 			void activate_types(std::vector< type_index > const& types){
 				for(auto& type: types){
-					auto iter = std::find(type_indices_.begin(), type_indices_.end(), type);
+					auto iter = std::find(
+						type_indices_.begin(),
+						type_indices_.end(),
+						type
+					);
+
 					if(iter == type_indices_.end()){
-						throw std::runtime_error("type '" + type.pretty_name() + "' is not an output type of '" + name + "'");
+						throw std::runtime_error(
+							"type '" + type.pretty_name() +
+							"' is not an output type of '" + name + "'"
+						);
 					}
+
 					auto index = iter - type_indices_.begin();
 					active_types_[index] = true;
 				}
@@ -135,16 +176,24 @@ namespace disposer{
 
 
 		private:
-			static std::array< type_index, 1 + sizeof...(U) > const type_indices_;
+			static std::array< type_index, 1 + sizeof...(U) > const
+				type_indices_;
 
 			std::array< bool, 1 + sizeof...(U) > active_types_{{false}};
 		};
 
 		template < typename T, typename ... U >
-		std::array< type_index, 1 + sizeof...(U) > const output< T, U ... >::type_indices_{{ type_id_with_cvr< T >(), type_id_with_cvr< U >() ... }};
+		std::array< type_index, 1 + sizeof...(U) > const
+		output< T, U ... >::type_indices_{{
+			type_id_with_cvr< T >(),
+			type_id_with_cvr< U >() ...
+		}};
 
 
-		template < template< typename, typename ... > class Container, typename ... T >
+		template < 
+			template < typename, typename ... > class Container,
+			typename ... T
+		>
 		class container_output: public output< Container< T > ... >{
 		public:
 			using output< Container< T > ... >::output;
@@ -152,12 +201,16 @@ namespace disposer{
 
 			template < typename V >
 			void activate(){
-				output< Container< T > ... >::template activate< Container< V > >();
+				output< Container< T > ... >::
+				template activate< Container< V > >();
 			}
 
 			template < typename V, typename W, typename ... X >
 			void activate(){
-				output< Container< T > ... >::template activate< Container< V >, Container< W >, Container< X > ... >();
+				output< Container< T > ... >::
+				template activate<
+					Container< V >, Container< W >, Container< X > ...
+				>();
 			}
 		};
 
@@ -176,7 +229,9 @@ namespace disposer{
 
 		template < typename W >
 		auto put(W&& value){
-			impl::output::output< T >::template put< T >(static_cast< W&& >(value));
+			impl::output::output< T >::template put< T >(
+				static_cast< W&& >(value)
+			);
 		}
 	};
 
@@ -187,29 +242,43 @@ namespace disposer{
 
 
 
-	template < template< typename, typename ... > class Container, typename ... T >
-	struct container_output: impl::output::container_output< Container, T ... >{
+	template <
+		template< typename, typename ... > class Container, typename ... T
+	>
+	struct container_output:
+		impl::output::container_output< Container, T ... >
+	{
 	public:
-		using impl::output::container_output< Container, T ... >::container_output;
+		using impl::output::
+			container_output< Container, T ... >::container_output;
 
 		template < typename V, typename W >
 		auto put(W&& value){
-			impl::output::container_output< Container, T ... >::template put< Container< V > >(static_cast< W&& >(value));
+			impl::output::container_output< Container, T ... >::
+				template put< Container< V > >(static_cast< W&& >(value));
 		}
 	};
 
 	template < template< typename, typename ... > class Container, typename T >
-	struct container_output< Container, T >: impl::output::container_output< Container, T >{
+	struct container_output< Container, T >:
+		impl::output::container_output< Container, T >
+	{
 		using impl::output::container_output< Container, T >::container_output;
 
 		template < typename W >
 		auto put(W&& value){
-			impl::output::container_output< Container, T >::template put< Container< T > >(static_cast< W&& >(value));
+			impl::output::container_output< Container, T >::
+				template put< Container< T > >(static_cast< W&& >(value));
 		}
 	};
 
-	template < template< typename, typename ... > class Container, typename ... T >
-	struct container_output< Container, type_list< T ... > >: container_output< Container, T ... >{
+	template <
+		template< typename, typename ... > class Container,
+		typename ... T
+	>
+	struct container_output< Container, type_list< T ... > >:
+		container_output< Container, T ... >
+	{
 		using container_output< Container, T ... >::container_output;
 	};
 

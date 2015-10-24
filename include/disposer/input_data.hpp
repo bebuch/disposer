@@ -35,9 +35,18 @@ namespace disposer{
 			if(last_use_){
 				return std::move(data_);
 			}else{
-				return hana::if_(hana::traits::is_copy_constructible(hana::type_c< T >),
-					[](auto& data){ return std::make_shared< output_data< T > >(data); },
-					[](auto&)->output_data_ptr< T >{ throw std::logic_error("Type '" + boost::typeindex::type_id< T >().pretty_name() + "' is not copy constructible"); }
+				return hana::if_(
+					hana::traits::is_copy_constructible(hana::type_c< T >),
+					[](auto& data){
+						return std::make_shared< output_data< T > >(data);
+					},
+					[](auto&)->output_data_ptr< T >{
+						throw std::logic_error(
+							"Type '" +
+							boost::typeindex::type_id< T >().pretty_name() +
+							"' is not copy constructible"
+						);
+					}
 				)(data());
 			}
 		}
@@ -52,7 +61,9 @@ namespace disposer{
 	template < typename T >
 	class input_data< std::future< T > >{
 	public:
-		input_data(output_data_ptr< std::future< T > > const& data, bool last_use):
+		input_data(
+			output_data_ptr< std::future< T > > const& data, bool last_use
+		):
 			data_(data),
 			last_use_(last_use)
 			{}
@@ -67,9 +78,18 @@ namespace disposer{
 			if(last_use_){
 				return data_->get();
 			}else{
-				return hana::if_(hana::traits::is_copy_constructible(hana::type_c< T >),
-					[](auto& data){ return std::make_shared< output_data< T > >(data); },
-					[](auto&)->output_data_ptr< T >{ throw std::logic_error("Type '" + boost::typeindex::type_id< T >().pretty_name() + "' is not copy constructible"); }
+				return hana::if_(
+					hana::traits::is_copy_constructible(hana::type_c< T >),
+					[](auto& data){
+						return std::make_shared< output_data< T > >(data);
+					},
+					[](auto&)->output_data_ptr< T >{
+						throw std::logic_error(
+							"Type '" +
+							boost::typeindex::type_id< T >().pretty_name() +
+							"' is not copy constructible"
+						);
+					}
 				)(data());
 			}
 		}

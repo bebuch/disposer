@@ -19,7 +19,9 @@ namespace disposer{
 
 	class signal_t{
 	public:
-		void operator()(std::size_t id, any_type const& data, type_index const& type)const{
+		void operator()(
+			std::size_t id, any_type const& data, type_index const& type
+		)const{
 			for(auto& target: targets_){
 				target.first.add(id, data, type, target.second);
 			}

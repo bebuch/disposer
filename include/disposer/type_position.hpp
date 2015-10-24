@@ -27,9 +27,15 @@ namespace disposer{
 	};
 
 	template < typename Ref, std::size_t Index, typename Test >
-	struct type_position< Ref, Index, Test >: type_position_test< Index, std::is_same< Ref, Test >::value >{};
+	struct type_position< Ref, Index, Test >:
+		type_position_test< Index, std::is_same< Ref, Test >::value >{};
 
-	template < typename Ref, std::size_t Index, typename Test, typename ... Tests >
+	template <
+		typename Ref,
+		std::size_t Index,
+		typename Test,
+		typename ... Tests
+	>
 	struct type_position< Ref, Index, Test, Tests ... >: std::conditional_t<
 		std::is_same< Ref, Test >::value,
 		std::integral_constant< std::size_t, Index >,
@@ -37,10 +43,12 @@ namespace disposer{
 	>{};
 
 	template < typename Ref, std::size_t Index, typename ... Tests >
-	struct type_position< Ref, Index, type_list< Tests ... > >: type_position< Ref, Index, Tests ... >{};
+	struct type_position< Ref, Index, type_list< Tests ... > >:
+		type_position< Ref, Index, Tests ... >{};
 
 	template < typename Ref, typename ... Tests >
-	constexpr std::size_t type_position_v = type_position< Ref, 0, Tests ... >::value;
+	constexpr std::size_t type_position_v =
+		type_position< Ref, 0, Tests ... >::value;
 
 
 }

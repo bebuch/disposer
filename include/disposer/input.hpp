@@ -39,16 +39,23 @@ namespace disposer{
 		>;
 
 		static_assert(
-			!hana::fold(hana::transform(value_types, hana::traits::is_const), false, std::logical_or<>()),
+			!hana::fold(hana::transform(
+				value_types, hana::traits::is_const
+			), false, std::logical_or<>()),
 			"disposer::input types are not allowed to be const"
 		);
 
 		static_assert(
-			!hana::fold(hana::transform(value_types, hana::traits::is_reference), false, std::logical_or<>()),
+			!hana::fold(hana::transform(
+				value_types, hana::traits::is_reference
+			), false, std::logical_or<>()),
 			"disposer::input types are not allowed to be references"
 		);
 
-		static_assert(is_type_unique< T, U ... >, "disposer::input must have distict types");
+		static_assert(
+			is_type_unique< T, U ... >,
+			"disposer::input must have distict types"
+		);
 
 
 		using input_base::input_base;
@@ -59,7 +66,9 @@ namespace disposer{
 			auto from = data_.begin();
 			auto to = data_.upper_bound(id);
 
-			std::multimap< std::size_t, value_type > result(std::make_move_iterator(from), std::make_move_iterator(to));
+			std::multimap< std::size_t, value_type > result(
+				std::make_move_iterator(from), std::make_move_iterator(to)
+			);
 			data_.erase(from, to);
 
 			return result;
@@ -76,10 +85,18 @@ namespace disposer{
 
 
 	private:
-		virtual void add(std::size_t id, any_type const& value, type_index const& type, bool last_use)override{
+		virtual void add(
+			std::size_t id,
+			any_type const& value,
+			type_index const& type,
+			bool last_use
+		)override{
 			auto iter = type_map_.find(type);
 			if(iter == type_map_.end()){
-				throw std::logic_error("unknown add type '" + type.pretty_name() + "' in input + '" + name + "'");
+				throw std::logic_error(
+					"unknown add type '" + type.pretty_name() +
+					"' in input + '" + name + "'"
+				);
 			}
 
 			// Call add< type >(id, value, last_use)
@@ -103,7 +120,9 @@ namespace disposer{
 			return result;
 		}
 
-		virtual bool activate_types(std::vector< type_index > const& types)noexcept override{
+		virtual bool activate_types(
+			std::vector< type_index > const& types
+		)noexcept override{
 			for(auto& type: types){
 				auto iter = active_map_.find(type);
 
@@ -125,7 +144,9 @@ namespace disposer{
 		}
 
 
-		static std::map< type_index, void(input::*)(std::size_t, any_type const&, bool) > const type_map_;
+		static std::map<
+			type_index, void(input::*)(std::size_t, any_type const&, bool)
+		> const type_map_;
 
 		std::map< type_index, bool > active_map_ = {
 			{ type_id_with_cvr< T >(), false },
@@ -141,18 +162,27 @@ namespace disposer{
 	class input< type_list< T, U ... > >: public input< T, U ... >{};
 
 	template < typename T, typename ... U >
-	std::map< type_index, void(input< T, U ... >::*)(std::size_t, any_type const&, bool) > const input< T, U ... >::type_map_ = {
+	std::map<
+		type_index,
+		void(input< T, U ... >::*)(std::size_t, any_type const&, bool)
+	> const input< T, U ... >::type_map_ = {
 			{ type_id_with_cvr< T >(), &input< T, U ... >::add< T > },
 			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
 		};
 
-	template < template< typename, typename ... > class Container, typename ... T >
-	struct container_input: input< Container< T > ... >{
+	template <
+		template< typename, typename ... > class Container, typename ... T
+	> struct container_input:
+		input< Container< T > ... >
+	{
 		using input< Container< T > ... >::input;
 	};
 
-	template < template< typename, typename ... > class Container, typename ... T >
-	struct container_input< Container, type_list< T ... > >: container_input< Container, T ... >{
+	template <
+		template< typename, typename ... > class Container, typename ... T
+	> struct container_input< Container, type_list< T ... > >:
+		container_input< Container, T ... >
+	{
 		using container_input< Container, T ... >::container_input;
 	};
 

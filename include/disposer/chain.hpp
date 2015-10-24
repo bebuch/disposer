@@ -31,7 +31,12 @@ namespace disposer{
 	*/
 	class chain{
 	public:
-		chain(std::vector< module_ptr >&& modules, id_generator& generate_id, std::string const& name, std::string const& group);
+		chain(
+			std::vector< module_ptr >&& modules,
+			id_generator& generate_id,
+			std::string const& name,
+			std::string const& group
+		);
 
 		chain(chain const&) = delete;
 		chain(chain&&) = delete;
@@ -50,7 +55,12 @@ namespace disposer{
 
 	private:
 		template < typename F >
-		void process_module(std::size_t i, std::size_t run, F const& action, char const* action_name);
+		void process_module(
+			std::size_t i,
+			std::size_t run,
+			F const& action,
+			char const* action_name
+		);
 
 		std::vector< module_ptr > modules_;
 

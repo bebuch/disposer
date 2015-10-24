@@ -22,7 +22,10 @@ namespace disposer{
 
 	template < typename T, typename U, typename ... V >
 	constexpr bool is_type_unique(){
-		return !std::is_same< T, U >::value && is_type_unique< T, V ... >() && is_type_unique< U, V ... >();
+		return
+			!std::is_same< T, U >::value
+			&& is_type_unique< T, V ... >()
+			&& is_type_unique< U, V ... >();
 	}
 
 	template < typename ... T >

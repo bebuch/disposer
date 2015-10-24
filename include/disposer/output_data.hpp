@@ -49,7 +49,8 @@ namespace disposer{
 	template < typename T >
 	class output_data< std::future< T > >{
 	public:
-		output_data(std::future< T >&& future): future_(std::move(future)), called_(false) {}
+		output_data(std::future< T >&& future):
+			future_(std::move(future)), called_(false) {}
 
 		output_data_ptr< T > get(){
 			get_future();
@@ -86,7 +87,8 @@ namespace disposer{
 	template <>
 	class output_data< std::future< void > >{
 	public:
-		output_data(std::future< void >&& future): future_(std::move(future)), called_(false) {}
+		output_data(std::future< void >&& future):
+			future_(std::move(future)), called_(false) {}
 
 		void wait()const{
 			std::lock_guard< std::mutex > lock(mutex_);

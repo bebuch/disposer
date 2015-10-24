@@ -20,8 +20,14 @@ namespace disposer{
 
 
 	template < typename CharT, typename Traits >
-	inline std::basic_ostream< CharT, Traits >& time_to_string(std::basic_ostream< CharT, Traits >& os, std::chrono::system_clock::time_point const& time = std::chrono::system_clock::now()) {
-		auto microseconds = std::chrono::duration_cast< std::chrono::microseconds >(time.time_since_epoch());
+	inline std::basic_ostream< CharT, Traits >& time_to_string(
+		std::basic_ostream< CharT, Traits >& os,
+		std::chrono::system_clock::time_point const& time =
+			std::chrono::system_clock::now()
+	){
+		auto microseconds = std::chrono::duration_cast<
+				std::chrono::microseconds
+			>(time.time_since_epoch());
 		auto localtime = std::chrono::system_clock::to_time_t(time);
 		auto datetime = *std::localtime(&localtime);
 
@@ -37,8 +43,15 @@ namespace disposer{
 			<< std::setw(3) << microseconds.count() % 1000;
 	}
 
-	template < typename CharT, typename Traits = std::char_traits< CharT >, typename Allocator = std::allocator< CharT > >
-	inline std::basic_string< CharT, Traits, Allocator > time_to_string(std::chrono::system_clock::time_point const& time = std::chrono::system_clock::now()) {
+	template <
+		typename CharT,
+		typename Traits = std::char_traits< CharT >,
+		typename Allocator = std::allocator< CharT >
+	>
+	inline std::basic_string< CharT, Traits, Allocator > time_to_string(
+		std::chrono::system_clock::time_point const& time =
+			std::chrono::system_clock::now()
+	){
 		std::basic_ostringstream< CharT, Traits, Allocator > os;
 
 		time_to_string(os, time);
@@ -46,7 +59,10 @@ namespace disposer{
 		return os.str();
 	}
 
-	inline std::string time_to_string(std::chrono::system_clock::time_point const& time = std::chrono::system_clock::now()) {
+	inline std::string time_to_string(
+		std::chrono::system_clock::time_point const& time =
+			std::chrono::system_clock::now()
+	){
 		return time_to_string< char >(time);
 	}
 

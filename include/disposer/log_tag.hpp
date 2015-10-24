@@ -42,7 +42,11 @@ namespace disposer{
 			time_to_string(os_, start_);
 
 			if(body_){
-				os_ << " ( " << std::setfill(' ') << std::setprecision(3) << std::setw(12) << std::chrono::duration< double, std::milli >(end - start_).count() << "ms ) ";
+				os_ << " ( " << std::setfill(' ') << std::setprecision(3)
+					<< std::setw(12)
+					<< std::chrono::duration< double, std::milli >(
+							end - start_
+						).count() << "ms ) ";
 			}else{
 				os_ << " ( no content     ) ";
 			}
@@ -58,7 +62,9 @@ namespace disposer{
 		}
 
 		void set_exception(std::exception const& error){
-			exception_text_ = " (exception catched: [" + boost::typeindex::type_id_runtime(error).pretty_name() + "] " + error.what() + ")";
+			exception_text_ = " (exception catched: [" +
+				boost::typeindex::type_id_runtime(error).pretty_name() +
+				"] " + error.what() + ")";
 		}
 
 		void unknown_exception(){

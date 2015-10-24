@@ -27,12 +27,15 @@ namespace disposer{
 
 	class parameter_processor{
 	public:
-		parameter_processor(parameter_list const& parameters): parameters_(parameters) {}
+		parameter_processor(parameter_list const& parameters):
+			parameters_(parameters) {}
 
 		template < typename T >
 		T get(std::string const& name){
 			auto iter = find(name);
-			if(iter == parameters_.cend()) throw std::runtime_error("parameter '" + name + "' not found");
+			if(iter == parameters_.cend()){
+				throw std::runtime_error("parameter '" + name + "' not found");
+			}
 			return cast< T >(name, iter->second);
 		}
 
@@ -44,10 +47,18 @@ namespace disposer{
 		template < typename T >
 		T get(std::string const& name, T&& default_value){
 			// TODO: somthing like:
-			// static_assert(std::is_same< T, boost::optional< typename T::value_type > >::value, "parameter can not be optional and default at the same time");
+			// static_assert(
+			// 	std::is_same<
+			// 		T,
+			// 		boost::optional< typename T::value_type >
+			// 	>::value,
+			// 	"parameter can not be optional and default at the same time"
+			// );
 
 			auto iter = find(name);
-			if(iter == parameters_.cend()) return std::forward< T >(default_value);
+			if(iter == parameters_.cend()){
+				return std::forward< T >(default_value);
+			}
 			return cast< T >(name, iter->second);
 		}
 
@@ -86,7 +97,11 @@ namespace disposer{
 		T cast(std::string const& name, std::string const& value)try{
 			return do_cast< T >(value);
 		}catch(...){
-			throw std::runtime_error("parameter '" + name + "' (value is '" + value + "') can not be converted to '" + boost::typeindex::type_id< T >().pretty_name() + "'");
+			throw std::runtime_error(
+				"parameter '" + name + "' (value is '" + value +
+				"') can not be converted to '" +
+				boost::typeindex::type_id< T >().pretty_name() + "'"
+			);
 		}
 
 		template < typename T >
@@ -116,15 +131,23 @@ namespace disposer{
 	}
 
 	template <>
-	inline unsigned char parameter_processor::do_cast(std::string const& value){
+	inline unsigned char parameter_processor::do_cast(
+		std::string const& value
+	){
 		auto result = boost::lexical_cast< unsigned >(value);
-		if(result > std::numeric_limits< unsigned char >::max()) std::logic_error("value is not in range");
+		if(result > std::numeric_limits< unsigned char >::max()){
+			std::logic_error("value is not in range");
+		}
 		return static_cast< signed char >(result);
 	}
 
 	template <>
 	inline char parameter_processor::do_cast(std::string const& value){
-		return static_cast< char >(parameter_processor::do_cast< std::conditional_t< std::is_signed< char >::value, signed char, unsigned char > >(value));
+		return static_cast< char >(
+			parameter_processor::do_cast< std::conditional_t<
+				std::is_signed< char >::value, signed char, unsigned char >
+			>(value)
+		);
 	}
 
 	inline std::string make_list_string(std::set< std::string > const& list){
