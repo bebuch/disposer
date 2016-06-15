@@ -1,13 +1,10 @@
-path-constant LIBRARIES
-	# path to your libraries directory
-	: /media/data/libraries/src
-	;
-
+import os ;
+local boost = [ os.environ BOOST ] ;
+local disposer = [ os.environ DISPOSER ] ;
 
 use-project /boost
-	: $(LIBRARIES)/boost
+	: $(boost)
 	;
-
 
 project disposer
 	:
@@ -22,23 +19,19 @@ project disposer
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
 	<toolset>gcc:<cxxflags>-Wall
 	<toolset>gcc:<cxxflags>-Wextra
-	<toolset>gcc:<cxxflags>-Wno-unused-local-typedefs
-	<toolset>gcc:<cxxflags>-Wno-deprecated-declarations
 	<toolset>gcc:<linkflags>-lpthread
 
 	<toolset>clang:<cxxflags>-std=c++14
 	<toolset>clang:<cxxflags>-fconstexpr-depth=1024
 	<toolset>clang:<cxxflags>-Wall
 	<toolset>clang:<cxxflags>-Wextra
-	<toolset>clang:<cxxflags>-Wno-deprecated-register
-	<toolset>clang:<cxxflags>-Wno-unused-local-typedef
 	<toolset>clang:<cxxflags>-stdlib=libc++
 	<toolset>clang:<cxxflags>-DBOOST_ASIO_HAS_STD_CHRONO
 	<toolset>clang:<linkflags>-lpthread
 	<toolset>clang:<linkflags>-lc++abi
 	<toolset>clang:<linkflags>-stdlib=libc++
 
-	<include>$(LIBRARIES)/boost
+	<include>$(boost)
 	:
 	usage-requirements <include>include
 	;
