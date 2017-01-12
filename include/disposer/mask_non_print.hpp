@@ -56,7 +56,7 @@ namespace disposer{
 				default: result << c;
 			}
 		}
-		return result;
+		return result.str();
 	}
 
 

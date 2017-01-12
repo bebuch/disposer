@@ -11,6 +11,7 @@
 
 #include "log_base.hpp"
 #include "time_to_string.hpp"
+#include "mask_non_print.hpp"
 
 #include <boost/type_index.hpp>
 
@@ -54,7 +55,7 @@ namespace disposer{
 
 		void post(){
 			if(exception_) os_ << " (failed)";
-			os_ << exception_text_ << std::endl;
+			os_ << exception_text_;
 		}
 
 		void failed(){
@@ -76,7 +77,7 @@ namespace disposer{
 		}
 
 		void exec()const{
-			std::clog << os_.str();
+			std::clog << (mask_non_print(os_.str()) + '\n');
 		}
 
 		template < typename T >
