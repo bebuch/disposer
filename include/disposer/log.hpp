@@ -10,7 +10,6 @@
 #define _disposer__log__hpp_INCLUDED_
 
 #include <boost/hana.hpp>
-
 #include <boost/optional.hpp>
 
 

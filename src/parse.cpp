@@ -9,14 +9,11 @@
 #include <disposer/parse.hpp>
 
 #include <boost/spirit/home/x3.hpp>
-#include <boost/spirit/home/x3/support/utility/error_reporting.hpp>
-#include <boost/spirit/home/x3/support/ast/position_tagged.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include <fstream>
 #include <string>
-#include <complex>
-#include <iostream>
+#include <map>
 
 #include <disposer/log_base.hpp>
 #include <disposer/log.hpp>
@@ -178,13 +175,13 @@ namespace disposer{
 
 
 			auto const parameter_set_def =
-				'\t' >> keyword >> separator >>
-				*parameter
+				x3::expect['\t' >> keyword >> separator] >>
+				x3::expect[+parameter]
 			;
 
 			auto const parameter_sets_def =
-				"parameter_set" > separator >>
-				*parameter_set
+				"parameter_set" > separator >
+				+parameter_set
 			;
 
 
@@ -211,16 +208,16 @@ namespace disposer{
 
 
 			auto const module_def =
-				'\t' >> keyword >> *space >>
+				('\t' > keyword) >> *space >>
 					'=' >> *space >> value >> separator >>
 				*("\t\tparameter_set" >> *space >>
 					'=' >> *space >> value >> separator) >>
-				*parameter
+				+parameter
 			;
 
 			auto const modules_def =
-				"module" > separator >>
-				*module
+				("module" > separator) >>
+				+module
 			;
 
 			BOOST_SPIRIT_DEFINE(
@@ -249,32 +246,32 @@ namespace disposer{
 
 
 			auto const io_def =
-				"\t\t\t\t" >> keyword >> *space >>
-					 '=' >> *space >> value >> separator
+				"\t\t\t\t" > (keyword >> *space) >
+					('=' >> *space) > value > separator
 			;
 
 			auto const chain_module_def =
-				"\t\t" >> keyword >> separator >>
+				("\t\t" > keyword > separator) >>
 				-(
-					"\t\t\t<-" >> separator >>
+					("\t\t\t<-" > separator) >>
 					*io
 				) >>
 				-(
-					"\t\t\t->" >> separator >>
+					("\t\t\t->" > separator) >>
 					*io
 				)
 			;
 
 			auto const chain_def =
-				'\t' >> keyword >> *space >>
-					-('=' >> *space >> value) >> separator >>
-				-("\t\tid_generator" >> *space >>
-					'=' >> *space >> value >> separator) >>
+				('\t' > (keyword >> *space) >>
+					-(('=' >> *space) > value) > separator) >>
+				-(("\t\tid_generator" >> *space) >
+					('=' >> *space) > value > separator) >>
 				*chain_module
 			;
 
 			auto const chains_def =
-				"chain" > separator >>
+				("chain" > separator) >>
 				*chain
 			;
 
@@ -337,35 +334,16 @@ namespace disposer{
 		}
 
 
-		struct config{
-			template < typename Iter, typename Exception, typename Context >
-			x3::error_handler_result on_error(
-				Iter& first, Iter const& last,
-				Exception const& x, Context const& context
-			){
-				using namespace std::literals::string_literals;
-
-				auto const line_number = line_count(first, x.where());
-				auto const before = get_error_line_before(first, x.where());
-				auto const after = get_error_line_after(x.where(), last);
-				std::ostringstream os;
-				os << "Syntax error at line " << line_number << ", pos "
-					<< before.size() << ": '" << before << after << "'";
-
-				throw std::runtime_error(os.str());
-
-				return x3::error_handler_result::fail;
-			}
-		};
+		struct config;
 		x3::rule< config, types::parse::config >
 			const config("config");
 
 
 		auto const config_def = x3::no_skip[
-			empty_lines > comment >
-			set::grammar >
-			module::grammar >
-			chain::grammar
+			empty_lines >> -comment >>
+			-set::grammar >>
+			x3::expect[module::grammar] >>
+			x3::expect[chain::grammar]
 		];
 
 
@@ -375,6 +353,56 @@ namespace disposer{
 
 
 		auto const grammar = config;
+
+		struct config{
+			static std::string convert(std::string const& tag){
+				std::map< std::string, std::string > map{
+					{
+						"modules",
+						"keyword 'parameter_set' or keyword 'module'"
+					},{
+						"separator",
+						"newline"
+					},{
+						"N5boost6spirit2x38sequenceINS2_INS1_12literal_charINS"
+						"0_13char_encoding8standardENS1_11unused_typeEEENS1_4r"
+						"uleIN8disposer6parser7keywordENSt3__112basic_stringIc"
+						"NSC_11char_traitsIcEENSC_9allocatorIcEEEELb0EEEEENS8_"
+						"INSA_9separatorES6_Lb0EEEEE",
+						"newline"
+					},{
+						"N5boost6spirit2x38sequenceINS2_INS1_12literal_charINS"
+						"0_13char_encoding8standardENS1_11unused_typeEEENS1_4r"
+						"uleIN8disposer6parser7keywordENSt3__112basic_stringIc"
+						"NSC_11char_traitsIcEENSC_9allocatorIcEEEELb0EEEEENS8_"
+						"INSA_9separatorES6_Lb0EEEEE",
+						"newline"
+					}
+				};
+				auto iter = map.find(tag);
+				return iter == map.end() ? tag : iter->second;
+			}
+
+			template < typename Iter, typename Exception, typename Context >
+			x3::error_handler_result on_error(
+				Iter& first, Iter const& last,
+				Exception const& x, Context const& /*context*/
+			){
+				using namespace std::literals::string_literals;
+
+				auto const line_number = line_count(first, x.where());
+				auto const before = get_error_line_before(first, x.where());
+				auto const after = get_error_line_after(x.where(), last);
+				std::ostringstream os;
+				os << "Syntax error at line " << line_number << ", pos "
+					<< before.size() << ": '" << before << after
+					<< "', expected " << convert(x.which());
+
+				throw std::runtime_error(os.str());
+
+				return x3::error_handler_result::fail;
+			}
+		};
 
 
 	}
@@ -405,7 +433,8 @@ namespace disposer{
 			auto const after = parser::get_error_line_after(iter, end);
 			std::ostringstream os;
 			os << "Syntax error at line " << line_number << ", pos "
-				<< before.size() << ": '" << before << after << "'";
+				<< before.size() << ": '" << before << after
+				<< "', incomplete parsing (programming error!)";
 			throw std::runtime_error(os.str());
 		}
 
