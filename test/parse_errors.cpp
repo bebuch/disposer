@@ -106,7 +106,166 @@ R"file(parameter_set
 module
 )file"
 	,
-"Syntax error at line 7, pos 1: '', expected "
+"Syntax error at line 7, pos 0: '', expected at least one module line "
+"'\tname = module\n'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3)file"
+	,
+"Syntax error at line 7, pos 6: '\tname3', expected a module line "
+"'\tname = module\n'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1)file"
+	,
+"Syntax error at line 7, pos 16: '\tname3 = module1', expected a module line "
+"'\tname = module\n'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+)file"
+	,
+"Syntax error at line 8, pos 0: '', expected a parameter_set "
+"reference '\t\tparameter_set = name\n', where 'parameter_set' is a keyword "
+"and 'name' the name of the referenced parameter set or a parameter "
+"'\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set =)file"
+	,
+"Syntax error at line 8, pos 17: '\t\tparameter_set =', expected a "
+"parameter_set reference '\t\tparameter_set = name\n', where 'parameter_set' "
+"is a keyword and 'name' the name of the referenced parameter set"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set = name1
+)file"
+	,
+"Syntax error at line 9, pos 0: '', expected "
+"a parameter_set reference '\t\tparameter_set = name\n', where "
+"'parameter_set' is a keyword and 'name' the name of the referenced parameter "
+"set or a parameter '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set = name1
+			test
+)file"
+	,
+"Syntax error at line 9, pos 0: '\t\t\ttest\n', expected "
+"a parameter_set reference '\t\tparameter_set = name\n', where "
+"'parameter_set' is a keyword and 'name' the name of the referenced parameter "
+"set or a parameter '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+			parameter_set = name1
+)file"
+	,
+"Syntax error at line 8, pos 0: '\t\t\tparameter_set = name1\n', expected a "
+"parameter_set reference '\t\tparameter_set = name\n', where 'parameter_set' "
+"is a keyword and 'name' the name of the referenced parameter set or a "
+"parameter '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set = name1
+		test = 5)file"
+	,
+"Syntax error at line 9, pos 10: '\t\ttest = 5', expected "
+"a parameter '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set = name1
+		test1 = 5
+		test2 = 2)file"
+	,
+"Syntax error at line 10, pos 11: '\t\ttest2 = 2', expected "
+"a parameter '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+	name3 = module1
+		parameter_set = name1
+		test1 = 5
+		parameter_set = name2
+)file"
+	,
+"Syntax error at line 10, pos 2: '\t\tparameter_set = name2\n', expected "
+"a parameter, but a parameter name ('\t\tname = value\n') must not be "
+"'parameter_set'"
 	}
 };
 

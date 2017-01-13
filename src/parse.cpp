@@ -180,9 +180,13 @@ namespace disposer{
 
 		x3::rule< struct value, std::string > const value("value");
 
-		struct parameter;
-		x3::rule< parameter, types::parse::parameter > const
+		struct parameter_tag;
+		x3::rule< parameter_tag, types::parse::parameter > const
 			parameter("parameter");
+
+		struct prevent_parameter_set;
+		x3::rule< prevent_parameter_set > const
+			prevent_parameter_set("prevent_parameter_set");
 
 
 		auto const space_def =
@@ -219,8 +223,12 @@ namespace disposer{
 			*(value_spaces | +(char_ - space - eol))
 		;
 
+		auto const prevent_parameter_set_def =
+			x3::expect[!("parameter_set" >> *space >> '=')]
+		;
+
 		auto const parameter_def =
-			("\t\t" >> !("parameter_set" >> *space >> '=')) > keyword  >
+			("\t\t" >> prevent_parameter_set) > keyword  >
 			*space > '=' > *space > value > separator
 		;
 
@@ -234,16 +242,34 @@ namespace disposer{
 			keyword,
 			value_spaces,
 			value,
+			prevent_parameter_set,
 			parameter
 		)
 
 
-		struct parameter: error_base{
+		struct parameter_tag: error_base{
 			virtual const char* message()const override{
 				return "a parameter '\t\tname = value\n' with name != "
 					"'parameter_set'";
 			}
 		};
+
+
+		struct prevent_parameter_set: error_base{
+			virtual const char* message()const override{
+				return "a parameter, but a parameter name "
+					"('\t\tname = value\n') must not be 'parameter_set'";
+			}
+		};
+
+
+		namespace module{
+
+			struct modules: error_base{
+				virtual const char* message()const override;
+			};
+
+		}
 
 
 		namespace set{
@@ -280,10 +306,11 @@ namespace disposer{
 			;
 
 			auto const parameter_sets_def =
-				(("parameter_set" > separator) | x3::expect[("chain" >> separator)[
-					([](auto& ctx){ x3::_pass(ctx) = false; })
-				]]) >>
-				parameter_sets_params
+				(
+					("parameter_set" > separator) |
+					(x3::expect["chain" >> separator])
+					[([](auto& ctx){ x3::_pass(ctx) = false; })]
+				) >> parameter_sets_params
 			;
 
 			auto const parameter_sets_params_def =
@@ -322,11 +349,10 @@ namespace disposer{
 					Iter& first, Iter const& last,
 					Exception const& x, Context const& context
 				){
-					if(x.which() == "separator"){
-						msg_ = "keyword line 'parameter_set\n'";
-					}else{
-						msg_ = "keyword line 'parameter_set\n' or keyword line "
-							"'module\n'";
+					msg_ = "keyword line 'parameter_set\n'";
+					if(x.which() != "separator"){
+						msg_ += " or ";
+						msg_ += module::modules().message();
 					}
 					return error_base::on_error(first, last, x, context);
 				}
@@ -356,27 +382,50 @@ namespace disposer{
 			x3::rule< module, types::parse::module > const
 				module("module");
 
+			struct module_sets;
+			x3::rule< module_sets, std::vector< std::string > > const
+				module_sets("module_sets");
+
 			struct modules;
 			x3::rule< modules, types::parse::modules > const
 				modules("modules");
 
+			struct modules_params;
+			x3::rule< modules_params, types::parse::modules > const
+				modules_params("modules_params");
+
 
 			auto const module_def =
-				('\t' > keyword) >> *space >>
-					'=' >> *space >> value >> separator >>
-				*("\t\tparameter_set" >> *space >>
-					'=' >> *space >> value >> separator) >>
-				+parameter
+				(('\t' > keyword) > *space > '=' > *space > value > separator)
+				>> module_sets >> *parameter
+			;
+
+			auto const module_sets_def =
+				*(
+					(
+						("\t\tparameter_set" >> *space >> '=')
+						> *space > value > separator
+					) | (
+						(x3::expect["\t\t" >> keyword])
+						[([](auto& ctx){ x3::_pass(ctx) = false; })]
+					)
+				)
 			;
 
 			auto const modules_def =
 				(x3::expect["module"] > separator) >>
-				+module
+				modules_params
+			;
+
+			auto const modules_params_def =
+				x3::expect[+module]
 			;
 
 			BOOST_SPIRIT_DEFINE(
 				module,
-				modules
+				module_sets,
+				modules,
+				modules_params
 			)
 
 			auto grammar = modules;
@@ -384,14 +433,41 @@ namespace disposer{
 
 			struct module: error_base{
 				virtual const char* message()const override{
-					return "a parameter '\t\tname = value\n' with name != "
-						"'parameter_set'";
+					return "a module line '\tname = module\n'";
 				}
 			};
 
-			struct modules: error_base{
+			struct module_sets: error_base{
+				template < typename Iter, typename Exception, typename Context >
+				x3::error_handler_result on_error(
+					Iter& first, Iter const& last,
+					Exception const& x, Context const& context
+				){
+					msg_ = "a parameter_set reference "
+						"'\t\tparameter_set = name\n', where 'parameter_set' "
+						"is a keyword and 'name' the name of the referenced "
+						"parameter set";
+					if(x.which() != "value"){
+						msg_ += " or ";
+						msg_ += parameter_tag().message();
+					}
+					return error_base::on_error(first, last, x, context);
+				}
+
 				virtual const char* message()const override{
-					return "keyword line 'module\n'";
+					return msg_.c_str();
+				}
+
+				std::string msg_;
+			};
+
+			const char* modules::message()const{
+				return "keyword line 'module\n'";
+			}
+
+			struct modules_params: error_base{
+				virtual const char* message()const override{
+					return "at least one module line '\tname = module\n'";
 				}
 			};
 
