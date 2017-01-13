@@ -1,64 +1,135 @@
 #include <disposer/parse.hpp>
+#include <disposer/mask_non_print.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <sstream>
+#include <vector>
 
 
-int success(){
-	std::cout << "success\n";
+int success(std::size_t i, std::string const& msg){
+	std::cout << std::setw(3) << i << " \033[0;32msuccess:\033[0m "
+		<< disposer::mask_non_print(msg) << "\n";
 	return 0;
 }
 
-int fail(){
-	std::cout << "fail\n";
+int fail(std::size_t i, std::string const& msg){
+	std::cout << std::setw(3) << i << " \033[0;31mfail:\033[0m "
+		<< disposer::mask_non_print(msg) << "\n";
 	return 1;
 }
 
-std::istringstream file01(
-R"file(xparameter_set)file");
-std::string const file01message(
-	"Syntax error at line 1, pos 0: 'xparameter_set', expected keyword "
-	"'parameter_set' or keyword 'module'");
-
-std::istringstream file02(
-R"file(parameter_setx)file");
-std::string const file02message(
-	"Syntax error at line 1, pos 13: 'parameter_setx', expected newline");
-
-std::istringstream file03(
-R"file(parameter_set)file");
-std::string const file03message(
-	"Syntax error at line 1, pos 13: 'parameter_set', expected newline");
-
-std::istringstream file04(
+std::vector< std::pair< std::string, std::string > > tests{
+	{
+R"file(xparameter_set)file"
+	,
+"Syntax error at line 1, pos 0: 'xparameter_set', expected keyword line "
+"'parameter_set\n' or keyword line 'module\n'"
+	}
+	,
+	{
+R"file(parameter_setx)file"
+	,
+"Syntax error at line 1, pos 13: 'parameter_setx', expected keyword line "
+"'parameter_set\n'"
+	}
+	,
+	{
+R"file(parameter_set)file"
+	,
+"Syntax error at line 1, pos 13: 'parameter_set', expected keyword line "
+"'parameter_set\n'"
+	}
+	,
+	{
 R"file(parameter_set
-)file");
-std::string const file04message(
-	"Syntax error at line 1, pos 13: 'parameter_set', expected ");
+)file"
+	,
+"Syntax error at line 2, pos 0: '', expected at least one parameter set "
+"line '\tname\n'"
+	},{
+R"file(parameter_set
+	name1
+	name2
+)file"
+	,
+"Syntax error at line 3, pos 0: '\tname2\n', expected at least one "
+"parameter line '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+)file"
+	,
+"Syntax error at line 5, pos 0: '', expected at least one "
+"parameter line '\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+)file"
+	,
+"Syntax error at line 6, pos 0: '', expected keyword line 'module\n'"
+	}
+	,
+	{
+R"file(module)file"
+	,
+"Syntax error at line 1, pos 0: 'module', expected keyword line "
+"'parameter_set\n' or keyword line 'module\n'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module)file"
+	,
+"Syntax error at line 6, pos 6: 'module', expected keyword line 'module\n'"
+	}
+	,
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+module
+)file"
+	,
+"Syntax error at line 7, pos 1: '', expected "
+	}
+};
 
-
-int parse(std::istringstream& file, std::string const& message){
+int parse(std::size_t i, std::string content, std::string const& message){
 	try{
+		std::istringstream file(content);
 		disposer::parse(file);
-		std::cout << "No exception\n";
-		return fail();
+		return fail(i, "No exception");
 	}catch(std::exception const& e){
 		if(e.what() == message){
-			return success();
+			return success(i, e.what());
 		}else{
-			std::cout << e.what() << '\n';
-			return fail();
+			return fail(i, e.what());
 		}
 	}catch(...){
-		std::cout << "Unknown exception\n";
-		return fail();
+		return fail(i, "Unknown exception");
 	}
 }
 
 int main(){
-	return
-		parse(file01, file01message) +
-		parse(file02, file02message) +
-		parse(file03, file03message) +
-		parse(file04, file04message);
+	std::cout << std::setfill('0');
+	std::size_t i = 0;
+	for(auto const& v: tests){
+		parse(i++, v.first, v.second);
+	}
 }

@@ -78,6 +78,21 @@ namespace disposer{
 	 namespace parser{
 
 
+		class syntax_error: public std::logic_error{
+		public:
+			syntax_error(std::string&& message, std::string::iterator pos):
+				std::logic_error(std::move(message)),
+				pos_(pos)
+				{}
+
+			std::string::iterator pos()const{ return pos_; }
+
+
+		private:
+			std::string::iterator const pos_;
+		};
+
+
 		namespace x3 = boost::spirit::x3;
 
 
@@ -87,25 +102,86 @@ namespace disposer{
 		using x3::eoi;
 
 
+		/// \brief Parser for line counting
+		template < typename Iterator >
+		std::size_t line_count(Iterator first, Iterator last){
+			namespace x3 = boost::spirit::x3;
+			using x3::eol;
+
+			std::size_t n = 1;
+			auto const inc = [&n](x3::unused_type){ ++n; };
+
+			x3::phrase_parse(first, last,
+				x3::no_skip[ *(*(x3::omit[char_] - eol) >> eol[inc]) ],
+				x3::space);
+
+			return n;
+		}
+
+		/// \brief Get text from the last line
+		template < typename Iterator >
+		std::string get_error_line_before(Iterator first, Iterator pos){
+			namespace x3 = boost::spirit::x3;
+			using x3::eol;
+
+			auto line_start = std::find_if(
+				std::make_reverse_iterator(pos),
+				std::make_reverse_iterator(first),
+				[](char c){ return c == '\n' || c == '\r'; }).base();
+
+			return std::string(line_start, pos);
+		}
+
+		/// \brief Get text from the first line
+		template < typename Iterator >
+		std::string get_error_line_after(Iterator pos, Iterator last){
+			namespace x3 = boost::spirit::x3;
+			using x3::eol;
+
+			auto line_end = std::find_if(
+				pos, last, [](char c){ return c == '\n' || c == '\r'; });
+
+			if(last == line_end){
+				return std::string(pos, line_end);
+			}else{
+				return std::string(pos, line_end) + '\n';
+			}
+		}
+
+
+		struct error_base{
+			template < typename Iter, typename Exception, typename Context >
+			x3::error_handler_result on_error(
+				Iter& /*first*/, Iter const& /*last*/,
+				Exception const& x, Context const& /*context*/
+			){
+				throw syntax_error(this->message(), x.where());
+			}
+
+			virtual const char* message()const = 0;
+		};
+
+
 		x3::rule< struct space > const space("space");
 
-		x3::rule< struct empty_lines > const empty_lines("empty_lines");
+		x3::rule< struct space_lines > const space_lines("space_lines");
 
 		x3::rule< struct separator > const separator("separator");
 
 		x3::rule< struct comment > const comment("comment");
 
-		x3::rule< struct keyword_spaces, std::string > const
+		x3::rule< struct keyword_spaces > const
 			keyword_spaces("keyword_spaces");
 
 		x3::rule< struct keyword, std::string > const keyword("keyword");
 
-		x3::rule< struct value_spaces, std::string > const
+		x3::rule< struct value_spaces > const
 			value_spaces("value_spaces");
 
 		x3::rule< struct value, std::string > const value("value");
 
-		x3::rule< struct parameter, types::parse::parameter > const
+		struct parameter;
+		x3::rule< parameter, types::parse::parameter > const
 			parameter("parameter");
 
 
@@ -113,12 +189,12 @@ namespace disposer{
 			lit(' ') | '\t'
 		;
 
-		auto const empty_lines_def =
-			*(*space >> eol) >> -(*space >> eoi)
+		auto const space_lines_def =
+			*(*space >> eol)
 		;
 
 		auto const separator_def =
-			*space >> ((eol >> empty_lines >> -comment) | eoi)
+			*space >> (eol >> space_lines >> -comment)
 		;
 
 		auto const comment_def =
@@ -126,7 +202,7 @@ namespace disposer{
 		;
 
 		auto const keyword_spaces_def =
-			+(char_(' ') | char_('\t')) >> !(eol | eoi | '=')
+			+(char_(' ') | char_('\t')) >> !(eol | '=')
 		;
 
 		auto const keyword_def =
@@ -144,14 +220,14 @@ namespace disposer{
 		;
 
 		auto const parameter_def =
-			"\t\t" >> !("parameter_set" >> *space >> '=') >> keyword  >>
-			*space >> '=' >> *space >> value >> separator
+			("\t\t" >> !("parameter_set" >> *space >> '=')) > keyword  >
+			*space > '=' > *space > value > separator
 		;
 
 
 		BOOST_SPIRIT_DEFINE(
 			space,
-			empty_lines,
+			space_lines,
 			separator,
 			comment,
 			keyword_spaces,
@@ -162,36 +238,112 @@ namespace disposer{
 		)
 
 
+		struct parameter: error_base{
+			virtual const char* message()const override{
+				return "a parameter '\t\tname = value\n' with name != "
+					"'parameter_set'";
+			}
+		};
+
+
 		namespace set{
 
 
+			struct parameter_set;
 			x3::rule<
-				struct parameter_set, types::parse::parameter_set
+				parameter_set, types::parse::parameter_set
 			> const parameter_set("parameter_set");
 
+			struct parameter_set_params;
 			x3::rule<
-				struct parameter_sets, types::parse::parameter_sets
+				parameter_set_params, std::vector< types::parse::parameter >
+			> const parameter_set_params("parameter_set_params");
+
+			struct parameter_sets;
+			x3::rule<
+				parameter_sets, types::parse::parameter_sets
 			> const parameter_sets("parameter_sets");
+
+			struct parameter_sets_params;
+			x3::rule<
+				parameter_sets_params, types::parse::parameter_sets
+			> const parameter_sets_params("parameter_sets_params");
 
 
 			auto const parameter_set_def =
-				x3::expect['\t' >> keyword >> separator] >>
+				('\t' > keyword > separator) >>
+				parameter_set_params
+			;
+
+			auto const parameter_set_params_def =
 				x3::expect[+parameter]
 			;
 
 			auto const parameter_sets_def =
-				"parameter_set" > separator >
-				+parameter_set
+				(("parameter_set" > separator) | x3::expect[("chain" >> separator)[
+					([](auto& ctx){ x3::_pass(ctx) = false; })
+				]]) >>
+				parameter_sets_params
+			;
+
+			auto const parameter_sets_params_def =
+				x3::expect[+parameter_set]
 			;
 
 
 			BOOST_SPIRIT_DEFINE(
 				parameter_set,
-				parameter_sets
+				parameter_set_params,
+				parameter_sets,
+				parameter_sets_params
 			)
 
 
 			auto grammar = parameter_sets;
+
+
+			struct parameter_set: error_base{
+				virtual const char* message()const override{
+					return "a parameter '\t\tname = value\n' with name != "
+						"'parameter_set'";
+				}
+			};
+
+			struct parameter_set_params: error_base{
+				virtual const char* message()const override{
+					return "at least one parameter line '\t\tname = value\n' "
+						"with name != 'parameter_set'";
+				}
+			};
+
+			struct parameter_sets: error_base{
+				template < typename Iter, typename Exception, typename Context >
+				x3::error_handler_result on_error(
+					Iter& first, Iter const& last,
+					Exception const& x, Context const& context
+				){
+					if(x.which() == "separator"){
+						msg_ = "keyword line 'parameter_set\n'";
+					}else{
+						msg_ = "keyword line 'parameter_set\n' or keyword line "
+							"'module\n'";
+					}
+					return error_base::on_error(first, last, x, context);
+				}
+
+				virtual const char* message()const override{
+					return msg_.c_str();
+				}
+
+				std::string msg_;
+			};
+
+			struct parameter_sets_params: error_base{
+				virtual const char* message()const override{
+					return "at least one parameter set line '\tname\n'";
+				}
+			};
+
 
 
 		}
@@ -200,10 +352,12 @@ namespace disposer{
 		namespace module{
 
 
-			x3::rule< struct module, types::parse::module > const
+			struct module;
+			x3::rule< module, types::parse::module > const
 				module("module");
 
-			x3::rule< struct modules, types::parse::modules > const
+			struct modules;
+			x3::rule< modules, types::parse::modules > const
 				modules("modules");
 
 
@@ -216,7 +370,7 @@ namespace disposer{
 			;
 
 			auto const modules_def =
-				("module" > separator) >>
+				(x3::expect["module"] > separator) >>
 				+module
 			;
 
@@ -226,6 +380,20 @@ namespace disposer{
 			)
 
 			auto grammar = modules;
+
+
+			struct module: error_base{
+				virtual const char* message()const override{
+					return "a parameter '\t\tname = value\n' with name != "
+						"'parameter_set'";
+				}
+			};
+
+			struct modules: error_base{
+				virtual const char* message()const override{
+					return "keyword line 'module\n'";
+				}
+			};
 
 
 		}
@@ -241,7 +409,8 @@ namespace disposer{
 
 			x3::rule< struct chain, types::parse::chain > const chain("chain");
 
-			x3::rule< struct chains, types::parse::chains > const
+			struct chains;
+			x3::rule< chains, types::parse::chains > const
 				chains("chains");
 
 
@@ -271,7 +440,7 @@ namespace disposer{
 			;
 
 			auto const chains_def =
-				("chain" > separator) >>
+				(x3::expect["chain"] > separator) >>
 				*chain
 			;
 
@@ -287,50 +456,13 @@ namespace disposer{
 			auto grammar = chains;
 
 
-		}
+			struct chains: error_base{
+				virtual const char* message()const override{
+					return "keyword line 'chain\n'";
+				}
+			};
 
 
-		template < typename Iterator >
-		std::size_t line_count(Iterator first, Iterator last)
-		{
-			namespace x3 = boost::spirit::x3;
-			using x3::eol;
-
-			std::size_t n = 1;
-			auto const inc = [&n](x3::unused_type){ ++n; };
-
-			x3::phrase_parse(first, last,
-				x3::no_skip[ *(*(x3::omit[char_] - eol) >> eol[inc]) ],
-				x3::space);
-
-			return n;
-		}
-
-
-		template < typename Iterator >
-		std::string get_error_line_before(Iterator first, Iterator pos)
-		{
-			namespace x3 = boost::spirit::x3;
-			using x3::eol;
-
-			auto line_start = std::find_if(
-				std::make_reverse_iterator(pos),
-				std::make_reverse_iterator(first),
-				[](char c){ return c == '\n' || c == '\r'; }).base();
-
-			return std::string(line_start, pos);
-		}
-
-		template < typename Iterator >
-		std::string get_error_line_after(Iterator pos, Iterator last)
-		{
-			namespace x3 = boost::spirit::x3;
-			using x3::eol;
-
-			auto line_end = std::find_if(
-				pos, last, [](char c){ return c == '\n' || c == '\r'; });
-
-			return std::string(pos, line_end);
 		}
 
 
@@ -338,13 +470,10 @@ namespace disposer{
 		x3::rule< config, types::parse::config >
 			const config("config");
 
-
-		auto const config_def = x3::no_skip[
-			empty_lines >> -comment >>
-			-set::grammar >>
-			x3::expect[module::grammar] >>
-			x3::expect[chain::grammar]
-		];
+		auto const config_def = x3::no_skip[x3::expect[
+			space_lines >> -comment >>
+			-set::grammar >> module::grammar >> chain::grammar
+		]];
 
 
 		BOOST_SPIRIT_DEFINE(
@@ -354,53 +483,11 @@ namespace disposer{
 
 		auto const grammar = config;
 
-		struct config{
-			static std::string convert(std::string const& tag){
-				std::map< std::string, std::string > map{
-					{
-						"modules",
-						"keyword 'parameter_set' or keyword 'module'"
-					},{
-						"separator",
-						"newline"
-					},{
-						"N5boost6spirit2x38sequenceINS2_INS1_12literal_charINS"
-						"0_13char_encoding8standardENS1_11unused_typeEEENS1_4r"
-						"uleIN8disposer6parser7keywordENSt3__112basic_stringIc"
-						"NSC_11char_traitsIcEENSC_9allocatorIcEEEELb0EEEEENS8_"
-						"INSA_9separatorES6_Lb0EEEEE",
-						"newline"
-					},{
-						"N5boost6spirit2x38sequenceINS2_INS1_12literal_charINS"
-						"0_13char_encoding8standardENS1_11unused_typeEEENS1_4r"
-						"uleIN8disposer6parser7keywordENSt3__112basic_stringIc"
-						"NSC_11char_traitsIcEENSC_9allocatorIcEEEELb0EEEEENS8_"
-						"INSA_9separatorES6_Lb0EEEEE",
-						"newline"
-					}
-				};
-				auto iter = map.find(tag);
-				return iter == map.end() ? tag : iter->second;
-			}
 
-			template < typename Iter, typename Exception, typename Context >
-			x3::error_handler_result on_error(
-				Iter& first, Iter const& last,
-				Exception const& x, Context const& /*context*/
-			){
-				using namespace std::literals::string_literals;
-
-				auto const line_number = line_count(first, x.where());
-				auto const before = get_error_line_before(first, x.where());
-				auto const after = get_error_line_after(x.where(), last);
-				std::ostringstream os;
-				os << "Syntax error at line " << line_number << ", pos "
-					<< before.size() << ": '" << before << after
-					<< "', expected " << convert(x.which());
-
-				throw std::runtime_error(os.str());
-
-				return x3::error_handler_result::fail;
+		struct config: error_base{
+			virtual const char* message()const override{
+				return "keyword line 'parameter_set\n' or keyword line "
+					"'module\n'";
 			}
 		};
 
@@ -423,22 +510,36 @@ namespace disposer{
 
 		x3::ascii::space_type space;
 
-		bool const match =
-			phrase_parse(iter, end, parser::grammar, space, config);
+		try{
+			bool const match =
+				phrase_parse(iter, end, parser::grammar, space, config);
 
-		if(!match || iter != end){
-			auto const line_number = parser::line_count(str.begin(), iter);
+			if(!match || iter != end){
+				auto const line_number = parser::line_count(str.begin(), iter);
+				auto const before =
+					parser::get_error_line_before(str.begin(), iter);
+				auto const after = parser::get_error_line_after(iter, end);
+				std::ostringstream os;
+				os << "Syntax error at line " << line_number << ", pos "
+					<< before.size() << ": '" << before << after
+					<< "', incomplete parsing (programming error!)";
+				throw std::runtime_error(os.str());
+			}
+
+			return config;
+		}catch(parser::syntax_error const& e){
+			auto const line_number = parser::line_count(str.begin(), e.pos());
 			auto const before =
-				parser::get_error_line_before(str.begin(), iter);
-			auto const after = parser::get_error_line_after(iter, end);
+				parser::get_error_line_before(str.begin(), e.pos());
+			auto const after = parser::get_error_line_after(e.pos(), end);
+
 			std::ostringstream os;
 			os << "Syntax error at line " << line_number << ", pos "
 				<< before.size() << ": '" << before << after
-				<< "', incomplete parsing (programming error!)";
+				<< "', expected " << e.what();
+
 			throw std::runtime_error(os.str());
 		}
-
-		return config;
 	}
 
 
