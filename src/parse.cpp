@@ -406,7 +406,11 @@ namespace disposer{
 						("\t\tparameter_set" >> *space >> '=')
 						> *space > value > separator
 					) | (
-						(x3::expect["\t\t" >> keyword])
+						(x3::expect[
+							("\t\t" >> keyword) |
+							("\t" >> keyword) |
+							("chain")
+						])
 						[([](auto& ctx){ x3::_pass(ctx) = false; })]
 					)
 				)
