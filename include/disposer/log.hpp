@@ -12,6 +12,8 @@
 #include <boost/hana.hpp>
 #include <boost/optional.hpp>
 
+#include <memory>
+
 
 namespace disposer{
 

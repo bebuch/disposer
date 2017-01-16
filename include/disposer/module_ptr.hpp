@@ -10,6 +10,7 @@
 #define _disposer__module_ptr__hpp_INCLUDED_
 
 #include <functional>
+#include <memory>
 
 
 namespace disposer{

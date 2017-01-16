@@ -51,7 +51,7 @@ public:
 	std::unordered_map< std::string, disposer::maker_function >& maker_list;
 
 	// variable name = { output&, is_last_use? }
-	using variables_map = 
+	using variables_map =
 		std::map< std::string, std::pair< output_base&, bool > >;
 
 	module_ptr make_module(make_data&& data);
@@ -82,8 +82,7 @@ public:
 		}
 		assert(false);
 		std::exit(1);
-	};
-
+	}
 };
 
 
@@ -190,7 +189,7 @@ void disposer::disposer::impl::activate_output_types(
 					std::ostringstream os;
 					os << "In chain '" << config_chain.name << "' module '"
 						<< module.name << "': Variable '"
-						<< config_input.variable 
+						<< config_input.variable
 						<< "' is incompatible with input '"
 						<< config_input.name << "'" << " (active '"
 						<< config_input.variable << "' types: ";
