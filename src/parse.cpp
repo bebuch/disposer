@@ -162,30 +162,30 @@ namespace disposer{
 		};
 
 
-		x3::rule< struct space > const space("space");
+		x3::rule< struct space_tag > const space("space");
 
-		x3::rule< struct space_lines > const space_lines("space_lines");
+		x3::rule< struct space_lines_tag > const space_lines("space_lines");
 
-		x3::rule< struct separator > const separator("separator");
+		x3::rule< struct separator_tag > const separator("separator");
 
-		x3::rule< struct comment > const comment("comment");
+		x3::rule< struct comment_tag > const comment("comment");
 
-		x3::rule< struct keyword_spaces > const
+		x3::rule< struct keyword_spaces_tag > const
 			keyword_spaces("keyword_spaces");
 
-		x3::rule< struct keyword, std::string > const keyword("keyword");
+		x3::rule< struct keyword_tag, std::string > const keyword("keyword");
 
-		x3::rule< struct value_spaces > const
+		x3::rule< struct value_spaces_tag > const
 			value_spaces("value_spaces");
 
-		x3::rule< struct value, std::string > const value("value");
+		x3::rule< struct value_tag, std::string > const value("value");
 
 		struct parameter_tag;
 		x3::rule< parameter_tag, types::parse::parameter > const
 			parameter("parameter");
 
-		struct prevent_parameter_set;
-		x3::rule< prevent_parameter_set > const
+		struct prevent_parameter_set_tag;
+		x3::rule< prevent_parameter_set_tag > const
 			prevent_parameter_set("prevent_parameter_set");
 
 
@@ -255,7 +255,7 @@ namespace disposer{
 		};
 
 
-		struct prevent_parameter_set: error_base{
+		struct prevent_parameter_set_tag: error_base{
 			virtual const char* message()const override{
 				return "a parameter, but a parameter name "
 					"('\t\tname = value\n') must not be 'parameter_set'";
@@ -265,34 +265,42 @@ namespace disposer{
 
 		namespace module{
 
-			struct modules: error_base{
+			struct modules_tag: error_base{
 				virtual const char* message()const override;
 			};
 
 		}
 
+		namespace chain{
+
+			struct chains_tag: error_base{
+				virtual const char* message()const override;
+			};
+
+		};
+
 
 		namespace set{
 
 
-			struct parameter_set;
+			struct parameter_set_tag;
 			x3::rule<
-				parameter_set, types::parse::parameter_set
+				parameter_set_tag, types::parse::parameter_set
 			> const parameter_set("parameter_set");
 
-			struct parameter_set_params;
+			struct parameter_set_params_tag;
 			x3::rule<
-				parameter_set_params, std::vector< types::parse::parameter >
+				parameter_set_params_tag, std::vector< types::parse::parameter >
 			> const parameter_set_params("parameter_set_params");
 
-			struct parameter_sets;
+			struct parameter_sets_tag;
 			x3::rule<
-				parameter_sets, types::parse::parameter_sets
+				parameter_sets_tag, types::parse::parameter_sets
 			> const parameter_sets("parameter_sets");
 
-			struct parameter_sets_params;
+			struct parameter_sets_params_tag;
 			x3::rule<
-				parameter_sets_params, types::parse::parameter_sets
+				parameter_sets_params_tag, types::parse::parameter_sets
 			> const parameter_sets_params("parameter_sets_params");
 
 
@@ -308,7 +316,7 @@ namespace disposer{
 			auto const parameter_sets_def =
 				(
 					("parameter_set" > separator) |
-					(x3::expect["chain" >> separator])
+					(x3::expect["module" >> separator])
 					[([](auto& ctx){ x3::_pass(ctx) = false; })]
 				) >> parameter_sets_params
 			;
@@ -329,21 +337,21 @@ namespace disposer{
 			auto grammar = parameter_sets;
 
 
-			struct parameter_set: error_base{
+			struct parameter_set_tag: error_base{
 				virtual const char* message()const override{
 					return "a parameter '\t\tname = value\n' with name != "
 						"'parameter_set'";
 				}
 			};
 
-			struct parameter_set_params: error_base{
+			struct parameter_set_params_tag: error_base{
 				virtual const char* message()const override{
 					return "at least one parameter line '\t\tname = value\n' "
 						"with name != 'parameter_set'";
 				}
 			};
 
-			struct parameter_sets: error_base{
+			struct parameter_sets_tag: error_base{
 				template < typename Iter, typename Exception, typename Context >
 				x3::error_handler_result on_error(
 					Iter& first, Iter const& last,
@@ -352,7 +360,7 @@ namespace disposer{
 					msg_ = "keyword line 'parameter_set\n'";
 					if(x.which() != "separator"){
 						msg_ += " or ";
-						msg_ += module::modules().message();
+						msg_ += module::modules_tag().message();
 					}
 					return error_base::on_error(first, last, x, context);
 				}
@@ -364,7 +372,7 @@ namespace disposer{
 				std::string msg_;
 			};
 
-			struct parameter_sets_params: error_base{
+			struct parameter_sets_params_tag: error_base{
 				virtual const char* message()const override{
 					return "at least one parameter set line '\tname\n'";
 				}
@@ -378,20 +386,20 @@ namespace disposer{
 		namespace module{
 
 
-			struct module;
-			x3::rule< module, types::parse::module > const
+			struct module_tag;
+			x3::rule< module_tag, types::parse::module > const
 				module("module");
 
-			struct module_sets;
-			x3::rule< module_sets, std::vector< std::string > > const
+			struct module_sets_tag;
+			x3::rule< module_sets_tag, std::vector< std::string > > const
 				module_sets("module_sets");
 
-			struct modules;
-			x3::rule< modules, types::parse::modules > const
+			struct modules_tag;
+			x3::rule< modules_tag, types::parse::modules > const
 				modules("modules");
 
-			struct modules_params;
-			x3::rule< modules_params, types::parse::modules > const
+			struct modules_params_tag;
+			x3::rule< modules_params_tag, types::parse::modules > const
 				modules_params("modules_params");
 
 
@@ -435,13 +443,13 @@ namespace disposer{
 			auto grammar = modules;
 
 
-			struct module: error_base{
+			struct module_tag: error_base{
 				virtual const char* message()const override{
 					return "a module line '\tname = module\n'";
 				}
 			};
 
-			struct module_sets: error_base{
+			struct module_sets_tag: error_base{
 				template < typename Iter, typename Exception, typename Context >
 				x3::error_handler_result on_error(
 					Iter& first, Iter const& last,
@@ -454,6 +462,10 @@ namespace disposer{
 					if(x.which() != "value"){
 						msg_ += " or ";
 						msg_ += parameter_tag().message();
+						msg_ += " or ";
+						msg_ += module_tag().message();
+						msg_ += " or ";
+						msg_ += chain::chains_tag().message();
 					}
 					return error_base::on_error(first, last, x, context);
 				}
@@ -465,11 +477,11 @@ namespace disposer{
 				std::string msg_;
 			};
 
-			const char* modules::message()const{
+			const char* modules_tag::message()const{
 				return "keyword line 'module\n'";
 			}
 
-			struct modules_params: error_base{
+			struct modules_params_tag: error_base{
 				virtual const char* message()const override{
 					return "at least one module line '\tname = module\n'";
 				}
@@ -482,53 +494,131 @@ namespace disposer{
 		namespace chain{
 
 
-			x3::rule< struct io, types::parse::io > const io("io");
+			struct input_tag;
+			x3::rule< input_tag, types::parse::io > const input("input");
 
-			x3::rule< struct chain_module, types::parse::chain_module > const
+			struct output_tag;
+			x3::rule< output_tag, types::parse::io > const output("output");
+
+			struct input_params_tag;
+			x3::rule< input_params_tag, std::vector< types::parse::io > >
+				const input_params("input_params");
+
+			struct output_params_tag;
+			x3::rule< output_params_tag, std::vector< types::parse::io > >
+				const output_params("output_params");
+
+			struct inputs_tag;
+			x3::rule< inputs_tag, std::vector< types::parse::io > > const
+				inputs("inputs");
+
+			struct outputs_tag;
+			x3::rule< outputs_tag, std::vector< types::parse::io > > const
+				outputs("outputs");
+
+			struct chain_module_tag;
+			x3::rule< chain_module_tag, types::parse::chain_module > const
 				chain_module("chain_module");
 
-			x3::rule< struct chain, types::parse::chain > const chain("chain");
+			struct chain_tag;
+			x3::rule< chain_tag, types::parse::chain > const chain("chain");
 
-			struct chains;
-			x3::rule< chains, types::parse::chains > const
+			struct chain_params_tag;
+			x3::rule< chain_params_tag, std::vector< types::parse::chain_module > >
+				const chain_params("chain_params");
+
+			struct group_tag;
+			x3::rule< group_tag, std::string > const group("group");
+
+			struct id_generator_tag;
+			x3::rule< id_generator_tag, std::string > const
+				id_generator("id_generator");
+
+			struct chains_tag;
+			x3::rule< chains_tag, types::parse::chains > const
 				chains("chains");
 
+			struct chains_params_tag;
+			x3::rule< chains_params_tag, types::parse::chains > const
+				chains_params("chains_params");
 
-			auto const io_def =
+
+			auto const input_def =
 				"\t\t\t\t" > (keyword >> *space) >
 					('=' >> *space) > value > separator
 			;
 
+			auto const output_def =
+				"\t\t\t\t" > (keyword >> *space) >
+					('=' >> *space) > value > separator
+			;
+
+			auto const input_params_def =
+				x3::expect[+input]
+			;
+
+			auto const output_params_def =
+				x3::expect[+output]
+			;
+
+			auto const inputs_def =
+				("\t\t\t<-" > separator) >>
+				input_params
+			;
+
+			auto const outputs_def =
+				("\t\t\t->" > separator) >>
+				output_params
+			;
+
 			auto const chain_module_def =
 				("\t\t" > keyword > separator) >>
-				-(
-					("\t\t\t<-" > separator) >>
-					*io
-				) >>
-				-(
-					("\t\t\t->" > separator) >>
-					*io
-				)
+				-inputs >>
+				-outputs
+			;
+
+			auto const group_def =
+				('=' >> *space) > value
+			;
+
+			auto const id_generator_def =
+				("\t\tid_generator" >> *space) >
+					('=' >> *space) > value > separator
+			;
+
+			auto const chain_params_def =
+				x3::expect[+chain_module]
 			;
 
 			auto const chain_def =
-				('\t' > (keyword >> *space) >>
-					-(('=' >> *space) > value) > separator) >>
-				-(("\t\tid_generator" >> *space) >
-					('=' >> *space) > value > separator) >>
-				*chain_module
+				('\t' > (keyword >> *space) > -group > separator) >>
+				-id_generator >>
+				chain_params
 			;
 
 			auto const chains_def =
 				(x3::expect["chain"] > separator) >>
-				*chain
+				chains_params
+			;
+
+			auto const chains_params_def =
+				x3::expect[+chain]
 			;
 
 
 			BOOST_SPIRIT_DEFINE(
-				io,
+				input,
+				output,
+				inputs,
+				outputs,
+				input_params,
+				output_params,
 				chain_module,
+				chain_params,
 				chain,
+				group,
+				id_generator,
+				chains_params,
 				chains
 			)
 
@@ -536,9 +626,70 @@ namespace disposer{
 			auto grammar = chains;
 
 
-			struct chains: error_base{
+			const char* chains_tag::message()const{
+				return "keyword line 'chain\n'";
+			}
+
+			struct input_tag: error_base{
 				virtual const char* message()const override{
-					return "keyword line 'chain\n'";
+					return "input map '\t\t\t\tparameter = variable'";
+				}
+			};
+
+			struct output_tag: error_base{
+				virtual const char* message()const override{
+					return "output map '\t\t\t\tparameter = variable'";
+				}
+			};
+
+			struct input_params_tag: error_base{
+				virtual const char* message()const override{
+					return "at least one input map "
+						"'\t\t\t\tparameter = variable'";
+				}
+			};
+
+			struct output_params_tag: error_base{
+				virtual const char* message()const override{
+					return "at least one output map "
+						"'\t\t\t\tparameter = variable'";
+				}
+			};
+
+			struct inputs_tag: error_base{
+				virtual const char* message()const override{
+					return "keyword line '\t\t\t->\n'";
+				}
+			};
+
+			struct outputs_tag: error_base{
+				virtual const char* message()const override{
+					return "keyword line '\t\t\t<-\n'";
+				}
+			};
+
+			struct chain_module_tag: error_base{
+				virtual const char* message()const override{
+					return "a module '\t\tmodule\n'";
+				}
+			};
+
+			struct chains_params_tag: error_base{
+				virtual const char* message()const override{
+					return "at least one chain line '\tname [= group]\n'";
+				}
+			};
+
+			struct group_tag: error_base{
+				virtual const char* message()const override{
+					return "a chain line with group '\tname = group\n'";
+				}
+			};
+
+			struct id_generator_tag: error_base{
+				virtual const char* message()const override{
+					return "a id_generator line '\t\tid_generator = name\n', "
+						"where id_generator is a keyword";
 				}
 			};
 
@@ -546,8 +697,8 @@ namespace disposer{
 		}
 
 
-		struct config;
-		x3::rule< config, types::parse::config >
+		struct config_tag;
+		x3::rule< config_tag, types::parse::config >
 			const config("config");
 
 		auto const config_def = x3::no_skip[x3::expect[
@@ -564,7 +715,7 @@ namespace disposer{
 		auto const grammar = config;
 
 
-		struct config: error_base{
+		struct config_tag: error_base{
 			virtual const char* message()const override{
 				return "keyword line 'parameter_set\n' or keyword line "
 					"'module\n'";
