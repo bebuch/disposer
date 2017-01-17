@@ -29,6 +29,7 @@ namespace disposer{
 	constexpr auto hana_type_list< type_list< T, U ... > > =
 		hana::tuple_t< T, U ... >;
 
+
 	template < typename T, typename ... U >
 	struct type_list{
 		static constexpr std::size_t size = 1 + sizeof...(U);
@@ -50,7 +51,7 @@ namespace disposer{
 		);
 
 		static_assert(
-			is_type_unique< T, U ... >,
+			is_type_unique_v< T, U ... >,
 			"disposer::type_list must have distict types"
 		);
 	};

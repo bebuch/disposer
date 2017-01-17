@@ -15,21 +15,24 @@
 namespace disposer{
 
 
+	template < typename ... T >
+	struct is_type_unique;
+
 	template < typename T >
-	constexpr bool is_type_unique(){
-		return true;
-	}
+	struct is_type_unique< T >{
+		static constexpr bool value = true;
+	};
 
 	template < typename T, typename U, typename ... V >
-	constexpr bool is_type_unique(){
-		return
+	struct is_type_unique< T, U, V ... >{
+		static constexpr bool value =
 			!std::is_same< T, U >::value
-			&& is_type_unique< T, V ... >()
-			&& is_type_unique< U, V ... >();
-	}
+			&& is_type_unique< T, V ... >::value
+			&& is_type_unique< U, V ... >::value;
+	};
 
 	template < typename ... T >
-	constexpr bool is_type_unique_v = is_type_unique< T ... >();
+	constexpr bool is_type_unique_v = is_type_unique< T ... >::value;
 
 
 }

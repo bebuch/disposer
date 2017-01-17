@@ -99,7 +99,7 @@ namespace disposer{
 			);
 
 			static_assert(
-				is_type_unique< T, U ... >,
+				is_type_unique_v< T, U ... >,
 				 "disposer::output must have distict types"
 			);
 
@@ -190,7 +190,7 @@ namespace disposer{
 		}};
 
 
-		template < 
+		template <
 			template < typename, typename ... > class Container,
 			typename ... T
 		>

@@ -53,7 +53,7 @@ namespace disposer{
 		);
 
 		static_assert(
-			is_type_unique< T, U ... >,
+			is_type_unique_v< T, U ... >,
 			"disposer::input must have distict types"
 		);
 
