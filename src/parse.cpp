@@ -277,7 +277,7 @@ namespace disposer{
 				virtual const char* message()const override;
 			};
 
-		};
+		}
 
 
 		namespace set{
