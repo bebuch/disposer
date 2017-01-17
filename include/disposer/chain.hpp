@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// Copyright (c) 2015 Benjamin Buch
+// Copyright (c) 2015-2017 Benjamin Buch
 //
 // https://github.com/bebuch/disposer
 //
@@ -25,7 +25,7 @@ namespace disposer{
 
 
 	/* properties:
-	* 
+	*
 	* - no 2 identical modules (trigger) running simultaneously
 	* - it must not be overtaken
 	*/
