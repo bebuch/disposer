@@ -3,6 +3,11 @@ A dynamic module management system
 
 <b>This software is highly experimental. Do not use it in production code!</b>
 
+## Supported Compilers
+
+- GCC 6.2 and higher
+- clang 3.9 and higher
+
 ## Direct dependencies
 
 - boost.type_index
@@ -10,7 +15,7 @@ A dynamic module management system
 - boost.lexical_cast
 - boost.variant
 - boost.range
-- boost.hana (will be part of boost soon)
+- boost.hana
 - boost.spirit (develop branch of X3)
 - boost.fusion (as long as Sprit X3 does not support boost.hana)
 
@@ -48,4 +53,9 @@ In a software process often different calculation steps are executed in sequence
 
 A sequence of modules is called <i>process chain</i>. Each process chain also gets a <i>unique identifier</i>.
 
-The disposer manages the process chains and their modules. This is done through a file that is read at runtime.
+The disposer manages the process chains and their modules. This is done through a configuration file that is read at runtime.
+
+## Config-File
+
+The configuration file has a special file format, which is explained below. There is no standardized file extension, but is is recommended to use '\*.ini' to get syntax highlighting in text editors.
+
