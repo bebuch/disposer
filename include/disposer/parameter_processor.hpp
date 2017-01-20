@@ -23,6 +23,22 @@
 namespace disposer{
 
 
+	namespace detail{
+
+
+		template < typename T >
+		struct is_optional: std::false_type{};
+
+		template < typename T >
+		struct is_optional< boost::optional< T > >: std::true_type{};
+
+		template < typename T >
+		constexpr bool is_optional_v = is_optional< T >::value;
+
+
+	}
+
+
 	using parameter_list = std::map< std::string, std::string >;
 
 	class parameter_processor{
@@ -46,14 +62,11 @@ namespace disposer{
 
 		template < typename T >
 		T get(std::string const& name, T&& default_value){
-			// TODO: somthing like:
-			// static_assert(
-			// 	std::is_same<
-			// 		T,
-			// 		boost::optional< typename T::value_type >
-			// 	>::value,
-			// 	"parameter can not be optional and default at the same time"
-			// );
+			using type = std::remove_cv_t< std::remove_reference_t< T > >;
+			static_assert(
+				!detail::is_optional_v< type >,
+				"parameter can not be optional and default at the same time"
+			);
 
 			auto iter = find(name);
 			if(iter == parameters_.cend()){
