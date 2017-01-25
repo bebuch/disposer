@@ -39,13 +39,19 @@ namespace disposer{
 	}
 
 
+	/// \brief A parameter has a name and a value
 	using parameter_list = std::map< std::string, std::string >;
 
+	/// \brief Access parameter value by name and convert to C++ type
 	class parameter_processor{
 	public:
+		/// \brief Init with a list of parameters
 		parameter_processor(parameter_list const& parameters):
 			parameters_(parameters) {}
 
+		/// \brief Get value as type T by name
+		///
+		/// \throw std::runtime_error if parameter don't exist
 		template < typename T >
 		T get(std::string const& name){
 			auto iter = find(name);
@@ -55,6 +61,9 @@ namespace disposer{
 			return cast< T >(name, iter->second);
 		}
 
+		/// \brief Convert value to type of target and assing it
+		///
+		/// \copydetails parameter_processor::get()
 		template < typename T >
 		void set(T& target, std::string const& name){
 			target = get< T >(name);
@@ -106,6 +115,9 @@ namespace disposer{
 			return parameters_.find(name);
 		}
 
+		/// \brief Convert value to type T, add error info if necessary
+		///
+		/// \copydetails parameter_processor::do_cast(value)
 		template < typename T >
 		T cast(std::string const& name, std::string const& value)try{
 			return do_cast< T >(value);
@@ -117,8 +129,11 @@ namespace disposer{
 			);
 		}
 
+		/// \brief Convert value to type T
+		///
+		/// \throw boost::bad_lexical_cast if value is not convertible to T
 		template < typename T >
-		T do_cast(std::string const& value){
+		static T do_cast(std::string const& value){
 			return boost::lexical_cast< T >(value);
 		}
 
@@ -126,6 +141,7 @@ namespace disposer{
 		std::set< std::string > used_parameters_;
 	};
 
+	/// \copydoc parameter_processor::do_cast(value)
 	template <>
 	inline bool parameter_processor::do_cast(std::string const& value){
 		if(value == "true") return true;
@@ -133,6 +149,7 @@ namespace disposer{
 		throw std::logic_error("Can not convert to bool");
 	}
 
+	/// \copydoc parameter_processor::do_cast(value)
 	template <>
 	inline signed char parameter_processor::do_cast(std::string const& value){
 		auto result = boost::lexical_cast< int >(value);
@@ -143,6 +160,7 @@ namespace disposer{
 		return static_cast< signed char >(result);
 	}
 
+	/// \copydoc parameter_processor::do_cast(value)
 	template <>
 	inline unsigned char parameter_processor::do_cast(
 		std::string const& value
@@ -154,6 +172,7 @@ namespace disposer{
 		return static_cast< signed char >(result);
 	}
 
+	/// \copydoc parameter_processor::do_cast(value)
 	template <>
 	inline char parameter_processor::do_cast(std::string const& value){
 		return static_cast< char >(

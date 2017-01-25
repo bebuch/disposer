@@ -11,10 +11,16 @@
 
 #include "output_data.hpp"
 
+#include <boost/hana.hpp>
+#include <boost/type_index.hpp>
+
 #include <stdexcept>
 
 
 namespace disposer{
+
+
+	namespace hana = boost::hana;
 
 
 	template < typename T >

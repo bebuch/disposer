@@ -16,7 +16,6 @@
 
 #include <boost/variant.hpp>
 
-#include <functional>
 #include <set>
 #include <map>
 

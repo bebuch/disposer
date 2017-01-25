@@ -1,6 +1,5 @@
 import os ;
 local boost = [ os.environ BOOST ] ;
-local disposer = [ os.environ DISPOSER ] ;
 
 use-project /boost
 	: $(boost)

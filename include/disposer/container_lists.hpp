@@ -13,11 +13,14 @@
 
 #include <boost/hana.hpp>
 
+#include <functional>
+
 
 namespace disposer{
 
 
 	namespace hana = boost::hana;
+
 
 	template < typename T, typename ... U >
 	struct type_list;
