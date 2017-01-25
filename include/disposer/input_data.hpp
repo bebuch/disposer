@@ -11,16 +11,12 @@
 
 #include "output_data.hpp"
 
-#include <boost/hana.hpp>
 #include <boost/type_index.hpp>
 
 #include <stdexcept>
 
 
 namespace disposer{
-
-
-	namespace hana = boost::hana;
 
 
 	template < typename T >
@@ -41,19 +37,15 @@ namespace disposer{
 			if(last_use_){
 				return std::move(data_);
 			}else{
-				return hana::if_(
-					hana::traits::is_copy_constructible(hana::type_c< T >),
-					[](auto& data){
-						return std::make_shared< output_data< T > >(data);
-					},
-					[](auto&)->output_data_ptr< T >{
-						throw std::logic_error(
-							"Type '" +
-							boost::typeindex::type_id< T >().pretty_name() +
-							"' is not copy constructible"
-						);
-					}
-				)(data());
+				if constexpr(std::is_copy_constructible_v< T >){
+					return std::make_shared< output_data< T > >(data());
+				}else{
+					throw std::logic_error(
+						"Type '" +
+						boost::typeindex::type_id< T >().pretty_name() +
+						"' is not copy constructible"
+					);
+				}
 			}
 		}
 
@@ -84,19 +76,15 @@ namespace disposer{
 			if(last_use_){
 				return data_->get();
 			}else{
-				return hana::if_(
-					hana::traits::is_copy_constructible(hana::type_c< T >),
-					[](auto& data){
-						return std::make_shared< output_data< T > >(data);
-					},
-					[](auto&)->output_data_ptr< T >{
-						throw std::logic_error(
-							"Type '" +
-							boost::typeindex::type_id< T >().pretty_name() +
-							"' is not copy constructible"
-						);
-					}
-				)(data());
+				if constexpr(std::is_copy_constructible_v< T >){
+					return std::make_shared< output_data< T > >(data());
+				}else{
+					throw std::logic_error(
+						"Type '" +
+						boost::typeindex::type_id< T >().pretty_name() +
+						"' is not copy constructible"
+					);
+				}
 			}
 		}
 

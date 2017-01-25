@@ -26,12 +26,15 @@ namespace disposer{
 	namespace detail{
 
 
+		/// \brief Check if T is a boost::optional
 		template < typename T >
 		struct is_optional: std::false_type{};
 
+		/// \brief Check if T is a boost::optional
 		template < typename T >
 		struct is_optional< boost::optional< T > >: std::true_type{};
 
+		/// \brief true, if T is a boost::optional, false otherwise
 		template < typename T >
 		constexpr bool is_optional_v = is_optional< T >::value;
 
@@ -52,6 +55,8 @@ namespace disposer{
 		/// \brief Get value as type T by name
 		///
 		/// \throw std::runtime_error if parameter don't exist
+		///
+		/// Mark name as used.
 		template < typename T >
 		T get(std::string const& name){
 			auto iter = find(name);
@@ -61,7 +66,7 @@ namespace disposer{
 			return cast< T >(name, iter->second);
 		}
 
-		/// \brief Convert value to type of target and assing it
+		/// \brief Set target to value of the named parameter
 		///
 		/// \copydetails parameter_processor::get()
 		template < typename T >
@@ -69,6 +74,10 @@ namespace disposer{
 			target = get< T >(name);
 		}
 
+		/// \brief Get parameter value as type T by name, or default value if
+		///        it don't exist
+		///
+		/// Mark name as used.
 		template < typename T >
 		T get(std::string const& name, T&& default_value){
 			using type = std::remove_cv_t< std::remove_reference_t< T > >;
@@ -84,11 +93,20 @@ namespace disposer{
 			return cast< T >(name, iter->second);
 		}
 
+		/// \brief Set target to value of the named parameter, of to default
+		///        value if it don't exist
+		///
+		/// Mark name as used.
 		template < typename T, typename V >
 		void set(T& target, std::string const& name, V&& default_value){
 			target = get< T >(name, std::forward< V >(default_value));
 		}
 
+		/// \brief Get parameter value as type optional< T > by name
+		///
+		/// Optional is empty if parameter don't exist.
+		///
+		/// Mark name as used.
 		template < typename T >
 		boost::optional< T > get_optional(std::string const& name){
 			auto iter = find(name);
@@ -96,11 +114,17 @@ namespace disposer{
 			return cast< T >(name, iter->second);
 		}
 
+		/// \brief Set target to value of the named parameter
+		///
+		/// Target is empty if parameter don't exist.
+		///
+		/// Mark name as used.
 		template < typename T >
 		void set(boost::optional< T >& target, std::string const& name){
 			target = get_optional< T >(name);
 		}
 
+		/// \brief List all unused parameters
 		parameter_list unused()const{
 			parameter_list result(parameters_);
 			for(auto const& name: used_parameters_){
@@ -110,6 +134,7 @@ namespace disposer{
 		}
 
 	private:
+		/// \brief Get iterator to element name and mark it as used
 		parameter_list::const_iterator find(std::string const& name){
 			used_parameters_.insert(name);
 			return parameters_.find(name);
@@ -117,7 +142,7 @@ namespace disposer{
 
 		/// \brief Convert value to type T, add error info if necessary
 		///
-		/// \copydetails parameter_processor::do_cast(value)
+		/// \copydetails parameter_processor::do_cast
 		template < typename T >
 		T cast(std::string const& name, std::string const& value)try{
 			return do_cast< T >(value);
@@ -132,55 +157,42 @@ namespace disposer{
 		/// \brief Convert value to type T
 		///
 		/// \throw boost::bad_lexical_cast if value is not convertible to T
+		/// \throw std::logic_error if value does not fit in range of T
 		template < typename T >
 		static T do_cast(std::string const& value){
-			return boost::lexical_cast< T >(value);
+			if constexpr(std::is_same_v< T, bool >){
+				if(value == "true") return true;
+				if(value == "false") return false;
+				throw std::logic_error("Can not convert to bool");
+			}else if constexpr(
+				std::is_same_v< T, signed char > ||
+				std::is_same_v< T, unsigned char >
+			){
+				auto result = boost::lexical_cast< int >(value);
+				if(
+					result < std::numeric_limits< T >::min() ||
+					result > std::numeric_limits< T >::max()
+				) std::logic_error("value is not in range");
+				return static_cast< T >(result);
+			}else if constexpr(std::is_same_v< T, char >){
+				return static_cast< char >(
+					parameter_processor::do_cast< std::conditional_t<
+						std::is_signed< char >::value,
+						signed char, unsigned char >
+					>(value)
+				);
+			}else{
+				return boost::lexical_cast< T >(value);
+			}
 		}
 
+
+		/// \brief Map of parameters (name & value)
 		parameter_list const parameters_;
+
+		/// \brief Set of all used parameters
 		std::set< std::string > used_parameters_;
 	};
-
-	/// \copydoc parameter_processor::do_cast(value)
-	template <>
-	inline bool parameter_processor::do_cast(std::string const& value){
-		if(value == "true") return true;
-		if(value == "false") return false;
-		throw std::logic_error("Can not convert to bool");
-	}
-
-	/// \copydoc parameter_processor::do_cast(value)
-	template <>
-	inline signed char parameter_processor::do_cast(std::string const& value){
-		auto result = boost::lexical_cast< int >(value);
-		if(
-			result < std::numeric_limits< signed char >::min() ||
-			result > std::numeric_limits< signed char >::max()
-		) std::logic_error("value is not in range");
-		return static_cast< signed char >(result);
-	}
-
-	/// \copydoc parameter_processor::do_cast(value)
-	template <>
-	inline unsigned char parameter_processor::do_cast(
-		std::string const& value
-	){
-		auto result = boost::lexical_cast< unsigned >(value);
-		if(result > std::numeric_limits< unsigned char >::max()){
-			std::logic_error("value is not in range");
-		}
-		return static_cast< signed char >(result);
-	}
-
-	/// \copydoc parameter_processor::do_cast(value)
-	template <>
-	inline char parameter_processor::do_cast(std::string const& value){
-		return static_cast< char >(
-			parameter_processor::do_cast< std::conditional_t<
-				std::is_signed< char >::value, signed char, unsigned char >
-			>(value)
-		);
-	}
 
 	inline std::string make_list_string(std::set< std::string > const& list){
 		std::string result;
