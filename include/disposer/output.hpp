@@ -74,7 +74,7 @@ namespace disposer{
 	};
 
 
-	namespace impl{ namespace output{
+	namespace detail{ namespace output{
 
 
 		template < typename T, typename ... U >
@@ -219,17 +219,17 @@ namespace disposer{
 
 
 	template < typename T, typename ... U >
-	struct output: impl::output::output< T, U ... >{
-		using impl::output::output< T, U ... >::output;
+	struct output: detail::output::output< T, U ... >{
+		using detail::output::output< T, U ... >::output;
 	};
 
 	template < typename T >
-	struct output< T >: impl::output::output< T >{
-		using impl::output::output< T >::output;
+	struct output< T >: detail::output::output< T >{
+		using detail::output::output< T >::output;
 
 		template < typename W >
 		auto put(W&& value){
-			impl::output::output< T >::template put< T >(
+			detail::output::output< T >::template put< T >(
 				static_cast< W&& >(value)
 			);
 		}
@@ -246,28 +246,28 @@ namespace disposer{
 		template< typename, typename ... > class Container, typename ... T
 	>
 	struct container_output:
-		impl::output::container_output< Container, T ... >
+		detail::output::container_output< Container, T ... >
 	{
 	public:
-		using impl::output::
+		using detail::output::
 			container_output< Container, T ... >::container_output;
 
 		template < typename V, typename W >
 		auto put(W&& value){
-			impl::output::container_output< Container, T ... >::
+			detail::output::container_output< Container, T ... >::
 				template put< Container< V > >(static_cast< W&& >(value));
 		}
 	};
 
 	template < template< typename, typename ... > class Container, typename T >
 	struct container_output< Container, T >:
-		impl::output::container_output< Container, T >
+		detail::output::container_output< Container, T >
 	{
-		using impl::output::container_output< Container, T >::container_output;
+		using detail::output::container_output< Container, T >::container_output;
 
 		template < typename W >
 		auto put(W&& value){
-			impl::output::container_output< Container, T >::
+			detail::output::container_output< Container, T >::
 				template put< Container< T > >(static_cast< W&& >(value));
 		}
 	};

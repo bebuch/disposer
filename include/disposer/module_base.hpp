@@ -94,7 +94,7 @@ namespace disposer{
 
 		template < typename Log >
 		auto module_log(Log& log)const{
-			using log_t = impl::log::extract_log_t< Log >;
+			using log_t = detail::log::extract_log_t< Log >;
 			return [&](log_t& os){
 				os << "id(" << id << '.' << number << ") ";
 				log(os);

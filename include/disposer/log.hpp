@@ -18,7 +18,7 @@
 namespace disposer{
 
 
-	namespace impl{ namespace log{
+	namespace detail{ namespace log{
 
 
 		template < typename Function >
@@ -170,32 +170,32 @@ namespace disposer{
 
 	template < typename Log >
 	inline void log(Log&& f){
-		using log_t = impl::log::extract_log_t< Log >;
+		using log_t = detail::log::extract_log_t< Log >;
 
-		auto log = impl::log::make_log< log_t >();
+		auto log = detail::log::make_log< log_t >();
 
 		static_assert(
-			impl::log::has_exec(log),
+			detail::log::has_exec(log),
 			"In 'log([](Log& os){ ... })' have 'os.exec()' to be a callable "
 			"expression."
 		);
 
-		impl::log::exec_log(f, log);
+		detail::log::exec_log(f, log);
 	}
 
 	template < typename Log, typename Body >
 	inline decltype(auto) log(Log&& f, Body&& body){
-		using log_t = impl::log::extract_log_t< Log >;
+		using log_t = detail::log::extract_log_t< Log >;
 
-		auto log = impl::log::make_log< log_t >();
+		auto log = detail::log::make_log< log_t >();
 
 		static_assert(
-			impl::log::has_exec(log),
+			detail::log::has_exec(log),
 			"In 'log([](Log& os){ ... }, []{ ... })' have 'os.exec()' to be a "
 			"callable expression."
 		);
 
-		boost::hana::if_(impl::log::has_have_body(log),
+		boost::hana::if_(detail::log::has_have_body(log),
 			[](auto& log){ log->have_body(); },
 			[](auto&){}
 		)(log);
@@ -205,12 +205,12 @@ namespace disposer{
 				boost::hana::type_c< decltype(body()) >
 			),
 			[](auto&& f, auto&& body, auto& log){
-				impl::log::exec_body(f, body, log);
-				impl::log::exec_log(f, log);
+				detail::log::exec_body(f, body, log);
+				detail::log::exec_log(f, log);
 			},
 			[](auto&& f, auto&& body, auto& log)->decltype(auto){
-				decltype(auto) result = impl::log::exec_body(f, body, log);
-				impl::log::exec_log(f, log);
+				decltype(auto) result = detail::log::exec_body(f, body, log);
+				detail::log::exec_log(f, log);
 				return result;
 			}
 		)(static_cast< Log&& >(f), static_cast< Body&& >(body), log);
@@ -231,9 +231,9 @@ namespace disposer{
 	/// a std::logic_error.
 	template < typename Log, typename Body >
 	inline auto exception_catching_log(Log&& f, Body&& body){
-		using log_t = impl::log::extract_log_t< Log >;
+		using log_t = detail::log::extract_log_t< Log >;
 
-		auto log = impl::log::make_log< log_t >();
+		auto log = detail::log::make_log< log_t >();
 
 
 		auto has_set_exception = boost::hana::is_valid(
@@ -248,7 +248,7 @@ namespace disposer{
 
 
 		static_assert(
-			impl::log::has_exec(log),
+			detail::log::has_exec(log),
 			"In 'exception_catching_log([](Log& os){ ... }, []{ ... })' have "
 			"'os.exec()' to be a callable expression."
 		);
@@ -267,13 +267,13 @@ namespace disposer{
 		);
 
 
-		boost::hana::if_(impl::log::has_have_body(log),
+		boost::hana::if_(detail::log::has_have_body(log),
 			[](auto& log){ log->have_body(); },
 			[](auto&){}
 		)(log);
 
-		auto result = impl::log::exec_exception_catching_body(body, log);
-		impl::log::exec_log(f, log);
+		auto result = detail::log::exec_exception_catching_body(body, log);
+		detail::log::exec_log(f, log);
 		return result;
 	}
 
