@@ -5,7 +5,7 @@ A dynamic module management system
 
 ## Supported Compilers
 
-- GCC 6.2 and higher
+- GCC 7.0 and higher
 - clang 3.9 and higher
 
 ## Direct dependencies
