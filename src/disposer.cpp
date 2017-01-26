@@ -91,7 +91,7 @@ disposer::module_ptr disposer::disposer::impl::make_module(make_data&& data){
 
 	if(iter == maker_list.end()){
 		throw std::logic_error(
-			"Module '" + data.chain + "." + data.name + "': " + "Type '" +
+			"Module '" + data.chain + "'.'" + data.name + "': " + "Type '" +
 			data.type_name + "' is unknown!"
 		);
 	}
@@ -107,7 +107,7 @@ disposer::module_ptr disposer::disposer::impl::make_module(make_data&& data){
 		return result;
 	}catch(std::exception const& error){
 		throw std::runtime_error(
-			"Module '" + data.chain + "." + data.name + "': " + error.what()
+			"Module '" + data.chain + "'.'" + data.name + "': " + error.what()
 		);
 	}
 }

@@ -40,8 +40,8 @@ namespace disposer{
 
 
 	void chain::trigger(){
-		std::size_t id = generate_id_(id_increase_);
-		std::size_t run = next_run_++;
+		std::size_t const id = generate_id_(id_increase_);
+		std::size_t const run = next_run_++;
 
 		log([this, id](log_base& os){
 			os << "id(" << id << ") chain '" << modules_[0]->chain << "'";
