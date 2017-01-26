@@ -40,9 +40,13 @@ namespace disposer{
 
 
 	void chain::exec(){
+		// generate a new id for the exec
 		std::size_t const id = generate_id_(id_increase_);
+
+		// generate a unique continuous index for the call
 		std::size_t const run = next_run_++;
 
+		// exec any module, call cleanup instead if the module throw
 		log([this, id](log_base& os){
 			os << "id(" << id << ") chain '" << modules_[0]->chain << "'";
 		}, [this, id, run]{
@@ -72,23 +76,23 @@ namespace disposer{
 
 	template < typename F >
 	void chain::process_module(
-		std::size_t i,
-		std::size_t run,
+		std::size_t const i,
+		std::size_t const run,
 		F const& action,
-		char const* action_name
+		char const* const action_name
 	){
-		// Lock mutex and wait for the previous run to be ready
+		// lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(mutexes_[i]);
 		cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });
 
-		// Cleanup the module
+		// exec or cleanup the module
 		log([this, i, action_name](log_base& os){
 			os << "id(" << modules_[i]->id << "." << i << ") " << action_name
 				<< " chain '" << modules_[i]->chain << "' module '"
 				<< modules_[i]->name << "'";
-		}, [this, i, action]{ action(*this, i); });
+		}, [this, i, &action]{ action(*this, i); });
 
-		// Make module ready
+		// make module ready
 		ready_run_[i] = run + 1;
 		cv_.notify_all();
 	}
