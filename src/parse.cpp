@@ -316,8 +316,7 @@ namespace disposer{
 			auto const parameter_sets_def =
 				(
 					("parameter_set" > separator) |
-					(x3::expect["module" >> separator])
-					[([](auto& ctx){ x3::_pass(ctx) = false; })]
+					&x3::expect["module" >> separator]
 				) >> parameter_sets_params
 			;
 
@@ -410,18 +409,13 @@ namespace disposer{
 
 			auto const module_sets_def =
 				*(
-					(
-						("\t\tparameter_set" >> *space >> '=')
-						> *space > value > separator
-					) | (
-						(x3::expect[
-							("\t\t" >> keyword) |
-							("\t" >> keyword) |
-							("chain")
-						])
-						[([](auto& ctx){ x3::_pass(ctx) = false; })]
-					)
-				)
+					("\t\tparameter_set" >> *space >> '=')
+					> *space > value > separator
+				) >> &x3::expect[
+					("\t\t" >> keyword) |
+					("\t" >> keyword) |
+					("chain")
+				]
 			;
 
 			auto const modules_def =
