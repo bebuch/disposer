@@ -360,14 +360,14 @@ void disposer::disposer::load(std::string const& filename){
 		});
 }
 
-void disposer::disposer::trigger(std::string const& chain){
+void disposer::disposer::exec(std::string const& chain){
 	auto iter = chains_.find(chain);
 	if(iter == chains_.end()){
 		throw std::logic_error(
-			"triggered chain '" + chain + "' does not exist"
+			"executed chain '" + chain + "' does not exist"
 		);
 	}
-	iter->second.trigger();
+	iter->second.exec();
 }
 
 std::unordered_set< std::string > disposer::disposer::chains()const{

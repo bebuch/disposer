@@ -27,7 +27,8 @@ namespace disposer{
 	/// \brief A process chain
 	///
 	/// Properties:
-	/// - no 2 identical modules (trigger) running simultaneously
+	/// - no 2 identical modules (in different executions) must running
+	///   simultaneously
 	/// - it must not be overtaken
 	class chain{
 	public:
@@ -62,7 +63,7 @@ namespace disposer{
 		/// 3.3 if not last module then back to 3.1
 		///
 		/// If a module throws an exception,
-		void trigger();
+		void exec();
 
 
 		std::string const name;

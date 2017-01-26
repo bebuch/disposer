@@ -58,7 +58,7 @@ namespace disposer{
 
 		void load(std::string const& filename);
 
-		void trigger(std::string const& chain);
+		void exec(std::string const& chain);
 
 		std::unordered_set< std::string > chains()const;
 

@@ -74,7 +74,7 @@ namespace disposer{
 
 
 	protected:
-		virtual void trigger() = 0;
+		virtual void exec() = 0;
 
 
 		virtual void input_ready(){}

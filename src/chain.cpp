@@ -39,7 +39,7 @@ namespace disposer{
 		{}
 
 
-	void chain::trigger(){
+	void chain::exec(){
 		std::size_t const id = generate_id_(id_increase_);
 		std::size_t const run = next_run_++;
 
@@ -50,13 +50,13 @@ namespace disposer{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(id);
 					process_module(i, run, [](chain& c, std::size_t i){
-						c.modules_[i]->trigger();
-					}, "trigger");
+						c.modules_[i]->exec();
+					}, "exec");
 				}
 			}catch(...){
-				// cleanup and unlock all triggers
+				// cleanup and unlock all executions
 				for(std::size_t i = 0; i < ready_run_.size(); ++i){
-					// Trigger was successful
+					// exec was successful
 					if(ready_run_[i] >= run + 1) continue;
 
 					process_module(i, run, [id](chain& c, std::size_t i){

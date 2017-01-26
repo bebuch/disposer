@@ -39,14 +39,14 @@ namespace disposer{
 
 
 		void operator()(std::size_t id, value_type&& value){
-			trigger_signal(
+			exec_signal(
 				id,
 				std::make_shared< output_data< value_type > >(std::move(value))
 			);
 		}
 
 		void operator()(std::size_t id, value_type const& value){
-			trigger_signal(
+			exec_signal(
 				id,
 				std::make_shared< output_data< value_type > >(value)
 			);
@@ -55,14 +55,14 @@ namespace disposer{
 		void operator()(
 			std::size_t id, output_data_ptr< value_type > const& value
 		){
-			trigger_signal(id, value);
+			exec_signal(id, value);
 		}
 
 
 	private:
 		signal_t& signal_;
 
-		void trigger_signal(
+		void exec_signal(
 			std::size_t id, output_data_ptr< value_type > const& value
 		){
 			signal_(
