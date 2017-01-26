@@ -59,3 +59,9 @@ exe parse_errors
 	parse_errors.cpp
 	/disposer//disposer
 	;
+
+exe parse_check
+	:
+	parse_check.cpp
+	/disposer//disposer
+	;
