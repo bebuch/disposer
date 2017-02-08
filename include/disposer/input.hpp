@@ -83,6 +83,28 @@ namespace disposer{
 		}
 
 
+		template < typename TransformFunction >
+		std::vector< type_index > active_types_transformed(
+// 			hana::basic_type< Out >(*fn)(hana::basic_type< In >)
+			TransformFunction fn
+		)const{
+			std::map< type_index, type_index > transform_map = {
+				{ type_id_with_cvr< T >(), type_id_with_cvr
+					< typename decltype(fn(hana::type_c< T >))::type >() },
+				{ type_id_with_cvr< U >(), type_id_with_cvr
+					< typename decltype(fn(hana::type_c< U >))::type >() } ...
+			};
+
+			std::vector< type_index > result;
+			result.reserve(1 + sizeof...(U));
+			for(auto& type: active_map_){
+				if(!type.second) continue;
+				result.push_back(transform_map.at(type.first));
+			}
+			return result;
+		}
+
+
 	private:
 		virtual void add(
 			std::size_t id,
