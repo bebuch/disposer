@@ -76,7 +76,7 @@ namespace disposer{
 		std::vector< type_index > active_types()const{
 			std::vector< type_index > result;
 			result.reserve(1 + sizeof...(U));
-			for(auto& type: type_map_){
+			for(auto& type: active_map_){
 				if(type.second) result.push_back(type.first);
 			}
 			return result;
