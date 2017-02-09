@@ -42,6 +42,41 @@ namespace disposer{
 	}
 
 
+	/// \brief Convert value to type T
+	///
+	/// \throw boost::bad_lexical_cast if value is not convertible to T
+	/// \throw std::logic_error if value does not fit in range of T
+	template < typename T >
+	struct parameter_cast{
+		T operator()(std::string const& value)const{
+			if constexpr(std::is_same_v< T, bool >){
+				if(value == "true") return true;
+				if(value == "false") return false;
+				throw std::logic_error("Can not convert to bool");
+			}else if constexpr(
+				std::is_same_v< T, signed char > ||
+				std::is_same_v< T, unsigned char >
+			){
+				auto result = boost::lexical_cast< int >(value);
+				if(
+					result < std::numeric_limits< T >::min() ||
+					result > std::numeric_limits< T >::max()
+				) std::logic_error("value is not in range");
+				return static_cast< T >(result);
+			}else if constexpr(std::is_same_v< T, char >){
+				return static_cast< char >(
+					parameter_cast< std::conditional_t<
+						std::is_signed< char >::value,
+						signed char, unsigned char >
+					>()(value)
+				);
+			}else{
+				return boost::lexical_cast< T >(value);
+			}
+		}
+	};
+
+
 	/// \brief A parameter has a name and a value
 	using parameter_list = std::map< std::string, std::string >;
 
@@ -142,48 +177,16 @@ namespace disposer{
 
 		/// \brief Convert value to type T, add error info if necessary
 		///
-		/// \copydetails parameter_processor::do_cast
+		/// \copydetails parameter_cast
 		template < typename T >
 		T cast(std::string const& name, std::string const& value)try{
-			return do_cast< T >(value);
+			return parameter_cast< T >()(value);
 		}catch(...){
 			throw std::runtime_error(
 				"parameter '" + name + "' (value is '" + value +
 				"') can not be converted to '" +
 				boost::typeindex::type_id< T >().pretty_name() + "'"
 			);
-		}
-
-		/// \brief Convert value to type T
-		///
-		/// \throw boost::bad_lexical_cast if value is not convertible to T
-		/// \throw std::logic_error if value does not fit in range of T
-		template < typename T >
-		static T do_cast(std::string const& value){
-			if constexpr(std::is_same_v< T, bool >){
-				if(value == "true") return true;
-				if(value == "false") return false;
-				throw std::logic_error("Can not convert to bool");
-			}else if constexpr(
-				std::is_same_v< T, signed char > ||
-				std::is_same_v< T, unsigned char >
-			){
-				auto result = boost::lexical_cast< int >(value);
-				if(
-					result < std::numeric_limits< T >::min() ||
-					result > std::numeric_limits< T >::max()
-				) std::logic_error("value is not in range");
-				return static_cast< T >(result);
-			}else if constexpr(std::is_same_v< T, char >){
-				return static_cast< char >(
-					parameter_processor::do_cast< std::conditional_t<
-						std::is_signed< char >::value,
-						signed char, unsigned char >
-					>(value)
-				);
-			}else{
-				return boost::lexical_cast< T >(value);
-			}
 		}
 
 
