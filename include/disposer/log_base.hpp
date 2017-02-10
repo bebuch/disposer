@@ -11,6 +11,7 @@
 
 #include <ostream>
 #include <memory>
+#include <functional>
 
 
 namespace disposer{
