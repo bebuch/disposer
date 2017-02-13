@@ -15,14 +15,17 @@
 namespace disposer{
 
 
+	/// \brief true if all types T are distinct, false otherwise
 	template < typename ... T >
 	struct is_type_unique;
 
+	/// \brief true, because T is the only type
 	template < typename T >
 	struct is_type_unique< T >{
 		static constexpr bool value = true;
 	};
 
+	/// \brief true if all types T, U, V... are distinct, false otherwise
 	template < typename T, typename U, typename ... V >
 	struct is_type_unique< T, U, V ... >{
 		static constexpr bool value =
@@ -31,6 +34,7 @@ namespace disposer{
 			&& is_type_unique< U, V ... >::value;
 	};
 
+	/// \brief true if all types T are distinct, false otherwise
 	template < typename ... T >
 	constexpr bool is_type_unique_v = is_type_unique< T ... >::value;
 

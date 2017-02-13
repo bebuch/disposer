@@ -23,6 +23,7 @@ namespace disposer{
 	template < typename T >
 	class input_data{
 	public:
+		/// \brief Constructor
 		input_data(output_data_ptr< T > const& data, bool last_use):
 			data_(data),
 			last_use_(last_use)
@@ -52,14 +53,19 @@ namespace disposer{
 
 
 	private:
+		/// \brief shared_ptr to the data
 		output_data_ptr< T > data_;
+
+		/// \brief Flag if this is the last use of the data in the chain
 		bool last_use_;
 	};
 
 
+	///\brief Specialization for std::future with data
 	template < typename T >
 	class input_data< std::future< T > >{
 	public:
+		/// \brief Constructor
 		input_data(
 			output_data_ptr< std::future< T > > const& data, bool last_use
 		):
@@ -91,32 +97,39 @@ namespace disposer{
 
 
 	private:
+		/// \brief shared_ptr to the data
 		output_data_ptr< std::future< T > > data_;
 		bool last_use_;
 	};
 
 
+	///\brief Specialization for std::future without data
 	template <>
 	class input_data< std::future< void > >{
 	public:
+		/// \brief Constructor
 		input_data(output_data_ptr< std::future< void > > const& data, bool):
 			data_(data)
 			{}
 
+		/// \brief Block until future is ready
 		void data()const{
 			data_->wait();
 		}
 
+		/// \brief Block until future is ready
 		void get(){
 			data_->wait();
 		}
 
+		/// \brief Block until future is ready
 		void wait()const{
 			data_->wait();
 		}
 
 
 	private:
+		/// \brief shared_ptr to the data
 		output_data_ptr< std::future< void > > data_;
 	};
 
