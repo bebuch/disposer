@@ -25,45 +25,73 @@ namespace disposer{
 
 	class module_adder{
 	public:
+		/// \brief A init function which constructs a module
 		using maker_function = std::function< module_ptr(make_data&) >;
 
+		/// \brief Register a new module in the disposer by mapping the
+		///        module name to the constructing init function
 		void operator()(std::string const& type, maker_function&& function);
 
 
 	private:
+		/// \brief Only constructible by the disposer class
 		module_adder(disposer& disposer): disposer_(disposer) {}
 
+
+		/// \brief Not copyable
 		module_adder(module_adder const&) = delete;
+
+		/// \brief Not movable
 		module_adder(module_adder&&) = delete;
 
+
+		/// \brief Reference to the disposer class
 		disposer& disposer_;
 
 	friend class disposer;
 	};
 
+
 	class disposer{
 	public:
+		/// \copydoc module_adder::maker_function
 		using maker_function = module_adder::maker_function;
 
+
+		/// \brief Constructor
 		disposer();
 
+
+		/// \brief Not copyable
 		disposer(disposer const&) = delete;
+
+		/// \brief Not movable
 		disposer(disposer&&) = delete;
 
+
+		/// \brief Not copyable
 		disposer& operator=(disposer const&) = delete;
+
+		/// \brief Not movable
 		disposer& operator=(disposer&&) = delete;
 
 
+		/// \brief Get a reference to the module_adder object
 		module_adder& adder();
 
+		/// \brief Load and parse the config file
 		void load(std::string const& filename);
 
+		/// \brief Execute the given chain as defined in the config file
 		void exec(std::string const& chain);
 
+		/// \brief List of all chaines
 		std::unordered_set< std::string > chains()const;
 
+		/// \brief List of all chaines in group
 		std::vector< std::string > chains(std::string const& group)const;
 
+		/// \brief List of all groups of chains
 		std::unordered_set< std::string > groups()const;
 
 
@@ -71,16 +99,21 @@ namespace disposer{
 
 
 	private:
+		/// \brief List of id_generators (map from name to object)
 		std::unordered_map< std::string, id_generator > id_generators_;
 
+		/// \brief List of groups (map from name to chain list)
 		std::unordered_map<
 			std::string, std::vector< std::reference_wrapper< chain > >
 		> groups_;
 
+		/// \brief List of modules (map from module type name to maker function)
 		std::unordered_map< std::string, maker_function > maker_list_;
 
+		/// \brief List of alle chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
 
+		/// \brief The adder object to register new module types
 		module_adder adder_;
 
 	friend class module_adder;
