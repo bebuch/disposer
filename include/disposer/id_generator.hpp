@@ -15,18 +15,33 @@
 namespace disposer{
 
 
+	/// \brief Generator for unique ID's
 	struct id_generator{
+		/// \brief Initialize the counter with 0
 		id_generator(): next_id(0){}
+
+
+		/// \brief id_generators are not copyable
 		id_generator(id_generator const&) = delete;
+
+		/// \brief id_generators are not movable
 		id_generator(id_generator&&) = delete;
 
+
+		/// \brief id_generators are not copyable
 		id_generator& operator=(id_generator const&) = delete;
+
+		/// \brief id_generators are not movable
 		id_generator& operator=(id_generator&&) = delete;
 
+
+		/// \brief Get the next ID and increase the counter by increase
 		std::size_t operator()(std::size_t increase){
 			return next_id.fetch_add(increase);
 		}
 
+
+		/// \brief The counter
 		std::atomic< std::size_t > next_id;
 	};
 

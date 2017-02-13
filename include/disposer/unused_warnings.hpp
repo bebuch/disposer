@@ -15,6 +15,7 @@
 namespace disposer{
 
 
+	/// \brief Warn about unused stuff in the parsed config via the log
 	void unused_warnings(types::parse::config const& config);
 
 

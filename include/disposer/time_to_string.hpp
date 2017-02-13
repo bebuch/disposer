@@ -19,6 +19,9 @@
 namespace disposer{
 
 
+	/// \brief Convert a time_point into a string
+	///
+	/// Output format: YYYY_MM_DD hh:mm:ss 3ms.3µs
 	template < typename CharT, typename Traits >
 	inline std::basic_ostream< CharT, Traits >& time_to_string(
 		std::basic_ostream< CharT, Traits >& os,
@@ -43,6 +46,8 @@ namespace disposer{
 			<< std::setw(3) << microseconds.count() % 1000;
 	}
 
+
+	/// \brief Date and time as basic_string of type CharT
 	template <
 		typename CharT,
 		typename Traits = std::char_traits< CharT >,
@@ -59,6 +64,7 @@ namespace disposer{
 		return os.str();
 	}
 
+	/// \brief Date and time as string
 	inline std::string time_to_string(
 		std::chrono::system_clock::time_point const& time =
 			std::chrono::system_clock::now()

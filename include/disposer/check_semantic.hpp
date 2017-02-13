@@ -15,6 +15,9 @@
 namespace disposer{
 
 
+	/// \brief Check semantics of the parsed config
+	///
+	/// \throw std::logic_error If a semantic error is detected
 	void check_semantic(types::parse::config const& config);
 
 
