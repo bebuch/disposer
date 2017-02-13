@@ -92,6 +92,11 @@ namespace disposer{
 		std::vector< std::string > chains(std::string const& group)const;
 
 		/// \brief List of all groups of chains
+		///
+		/// Groups have no special use in the disposer, they are comfore for
+		/// the user, to bind associated chains under one name.
+		///
+		/// The standard id_generator of group member chains is the group name.
 		std::unordered_set< std::string > groups()const;
 
 
