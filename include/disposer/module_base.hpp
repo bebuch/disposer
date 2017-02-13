@@ -62,7 +62,7 @@ namespace disposer{
 		module_base& operator=(module_base&&) = delete;
 
 
-		/// \brief Standard destructor
+		/// \brief Standard virtual destructor
 		virtual ~module_base() = default;
 
 

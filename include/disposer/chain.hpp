@@ -47,10 +47,18 @@ namespace disposer{
 			std::string const& group
 		);
 
+
+		/// \brief Chaines are not copyable
 		chain(chain const&) = delete;
+
+		/// \brief Chaines are not movable
 		chain(chain&&) = delete;
 
+
+		/// \brief Chaines are not copyable
 		chain& operator=(chain const&) = delete;
+
+		/// \brief Chaines are not movable
 		chain& operator=(chain&&) = delete;
 
 
