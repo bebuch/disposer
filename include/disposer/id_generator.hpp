@@ -16,7 +16,8 @@ namespace disposer{
 
 
 	/// \brief Generator for unique ID's
-	struct id_generator{
+	class id_generator{
+	public:
 		/// \brief Initialize the counter with 0
 		id_generator(): next_id(0){}
 
@@ -41,6 +42,7 @@ namespace disposer{
 		}
 
 
+	private:
 		/// \brief The counter
 		std::atomic< std::size_t > next_id;
 	};
