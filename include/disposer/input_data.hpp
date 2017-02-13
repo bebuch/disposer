@@ -19,6 +19,7 @@
 namespace disposer{
 
 
+	/// \brief Wrapper for input data
 	template < typename T >
 	class input_data{
 	public:
@@ -32,7 +33,7 @@ namespace disposer{
 			return data_->data();
 		}
 
-		/// \brief Move out the pointer if last use or get a deep copy
+		/// \brief If last use move out the pointer, otherwise get a deep copy
 		output_data_ptr< T > get(){
 			if(last_use_){
 				return std::move(data_);

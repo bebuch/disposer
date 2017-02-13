@@ -40,8 +40,8 @@ namespace disposer{
 	///
 	/// Polymorphe base class for module outputs.
 	///
-	/// A disposer module output must have at least one output type. An output
-	/// might have more then one type.
+	/// A disposer module output must have at least one output data type.
+	/// An output might have more then one data type.
 	class output_base{
 	public:
 		/// \brief Constructor
