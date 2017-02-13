@@ -18,6 +18,7 @@ namespace disposer{
 
 	class module_base;
 
+	/// \brief unique_ptr to class module_base or derived classes
 	using module_ptr = std::unique_ptr< module_base >;
 
 

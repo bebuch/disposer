@@ -36,29 +36,48 @@ namespace disposer{
 	};
 
 
+	/// \brief Base for module outpus
+	///
+	/// Polymorphe base class for module outputs.
+	///
+	/// A disposer module output must have at least one output type. An output
+	/// might have more then one type.
 	class output_base{
 	public:
+		/// \brief Constructor
 		output_base(std::string const& name): name(name), id(id_), id_(0) {}
 
+		/// \brief Outputs are not copyable
 		output_base(output_base const&) = delete;
+
+		/// \brief Outputs are not movable
 		output_base(output_base&&) = delete;
 
+
+		/// \brief Outputs are not copyable
 		output_base& operator=(output_base const&) = delete;
+
+		/// \brief Outputs are not movable
 		output_base& operator=(output_base&&) = delete;
 
 
 	protected:
+		/// \brief List of active output types
 		virtual std::vector< type_index > active_types()const = 0;
 
 
+		/// \brief Name of the output in the config file
 		std::string const name;
 
 		signal_t signal;
 
+		/// \brief Read only reference to the actual ID while module::exec()
+		///        is running
 		std::size_t const& id;
 
 
 	private:
+		/// \brief The actual ID while module::exec() is running
 		std::size_t id_;
 
 

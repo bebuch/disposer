@@ -16,6 +16,7 @@
 namespace disposer{
 
 
+	/// \brief Mask all non pritable characters with escape sequences
 	inline std::string mask_non_print(std::string const& str){
 		std::ostringstream result;
 		for(auto c: str){
