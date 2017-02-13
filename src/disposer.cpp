@@ -224,7 +224,12 @@ void disposer::disposer::impl::activate_output_types(
 				}
 			}
 
-			module.input_ready();
+			log([&config_module](log_base& os){
+				os << "call input_ready() in module '"
+					<< config_module.module.first << "'";
+			}, [&module](){
+				module.input_ready();
+			});
 
 			// config_module.outputs containes all active output names
 			for(auto& config_output: config_module.outputs){
