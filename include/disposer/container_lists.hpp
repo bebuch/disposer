@@ -25,16 +25,22 @@ namespace disposer{
 	template < typename T, typename ... U >
 	struct type_list;
 
+	/// \brief Types as hana::tuple_t
 	template < typename T, typename ... U >
 	constexpr auto hana_type_list = hana::tuple_t< T, U ... >;
 
+	/// \brief Map types in type_list to types in hana::tuple_t
 	template < typename T, typename ... U >
 	constexpr auto hana_type_list< type_list< T, U ... > > =
 		hana::tuple_t< T, U ... >;
 
 
+	/// \brief List of other types
+	///
+	/// This class is used for container inputs and outputs.
 	template < typename T, typename ... U >
 	struct type_list{
+		/// \brief Count of types
 		static constexpr std::size_t size = 1 + sizeof...(U);
 
 		static_assert(
@@ -59,20 +65,20 @@ namespace disposer{
 		);
 	};
 
-	template < typename ... T >
-	struct container_types;
 
-
-	template < template< typename ... > class target, typename T >
+	/// \brief Map the types in TypeList to the template parameters of target
+	template < template< typename ... > class target, typename TypeList >
 	struct type_unroll;
 
+	/// \brief Map the types T to the template parameters of target
 	template < template< typename ... > class target, typename ... T >
 	struct type_unroll< target, type_list< T ... > >{
 		using type = target< T ... >;
 	};
 
-	template < template< typename ... > class target, typename T >
-	using type_unroll_t = typename type_unroll< target, T >::type;
+	/// \brief Map the types in TypeList to the template parameters of target
+	template < template< typename ... > class target, typename TypeList >
+	using type_unroll_t = typename type_unroll< target, TypeList >::type;
 
 
 }

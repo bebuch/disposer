@@ -23,6 +23,8 @@ namespace disposer{
 	struct make_data;
 	class disposer;
 
+
+	/// \brief Functor to register a new module by a name and an init function
 	class module_adder{
 	public:
 		/// \brief A init function which constructs a module
@@ -52,6 +54,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Main class of the disposer software
 	class disposer{
 	public:
 		/// \copydoc module_adder::maker_function
