@@ -12,7 +12,7 @@
 #include "container_lists.hpp"
 #include "input_base.hpp"
 #include "input_data.hpp"
-#include "is_type_unique.hpp"
+#include "are_types_distinct.hpp"
 
 #include <boost/variant.hpp>
 
@@ -52,7 +52,7 @@ namespace disposer{
 		);
 
 		static_assert(
-			is_type_unique_v< T, U ... >,
+			are_types_distinct_v< T, U ... >,
 			"disposer::input must have distict types"
 		);
 

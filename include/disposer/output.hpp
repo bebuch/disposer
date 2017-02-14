@@ -13,7 +13,7 @@
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
-#include "is_type_unique.hpp"
+#include "are_types_distinct.hpp"
 #include "type_position.hpp"
 
 #include <boost/hana.hpp>
@@ -99,7 +99,7 @@ namespace disposer{
 			);
 
 			static_assert(
-				is_type_unique_v< T, U ... >,
+				are_types_distinct_v< T, U ... >,
 				 "disposer::output must have distict types"
 			);
 

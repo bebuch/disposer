@@ -9,7 +9,7 @@
 #ifndef _disposer__container_lists__hpp_INCLUDED_
 #define _disposer__container_lists__hpp_INCLUDED_
 
-#include "is_type_unique.hpp"
+#include "are_types_distinct.hpp"
 
 #include <boost/hana.hpp>
 
@@ -60,7 +60,7 @@ namespace disposer{
 		);
 
 		static_assert(
-			is_type_unique_v< T, U ... >,
+			are_types_distinct_v< T, U ... >,
 			"disposer::type_list must have distict types"
 		);
 	};
