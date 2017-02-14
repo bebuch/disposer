@@ -14,8 +14,7 @@
 #include "input_data.hpp"
 #include "are_types_distinct.hpp"
 
-#include <boost/variant.hpp>
-
+#include <variant>
 #include <set>
 #include <map>
 
@@ -34,7 +33,7 @@ namespace disposer{
 		using value_type = std::conditional_t<
 			sizeof...(U) == 0,
 			input_data< T >,
-			boost::variant< input_data< T >, input_data< U > ... >
+			std::variant< input_data< T >, input_data< U > ... >
 		>;
 
 		static_assert(
