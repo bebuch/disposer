@@ -40,6 +40,7 @@ namespace disposer{
 		/// \brief Constructor
 		input_base(std::string const& name): name(name), id(id_), id_(0) {}
 
+
 		/// \brief Inputs are not copyable
 		input_base(input_base const&) = delete;
 

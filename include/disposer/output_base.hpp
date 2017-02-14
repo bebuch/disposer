@@ -17,21 +17,28 @@
 namespace disposer{
 
 
+	/// \brief Connection between an output and an input
 	class signal_t{
 	public:
+		/// \brief Called by output to move data to receiving inputs
 		void operator()(
 			std::size_t id, any_type const& data, type_index const& type
 		)const{
-			for(auto& target: targets_){
-				target.first.add(id, data, type, target.second);
+			for(auto& [input, last_use]: targets_){
+				input.add(id, data, type, last_use);
 			}
 		}
 
+		/// \brief Add an input to the target list
+		///
+		/// The last_use flag shall be true, if the input is the last which
+		/// gets the variable in the chain.
 		void connect(input_base& input, bool last_use){
 			targets_.emplace_back(input, last_use);
 		}
 
 	private:
+		/// \brief List of all connected inputs
 		std::vector< std::pair< input_base&, bool > > targets_;
 	};
 
