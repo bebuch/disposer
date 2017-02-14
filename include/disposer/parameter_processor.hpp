@@ -10,6 +10,7 @@
 #define _disposer__parameter_processor__hpp_INCLUDED_
 
 #include <stdexcept>
+#include <optional>
 #include <limits>
 #include <string>
 #include <map>
@@ -17,7 +18,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/type_index.hpp>
-#include <boost/optional.hpp>
 
 
 namespace disposer{
@@ -26,15 +26,15 @@ namespace disposer{
 	namespace detail{
 
 
-		/// \brief Check if T is a boost::optional
+		/// \brief Check if T is a std::optional
 		template < typename T >
 		struct is_optional: std::false_type{};
 
-		/// \brief Check if T is a boost::optional
+		/// \brief Check if T is a std::optional
 		template < typename T >
-		struct is_optional< boost::optional< T > >: std::true_type{};
+		struct is_optional< std::optional< T > >: std::true_type{};
 
-		/// \brief true, if T is a boost::optional, false otherwise
+		/// \brief true, if T is a std::optional, false otherwise
 		template < typename T >
 		constexpr bool is_optional_v = is_optional< T >::value;
 
@@ -143,9 +143,9 @@ namespace disposer{
 		///
 		/// Mark name as used.
 		template < typename T >
-		boost::optional< T > get_optional(std::string const& name){
+		std::optional< T > get_optional(std::string const& name){
 			auto iter = find(name);
-			if(iter == parameters_.cend()) return boost::none;
+			if(iter == parameters_.cend()) return {};
 			return cast< T >(name, iter->second);
 		}
 
@@ -155,7 +155,7 @@ namespace disposer{
 		///
 		/// Mark name as used.
 		template < typename T >
-		void set(boost::optional< T >& target, std::string const& name){
+		void set(std::optional< T >& target, std::string const& name){
 			target = get_optional< T >(name);
 		}
 

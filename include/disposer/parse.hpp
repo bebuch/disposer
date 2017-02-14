@@ -9,8 +9,7 @@
 #ifndef _disposer__config_parse__hpp_INCLUDED_
 #define _disposer__config_parse__hpp_INCLUDED_
 
-#include <boost/optional.hpp>
-
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,8 +56,8 @@ namespace disposer{
 
 		struct chain{
 			std::string name;
-			boost::optional< std::string > group;
-			boost::optional< std::string > id_generator;
+			std::optional< std::string > group;
+			std::optional< std::string > id_generator;
 			std::vector< chain_module > modules;
 		};
 

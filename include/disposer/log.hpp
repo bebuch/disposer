@@ -10,8 +10,8 @@
 #define _disposer__log__hpp_INCLUDED_
 
 #include <boost/hana.hpp>
-#include <boost/optional.hpp>
 
+#include <optional>
 #include <memory>
 
 
@@ -124,7 +124,7 @@ namespace disposer{
 				return boost::hana::if_(is_void,
 					[](auto&& body){ body(); return true; },
 					[](auto&& body){
-						return boost::optional< decltype(body()) >(body());
+						return std::optional< decltype(body()) >(body());
 					}
 				)(static_cast< Body&& >(body));
 			}catch(std::exception const& error){
@@ -136,7 +136,7 @@ namespace disposer{
 			return boost::hana::if_(is_void,
 				[](auto&&){ return false; },
 				[](auto&& body){
-					return boost::optional< decltype(body()) >();
+					return std::optional< decltype(body()) >();
 				}
 			)(static_cast< Body&& >(body));
 
