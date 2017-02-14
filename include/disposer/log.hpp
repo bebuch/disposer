@@ -21,29 +21,35 @@ namespace disposer{
 	namespace detail{ namespace log{
 
 
+		/// \brief Implementation of extract_log_t
 		template < typename Function >
 		struct extract_log_from_function{};
 
+		/// \brief Implementation of extract_log_t
 		template < typename F, typename R, typename Log >
 		struct extract_log_from_function< R(F::*)(Log&) >{
 			using type = Log;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename F, typename R, typename Log >
 		struct extract_log_from_function< R(F::*)(Log&)const >{
 			using type = Log;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename F, typename R, typename Log >
 		struct extract_log_from_function< R(F::*)(Log&)volatile >{
 			using type = Log;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename F, typename R, typename Log >
 		struct extract_log_from_function< R(F::*)(Log&)volatile const >{
 			using type = Log;
 		};
 
+		/// \brief Extract type of first Function parameter
 		template < typename Function >
 		struct extract_log{
 			using type =
@@ -52,25 +58,35 @@ namespace disposer{
 				>::type;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename Function >
 		struct extract_log< Function& >{
 			using type = typename extract_log< Function >::type;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename Log, typename R >
 		struct extract_log< R(Log&) >{
 			using type = Log;
 		};
 
+		/// \brief Implementation of extract_log_t
 		template < typename Log, typename R >
 		struct extract_log< R(*)(Log&) >{
 			using type = Log;
 		};
 
+		/// \copydoc extract_log
 		template < typename Function >
 		using extract_log_t = typename extract_log< Function >::type;
 
 
+		/// \brief Output the log message
+		///
+		///   1. Call log.pre() if it exists
+		///   2. Call the log function: f(log)
+		///   3. Call log.post() if it exists
+		///   4. Call log.exec()
 		template < typename F, typename Log >
 		inline void exec_log(F& f, Log& log){
 			auto has_pre = boost::hana::is_valid(
@@ -96,6 +112,15 @@ namespace disposer{
 			log->exec();
 		}
 
+
+		/// \brief Call the associated code block
+		///
+		///   - If no exception appears:
+		///       1. return with associated code block result
+		///   - If an exception appears:
+		///       1. Call log.failed() if it exists
+		///       2. Call exec_log
+		///       3. rethrow the exception
 		template < typename F, typename Body, typename Log >
 		inline decltype(auto) exec_body(F& f, Body& body, Log& log)try{
 			return body();
@@ -114,6 +139,16 @@ namespace disposer{
 			throw;
 		}
 
+
+		/// \brief Call the associated code block and catch exceptions
+		///
+		///   - If no exception appears:
+		///       1. return with associated code block result as std::optional
+		///   - If an exception appears:
+		///       1. exception is derived from std::exception
+		///           - yes: Call log.set_exception(exception)
+		///           - no: Call log.unknown_exception()
+		///       2. return with an empty std::optional
 		template < typename Body, typename Log >
 		inline auto exec_exception_catching_body(Body& body, Log& log){
 			constexpr auto is_void = boost::hana::traits::is_void(
@@ -142,6 +177,12 @@ namespace disposer{
 
 		}
 
+
+		/// \brief Construct a new log object
+		///
+		///   - Log::factory exists
+		///       - yes: construct by calling Log::factory()
+		///       - no: construct by calling standard constructor
 		template < typename Log >
 		auto make_log(){
 			auto has_factory = boost::hana::is_valid(
@@ -156,10 +197,12 @@ namespace disposer{
 			)(boost::hana::type_c< Log >);
 		}
 
+		/// \brief Check if a type has a exec() function
 		auto has_exec = boost::hana::is_valid(
 			[](auto&& x)->decltype((void)x->exec()){}
 		);
 
+		/// \brief Check if a type has a have_body() function
 		auto has_have_body = boost::hana::is_valid(
 			[](auto&& x)->decltype((void)x->have_body()){}
 		);
@@ -168,6 +211,13 @@ namespace disposer{
 	} }
 
 
+	/// \brief Add a log message without associated code block
+	///
+	/// Usage Example:
+	///
+	/// \code{.cpp}
+	/// log([](your_log_tag_type& os){ os << "your message"; });
+	/// \endcode
 	template < typename Log >
 	inline void log(Log&& f){
 		using log_t = detail::log::extract_log_t< Log >;
@@ -183,6 +233,16 @@ namespace disposer{
 		detail::log::exec_log(f, log);
 	}
 
+	/// \brief Add a log message with associated code block
+	///
+	/// Usage Example:
+	///
+	/// \code{.cpp}
+	/// int result = log([](your_log_tag_type& os){ os << "your message"; }, []{
+	///      // your code
+	///      return 5;
+	/// });
+	/// \endcode
 	template < typename Log, typename Body >
 	inline decltype(auto) log(Log&& f, Body&& body){
 		using log_t = detail::log::extract_log_t< Log >;
@@ -217,6 +277,7 @@ namespace disposer{
 	}
 
 	/// \brief Catch all exceptions
+	///
 	/// Call the function and catch all exceptions throwing by the function.
 	/// The name is emited via error_log together with the exception message.
 	///
@@ -229,6 +290,17 @@ namespace disposer{
 	/// conversion becomes true, accessability to the function result using
 	/// member-function result() is permitted. Otherwise, result() will throw
 	/// a std::logic_error.
+	///
+	/// Usage Example:
+	///
+	/// \code{.cpp}
+	/// std::optional< int > result = exception_catching_log(
+	///     [](your_log_tag_type& os){ os << "your message"; },
+	///     []{
+	///         // your code
+	///         return 5;
+	///     });
+	/// \endcode
 	template < typename Log, typename Body >
 	inline auto exception_catching_log(Log&& f, Body&& body){
 		using log_t = detail::log::extract_log_t< Log >;
