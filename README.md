@@ -6,14 +6,12 @@ A dynamic module management system
 ## Supported Compilers
 
 - GCC 7.0 and higher
-- clang 3.9 and higher
+- LLVM 4.0 and higher
 
 ## Direct dependencies
 
 - boost.type_index
-- boost.optional
 - boost.lexical_cast
-- boost.variant
 - boost.range
 - boost.hana
 - boost.spirit (develop branch of X3)
@@ -37,6 +35,7 @@ A dynamic module management system
 - boost.move
 - boost.mpl
 - boost.numeric_conversion
+- boost.optional
 - boost.predef
 - boost.preprocessor
 - boost.regex
@@ -46,6 +45,7 @@ A dynamic module management system
 - boost.type_traits
 - boost.typeof
 - boost.utility
+- boost.variant
 
 ## Definition
 
