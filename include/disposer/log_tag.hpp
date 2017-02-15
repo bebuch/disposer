@@ -70,9 +70,21 @@ namespace disposer{
 
 		/// \brief Save exception message
 		void set_exception(std::exception const& error){
-			exception_text_ = " (exception catched: [" +
-				boost::typeindex::type_id_runtime(error).pretty_name() +
-				"] " + error.what() + ")";
+			// Get exception type
+			auto type = [&error]()->std::string{
+				using namespace std::literals::string_literals;
+				try{
+					return boost::typeindex::type_id_runtime(error)
+						.pretty_name();
+				}catch(std::exception const& e){
+					return "Could not find type: "s + e.what();
+				}catch(...){
+					return "Could not find type";
+				}
+			}();
+
+			exception_text_ = " (exception catched: [" + type + "] "
+				+ error.what() + ")";
 		}
 
 		/// \brief Save text for unknown exception
