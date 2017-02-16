@@ -182,6 +182,13 @@ namespace disposer{
 		template < typename T >
 		T cast(std::string const& name, std::string const& value)try{
 			return parameter_cast< T >()(value);
+		}catch(std::exception const& e){
+			throw std::runtime_error(
+				"parameter '" + name + "' (value is '" + value +
+				"') can not be converted to type [" + type_name< T >() +
+				"]; original error: " + e.what()
+
+			);
 		}catch(...){
 			throw std::runtime_error(
 				"parameter '" + name + "' (value is '" + value +

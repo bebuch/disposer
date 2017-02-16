@@ -23,9 +23,9 @@ namespace disposer{
 			return boost::typeindex::type_id_runtime(value).pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
-			return "Could not find type: "s + e.what();
+			return "could not find type: "s + e.what();
 		}catch(...){
-			return "Could not find type";
+			return "could not find type";
 		}
 	}
 
@@ -36,9 +36,9 @@ namespace disposer{
 			return boost::typeindex::type_id< T >().pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
-			return "Could not find type: "s + e.what();
+			return "could not find type: "s + e.what();
 		}catch(...){
-			return "Could not find type";
+			return "could not find type";
 		}
 	}
 
@@ -49,9 +49,9 @@ namespace disposer{
 			return boost::typeindex::type_id_with_cvr< T >().pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
-			return "Could not find type: "s + e.what();
+			return "could not find type: "s + e.what();
 		}catch(...){
-			return "Could not find type";
+			return "could not find type";
 		}
 	}
 
