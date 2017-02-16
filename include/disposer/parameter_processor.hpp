@@ -17,7 +17,8 @@
 #include <set>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/type_index.hpp>
+
+#include "type_name.hpp"
 
 
 namespace disposer{
@@ -184,8 +185,7 @@ namespace disposer{
 		}catch(...){
 			throw std::runtime_error(
 				"parameter '" + name + "' (value is '" + value +
-				"') can not be converted to '" +
-				boost::typeindex::type_id< T >().pretty_name() + "'"
+				"') can not be converted to type [" + type_name< T >() + "]"
 			);
 		}
 

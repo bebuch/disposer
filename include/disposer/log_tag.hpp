@@ -12,8 +12,7 @@
 #include "log_base.hpp"
 #include "time_to_string.hpp"
 #include "mask_non_print.hpp"
-
-#include <boost/type_index.hpp>
+#include "type_name.hpp"
 
 #include <atomic>
 
@@ -70,20 +69,7 @@ namespace disposer{
 
 		/// \brief Save exception message
 		void set_exception(std::exception const& error){
-			// Get exception type
-			auto type = [&error]()->std::string{
-				using namespace std::literals::string_literals;
-				try{
-					return boost::typeindex::type_id_runtime(error)
-						.pretty_name();
-				}catch(std::exception const& e){
-					return "Could not find type: "s + e.what();
-				}catch(...){
-					return "Could not find type";
-				}
-			}();
-
-			exception_text_ = " (exception catched: [" + type + "] "
+			exception_text_ = " (exception catched: [" + type_name(error) + "] "
 				+ error.what() + ")";
 		}
 

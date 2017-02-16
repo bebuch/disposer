@@ -10,8 +10,7 @@
 #define _disposer__input_data__hpp_INCLUDED_
 
 #include "output_data.hpp"
-
-#include <boost/type_index.hpp>
+#include "type_name.hpp"
 
 #include <stdexcept>
 
@@ -43,9 +42,8 @@ namespace disposer{
 					return std::make_shared< output_data< T > >(data());
 				}else{
 					throw std::logic_error(
-						"Type '" +
-						boost::typeindex::type_id< T >().pretty_name() +
-						"' is not copy constructible"
+						"Type [" + type_name< T >()
+						+ "] is not copy constructible"
 					);
 				}
 			}
@@ -87,9 +85,8 @@ namespace disposer{
 					return std::make_shared< output_data< T > >(data());
 				}else{
 					throw std::logic_error(
-						"Type '" +
-						boost::typeindex::type_id< T >().pretty_name() +
-						"' is not copy constructible"
+						"Type '" + type_name< T >()
+						+ "' is not copy constructible"
 					);
 				}
 			}

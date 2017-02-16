@@ -116,8 +116,8 @@ namespace disposer{
 
 				if(!active_types_[type_position_v< V, T, U ... >]){
 					throw std::logic_error(
-						"output '" + name + "' put inactive type '" +
-						type_id_with_cvr< V >().pretty_name() + "'"
+						"output '" + name + "' put inactive type [" +
+						type_name_with_cvr< V >() + "]"
 					);
 				}
 
