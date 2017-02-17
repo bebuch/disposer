@@ -119,7 +119,7 @@ namespace disposer{
 
 		/// \brief Called while module creation after the inputs are set
 		///
-		/// You should activate your outputs in this function.
+		/// You should enable your outputs in this function.
 		virtual void input_ready(){}
 
 

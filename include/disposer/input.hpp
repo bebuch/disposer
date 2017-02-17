@@ -140,7 +140,7 @@ namespace disposer{
 			return result;
 		}
 
-		virtual bool activate_types(
+		virtual bool enable_types(
 			std::vector< type_index > const& types
 		)noexcept override{
 			for(auto& type: types){

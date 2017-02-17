@@ -72,7 +72,7 @@ namespace disposer{
 		virtual void cleanup(std::size_t id)noexcept = 0;
 
 		/// \brief Get a list of all active input data types
-		virtual bool activate_types(
+		virtual bool enable_types(
 			std::vector< type_index > const& types
 		) noexcept = 0;
 

@@ -128,22 +128,22 @@ namespace disposer{
 
 
 			template < typename V >
-			void activate(){
+			void enable(){
 				static_assert(
 					hana::contains(value_types, hana::type_c< V >),
-					"type V in activate< V > is not a output type"
+					"type V in enable< V > is not a output type"
 				);
 
 				active_types_[type_position_v< V, T, U ... >] = true;
 			}
 
 			template < typename V, typename W, typename ... X >
-			void activate(){
-				activate< V >();
-				activate< W, X ... >();
+			void enable(){
+				enable< V >();
+				enable< W, X ... >();
 			}
 
-			void activate_types(std::vector< type_index > const& types){
+			void enable_types(std::vector< type_index > const& types){
 				for(auto& type: types){
 					auto iter = std::find(
 						type_indices_.begin(),
@@ -200,15 +200,15 @@ namespace disposer{
 
 
 			template < typename V >
-			void activate(){
+			void enable(){
 				output< Container< T > ... >::
-				template activate< Container< V > >();
+				template enable< Container< V > >();
 			}
 
 			template < typename V, typename W, typename ... X >
-			void activate(){
+			void enable(){
 				output< Container< T > ... >::
-				template activate<
+				template enable<
 					Container< V >, Container< W >, Container< X > ...
 				>();
 			}

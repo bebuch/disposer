@@ -61,7 +61,7 @@ public:
 		variables_map& variables
 	);
 
-	void activate_output_types(
+	void enable_output_types(
 		types::merge::chain const& config_chain,
 		std::vector< module_ptr > const& modules,
 		variables_map const& variables
@@ -161,18 +161,18 @@ auto disposer::disposer::impl::create_modules(
 	return modules;
 }
 
-void disposer::disposer::impl::activate_output_types(
+void disposer::disposer::impl::enable_output_types(
 	types::merge::chain const& config_chain,
 	std::vector< module_ptr > const& modules,
 	variables_map const& variables
 ){
-	// go through all modules and activate output types in the target inputs
+	// go through all modules and enable output types in the target inputs
 	auto module_ptr_iter = modules.begin();
 	for(auto& config_module: config_chain.modules){
 		auto& module = **module_ptr_iter++;
 
 		log([&config_module](log_base& os){
-			os << "activate input and output types in module '"
+			os << "enable input and output types in module '"
 				<< config_module.module.first << "'";
 		}, [&](){
 			// config_module.inputs containes all active input
@@ -184,8 +184,8 @@ void disposer::disposer::impl::activate_output_types(
 				auto& output = output_iter->second.first;
 				auto& input = find(module.inputs_, config_input.name).get();
 
-				// try to activate the types from output in input
-				if(!input.activate_types(output.active_types())){
+				// try to enable the types from output in input
+				if(!input.enable_types(output.active_types())){
 					std::ostringstream os;
 					os << "In chain '" << config_chain.name << "' module '"
 						<< module.name << "': Variable '"
@@ -302,7 +302,7 @@ auto disposer::disposer::impl::create_chains(types::merge::config&& config){
 
 			auto modules = create_modules(config_chain, variables);
 
-			activate_output_types(config_chain, modules, variables);
+			enable_output_types(config_chain, modules, variables);
 
 			connect_modules(config_chain, modules, variables);
 
