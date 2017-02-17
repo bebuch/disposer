@@ -25,7 +25,7 @@ namespace disposer{
 			std::size_t id, any_type const& data, type_index const& type
 		)const{
 			for(auto& [input, last_use]: targets_){
-				input.add(id, data, type, last_use);
+				input.add(signal_t_key(), id, data, type, last_use);
 			}
 		}
 
@@ -68,14 +68,23 @@ namespace disposer{
 		output_base& operator=(output_base&&) = delete;
 
 
-	protected:
 		/// \brief List of active output types
 		virtual std::vector< type_index > active_types()const = 0;
+
+
+		/// \brief Set the new id for the next exec or cleanup
+		void set_id(module_base_key, std::size_t id)noexcept{ id_ = id; }
+
+
+		/// \brief Access the internal signal object
+		signal_t& get_signal(creator_key){ return signal; }
 
 
 		/// \brief Name of the output in the config file
 		std::string const name;
 
+
+	protected:
 		signal_t signal;
 
 		/// \brief Read only reference to the actual ID while module::exec()
@@ -86,10 +95,6 @@ namespace disposer{
 	private:
 		/// \brief The actual ID while module::exec() is running
 		std::size_t id_;
-
-
-	friend class module_base;
-	friend class disposer::impl;
 	};
 
 

@@ -29,6 +29,38 @@ namespace disposer{
 	struct any_type;
 
 
+	/// \brief Class module_base access key
+	struct module_base_key{
+	private:
+		/// \brief Constructor
+		constexpr module_base_key()noexcept = default;
+		friend class module_base;
+	};
+
+	/// \brief Class signal_t access key
+	struct signal_t_key{
+	private:
+		/// \brief Constructor
+		constexpr signal_t_key()noexcept = default;
+		friend class signal_t;
+	};
+
+
+	struct creator_key;
+
+	/// \brief Defined in create_chain_modules.cpp
+	creator_key make_creator_key();
+
+	/// \brief Access key creator functions
+	struct creator_key{
+	private:
+		/// \brief Constructor
+		constexpr creator_key()noexcept = default;
+		friend creator_key make_creator_key();
+	};
+
+
+
 	/// \brief Base for module inputs
 	///
 	/// Polymorphe base class for module inputs.
@@ -59,6 +91,38 @@ namespace disposer{
 		virtual ~input_base() = default;
 
 
+		/// \brief Get a list of all input data types
+		virtual std::vector< type_index > types()const = 0;
+
+		/// \brief Enable the given types
+		bool enable_types(
+			creator_key,
+			std::vector< type_index > const& types
+		) noexcept{ return enable_types(types); }
+
+
+		/// \brief Call add(id, value, type, last_use)
+		void add(
+			signal_t_key,
+			std::size_t id,
+			any_type const& value,
+			type_index const& type,
+			bool last_use
+		){ add(id, value, type, last_use); }
+
+
+		/// \brief Set the new id for the next exec or cleanup
+		void set_id(module_base_key, std::size_t id)noexcept{ id_ = id; }
+
+		/// \brief Call cleanup(id)
+		void cleanup(module_base_key, std::size_t id)noexcept{ cleanup(id); }
+
+
+
+		/// \brief Name of the input in the config file
+		std::string const name;
+
+
 	protected:
 		/// \brief Add data to an input
 		virtual void add(
@@ -68,20 +132,16 @@ namespace disposer{
 			bool last_use
 		) = 0;
 
-		/// \brief Clean up all data with ID less or equal id
-		virtual void cleanup(std::size_t id)noexcept = 0;
 
-		/// \brief Get a list of all active input data types
+		/// \brief Enable the given types
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		) noexcept = 0;
 
-		/// \brief Get a list of all input data types
-		virtual std::vector< type_index > types()const = 0;
 
 
-		/// \brief Name of the input in the config file
-		std::string const name;
+		/// \brief Clean up all data with ID less or equal id
+		virtual void cleanup(std::size_t id)noexcept = 0;
 
 		/// \brief Read only reference to the actual ID while module::exec()
 		///        is running
@@ -91,11 +151,6 @@ namespace disposer{
 	private:
 		/// \brief The actual ID while module::exec() is running
 		std::size_t id_;
-
-
-	friend class signal_t;
-	friend class module_base;
-	friend class disposer::impl;
 	};
 
 

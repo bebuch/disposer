@@ -11,9 +11,9 @@
 
 #include "module_ptr.hpp"
 #include "id_generator.hpp"
+#include "merge.hpp"
 #include "log_base.hpp"
 #include "log.hpp"
-
 
 #include <mutex>
 #include <string>
@@ -34,16 +34,15 @@ namespace disposer{
 	public:
 		/// \brief Construct a proccess chain
 		///
-		/// \param modules A list of modules
+		/// \param config_chain configuration data from config file
 		/// \param generate_id Reference to a id_generator
-		/// \param name The name of the proccess chain
 		/// \param group A reference to the group name
 		///
 		/// The id increase for the id_generator is calculated over all modules.
 		chain(
-			std::vector< module_ptr >&& modules,
+			module_maker_list const& maker_list,
+			types::merge::chain const& config_chain,
 			id_generator& generate_id,
-			std::string const& name,
 			std::string const& group
 		);
 

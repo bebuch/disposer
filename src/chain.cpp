@@ -8,6 +8,7 @@
 //-----------------------------------------------------------------------------
 #include <disposer/chain.hpp>
 #include <disposer/module_base.hpp>
+#include <disposer/create_chain_modules.hpp>
 
 #include <numeric>
 
@@ -16,14 +17,14 @@ namespace disposer{
 
 
 	chain::chain(
-		std::vector< module_ptr >&& modules,
+		module_maker_list const& maker_list,
+		types::merge::chain const& config_chain,
 		id_generator& generate_id,
-		std::string const& name,
 		std::string const& group
 	):
-		name(name),
+		name(config_chain.name),
 		group(group),
-		modules_(std::move(modules)),
+		modules_(create_chain_modules(maker_list, config_chain)),
 		id_increase_(std::accumulate(
 			modules_.cbegin(),
 			modules_.cend(),
@@ -52,9 +53,9 @@ namespace disposer{
 		}, [this, id, run]{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
-					modules_[i]->set_id(id);
+					modules_[i]->set_id(chain_key(), id);
 					process_module(i, run, [](chain& c, std::size_t i){
-						c.modules_[i]->exec();
+						c.modules_[i]->exec(chain_key());
 					}, "exec");
 				}
 			}catch(...){
@@ -64,7 +65,7 @@ namespace disposer{
 					if(ready_run_[i] >= run + 1) continue;
 
 					process_module(i, run, [id](chain& c, std::size_t i){
-						c.modules_[i]->cleanup(id);
+						c.modules_[i]->cleanup(chain_key(), id);
 					}, "cleanup");
 				}
 

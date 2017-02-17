@@ -21,6 +21,15 @@
 namespace disposer{
 
 
+	/// \brief Class disposer access key
+	struct chain_key{
+	private:
+		/// \brief Constructor
+		constexpr chain_key()noexcept = default;
+		friend class chain;
+	};
+
+
 	/// \brief Exception class for modules that need input variables
 	struct module_not_as_start: std::logic_error{
 		module_not_as_start(make_data const& data):
@@ -34,18 +43,27 @@ namespace disposer{
 	/// \brief Base class for all disposer modules
 	class module_base{
 	public:
+		/// \brief List of inputs
+		using input_list =
+			std::vector< std::reference_wrapper< input_base > >;
+
+		/// \brief List of outputs
+		using output_list =
+			std::vector< std::reference_wrapper< output_base > >;
+
+
 		/// \brief Constructor with optional outputs
 		module_base(
 			make_data const& data,
-			std::vector< std::reference_wrapper< input_base > >&& inputs,
-			std::vector< std::reference_wrapper< output_base > >&& outputs = {}
+			input_list&& inputs,
+			output_list&& outputs = {}
 		);
 
 		/// \brief Constructor with optional inputs
 		module_base(
 			make_data const& data,
-			std::vector< std::reference_wrapper< output_base > >&& outputs,
-			std::vector< std::reference_wrapper< input_base > >&& inputs = {}
+			output_list&& outputs,
+			input_list&& inputs = {}
 		);
 
 		/// \brief Modules are not copyable
@@ -79,6 +97,32 @@ namespace disposer{
 		}
 
 
+		/// \brief Set for next exec ID
+		void set_id(chain_key, std::size_t id);
+
+
+		/// \brief Call the actual worker function exec()
+		void exec(chain_key){ exec(); }
+
+
+		/// \brief Call input_ready()
+		void input_ready(creator_key){ input_ready(); }
+
+
+		/// \brief Called for a modules wich failed by exception and all
+		///        following modules in the chain instead of exec()
+		///
+		/// Removes all input data whichs ID is less or equal to the actual ID.
+		void cleanup(chain_key, std::size_t id)noexcept;
+
+
+		/// \brief Access to internal inputs_
+		input_list& inputs(creator_key){ return inputs_; }
+
+		/// \brief Access to internal outputs_
+		output_list& outputs(creator_key){ return outputs_; }
+
+
 		/// \brief Name of the module type given via class module_declarant
 		std::string const type_name;
 
@@ -108,7 +152,7 @@ namespace disposer{
 		/// with the ID's 8, 9, 10 and 11.
 		std::size_t const id_increase;
 
-		/// Read only reference to the actual ID while exec() does run
+		/// Read only reference to the ID while exec() does run
 		std::size_t const& id;
 
 
@@ -127,22 +171,12 @@ namespace disposer{
 		/// Actual ID while exec() does run
 		std::size_t id_;
 
-		/// \brief Set actual ID
-		void set_id(std::size_t id);
-
 
 		/// \brief List of inputs
-		std::vector< std::reference_wrapper< input_base > > inputs_;
+		input_list inputs_;
 
 		/// \brief List of outputs
-		std::vector< std::reference_wrapper< output_base > > outputs_;
-
-
-		/// \brief Called for a modules wich failed by exception and all
-		///        following modules in the chain instead of exec()
-		///
-		/// Removes all input data whichs ID is less or equal to the actual ID.
-		void cleanup(std::size_t id)noexcept;
+		output_list outputs_;
 
 
 		/// \brief Helper for log message functions
@@ -155,10 +189,6 @@ namespace disposer{
 				log(os);
 			};
 		}
-
-
-	friend class chain;
-	friend class ::disposer::disposer::impl;
 	};
 
 

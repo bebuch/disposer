@@ -14,8 +14,8 @@ namespace disposer{
 
 	module_base::module_base(
 		make_data const& data,
-		std::vector< std::reference_wrapper< input_base > >&& inputs,
-		std::vector< std::reference_wrapper< output_base > >&& outputs
+		input_list&& inputs,
+		output_list&& outputs
 	):
 		type_name(data.type_name),
 		chain(data.chain),
@@ -30,25 +30,25 @@ namespace disposer{
 
 	module_base::module_base(
 		make_data const& data,
-		std::vector< std::reference_wrapper< output_base > >&& outputs,
-		std::vector< std::reference_wrapper< input_base > >&& inputs
+		output_list&& outputs,
+		input_list&& inputs
 	):
 		module_base(data, std::move(inputs), std::move(outputs)){}
 
 
-	void module_base::cleanup(std::size_t id)noexcept{
+	void module_base::cleanup(chain_key, std::size_t id)noexcept{
 		for(auto& input: inputs_){
-			input.get().cleanup(id);
+			input.get().cleanup(module_base_key(), id);
 		}
 	}
 
-	void module_base::set_id(std::size_t id){
+	void module_base::set_id(chain_key, std::size_t id){
 		id_ = id;
 		for(auto& input: inputs_){
-			input.get().id_ = id;
+			input.get().set_id(module_base_key(), id);
 		}
 		for(auto& output: outputs_){
-			output.get().id_ = id;
+			output.get().set_id(module_base_key(), id);
 		}
 	}
 

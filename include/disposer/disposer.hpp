@@ -27,12 +27,11 @@ namespace disposer{
 	/// \brief Functor to register a new module by a name and an init function
 	class module_declarant{
 	public:
-		/// \brief A init function which constructs a module
-		using maker_function = std::function< module_ptr(make_data&) >;
-
 		/// \brief Register a new module in the disposer by mapping the
 		///        module name to the constructing init function
-		void operator()(std::string const& type, maker_function&& function);
+		void operator()(
+			std::string const& type,
+			module_maker_function&& function);
 
 
 	private:
@@ -57,10 +56,6 @@ namespace disposer{
 	/// \brief Main class of the disposer software
 	class disposer{
 	public:
-		/// \copydoc module_declarant::maker_function
-		using maker_function = module_declarant::maker_function;
-
-
 		/// \brief Constructor
 		disposer();
 
@@ -103,9 +98,6 @@ namespace disposer{
 		std::unordered_set< std::string > groups()const;
 
 
-		class impl;
-
-
 	private:
 		/// \brief List of id_generators (map from name to object)
 		std::unordered_map< std::string, id_generator > id_generators_;
@@ -116,7 +108,7 @@ namespace disposer{
 		> groups_;
 
 		/// \brief List of modules (map from module type name to maker function)
-		std::unordered_map< std::string, maker_function > maker_list_;
+		module_maker_list maker_list_;
 
 		/// \brief List of alle chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
