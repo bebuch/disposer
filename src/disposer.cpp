@@ -19,9 +19,9 @@
 
 
 disposer::disposer::disposer():
-	adder_(*this) {}
+	declarant_(*this) {}
 
-void disposer::module_adder::operator()(
+void disposer::module_declarant::operator()(
 	std::string const& type_name,
 	maker_function&& function
 ){
@@ -41,8 +41,8 @@ void disposer::module_adder::operator()(
 }
 
 
-disposer::module_adder& disposer::disposer::adder(){
-	return adder_;
+disposer::module_declarant& disposer::disposer::declarant(){
+	return declarant_;
 }
 
 
@@ -339,24 +339,16 @@ auto disposer::disposer::impl::create_chains(types::merge::config&& config){
 
 void disposer::disposer::load(std::string const& filename){
 	auto config = log([&](log_base& os){ os << "parse '" << filename << "'"; },
-		[&](){
-			return parse(filename);
-		});
+		[&](){ return parse(filename); });
 
 	log([](log_base& os){ os << "check semantic"; },
-		[&config](){
-			check_semantic(config);
-		});
+		[&config](){ check_semantic(config); });
 
 	log([](log_base& os){ os << "look for unused stuff and warn about it"; },
-		[&config](){
-			unused_warnings(config);
-		});
+		[&config](){ unused_warnings(config); });
 
 	auto merged_config = log([](log_base& os){ os << "merge"; },
-		[&config](){
-			return merge(std::move(config));
-		});
+		[&config](){ return merge(std::move(config)); });
 
 	log([](log_base& os){ os << "create chains"; },
 		[this, &merged_config](){

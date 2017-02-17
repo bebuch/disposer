@@ -25,7 +25,7 @@ namespace disposer{
 
 
 	/// \brief Functor to register a new module by a name and an init function
-	class module_adder{
+	class module_declarant{
 	public:
 		/// \brief A init function which constructs a module
 		using maker_function = std::function< module_ptr(make_data&) >;
@@ -37,14 +37,14 @@ namespace disposer{
 
 	private:
 		/// \brief Only constructible by the disposer class
-		module_adder(disposer& disposer): disposer_(disposer) {}
+		module_declarant(disposer& disposer): disposer_(disposer) {}
 
 
 		/// \brief Not copyable
-		module_adder(module_adder const&) = delete;
+		module_declarant(module_declarant const&) = delete;
 
 		/// \brief Not movable
-		module_adder(module_adder&&) = delete;
+		module_declarant(module_declarant&&) = delete;
 
 
 		/// \brief Reference to the disposer class
@@ -57,8 +57,8 @@ namespace disposer{
 	/// \brief Main class of the disposer software
 	class disposer{
 	public:
-		/// \copydoc module_adder::maker_function
-		using maker_function = module_adder::maker_function;
+		/// \copydoc module_declarant::maker_function
+		using maker_function = module_declarant::maker_function;
 
 
 		/// \brief Constructor
@@ -79,8 +79,8 @@ namespace disposer{
 		disposer& operator=(disposer&&) = delete;
 
 
-		/// \brief Get a reference to the module_adder object
-		module_adder& adder();
+		/// \brief Get a reference to the module_declarant object
+		module_declarant& declarant();
 
 		/// \brief Load and parse the config file
 		void load(std::string const& filename);
@@ -121,10 +121,10 @@ namespace disposer{
 		/// \brief List of alle chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
 
-		/// \brief The adder object to register new module types
-		module_adder adder_;
+		/// \brief The declarant object to register new module types
+		module_declarant declarant_;
 
-	friend class module_adder;
+	friend class module_declarant;
 	};
 
 
