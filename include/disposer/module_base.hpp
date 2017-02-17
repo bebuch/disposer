@@ -150,7 +150,8 @@ namespace disposer{
 		auto module_log(Log& log)const{
 			using log_t = detail::log::extract_log_t< Log >;
 			return [&](log_t& os){
-				os << "id(" << id << '.' << number << ") ";
+				os << "id(" << id << "." << number << ") exec chain '"
+					<< chain << "' module '" << name << "': ";
 				log(os);
 			};
 		}
