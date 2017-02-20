@@ -77,17 +77,21 @@ namespace disposer{
 		/// \brief Get a reference to the module_declarant object
 		module_declarant& declarant();
 
+
 		/// \brief Load and parse the config file
 		void load(std::string const& filename);
 
-		/// \brief Execute the given chain as defined in the config file
-		void exec(std::string const& chain);
 
 		/// \brief List of all chaines
 		std::unordered_set< std::string > chains()const;
 
 		/// \brief List of all chaines in group
 		std::vector< std::string > chains(std::string const& group)const;
+
+
+		/// \brief Get a reference to the chain, throw if it does not exist
+		chain& get_chain(std::string const& chain);
+
 
 		/// \brief List of all groups of chains
 		///

@@ -120,14 +120,14 @@ namespace disposer{
 			});
 	}
 
-	void disposer::exec(std::string const& chain){
+	chain& disposer::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);
 		if(iter == chains_.end()){
 			throw std::logic_error(
-				"executed chain '" + chain + "' does not exist"
+				"chain '" + chain + "' does not exist"
 			);
 		}
-		iter->second.exec();
+		return iter->second;
 	}
 
 	std::unordered_set< std::string > disposer::chains()const{

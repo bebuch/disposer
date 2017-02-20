@@ -105,6 +105,13 @@ namespace disposer{
 		void exec(chain_key){ exec(); }
 
 
+		/// \brief Call the actual enable() function
+		void enable(chain_key){ enable(); }
+
+		/// \brief Call the actual disable() function
+		void disable(chain_key)noexcept{ disable(); }
+
+
 		/// \brief Call input_ready()
 		void input_ready(creator_key){ input_ready(); }
 
@@ -159,6 +166,19 @@ namespace disposer{
 	protected:
 		/// \brief The actual worker function called one times per trigger
 		virtual void exec() = 0;
+
+
+		/// \brief Enables the module for exec calls
+		///
+		/// By default the function does nothing.
+		virtual void enable(){}
+
+		/// \brief Disables the module for exec calls
+		///
+		/// By default the function does nothing.
+		virtual void disable()noexcept{}
+
+
 
 
 		/// \brief Called while module creation after the inputs are set
