@@ -42,6 +42,11 @@ namespace disposer{
 		{}
 
 
+	chain::~chain(){
+		disable();
+	}
+
+
 	namespace{
 
 
@@ -115,6 +120,8 @@ namespace disposer{
 
 	void chain::enable(){
 		std::unique_lock< std::mutex > lock(enable_mutex_);
+		if(enabled_) return;
+
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
 		log([this](log_base& os){ os << "chain '" << name << "' enable"; },
@@ -154,9 +161,9 @@ namespace disposer{
 
 
 	void chain::disable()noexcept{
-		enabled_ = false;
-
 		std::unique_lock< std::mutex > lock(enable_mutex_);
+		if(!enabled_.exchange(false)) return;
+
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
 		log([this](log_base& os){ os << "chain '" << name << "' disable"; },

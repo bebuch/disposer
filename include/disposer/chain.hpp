@@ -47,6 +47,10 @@ namespace disposer{
 		);
 
 
+		/// \brief Disable all modules and destruct chain
+		~chain();
+
+
 		/// \brief Chaines are not copyable
 		chain(chain const&) = delete;
 

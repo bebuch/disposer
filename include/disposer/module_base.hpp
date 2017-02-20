@@ -96,6 +96,14 @@ namespace disposer{
 			return ::disposer::log(module_log(f), static_cast< Body&& >(body));
 		}
 
+		/// \brief Add a line to the log with linked code block and catch all
+		///        exceptions
+		template < typename Log, typename Body >
+		decltype(auto) exception_catching_log(Log&& f, Body&& body)const{
+			return ::disposer::exception_catching_log(
+				module_log(f), static_cast< Body&& >(body));
+		}
+
 
 		/// \brief Set for next exec ID
 		void set_id(chain_key, std::size_t id);
