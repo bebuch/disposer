@@ -115,7 +115,7 @@ namespace disposer{
 		///
 		/// Mark name as used.
 		template < typename T >
-		T get(std::string const& name, T&& default_value){
+		auto get(std::string const& name, T&& default_value){
 			using type = std::remove_cv_t< std::remove_reference_t< T > >;
 			static_assert(
 				!detail::is_optional_v< type >,
@@ -124,9 +124,18 @@ namespace disposer{
 
 			auto iter = find(name);
 			if(iter == parameters_.cend()){
-				return std::forward< T >(default_value);
+				return type(std::forward< T >(default_value));
 			}
-			return cast< T >(name, iter->second);
+			return cast< type >(name, iter->second);
+		}
+
+		/// \brief Get parameter value as type T by name, or default value if
+		///        it don't exist
+		///
+		/// Mark name as used.
+		template < typename T >
+		auto get(std::string const& name, T const& default_value){
+			return get< T >(name, T(default_value));
 		}
 
 		/// \brief Set target to value of the named parameter, of to default
