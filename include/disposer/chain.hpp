@@ -143,7 +143,7 @@ namespace disposer{
 		/// Call disable() to set it to false.
 		std::atomic< bool > enabled_;
 
-		/// \brief Count of active exec() calls
+		/// \brief Count of running exec() calls
 		std::atomic< std::size_t > exec_calls_count_;
 
 		/// \brief Manages exec() and enable() / disable() calls

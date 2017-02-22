@@ -114,9 +114,9 @@ namespace disposer{
 					"type V in put< V > is not a output type"
 				);
 
-				if(!active_types_[type_position_v< V, T, U ... >]){
+				if(!enabled_types_[type_position_v< V, T, U ... >]){
 					throw std::logic_error(
-						"output '" + name + "' put inactive type [" +
+						"output '" + name + "' put disabled type [" +
 						type_name_with_cvr< V >() + "]"
 					);
 				}
@@ -134,7 +134,7 @@ namespace disposer{
 					"type V in enable< V > is not a output type"
 				);
 
-				active_types_[type_position_v< V, T, U ... >] = true;
+				enabled_types_[type_position_v< V, T, U ... >] = true;
 			}
 
 			template < typename V, typename W, typename ... X >
@@ -159,17 +159,17 @@ namespace disposer{
 					}
 
 					auto index = iter - type_indices_.begin();
-					active_types_[index] = true;
+					enabled_types_[index] = true;
 				}
 			}
 
 
 		protected:
-			virtual std::vector< type_index > active_types()const override{
+			virtual std::vector< type_index > enabled_types()const override{
 				std::vector< type_index > result;
 				result.reserve(1 + sizeof...(U));
 				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){
-					if(active_types_[i]) result.push_back(type_indices_[i]);
+					if(enabled_types_[i]) result.push_back(type_indices_[i]);
 				}
 				return result;
 			}
@@ -179,7 +179,7 @@ namespace disposer{
 			static std::array< type_index, 1 + sizeof...(U) > const
 				type_indices_;
 
-			std::array< bool, 1 + sizeof...(U) > active_types_{{false}};
+			std::array< bool, 1 + sizeof...(U) > enabled_types_{{false}};
 		};
 
 		template < typename T, typename ... U >

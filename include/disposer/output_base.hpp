@@ -68,8 +68,8 @@ namespace disposer{
 		output_base& operator=(output_base&&) = delete;
 
 
-		/// \brief List of active output types
-		virtual std::vector< type_index > active_types()const = 0;
+		/// \brief List of enabled output types
+		virtual std::vector< type_index > enabled_types()const = 0;
 
 
 		/// \brief Set the new id for the next exec or cleanup

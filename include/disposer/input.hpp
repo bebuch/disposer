@@ -72,10 +72,10 @@ namespace disposer{
 			return result;
 		}
 
-		std::vector< type_index > active_types()const{
+		std::vector< type_index > enabled_types()const{
 			std::vector< type_index > result;
 			result.reserve(1 + sizeof...(U));
-			for(auto& type: active_map_){
+			for(auto& type: enabled_map_){
 				if(type.second) result.push_back(type.first);
 			}
 			return result;
@@ -83,7 +83,7 @@ namespace disposer{
 
 
 		template < typename TransformFunction >
-		std::vector< type_index > active_types_transformed(
+		std::vector< type_index > enabled_types_transformed(
 // 			hana::basic_type< Out >(*fn)(hana::basic_type< In >)
 			TransformFunction fn
 		)const{
@@ -96,7 +96,7 @@ namespace disposer{
 
 			std::vector< type_index > result;
 			result.reserve(1 + sizeof...(U));
-			for(auto& type: active_map_){
+			for(auto& type: enabled_map_){
 				if(!type.second) continue;
 				result.push_back(transform_map.at(type.first));
 			}
@@ -133,8 +133,8 @@ namespace disposer{
 
 		virtual std::vector< type_index > types()const override{
 			std::vector< type_index > result;
-			result.reserve(active_map_.size());
-			for(auto& pair: active_map_){
+			result.reserve(enabled_map_.size());
+			for(auto& pair: enabled_map_){
 				result.push_back(pair.first);
 			}
 			return result;
@@ -144,9 +144,9 @@ namespace disposer{
 			std::vector< type_index > const& types
 		)noexcept override{
 			for(auto& type: types){
-				auto iter = active_map_.find(type);
+				auto iter = enabled_map_.find(type);
 
-				if(iter == active_map_.end()) return false;
+				if(iter == enabled_map_.end()) return false;
 
 				iter->second = true;
 			}
@@ -168,7 +168,7 @@ namespace disposer{
 			type_index, void(input::*)(std::size_t, any_type const&, bool)
 		> const type_map_;
 
-		std::map< type_index, bool > active_map_ = {
+		std::map< type_index, bool > enabled_map_ = {
 			{ type_id_with_cvr< T >(), false },
 			{ type_id_with_cvr< U >(), false } ...
 		};

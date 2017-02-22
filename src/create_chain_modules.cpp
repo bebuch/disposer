@@ -140,8 +140,7 @@ namespace disposer{ namespace{
 				os << "enable input and output types in module '"
 					<< config_module.module.first << "'";
 			}, [&](){
-				// config_module.inputs containes all active input
-				// names
+				// config_module.inputs containes all enabled input names
 				for(auto& config_input: config_module.inputs){
 					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
@@ -154,18 +153,18 @@ namespace disposer{ namespace{
 
 					// try to enable the types from output in input
 					if(!input.enable_types(
-						make_creator_key(), output.active_types())
+						make_creator_key(), output.enabled_types())
 					){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
 							<< module.name << "': Variable '"
 							<< config_input.variable
 							<< "' is incompatible with input '"
-							<< config_input.name << "'" << " (active '"
+							<< config_input.name << "'" << " (enabled '"
 							<< config_input.variable << "' types: ";
 
 						bool first = true;
-						for(auto& type: output.active_types()){
+						for(auto& type: output.enabled_types()){
 							if(first){
 								first = false;
 							}else{
@@ -202,19 +201,19 @@ namespace disposer{ namespace{
 					module.input_ready(make_creator_key());
 				});
 
-				// config_module.outputs containes all active output names
+				// config_module.outputs containes all enabled output names
 				for(auto& config_output: config_module.outputs){
 					auto output_iter = variables.find(config_output.variable);
 					assert(output_iter != variables.end());
 
 					auto& output = output_iter->second.first;
 
-					if(output.active_types().empty()){
+					if(output.enabled_types().empty()){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
 							<< module.name << "': Output '" + config_output.name
 							<< "' (Variable: '" << config_output.variable
-							<< "') has no active output types";
+							<< "') has no enabled output types";
 
 						throw std::logic_error(os.str());
 					}
@@ -240,7 +239,7 @@ namespace disposer{ namespace{
 				os << "connect inputs of module '" << config_module.module.first
 					<< "'";
 			}, [&](){
-				// config_module.inputs containes all active input names
+				// config_module.inputs containes all enabled input names
 				for(auto& config_input: config_module.inputs){
 					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
