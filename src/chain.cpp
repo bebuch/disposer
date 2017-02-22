@@ -139,7 +139,7 @@ namespace disposer{
 					}
 				}catch(...){
 					// disable all modules until the one who throw
-					for(std::size_t j; j < i; ++j){
+					for(std::size_t j = 0; j < i; ++j){
 						log([this, i, j](log_base& os){
 								os << "chain '" << name << "' module '"
 									<< modules_[j]->name
