@@ -22,6 +22,9 @@ namespace disposer{
 	template < typename T >
 	class input_data{
 	public:
+		/// \brief Type of the data
+		using value_type = T;
+
 		/// \brief Constructor
 		input_data(output_data_ptr< T > const& data, bool last_use):
 			data_(data),
@@ -63,6 +66,9 @@ namespace disposer{
 	template < typename T >
 	class input_data< std::future< T > >{
 	public:
+		/// \brief Type of the data
+		using value_type = std::future< T >;
+
 		/// \brief Constructor
 		input_data(
 			output_data_ptr< std::future< T > > const& data, bool last_use
@@ -104,6 +110,9 @@ namespace disposer{
 	template <>
 	class input_data< std::future< void > >{
 	public:
+		/// \brief Type of the data
+		using value_type = std::future< void >;
+
 		/// \brief Constructor
 		input_data(output_data_ptr< std::future< void > > const& data, bool):
 			data_(data)
