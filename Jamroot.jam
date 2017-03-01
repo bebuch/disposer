@@ -1,5 +1,7 @@
 import os ;
 local boost = [ os.environ BOOST ] ;
+local io_tools = ../io_tools ;
+
 
 use-project /boost
 	: $(boost)
@@ -31,6 +33,7 @@ project disposer
 	<toolset>clang:<linkflags>-stdlib=libc++
 
 	<include>$(boost)
+	<include>$(io_tools)/include
 	:
 	usage-requirements <include>include
 	;
