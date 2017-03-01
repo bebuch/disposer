@@ -10,9 +10,10 @@
 #define _disposer__log_tag__hpp_INCLUDED_
 
 #include "log_base.hpp"
-#include "time_to_string.hpp"
-#include "mask_non_print.hpp"
 #include "type_name.hpp"
+
+#include <io_tools/time_to_string.hpp>
+#include <io_tools/mask_non_print.hpp>
 
 #include <atomic>
 
@@ -43,7 +44,7 @@ namespace disposer{
 
 			os_ << std::setfill('0') << std::setw(6) << id_ << ' ';
 
-			time_to_string(os_, start_);
+			io_tools::time_to_string(os_, start_);
 
 			if(body_){
 				os_ << " ( " << std::setfill(' ') << std::setprecision(3)
@@ -85,7 +86,7 @@ namespace disposer{
 
 		/// \brief Output the combinded message to std::log
 		void exec()const{
-			std::clog << (mask_non_print(os_.str()) + '\n');
+			std::clog << (io_tools::mask_non_print(os_.str()) + '\n');
 		}
 
 		/// \brief Forward every output to the message stream
