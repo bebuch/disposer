@@ -178,7 +178,7 @@ namespace disposer{ namespace{
 							<< "' types: ";
 
 						first = true;
-						for(auto& type: input.types()){
+						for(auto& type: input.type_list()){
 							if(first){
 								first = false;
 							}else{
