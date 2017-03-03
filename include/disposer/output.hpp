@@ -13,20 +13,12 @@
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
-#include "are_types_distinct.hpp"
-#include "type_position.hpp"
-
-#include <boost/hana.hpp>
+#include "unpack_to.hpp"
 
 #include <functional>
 
 
 namespace disposer{
-
-
-	namespace hana = boost::hana;
-
-	using boost::typeindex::type_id_with_cvr;
 
 
 	template < typename T >
@@ -68,220 +60,155 @@ namespace disposer{
 			signal_(
 				id,
 				reinterpret_cast< any_type const& >(value),
-				type_id_with_cvr< T >()
+				type_index::type_id_with_cvr< T >()
 			);
 		}
 	};
 
 
-	namespace detail{ namespace output{
+	template < typename ... T >
+	class basic_output: public output_base{
+	public:
+		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
+
+		static constexpr std::size_t type_count = sizeof...(T);
 
 
-		template < typename T, typename ... U >
-		class output: public output_base{
-		public:
-			static constexpr auto value_types = hana::tuple_t< T, U ... >;
+		static_assert(type_count != 0,
+			"disposer::output needs at least on type");
 
+		static_assert(!hana::any_of(types, hana::traits::is_const),
+			"disposer::output types are not allowed to be const");
+
+		static_assert(!hana::any_of(types, hana::traits::is_reference),
+			"disposer::output types are not allowed to be references");
+
+
+		using output_base::output_base;
+
+
+		template < typename V, typename W >
+		void put(W&& value){
 			static_assert(
-				!hana::fold(hana::transform(
-					value_types,
-					hana::traits::is_const
-				), false, std::logical_or<>()),
-				"disposer::output types are not allowed to be const"
+				hana::contains(types, hana::type_c< V >),
+				"type V in put< V > is not a output type"
 			);
 
+			if(!enabled_types_[type_index::type_id_with_cvr< V >()]){
+				throw std::logic_error(
+					"output '" + name + "' put disabled type [" +
+					type_name_with_cvr< V >() + "]"
+				);
+			}
+
+			output_interface< V >{signal}(id, static_cast< W&& >(value));
+		}
+
+
+		template < typename V >
+		void enable(){
 			static_assert(
-				!hana::fold(hana::transform(
-					value_types,
-					hana::traits::is_reference
-				), false, std::logical_or<>()),
-				"disposer::output types are not allowed to be references"
+				hana::contains(types, hana::type_c< V >),
+				"type V in enable< V > is not a output type"
 			);
 
-			static_assert(
-				are_types_distinct_v< T, U ... >,
-				 "disposer::output must have distict types"
-			);
+			enabled_types_[type_index::type_id_with_cvr< V >()] = true;
+		}
 
+		template < typename V, typename W, typename ... X >
+		void enable(){
+			enable< V >();
+			enable< W, X ... >();
+		}
 
-			using output_base::output_base;
-
-
-			template < typename V, typename W >
-			auto put(W&& value){
-				static_assert(
-					hana::contains(value_types, hana::type_c< V >),
-					"type V in put< V > is not a output type"
+		void enable_types(std::vector< type_index > const& types){
+			for(auto& type: types){
+				auto iter = std::find(
+					enabled_types_.begin(),
+					enabled_types_.end(),
+					type
 				);
 
-				if(!enabled_types_[type_position_v< V, T, U ... >]){
+				if(iter == enabled_types_.end()){
 					throw std::logic_error(
-						"output '" + name + "' put disabled type [" +
-						type_name_with_cvr< V >() + "]"
+						"type [" + type.pretty_name() +
+						"] is not an output type of '" + name + "'"
 					);
 				}
 
-				return output_interface< V >(signal)(
-					id, static_cast< W&& >(value)
-				);
+				iter->second = true;
 			}
+		}
 
 
-			template < typename V >
-			void enable(){
-				static_assert(
-					hana::contains(value_types, hana::type_c< V >),
-					"type V in enable< V > is not a output type"
-				);
-
-				enabled_types_[type_position_v< V, T, U ... >] = true;
+	protected:
+		virtual std::vector< type_index > enabled_types()const override{
+			std::vector< type_index > result;
+			result.reserve(type_count);
+			for(auto const& [type, enabled]: enabled_types_){
+				if(enabled) result.push_back(type);
 			}
-
-			template < typename V, typename W, typename ... X >
-			void enable(){
-				enable< V >();
-				enable< W, X ... >();
-			}
-
-			void enable_types(std::vector< type_index > const& types){
-				for(auto& type: types){
-					auto iter = std::find(
-						type_indices_.begin(),
-						type_indices_.end(),
-						type
-					);
-
-					if(iter == type_indices_.end()){
-						throw std::runtime_error(
-							"type '" + type.pretty_name() +
-							"' is not an output type of '" + name + "'"
-						);
-					}
-
-					auto index = iter - type_indices_.begin();
-					enabled_types_[index] = true;
-				}
-			}
+			return result;
+		}
 
 
-		protected:
-			virtual std::vector< type_index > enabled_types()const override{
-				std::vector< type_index > result;
-				result.reserve(1 + sizeof...(U));
-				for(std::size_t i = 0; i < 1 + sizeof...(U); ++i){
-					if(enabled_types_[i]) result.push_back(type_indices_[i]);
-				}
-				return result;
-			}
-
-
-		private:
-			static std::array< type_index, 1 + sizeof...(U) > const
-				type_indices_;
-
-			std::array< bool, 1 + sizeof...(U) > enabled_types_{{false}};
-		};
-
-		template < typename T, typename ... U >
-		std::array< type_index, 1 + sizeof...(U) > const
-		output< T, U ... >::type_indices_{{
-			type_id_with_cvr< T >(),
-			type_id_with_cvr< U >() ...
-		}};
-
-
-		template <
-			template < typename, typename ... > class Container,
-			typename ... T
-		>
-		class container_output: public output< Container< T > ... >{
-		public:
-			using output< Container< T > ... >::output;
-
-
-			template < typename V >
-			void enable(){
-				output< Container< T > ... >::
-				template enable< Container< V > >();
-			}
-
-			template < typename V, typename W, typename ... X >
-			void enable(){
-				output< Container< T > ... >::
-				template enable<
-					Container< V >, Container< W >, Container< X > ...
-				>();
-			}
-		};
-
-
-	} }
-
-
-	template < typename T, typename ... U >
-	struct output: detail::output::output< T, U ... >{
-		using detail::output::output< T, U ... >::output;
+	private:
+		std::unordered_map< type_index, bool > enabled_types_{
+				{type_index::type_id_with_cvr< T >(), false} ...
+			};
 	};
 
+
+	template < typename ... T >
+	struct output: basic_output< T ... >{
+		using basic_output< T ... >::basic_output;
+	};
+
+
 	template < typename T >
-	struct output< T >: detail::output::output< T >{
-		using detail::output::output< T >::output;
+	struct output< T >: basic_output< T >{
+		using basic_output< T >::basic_output;
 
 		template < typename W >
-		auto put(W&& value){
-			detail::output::output< T >::template put< T >(
+		void put(W&& value){
+			basic_output< T >::template put< T >(
 				static_cast< W&& >(value)
 			);
 		}
 	};
 
-	template < typename T, typename ... U >
-	struct output< type_list< T, U ... > >: output< T, U ... >{
-		using output< T, U ... >::output;
-	};
-
-
 
 	template <
-		template< typename, typename ... > class Container, typename ... T
-	>
-	struct container_output:
-		detail::output::container_output< Container, T ... >
-	{
-	public:
-		using detail::output::
-			container_output< Container, T ... >::container_output;
+		template < typename > typename Container,
+		typename Set,
+		typename = hana::when< true > >
+	struct container_output;
+
+	template <
+		template < typename > typename Container,
+		typename Set >
+	struct container_output<
+		Container,
+		Set,
+		hana::when< hana::is_a< hana::set_tag, Set > >
+	>: decltype(unpack_with_container_to< Container, output >(Set{}))::type{
+		using base_class = typename
+			decltype(unpack_with_container_to< Container, output >(Set{}))
+				::type;
+
+		using base_class::output;
+
+		template < typename ... V >
+		void enable(){
+			base_class::template enable< Container< V > ... >();
+		}
 
 		template < typename V, typename W >
-		auto put(W&& value){
-			detail::output::container_output< Container, T ... >::
-				template put< Container< V > >(static_cast< W&& >(value));
+		void put_by_subtype(W&& value){
+			base_class::template
+				put< Container< V > >(static_cast< W&& >(value));
 		}
 	};
-
-	template < template< typename, typename ... > class Container, typename T >
-	struct container_output< Container, T >:
-		detail::output::container_output< Container, T >
-	{
-		using detail::output::container_output< Container, T >::container_output;
-
-		template < typename W >
-		auto put(W&& value){
-			detail::output::container_output< Container, T >::
-				template put< Container< T > >(static_cast< W&& >(value));
-		}
-	};
-
-	template <
-		template< typename, typename ... > class Container,
-		typename ... T
-	>
-	struct container_output< Container, type_list< T ... > >:
-		container_output< Container, T ... >
-	{
-		using container_output< Container, T ... >::container_output;
-	};
-
 
 
 }

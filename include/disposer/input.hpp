@@ -12,7 +12,7 @@
 #include "container_lists.hpp"
 #include "input_base.hpp"
 #include "input_data.hpp"
-#include "are_types_distinct.hpp"
+#include "unpack_to.hpp"
 
 #include <variant>
 #include <set>
@@ -22,38 +22,29 @@
 namespace disposer{
 
 
-	using boost::typeindex::type_id_with_cvr;
-
-
-	template < typename T, typename ... U >
+	template < typename ... T >
 	class input: public input_base{
 	public:
-		static constexpr auto value_types = hana::tuple_t< T, U ... >;
+		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
+
+		static constexpr std::size_t type_count = sizeof...(T);
+
+
+		static_assert(type_count != 0,
+			"disposer::input needs at least on type");
+
+		static_assert(!hana::any_of(types, hana::traits::is_const),
+			"disposer::input types are not allowed to be const");
+
+		static_assert(!hana::any_of(types, hana::traits::is_reference),
+			"disposer::input types are not allowed to be references");
+
 
 		using value_type = std::conditional_t<
-			sizeof...(U) == 0,
-			input_data< T >,
-			std::variant< input_data< T >, input_data< U > ... >
+			type_count == 1,
+			input_data< T ... >,
+			std::variant< input_data< T > ... >
 		>;
-
-		static_assert(
-			!hana::fold(hana::transform(
-				value_types, hana::traits::is_const
-			), false, std::logical_or<>()),
-			"disposer::input types are not allowed to be const"
-		);
-
-		static_assert(
-			!hana::fold(hana::transform(
-				value_types, hana::traits::is_reference
-			), false, std::logical_or<>()),
-			"disposer::input types are not allowed to be references"
-		);
-
-		static_assert(
-			are_types_distinct_v< T, U ... >,
-			"disposer::input must have distict types"
-		);
 
 
 		using input_base::input_base;
@@ -74,7 +65,7 @@ namespace disposer{
 
 		std::vector< type_index > enabled_types()const{
 			std::vector< type_index > result;
-			result.reserve(1 + sizeof...(U));
+			result.reserve(type_count);
 			for(auto& type: enabled_map_){
 				if(type.second) result.push_back(type.first);
 			}
@@ -84,18 +75,19 @@ namespace disposer{
 
 		template < typename TransformFunction >
 		std::vector< type_index > enabled_types_transformed(
-// 			hana::basic_type< Out >(*fn)(hana::basic_type< In >)
+			// hana::basic_type< Out >(*fn)(hana::basic_type< In >)
 			TransformFunction fn
 		)const{
-			std::map< type_index, type_index > transform_map = {
-				{ type_id_with_cvr< T >(), type_id_with_cvr
-					< typename decltype(fn(hana::type_c< T >))::type >() },
-				{ type_id_with_cvr< U >(), type_id_with_cvr
-					< typename decltype(fn(hana::type_c< U >))::type >() } ...
+			std::unordered_map< type_index, type_index > transform_map = {
+				{
+					type_index::type_id_with_cvr< T >(),
+					type_index::type_id_with_cvr<
+						typename decltype(fn(hana::type_c< T >))::type >()
+				} ...
 			};
 
 			std::vector< type_index > result;
-			result.reserve(1 + sizeof...(U));
+			result.reserve(type_count);
 			for(auto& type: enabled_map_){
 				if(!type.second) continue;
 				result.push_back(transform_map.at(type.first));
@@ -105,6 +97,9 @@ namespace disposer{
 
 
 	private:
+		using add_function = void(input::*)(std::size_t, any_type const&, bool);
+
+
 		virtual void add(
 			std::size_t id,
 			any_type const& value,
@@ -114,8 +109,8 @@ namespace disposer{
 			auto iter = type_map_.find(type);
 			if(iter == type_map_.end()){
 				throw std::logic_error(
-					"unknown add type '" + type.pretty_name() +
-					"' in input + '" + name + "'"
+					"unknown add type [" + type.pretty_name() +
+					"] in input '" + name + "'"
 				);
 			}
 
@@ -131,7 +126,7 @@ namespace disposer{
 			data_.erase(from, to);
 		}
 
-		virtual std::vector< type_index > types()const override{
+		virtual std::vector< type_index > type_list()const override{
 			std::vector< type_index > result;
 			result.reserve(enabled_map_.size());
 			for(auto& pair: enabled_map_){
@@ -164,13 +159,10 @@ namespace disposer{
 		}
 
 
-		static std::map<
-			type_index, void(input::*)(std::size_t, any_type const&, bool)
-		> const type_map_;
+		static std::unordered_map< type_index, add_function > const type_map_;
 
-		std::map< type_index, bool > enabled_map_ = {
-			{ type_id_with_cvr< T >(), false },
-			{ type_id_with_cvr< U >(), false } ...
+		std::unordered_map< type_index, bool > enabled_map_ = {
+			{ type_index::type_id_with_cvr< T >(), false } ...
 		};
 
 		std::mutex mutex_;
@@ -178,32 +170,35 @@ namespace disposer{
 		std::multimap< std::size_t, value_type > data_;
 	};
 
-	template < typename T, typename ... U >
-	class input< type_list< T, U ... > >: public input< T, U ... >{};
-
-	template < typename T, typename ... U >
-	std::map<
-		type_index,
-		void(input< T, U ... >::*)(std::size_t, any_type const&, bool)
-	> const input< T, U ... >::type_map_ = {
-			{ type_id_with_cvr< T >(), &input< T, U ... >::add< T > },
-			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
+	template < typename ... T >
+	std::unordered_map< type_index, typename input< T ... >::add_function >
+		const input< T ... >::type_map_ = {
+			{
+				type_index::type_id_with_cvr< T >(),
+				&input< T ... >::add< T >
+			} ...
 		};
 
-	template <
-		template< typename, typename ... > class Container, typename ... T
-	> struct container_input:
-		input< Container< T > ... >
-	{
-		using input< Container< T > ... >::input;
-	};
 
 	template <
-		template< typename, typename ... > class Container, typename ... T
-	> struct container_input< Container, type_list< T ... > >:
-		container_input< Container, T ... >
-	{
-		using container_input< Container, T ... >::container_input;
+		template < typename > typename Container,
+		typename Set,
+		typename = hana::when< true > >
+	struct container_input;
+
+	template <
+		template < typename > typename Container,
+		typename Set >
+	struct container_input<
+		Container,
+		Set,
+		hana::when< hana::is_a< hana::set_tag, Set > >
+	>: decltype(unpack_with_container_to< Container, input >(Set{}))::type{
+		using base_class = typename
+			decltype(unpack_with_container_to< Container, input >(Set{}))
+				::type;
+
+		using base_class::input;
 	};
 
 
