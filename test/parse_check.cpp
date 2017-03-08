@@ -7,7 +7,8 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include <disposer/parse.hpp>
-#include <disposer/mask_non_print.hpp>
+
+#include <io_tools/mask_non_print.hpp>
 
 #include <boost/optional/optional_io.hpp>
 
@@ -15,6 +16,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+
 
 namespace disposer{ namespace types{ namespace parse{
 
@@ -59,8 +61,8 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	std::ostream& operator<<(std::ostream& os, chain const& v){
-		return os << "{" << v.name << "," << v.group << ","
-			<< v.id_generator << "," << v.modules << "}";
+		return os << "{" << v.name << "," << *v.group << ","
+			<< *v.id_generator << "," << v.modules << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, config const& v){
@@ -145,14 +147,14 @@ int fail2(std::size_t i, config const& ref, config const& test){
 	os1 << ref;
 	os2 << test;
 	std::cout << std::setw(3) << i << " \033[0;31mfail:\033[0m "
-		<< "\n" << disposer::mask_non_print(os1.str())
-		<< "\n" << disposer::mask_non_print(os2.str()) << "\n";
+		<< "\n" << io_tools::mask_non_print(os1.str())
+		<< "\n" << io_tools::mask_non_print(os2.str()) << "\n";
 	return 1;
 }
 
 int fail1(std::size_t i, std::string const& msg){
 	std::cout << std::setw(3) << i << " \033[0;31mfail:\033[0m "
-		<< disposer::mask_non_print(msg) << "\n";
+		<< io_tools::mask_non_print(msg) << "\n";
 	return 1;
 }
 
