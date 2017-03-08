@@ -52,7 +52,7 @@ namespace disposer{
 	class output_base{
 	public:
 		/// \brief Constructor
-		output_base(std::string const& name): name(name), id(id_), id_(0) {}
+		output_base(std::string_view name): name(name), id(id_), id_(0) {}
 
 		/// \brief Outputs are not copyable
 		output_base(output_base const&) = delete;
@@ -84,7 +84,7 @@ namespace disposer{
 
 
 		/// \brief Name of the output in the config file
-		std::string const name;
+		std::string_view const name;
 
 
 	protected:

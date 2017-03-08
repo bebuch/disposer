@@ -13,6 +13,9 @@
 #include "output_base.hpp"
 #include "output_data.hpp"
 #include "unpack_to.hpp"
+#include "type_name.hpp"
+
+#include <io_tools/make_string.hpp>
 
 #include <functional>
 
@@ -65,9 +68,11 @@ namespace disposer{
 	};
 
 
-	template < typename ... T >
+	template < typename String, typename ... T >
 	class output: public output_base{
 	public:
+		static_assert(hana::is_a< hana::string_tag, String >);
+
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
 		static constexpr std::size_t type_count = sizeof...(T);
@@ -85,6 +90,8 @@ namespace disposer{
 
 		using output_base::output_base;
 
+		output(): output_base(String::c_str()) {}
+
 
 		template < typename V, typename W >
 		void put(W&& value){
@@ -94,10 +101,11 @@ namespace disposer{
 			);
 
 			if(!enabled_types_[type_index::type_id_with_cvr< V >()]){
-				throw std::logic_error(
-					"output '" + name + "' put disabled type [" +
-					type_name_with_cvr< V >() + "]"
-				);
+				using namespace std::literals::string_literals;
+				throw std::logic_error(io_tools::make_string(
+					"output '", name, "' put disabled type [",
+					type_name_with_cvr< V >(), "]"
+				));
 			}
 
 			output_interface< V >{signal}(id, static_cast< W&& >(value));
@@ -129,10 +137,10 @@ namespace disposer{
 				);
 
 				if(iter == enabled_types_.end()){
-					throw std::logic_error(
-						"type [" + type.pretty_name() +
-						"] is not an output type of '" + name + "'"
-					);
+					throw std::logic_error(io_tools::make_string(
+						"type [", type.pretty_name(),
+						"] is not an output type of '", name, "'"
+					));
 				}
 
 				iter->second = true;
@@ -140,8 +148,11 @@ namespace disposer{
 		}
 
 
+		static constexpr std::string_view name{String::c_str()};
+
+
 	protected:
-		virtual std::vector< type_index > enabled_types()const override{
+		std::vector< type_index > enabled_types()const override{
 			std::vector< type_index > result;
 			result.reserve(type_count);
 			for(auto const& [type, enabled]: enabled_types_){
@@ -156,43 +167,6 @@ namespace disposer{
 				{type_index::type_id_with_cvr< T >(), false} ...
 			};
 	};
-
-
-// 	template < typename ... T >
-// 	struct output: basic_output< T ... >{
-// 		using basic_output< T ... >::basic_output;
-// 	};
-//
-//
-// 	template < typename T >
-// 	struct output< T >: basic_output< T >{
-// 		using basic_output< T >::basic_output;
-//
-// 		template < typename W >
-// 		void put(W&& value){
-// 			basic_output< T >::template put< T >(
-// 				static_cast< W&& >(value)
-// 			);
-// 		}
-// 	};
-//
-// 	template <
-// 		template < typename > typename Container,
-// 		typename ... SubType >
-// 	struct container_output: output< Container< SubType > ... >{
-// 		using output< Container< SubType > ... >::output;
-//
-// 		template < typename ... V >
-// 		void enable(){
-// 			base_class::template enable< Container< V > ... >();
-// 		}
-//
-// 		template < typename V, typename W >
-// 		void put_by_subtype(W&& value){
-// 			base_class::template
-// 				put< Container< V > >(static_cast< W&& >(value));
-// 		}
-// 	};
 
 
 }
@@ -216,24 +190,27 @@ namespace disposer::interface::module{
 	constexpr auto output(String&& name, Types&& types){
 		using namespace boost::hana;
 		static_assert(hana::is_a< hana::string_tag, String >);
-		static_assert(
-// 			hana::is_a< hana::type_tag, Types > ||
-			hana::is_a< hana::set_tag, Types >
-		);
 
-// 		if constexpr(hana::is_a< hana::set_tag, Types >){
+		if constexpr(hana::is_a< hana::type_tag, Types >){
+			using output_type = ::disposer::output< std::decay_t< String >,
+				typename decltype(+types)::type >;
+
+			return hana::make_pair(static_cast< String&& >(name),
+				output_type());
+		}else{
+			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
-			using output_type = typename decltype(
-				::disposer::unpack_to< ::disposer::output >(types))::type;
+			auto string_and_types =
+				hana::prepend(hana::to_tuple(types), hana::type_c< String >);
+
+			using output_type = typename decltype(::disposer::unpack_to<
+				::disposer::output >(string_and_types))::type;
 
 			return hana::make_pair(
 				static_cast< String&& >(name),
-				output_type(name.c_str()));
-// 		}else{
-// 			return hana::make_pair(static_cast< String&& >(name),
-// 				typename ::disposer::output< typename decltype(+types)::type >::type(name.c_str()));
-// 		}
+				output_type());
+		}
 	}
 
 

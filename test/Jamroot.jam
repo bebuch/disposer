@@ -71,3 +71,9 @@ exe parse_check
 	parse_check.cpp
 	/disposer//disposer
 	;
+
+exe output
+	:
+	output.cpp
+	/disposer//disposer
+	;
