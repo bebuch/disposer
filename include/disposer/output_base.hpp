@@ -59,8 +59,10 @@ namespace disposer{
 
 		/// \brief Move-Constructor
 		output_base(output_base&& other):
+			name(other.name),
 			signal(std::move(other.signal)),
-			id(other.id)
+			id(id_),
+			id_(other.id_)
 			{}
 
 
@@ -88,6 +90,7 @@ namespace disposer{
 
 
 	protected:
+		/// \brief Connection between an output and an input
 		signal_t signal;
 
 		/// \brief Read only reference to the actual ID while module::exec()

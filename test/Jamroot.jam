@@ -77,3 +77,9 @@ exe output
 	output.cpp
 	/disposer//disposer
 	;
+
+exe input
+	:
+	input.cpp
+	/disposer//disposer
+	;

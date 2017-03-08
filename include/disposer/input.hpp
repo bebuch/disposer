@@ -24,9 +24,11 @@
 namespace disposer{
 
 
-	template < typename ... T >
+	template < typename Name, typename ... T >
 	class input: public input_base{
 	public:
+		static_assert(hana::is_a< hana::string_tag, Name >);
+
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
 		static constexpr std::size_t type_count = sizeof...(T);
@@ -50,6 +52,8 @@ namespace disposer{
 
 
 		using input_base::input_base;
+
+		constexpr input()noexcept: input_base(Name::c_str()) {}
 
 
 		std::multimap< std::size_t, value_type > get(){
@@ -110,10 +114,10 @@ namespace disposer{
 		)override{
 			auto iter = type_map_.find(type);
 			if(iter == type_map_.end()){
-				throw std::logic_error(
-					"unknown add type [" + type.pretty_name() +
-					"] in input '" + name + "'"
-				);
+				throw std::logic_error(io_tools::make_string(
+					"unknown add type [", type.pretty_name(),
+					"] in input '", name, "'"
+				));
 			}
 
 			// Call add< type >(id, value, last_use)
@@ -172,36 +176,46 @@ namespace disposer{
 		std::multimap< std::size_t, value_type > data_;
 	};
 
-	template < typename ... T >
-	std::unordered_map< type_index, typename input< T ... >::add_function >
-		const input< T ... >::type_map_ = {
+
+	template < typename Name, typename ... T >
+	std::unordered_map< type_index, typename input< Name, T ... >
+		::add_function > const input< Name, T ... >::type_map_ = {
 			{
 				type_index::type_id_with_cvr< T >(),
-				&input< T ... >::add< T >
+				&input< Name, T ... >::add< T >
 			} ...
 		};
 
 
-// 	template <
-// 		template < typename > typename Container,
-// 		typename Set,
-// 		typename = hana::when< true > >
-// 	struct container_input;
-//
-// 	template <
-// 		template < typename > typename Container,
-// 		typename Set >
-// 	struct container_input<
-// 		Container,
-// 		Set,
-// 		hana::when< hana::is_a< hana::set_tag, Set > >
-// 	>: decltype(unpack_with_container_to< Container, input >(Set{}))::type{
-// 		using base_class = typename
-// 			decltype(unpack_with_container_to< Container, input >(Set{}))
-// 				::type;
-//
-// 		using base_class::input;
-// 	};
+}
+
+
+namespace disposer::interface::module{
+
+
+	template < typename Name, typename Types >
+	constexpr auto input(Name&&, Types&& types){
+		static_assert(hana::is_a< hana::string_tag, Name >);
+
+		if constexpr(hana::is_a< hana::type_tag, Types >){
+			using input_type = ::disposer::input< std::decay_t< Name >,
+				typename decltype(+types)::type >;
+
+			return hana::pair< std::decay_t< Name >, input_type >{};
+
+		}else{
+			static_assert(hana::Foldable< Types >::value);
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+
+			auto string_and_types =
+				hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
+
+			using input_type = typename decltype(::disposer::unpack_to<
+				::disposer::input >(string_and_types))::type;
+
+			return hana::pair< std::decay_t< Name >, input_type >{};
+		}
+	}
 
 
 }

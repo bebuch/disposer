@@ -72,10 +72,10 @@ namespace disposer{
 		input_base(input_base&&) = delete;
 
 
-		/// \brief Inputs are not copyable
+		/// \brief Inputs are not copy-assingable
 		input_base& operator=(input_base const&) = delete;
 
-		/// \brief Inputs are not movable
+		/// \brief Inputs are not move-assingble
 		input_base& operator=(input_base&&) = delete;
 
 
@@ -110,7 +110,6 @@ namespace disposer{
 		void cleanup(module_base_key, std::size_t id)noexcept{ cleanup(id); }
 
 
-
 		/// \brief Name of the input in the config file
 		std::string_view const name;
 
@@ -129,7 +128,6 @@ namespace disposer{
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		) noexcept = 0;
-
 
 
 		/// \brief Clean up all data with ID less or equal id

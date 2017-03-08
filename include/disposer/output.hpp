@@ -68,10 +68,10 @@ namespace disposer{
 	};
 
 
-	template < typename String, typename ... T >
+	template < typename Name, typename ... T >
 	class output: public output_base{
 	public:
-		static_assert(hana::is_a< hana::string_tag, String >);
+		static_assert(hana::is_a< hana::string_tag, Name >);
 
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
@@ -90,7 +90,7 @@ namespace disposer{
 
 		using output_base::output_base;
 
-		output(): output_base(String::c_str()) {}
+		output(): output_base(Name::c_str()) {}
 
 
 		template < typename V, typename W >
@@ -148,9 +148,6 @@ namespace disposer{
 		}
 
 
-		static constexpr std::string_view name{String::c_str()};
-
-
 	protected:
 		std::vector< type_index > enabled_types()const override{
 			std::vector< type_index > result;
@@ -186,29 +183,26 @@ namespace disposer::interface::module{
 // 	}
 
 
-	template < typename String, typename Types >
-	constexpr auto output(String&& name, Types&& types){
-		static_assert(hana::is_a< hana::string_tag, String >);
+	template < typename Name, typename Types >
+	constexpr auto output(Name&&, Types&& types){
+		static_assert(hana::is_a< hana::string_tag, Name >);
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using output_type = ::disposer::output< std::decay_t< String >,
+			using output_type = ::disposer::output< std::decay_t< Name >,
 				typename decltype(+types)::type >;
 
-			return hana::make_pair(static_cast< String&& >(name),
-				output_type());
+			return hana::pair< std::decay_t< Name >, output_type >{};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			auto string_and_types =
-				hana::prepend(hana::to_tuple(types), hana::type_c< String >);
+				hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
 
 			using output_type = typename decltype(::disposer::unpack_to<
 				::disposer::output >(string_and_types))::type;
 
-			return hana::make_pair(
-				static_cast< String&& >(name),
-				output_type());
+			return hana::pair< std::decay_t< Name >, output_type >{};
 		}
 	}
 
