@@ -57,14 +57,17 @@ namespace disposer{
 		/// \brief Outputs are not copyable
 		output_base(output_base const&) = delete;
 
-		/// \brief Outputs are not movable
-		output_base(output_base&&) = delete;
+		/// \brief Move-Constructor
+		output_base(output_base&& other):
+			signal(std::move(other.signal)),
+			id(other.id)
+			{}
 
 
-		/// \brief Outputs are not copyable
+		/// \brief Outputs are not copy-assignable
 		output_base& operator=(output_base const&) = delete;
 
-		/// \brief Outputs are not movable
+		/// \brief Outputs are not move-assignable
 		output_base& operator=(output_base&&) = delete;
 
 

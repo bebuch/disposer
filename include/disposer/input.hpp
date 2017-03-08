@@ -9,7 +9,6 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
-#include "container_lists.hpp"
 #include "input_base.hpp"
 #include "input_data.hpp"
 #include "unpack_to.hpp"
@@ -180,26 +179,26 @@ namespace disposer{
 		};
 
 
-	template <
-		template < typename > typename Container,
-		typename Set,
-		typename = hana::when< true > >
-	struct container_input;
-
-	template <
-		template < typename > typename Container,
-		typename Set >
-	struct container_input<
-		Container,
-		Set,
-		hana::when< hana::is_a< hana::set_tag, Set > >
-	>: decltype(unpack_with_container_to< Container, input >(Set{}))::type{
-		using base_class = typename
-			decltype(unpack_with_container_to< Container, input >(Set{}))
-				::type;
-
-		using base_class::input;
-	};
+// 	template <
+// 		template < typename > typename Container,
+// 		typename Set,
+// 		typename = hana::when< true > >
+// 	struct container_input;
+//
+// 	template <
+// 		template < typename > typename Container,
+// 		typename Set >
+// 	struct container_input<
+// 		Container,
+// 		Set,
+// 		hana::when< hana::is_a< hana::set_tag, Set > >
+// 	>: decltype(unpack_with_container_to< Container, input >(Set{}))::type{
+// 		using base_class = typename
+// 			decltype(unpack_with_container_to< Container, input >(Set{}))
+// 				::type;
+//
+// 		using base_class::input;
+// 	};
 
 
 }

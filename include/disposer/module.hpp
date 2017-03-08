@@ -15,4 +15,39 @@
 #include "module_base.hpp"
 #include "disposer.hpp"
 
+
+namespace disposer::interface::module{
+
+
+	template < typename Derived >
+	class module: public module_base{
+	public:
+		module(make_data const& data):
+			module_base(data, {}, {}){}
+
+	private:
+		Derived& derived(){
+			static_assert(std::is_base_of_v< module, Derived >);
+			return *static_cast< Derived* >(this);
+		}
+
+		output_list generate_output_list(){
+			namespace hana = boost::hana;
+			return hana::unpack(derived().out, [](auto const& ... out){
+				return output_list{ std::cref(hana::second(out)) ... };
+			});
+		}
+
+		input_list generate_input_list(){
+			namespace hana = boost::hana;
+			return hana::unpack(derived().in, [](auto const& ... in){
+				return input_list{ std::cref(hana::second(in)) ... };
+			});
+		}
+	};
+
+
+}
+
+
 #endif

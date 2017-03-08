@@ -7,7 +7,8 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include <disposer/parse.hpp>
-#include <disposer/mask_non_print.hpp>
+
+#include <io_tools/mask_non_print.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -17,13 +18,13 @@
 
 int success(std::size_t i, std::string const& msg){
 	std::cout << std::setw(3) << i << " \033[0;32msuccess:\033[0m "
-		<< disposer::mask_non_print(msg) << "\n";
+		<< io_tools::mask_non_print(msg) << "\n";
 	return 0;
 }
 
 int fail(std::size_t i, std::string const& msg){
 	std::cout << std::setw(3) << i << " \033[0;31mfail:\033[0m "
-		<< disposer::mask_non_print(msg) << "\n";
+		<< io_tools::mask_non_print(msg) << "\n";
 	return 1;
 }
 

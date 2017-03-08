@@ -25,7 +25,7 @@ namespace disposer{ namespace{
 	using output_pair = std::pair< output_base&, bool >;
 
 	/// \brief Map from a variable name to an output
-	using variables_map = std::map< std::string, output_pair >;
+	using variables_map = std::unordered_map< std::string, output_pair >;
 
 
 	auto find(module_base::input_list& container, std::string const& data){

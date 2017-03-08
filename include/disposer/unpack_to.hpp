@@ -23,38 +23,14 @@ namespace disposer{
 		template < typename Seq >
 		auto operator()(Seq&& seq)const{
 			return hana::unpack(static_cast< Seq&& >(seq), [](auto&& ... types){
-					return hana::type_c< Class< typename
-						std::remove_reference_t< decltype(types) >::type ...
-					> >;
+					return hana::type_c< Class<
+						typename decltype(+types)::type ... > >;
 				});
 		}
 	};
 
 	template < template < typename ... > typename Class >
 	constexpr unpack_to_t< Class > unpack_to{};
-
-
-	template <
-		template < typename > typename Container,
-		template < typename ... > typename Class >
-	struct unpack_with_container_to_t{
-		template < typename Seq >
-		auto operator()(Seq&& seq)const{
-			return unpack_to< Class >(
-				hana::unpack(static_cast< Seq&& >(seq), [](auto&& ... types){
-						return hana::tuple_t<
-							Container< typename std::remove_reference_t<
-								decltype(types) >::type > ... >;
-					})
-			);
-		}
-	};
-
-	template <
-		template < typename > typename Container,
-		template < typename ... > typename Class >
-	constexpr unpack_with_container_to_t< Container, Class >
-		unpack_with_container_to{};
 
 
 }

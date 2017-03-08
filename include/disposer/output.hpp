@@ -9,7 +9,6 @@
 #ifndef _disposer__output__hpp_INCLUDED_
 #define _disposer__output__hpp_INCLUDED_
 
-#include "container_lists.hpp"
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
@@ -67,7 +66,7 @@ namespace disposer{
 
 
 	template < typename ... T >
-	class basic_output: public output_base{
+	class output: public output_base{
 	public:
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
@@ -159,56 +158,83 @@ namespace disposer{
 	};
 
 
-	template < typename ... T >
-	struct output: basic_output< T ... >{
-		using basic_output< T ... >::basic_output;
-	};
+// 	template < typename ... T >
+// 	struct output: basic_output< T ... >{
+// 		using basic_output< T ... >::basic_output;
+// 	};
+//
+//
+// 	template < typename T >
+// 	struct output< T >: basic_output< T >{
+// 		using basic_output< T >::basic_output;
+//
+// 		template < typename W >
+// 		void put(W&& value){
+// 			basic_output< T >::template put< T >(
+// 				static_cast< W&& >(value)
+// 			);
+// 		}
+// 	};
+//
+// 	template <
+// 		template < typename > typename Container,
+// 		typename ... SubType >
+// 	struct container_output: output< Container< SubType > ... >{
+// 		using output< Container< SubType > ... >::output;
+//
+// 		template < typename ... V >
+// 		void enable(){
+// 			base_class::template enable< Container< V > ... >();
+// 		}
+//
+// 		template < typename V, typename W >
+// 		void put_by_subtype(W&& value){
+// 			base_class::template
+// 				put< Container< V > >(static_cast< W&& >(value));
+// 		}
+// 	};
 
 
-	template < typename T >
-	struct output< T >: basic_output< T >{
-		using basic_output< T >::basic_output;
-
-		template < typename W >
-		void put(W&& value){
-			basic_output< T >::template put< T >(
-				static_cast< W&& >(value)
-			);
-		}
-	};
+}
 
 
-	template <
-		template < typename > typename Container,
-		typename Set,
-		typename = hana::when< true > >
-	struct container_output;
+namespace disposer::interface::module{
 
-	template <
-		template < typename > typename Container,
-		typename Set >
-	struct container_output<
-		Container,
-		Set,
-		hana::when< hana::is_a< hana::set_tag, Set > >
-	>: decltype(unpack_with_container_to< Container, output >(Set{}))::type{
-		using base_class = typename
-			decltype(unpack_with_container_to< Container, output >(Set{}))
-				::type;
 
-		using base_class::output;
+// 	template < typename ... OutputPairs >
+// 	constexpr void out(OutputPairs&& ... outputs){
+// 		static_assert((hana::is_a< hana::pair_tag, OutputPairs > && ...));
+// 		static_assert((hana::is_a< hana::string_tag,
+// 			decltype(hana::first(outputs)) > && ...));
+// 		static_assert((std::is_base_of_v< output_base,
+// 			decltype(+hana::second(outputs)) > && ...));
+// 		return hana::make_map(outputs);
+// 	}
 
-		template < typename ... V >
-		void enable(){
-			base_class::template enable< Container< V > ... >();
-		}
 
-		template < typename V, typename W >
-		void put_by_subtype(W&& value){
-			base_class::template
-				put< Container< V > >(static_cast< W&& >(value));
-		}
-	};
+	template < typename String, typename Types >
+	constexpr auto output(String&& name, Types&& types){
+		using namespace boost::hana;
+		static_assert(hana::is_a< hana::string_tag, String >);
+		static_assert(
+// 			hana::is_a< hana::type_tag, Types > ||
+			hana::is_a< hana::set_tag, Types >
+		);
+
+// 		if constexpr(hana::is_a< hana::set_tag, Types >){
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+
+			using output_type = typename decltype(
+				::disposer::unpack_to< ::disposer::output >(types))::type;
+
+			return hana::make_pair(
+				static_cast< String&& >(name),
+				output_type(name.c_str()));
+// 		}else{
+// 			return hana::make_pair(static_cast< String&& >(name),
+// 				typename ::disposer::output< typename decltype(+types)::type >::type(name.c_str()));
+// 		}
+	}
 
 
 }
