@@ -56,7 +56,9 @@ R"file(parameter_set
 	,
 "Syntax error at line 2, pos 0: '', expected at least one parameter set "
 "line '\tname\n'"
-	},{
+	}
+	,
+	{
 R"file(parameter_set
 	name1
 	name2

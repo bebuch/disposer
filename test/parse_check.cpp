@@ -17,6 +17,7 @@
 #include <sstream>
 #include <vector>
 
+
 namespace disposer{ namespace types{ namespace parse{
 
 	std::ostream& operator<<(std::ostream& os, std::string const& v){
@@ -60,8 +61,8 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	std::ostream& operator<<(std::ostream& os, chain const& v){
-		return os << "{" << v.name << "," << v.group << ","
-			<< v.id_generator << "," << v.modules << "}";
+		return os << "{" << v.name << "," << *v.group << ","
+			<< *v.id_generator << "," << v.modules << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, config const& v){

@@ -67,13 +67,13 @@ void (&r)(log_tag_base& os) = fr;
 
 // body return type
 
-struct x1{
+struct t1{
 	int operator()(){
 		return 1;
 	}
 };
 
-struct x2{
+struct t2{
 	int a = 0;
 	decltype(auto) operator()(){
 		return (a);
@@ -105,8 +105,8 @@ int main(){
 
 
 	// body return type
-	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, x1())) >().pretty_name() << " == int" << std::endl;
-	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, x2())) >().pretty_name() << " == int&" << std::endl;
+	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, t1{})) >().pretty_name() << " == int" << std::endl;
+	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, t2{})) >().pretty_name() << " == int&" << std::endl;
 
 	int a = 0;
 	decltype(auto) w1 = []{ return 1; }();
