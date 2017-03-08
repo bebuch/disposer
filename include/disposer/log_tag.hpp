@@ -10,7 +10,7 @@
 #define _disposer__log_tag__hpp_INCLUDED_
 
 #include "log_base.hpp"
-#include "type_name.hpp"
+#include "type_index.hpp"
 
 #include <io_tools/time_to_string.hpp>
 #include <io_tools/mask_non_print.hpp>

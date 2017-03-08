@@ -32,14 +32,12 @@ namespace disposer::interface::module{
 		}
 
 		output_list generate_output_list(){
-			namespace hana = boost::hana;
 			return hana::unpack(derived().out, [](auto const& ... out){
 				return output_list{ std::cref(hana::second(out)) ... };
 			});
 		}
 
 		input_list generate_input_list(){
-			namespace hana = boost::hana;
 			return hana::unpack(derived().in, [](auto const& ... in){
 				return input_list{ std::cref(hana::second(in)) ... };
 			});

@@ -12,6 +12,9 @@
 #include "input_base.hpp"
 #include "input_data.hpp"
 #include "unpack_to.hpp"
+#include "type_index.hpp"
+
+#include <io_tools/make_string.hpp>
 
 #include <variant>
 #include <set>

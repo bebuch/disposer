@@ -10,7 +10,7 @@
 #define _disposer__input_data__hpp_INCLUDED_
 
 #include "output_data.hpp"
-#include "type_name.hpp"
+#include "type_index.hpp"
 
 #include <stdexcept>
 

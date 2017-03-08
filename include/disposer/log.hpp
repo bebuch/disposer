@@ -18,10 +18,11 @@
 namespace disposer{
 
 
+	namespace hana = boost::hana;
+
+
 	namespace detail{ namespace log{
 
-
-		namespace hana = boost::hana;
 
 
 		/// \brief Implementation of extract_log_t
@@ -249,8 +250,6 @@ namespace disposer{
 	/// \endcode
 	template < typename LogF, typename Body >
 	inline decltype(auto) log(LogF&& log_f, Body&& body){
-		namespace hana = boost::hana;
-
 		using log_t = detail::log::extract_log_t< LogF >;
 
 		auto log = detail::log::make_log< log_t >();
@@ -302,8 +301,6 @@ namespace disposer{
 	/// \endcode
 	template < typename LogF, typename Body >
 	inline auto exception_catching_log(LogF&& log_f, Body&& body){
-		namespace hana = boost::hana;
-
 		using log_t = detail::log::extract_log_t< LogF >;
 
 

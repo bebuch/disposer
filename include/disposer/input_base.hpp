@@ -9,34 +9,15 @@
 #ifndef _disposer__input_base__hpp_INCLUDED_
 #define _disposer__input_base__hpp_INCLUDED_
 
-#include "disposer.hpp"
+#include "any_type.hpp"
+#include "type_index.hpp"
 
-#include <boost/functional/hash.hpp>
-#include <boost/type_index/ctti_type_index.hpp>
-
-#include <string>
 #include <vector>
 #include <stdexcept>
 #include <unordered_map>
 
 
-namespace std{
-
-	// make ctti_type_index hashable for unordered_map and unordered_set
-	template <> struct hash< boost::typeindex::ctti_type_index >:
-		boost::hash< boost::typeindex::ctti_type_index >{};
-
-}
-
-
 namespace disposer{
-
-
-	using type_index = boost::typeindex::ctti_type_index;
-
-
-	/// \brief Dummy type for references to real data in inputs and outputs
-	struct any_type;
 
 
 	/// \brief Class module_base access key
@@ -80,7 +61,8 @@ namespace disposer{
 	class input_base{
 	public:
 		/// \brief Constructor
-		input_base(std::string const& name): name(name), id(id_), id_(0) {}
+		constexpr input_base(std::string_view name)noexcept:
+			name(name), id(id_), id_(0) {}
 
 
 		/// \brief Inputs are not copyable
@@ -130,7 +112,7 @@ namespace disposer{
 
 
 		/// \brief Name of the input in the config file
-		std::string const name;
+		std::string_view const name;
 
 
 	protected:

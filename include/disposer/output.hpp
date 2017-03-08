@@ -13,7 +13,7 @@
 #include "output_base.hpp"
 #include "output_data.hpp"
 #include "unpack_to.hpp"
-#include "type_name.hpp"
+#include "type_index.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -188,7 +188,6 @@ namespace disposer::interface::module{
 
 	template < typename String, typename Types >
 	constexpr auto output(String&& name, Types&& types){
-		using namespace boost::hana;
 		static_assert(hana::is_a< hana::string_tag, String >);
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){

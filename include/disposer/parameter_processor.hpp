@@ -18,7 +18,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "type_name.hpp"
+#include "type_index.hpp"
 
 
 namespace disposer{
