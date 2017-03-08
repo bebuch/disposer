@@ -314,10 +314,8 @@ namespace disposer{
 			;
 
 			auto const parameter_sets_def =
-				(
-					("parameter_set" > separator) |
-					&x3::expect["module" >> separator]
-				) >> parameter_sets_params
+				(("parameter_set" > separator) >> parameter_sets_params) |
+				&x3::expect["module" >> separator]
 			;
 
 			auto const parameter_sets_params_def =

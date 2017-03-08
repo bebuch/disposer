@@ -21,9 +21,12 @@ namespace disposer{
 	namespace detail{ namespace log{
 
 
+		namespace hana = boost::hana;
+
+
 		/// \brief Implementation of extract_log_t
 		template < typename Function >
-		struct extract_log_from_function{};
+		struct extract_log_from_function;
 
 		/// \brief Implementation of extract_log_t
 		template < typename F, typename R, typename Log >
@@ -89,22 +92,22 @@ namespace disposer{
 		///   4. Call log.exec()
 		template < typename F, typename Log >
 		inline void exec_log(F& f, Log& log){
-			auto has_pre = boost::hana::is_valid(
-				[](auto&& x)->decltype((void)x->pre()){}
+			auto has_pre = hana::is_valid(
+				[](auto& x)->decltype((void)x->pre()){}
 			);
 
-			auto has_post = boost::hana::is_valid(
-				[](auto&& x)->decltype((void)x->post()){}
+			auto has_post = hana::is_valid(
+				[](auto& x)->decltype((void)x->post()){}
 			);
 
-			boost::hana::if_(has_pre(log),
+			hana::if_(has_pre(log),
 				[](auto& log){ log->pre(); },
 				[](auto&){}
 			)(log);
 
 			f(*log);
 
-			boost::hana::if_(has_post(log),
+			hana::if_(has_post(log),
 				[](auto& log){ log->post(); },
 				[](auto&){}
 			)(log);
@@ -121,20 +124,20 @@ namespace disposer{
 		///       1. Call log.failed() if it exists
 		///       2. Call exec_log
 		///       3. rethrow the exception
-		template < typename F, typename Body, typename Log >
-		inline decltype(auto) exec_body(F& f, Body& body, Log& log)try{
+		template < typename LogF, typename Body, typename Log >
+		inline decltype(auto) exec_body(LogF&& log_f, Body&& body, Log& log)try{
 			return body();
 		}catch(...){
-			auto has_failed = boost::hana::is_valid(
-				[](auto&& x)->decltype((void)x->failed()){}
+			auto has_failed = hana::is_valid(
+				[](auto& x)->decltype((void)x->failed()){}
 			);
 
-			boost::hana::if_(has_failed(log),
+			hana::if_(has_failed(log),
 				[](auto& log){ log->failed(); },
 				[](auto&){}
 			)(log);
 
-			exec_log(f, log);
+			exec_log(log_f, log);
 
 			throw;
 		}
@@ -150,31 +153,33 @@ namespace disposer{
 		///           - no: Call log.unknown_exception()
 		///       2. return with an empty std::optional
 		template < typename Body, typename Log >
-		inline auto exec_exception_catching_body(Body& body, Log& log){
-			constexpr auto is_void = boost::hana::traits::is_void(
-				boost::hana::type_c< decltype(body()) >
-			);
+		inline auto exec_exception_catching_body(Body&& body, Log& log){
+			constexpr auto is_void = std::is_void_v< decltype(body()) >;
+
+			using body_type = decltype(body());
+			using return_type = std::conditional_t<
+				std::is_reference_v< body_type >,
+				std::reference_wrapper< std::remove_reference_t< body_type > >,
+				body_type >;
 
 			try{
-				return boost::hana::if_(is_void,
-					[](auto&& body){ body(); return true; },
-					[](auto&& body){
-						return std::optional< decltype(body()) >(body());
-					}
-				)(static_cast< Body&& >(body));
+				if constexpr(is_void){
+					body();
+					return true;
+				}else{
+					return std::optional< return_type >(body());
+				}
 			}catch(std::exception const& error){
 				log->set_exception(error);
 			}catch(...){
 				log->unknown_exception();
 			}
 
-			return boost::hana::if_(is_void,
-				[](auto&&){ return false; },
-				[](auto&& body){
-					return std::optional< decltype(body()) >();
-				}
-			)(static_cast< Body&& >(body));
-
+			if constexpr(is_void){
+				return false;
+			}else{
+				return std::optional< return_type >();
+			}
 		}
 
 
@@ -185,26 +190,25 @@ namespace disposer{
 		///       - no: construct by calling standard constructor
 		template < typename Log >
 		auto make_log(){
-			auto has_factory = boost::hana::is_valid(
+			constexpr auto has_factory = hana::is_valid(
 				[](auto t)->decltype((void)decltype(t)::type::factory()){}
 			);
 
-			return boost::hana::if_(has_factory(boost::hana::type_c< Log >),
-				[](auto t){ return decltype(t)::type::factory(); },
-				[](auto t){
-					return std::make_unique< typename decltype(t)::type >();
-				}
-			)(boost::hana::type_c< Log >);
+			if constexpr(has_factory(hana::type_c< Log >)){
+				return Log::factory();
+			}else{
+				return std::make_unique< Log >();
+			}
 		}
 
 		/// \brief Check if a type has a exec() function
-		auto has_exec = boost::hana::is_valid(
-			[](auto&& x)->decltype((void)x->exec()){}
+		constexpr auto has_exec = hana::is_valid(
+			[](auto& x)->decltype((void)x->exec()){}
 		);
 
 		/// \brief Check if a type has a have_body() function
-		auto has_have_body = boost::hana::is_valid(
-			[](auto&& x)->decltype((void)x->have_body()){}
+		constexpr auto has_have_body = hana::is_valid(
+			[](auto& x)->decltype((void)x->have_body()){}
 		);
 
 
@@ -218,9 +222,9 @@ namespace disposer{
 	/// \code{.cpp}
 	/// log([](your_log_tag_type& os){ os << "your message"; });
 	/// \endcode
-	template < typename Log >
-	inline void log(Log&& f){
-		using log_t = detail::log::extract_log_t< Log >;
+	template < typename LogF >
+	inline void log(LogF&& log_f){
+		using log_t = detail::log::extract_log_t< LogF >;
 
 		auto log = detail::log::make_log< log_t >();
 
@@ -230,7 +234,7 @@ namespace disposer{
 			"expression."
 		);
 
-		detail::log::exec_log(f, log);
+		detail::log::exec_log(log_f, log);
 	}
 
 	/// \brief Add a log message with associated code block
@@ -243,9 +247,11 @@ namespace disposer{
 	///      return 5;
 	/// });
 	/// \endcode
-	template < typename Log, typename Body >
-	inline decltype(auto) log(Log&& f, Body&& body){
-		using log_t = detail::log::extract_log_t< Log >;
+	template < typename LogF, typename Body >
+	inline decltype(auto) log(LogF&& log_f, Body&& body){
+		namespace hana = boost::hana;
+
+		using log_t = detail::log::extract_log_t< LogF >;
 
 		auto log = detail::log::make_log< log_t >();
 
@@ -255,25 +261,18 @@ namespace disposer{
 			"callable expression."
 		);
 
-		boost::hana::if_(detail::log::has_have_body(log),
-			[](auto& log){ log->have_body(); },
-			[](auto&){}
-		)(log);
+		if constexpr(detail::log::has_have_body(log)){
+			log->have_body();
+		}
 
-		return boost::hana::if_(
-			boost::hana::traits::is_void(
-				boost::hana::type_c< decltype(body()) >
-			),
-			[](auto&& f, auto&& body, auto& log){
-				detail::log::exec_body(f, body, log);
-				detail::log::exec_log(f, log);
-			},
-			[](auto&& f, auto&& body, auto& log)->decltype(auto){
-				decltype(auto) result = detail::log::exec_body(f, body, log);
-				detail::log::exec_log(f, log);
-				return result;
-			}
-		)(static_cast< Log&& >(f), static_cast< Body&& >(body), log);
+		if constexpr(hana::traits::is_void(hana::type_c< decltype(body()) >)){
+			detail::log::exec_body(log_f, body, log);
+			detail::log::exec_log(log_f, log);
+		}else{
+			decltype(auto) result = detail::log::exec_body(log_f, body, log);
+			detail::log::exec_log(log_f, log);
+			return result;
+		}
 	}
 
 	/// \brief Catch all exceptions
@@ -301,22 +300,25 @@ namespace disposer{
 	///         return 5;
 	///     });
 	/// \endcode
-	template < typename Log, typename Body >
-	inline auto exception_catching_log(Log&& f, Body&& body){
-		using log_t = detail::log::extract_log_t< Log >;
+	template < typename LogF, typename Body >
+	inline auto exception_catching_log(LogF&& log_f, Body&& body){
+		namespace hana = boost::hana;
 
-		auto log = detail::log::make_log< log_t >();
+		using log_t = detail::log::extract_log_t< LogF >;
 
 
-		auto has_set_exception = boost::hana::is_valid(
-			[](auto&& x)->decltype(
+		constexpr auto has_set_exception = hana::is_valid(
+			[](auto& x)->decltype(
 				(void)x->set_exception(std::declval< std::exception >())
 			){}
 		);
 
-		auto has_unknown_exception = boost::hana::is_valid(
-			[](auto&& x)->decltype((void)x->unknown_exception()){}
+		constexpr auto has_unknown_exception = hana::is_valid(
+			[](auto& x)->decltype((void)x->unknown_exception()){}
 		);
+
+
+		auto log = detail::log::make_log< log_t >();
 
 
 		static_assert(
@@ -339,13 +341,12 @@ namespace disposer{
 		);
 
 
-		boost::hana::if_(detail::log::has_have_body(log),
-			[](auto& log){ log->have_body(); },
-			[](auto&){}
-		)(log);
+		if constexpr(detail::log::has_have_body(log)){
+			log->have_body();
+		}
 
 		auto result = detail::log::exec_exception_catching_body(body, log);
-		detail::log::exec_log(f, log);
+		detail::log::exec_log(log_f, log);
 		return result;
 	}
 
