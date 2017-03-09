@@ -50,8 +50,40 @@ struct M5{
 
 int main(){
 	M1 m1;
+	static_assert(std::is_same_v< decltype(m1.io), hana::map<
+			hana::pair< decltype("test1"_s),
+				disposer::output< decltype("test1"_s), int > >
+		> >);
+
 	M2 m2;
+	static_assert(std::is_same_v< decltype(m2.io), hana::map<
+			hana::pair< decltype("test1"_s),
+				disposer::output< decltype("test1"_s), int > >,
+			hana::pair< decltype("test2"_s),
+				disposer::output< decltype("test2"_s), char > >,
+			hana::pair< decltype("test3"_s),
+				disposer::output< decltype("test3"_s), float > >
+		> >);
+
 	M3 m3;
+	static_assert(std::is_same_v< decltype(m3.io), hana::map<
+			hana::pair< decltype("test1"_s),
+				disposer::output< decltype("test1"_s), int, char, float > >
+		> >);
+
 	M4 m4;
+	static_assert(std::is_same_v< decltype(m4.io), hana::map<
+			hana::pair< decltype("test1"_s),
+				disposer::output< decltype("test1"_s), int, char, float > >
+		> >);
+
 	M5 m5;
+	static_assert(std::is_same_v< decltype(m5.io), hana::map<
+			hana::pair< decltype("test1"_s),
+				disposer::output< decltype("test1"_s), int > >,
+			hana::pair< decltype("test2"_s),
+				disposer::output< decltype("test2"_s), int, char, float > >,
+			hana::pair< decltype("test3"_s),
+				disposer::output< decltype("test3"_s), int, char, float > >
+		> >);
 }
