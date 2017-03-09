@@ -9,11 +9,11 @@
 #ifndef _disposer__output__hpp_INCLUDED_
 #define _disposer__output__hpp_INCLUDED_
 
-#include "input_base.hpp"
 #include "output_base.hpp"
 #include "output_data.hpp"
 #include "unpack_to.hpp"
 #include "type_index.hpp"
+#include "io.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -172,39 +172,43 @@ namespace disposer{
 namespace disposer::interface::module{
 
 
-// 	template < typename ... OutputPairs >
-// 	constexpr void out(OutputPairs&& ... outputs){
-// 		static_assert((hana::is_a< hana::pair_tag, OutputPairs > && ...));
-// 		static_assert((hana::is_a< hana::string_tag,
-// 			decltype(hana::first(outputs)) > && ...));
-// 		static_assert((std::is_base_of_v< output_base,
-// 			decltype(+hana::second(outputs)) > && ...));
-// 		return hana::make_map(outputs);
-// 	}
-
-
+	/// \brief Temporary class for deducting disposer::output type
 	template < typename Name, typename Types >
-	constexpr auto output(Name&&, Types&& types){
-		static_assert(hana::is_a< hana::string_tag, Name >);
+	struct out: io< out< Name, Types > >{
+		/// \brief Calculation function for output type
+		static constexpr auto make_type(Name, Types types){
+			static_assert(hana::is_a< hana::string_tag, Name >);
 
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using output_type = ::disposer::output< std::decay_t< Name >,
-				typename decltype(+types)::type >;
+			if constexpr(hana::is_a< hana::type_tag, Types >){
+				using output_type = ::disposer::output< std::decay_t< Name >,
+					typename decltype(+types)::type >;
 
-			return hana::pair< std::decay_t< Name >, output_type >{};
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+				return hana::type_c< output_type >;
+			}else{
+				static_assert(hana::Foldable< Types >::value);
+				static_assert(hana::all_of(Types{},
+					hana::is_a< hana::type_tag >));
 
-			auto string_and_types =
-				hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
+				auto string_and_types =
+					hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
 
-			using output_type = typename decltype(::disposer::unpack_to<
-				::disposer::output >(string_and_types))::type;
+				using output_type = typename decltype(::disposer::unpack_to<
+					::disposer::output >(string_and_types))::type;
 
-			return hana::pair< std::decay_t< Name >, output_type >{};
+				return hana::type_c< output_type >;
+			}
 		}
-	}
+
+		/// \brief Output name as compile time string
+		using name = std::decay_t< Name >;
+
+		/// \brief Type of a disposer::output
+		using type = typename decltype(make_type(
+			std::declval< Name >(), std::declval< Types >()))::type;
+
+		/// \brief Use class template deduction
+		constexpr out(Name, Types)noexcept{}
+	};
 
 
 }

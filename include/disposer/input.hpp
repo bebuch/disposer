@@ -12,7 +12,7 @@
 #include "input_base.hpp"
 #include "input_data.hpp"
 #include "unpack_to.hpp"
-#include "type_index.hpp"
+#include "io.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -22,6 +22,15 @@
 
 
 namespace disposer{
+
+
+	template < typename T, typename ... >
+	struct first_of{
+		using type = T;
+	};
+
+	template < typename ... T >
+	using first_of_t = typename first_of< T ... >::type;
 
 
 	template < typename Name, typename ... T >
@@ -46,7 +55,7 @@ namespace disposer{
 
 		using value_type = std::conditional_t<
 			type_count == 1,
-			input_data< T ... >,
+			input_data< first_of_t< T ... > >,
 			std::variant< input_data< T > ... >
 		>;
 
@@ -193,29 +202,43 @@ namespace disposer{
 namespace disposer::interface::module{
 
 
+	/// \brief Temporary class for deducting disposer::input type
 	template < typename Name, typename Types >
-	constexpr auto input(Name&&, Types&& types){
-		static_assert(hana::is_a< hana::string_tag, Name >);
+	struct in: io< in< Name, Types > >{
+		/// \brief Calculation function for input type
+		static constexpr auto make_type(Name, Types types){
+			static_assert(hana::is_a< hana::string_tag, Name >);
 
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using input_type = ::disposer::input< std::decay_t< Name >,
-				typename decltype(+types)::type >;
+			if constexpr(hana::is_a< hana::type_tag, Types >){
+				using input_type = ::disposer::input< std::decay_t< Name >,
+					typename decltype(+types)::type >;
 
-			return hana::pair< std::decay_t< Name >, input_type >{};
+				return hana::type_c< input_type >;
+			}else{
+				static_assert(hana::Foldable< Types >::value);
+				static_assert(hana::all_of(Types{},
+					hana::is_a< hana::type_tag >));
 
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+				auto string_and_types =
+					hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
 
-			auto string_and_types =
-				hana::prepend(hana::to_tuple(types), hana::type_c< Name >);
+				using input_type = typename decltype(::disposer::unpack_to<
+					::disposer::input >(string_and_types))::type;
 
-			using input_type = typename decltype(::disposer::unpack_to<
-				::disposer::input >(string_and_types))::type;
-
-			return hana::pair< std::decay_t< Name >, input_type >{};
+				return hana::type_c< input_type >;
+			}
 		}
-	}
+
+		/// \brief Output name as compile time string
+		using name = std::decay_t< Name >;
+
+		/// \brief Type of a disposer::input
+		using type = typename decltype(make_type(
+			std::declval< Name >(), std::declval< Types >()))::type;
+
+		/// \brief Use class template deduction
+		constexpr in(Name, Types)noexcept{}
+	};
 
 
 }

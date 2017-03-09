@@ -7,43 +7,43 @@ using namespace disposer::interface::module;
 
 
 struct M1{
-	decltype(hana::make_map(
-		output("test1"_s, hana::type_c< int >)
-	)) out;
+	decltype(io_list(
+		out("test1"_s, hana::type_c< int >)
+	)) io;
 };
 
 struct M2{
-	decltype(hana::make_map(
-		output("test1"_s, hana::type_c< int >),
-		output("test2"_s, hana::type_c< char >),
-		output("test3"_s, hana::type_c< float >)
-	)) out;
+	decltype(io_list(
+		out("test1"_s, hana::type_c< int >),
+		out("test2"_s, hana::type_c< char >),
+		out("test3"_s, hana::type_c< float >)
+	)) io;
 };
 
 constexpr auto types = hana::tuple_t< int, char, float >;
 
 struct M3{
-	decltype(hana::make_map(
-		output("test1"_s, types)
-	)) out;
+	decltype(io_list(
+		out("test1"_s, types)
+	)) io;
 };
 
 
 constexpr auto types_set = hana::to_set(types);
 
 struct M4{
-	decltype(hana::make_map(
-		output("test1"_s, types_set)
-	)) out;
+	decltype(io_list(
+		out("test1"_s, types_set)
+	)) io;
 };
 
 
 struct M5{
-	decltype(hana::make_map(
-		output("test1"_s, hana::type_c< int >),
-		output("test2"_s, types),
-		output("test3"_s, types_set)
-	)) out;
+	decltype(io_list(
+		out("test1"_s, hana::type_c< int >),
+		out("test2"_s, types),
+		out("test3"_s, types_set)
+	)) io;
 };
 
 
