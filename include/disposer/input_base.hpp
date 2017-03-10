@@ -11,8 +11,7 @@
 
 #include "disposer.hpp"
 
-#include <boost/functional/hash.hpp>
-#include <boost/type_index/ctti_type_index.hpp>
+#include <boost/type_index.hpp>
 
 #include <string>
 #include <vector>
@@ -20,19 +19,10 @@
 #include <unordered_map>
 
 
-namespace std{
-
-	// make ctti_type_index hashable for unordered_map and unordered_set
-	template <> struct hash< boost::typeindex::ctti_type_index >:
-		boost::hash< boost::typeindex::ctti_type_index >{};
-
-}
-
-
 namespace disposer{
 
 
-	using type_index = boost::typeindex::ctti_type_index;
+	using boost::typeindex::type_index;
 
 
 	/// \brief Dummy type for references to real data in inputs and outputs
@@ -102,7 +92,7 @@ namespace disposer{
 
 
 		/// \brief Get a list of all input data types
-		virtual std::vector< type_index > type_list()const = 0;
+		virtual std::vector< type_index > types()const = 0;
 
 		/// \brief Enable the given types
 		bool enable_types(
