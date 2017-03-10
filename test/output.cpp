@@ -5,62 +5,29 @@ namespace hana = boost::hana;
 using namespace hana::literals;
 using namespace disposer::interface::module;
 
-
-struct M1{
-	decltype(io_list(
-		out("test1"_s, hana::type_c< int >)
-	)) io;
-};
-
-struct M2{
-	decltype(io_list(
-		out("test1"_s, hana::type_c< int >),
-		out("test2"_s, hana::type_c< char >),
-		out("test3"_s, hana::type_c< float >)
-	)) io;
-};
-
 constexpr auto types = hana::tuple_t< int, char, float >;
-
-struct M3{
-	decltype(io_list(
-		out("test1"_s, types)
-	)) io;
-};
-
-
 constexpr auto types_set = hana::to_set(types);
-
-struct M4{
-	decltype(io_list(
-		out("test1"_s, types_set)
-	)) io;
-};
-
-
-struct M5{
-	decltype(io_list(
-		out("test1"_s, hana::type_c< int >),
-		out("test2"_s, types),
-		out("test3"_s, types_set)
-	)) io;
-};
-
 
 
 int main(){
-	M1 m1;
-	static_assert(std::is_same_v< decltype(m1.io),
+	constexpr auto m1 = io_list(
+			out("test1"_s, hana::type_c< int >)
+		);
+	static_assert(std::is_same_v< decltype(m1),
 		hana::pair<
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_s), int > >
 			> >
-		> >);
+		> const >);
 
-	M2 m2;
-	static_assert(std::is_same_v< decltype(m2.io),
+	constexpr auto m2 = io_list(
+			out("test1"_s, hana::type_c< int >),
+			out("test2"_s, hana::type_c< char >),
+			out("test3"_s, hana::type_c< float >)
+		);
+	static_assert(std::is_same_v< decltype(m2),
 		hana::pair<
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
@@ -71,30 +38,38 @@ int main(){
 				hana::pair< decltype("test3"_s),
 					disposer::output< decltype("test3"_s), float > >
 			> >
-		> >);
+		> const >);
 
-	M3 m3;
-	static_assert(std::is_same_v< decltype(m3.io),
+	constexpr auto m3 = io_list(
+			out("test1"_s, types)
+		);
+	static_assert(std::is_same_v< decltype(m3),
 		hana::pair<
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_s), int, char, float > >
 			> >
-		> >);
+		> const >);
 
-	M4 m4;
-	static_assert(std::is_same_v< decltype(m4.io),
+	constexpr auto m4 = io_list(
+			out("test1"_s, types_set)
+		);
+	static_assert(std::is_same_v< decltype(m4),
 		hana::pair<
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_s), int, char, float > >
 			> >
-		> >);
+		> const >);
 
-	M5 m5;
-	static_assert(std::is_same_v< decltype(m5.io),
+	constexpr auto m5 = io_list(
+			out("test1"_s, hana::type_c< int >),
+			out("test2"_s, types),
+			out("test3"_s, types_set)
+		);
+	static_assert(std::is_same_v< decltype(m5),
 		hana::pair<
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
@@ -105,5 +80,5 @@ int main(){
 				hana::pair< decltype("test3"_s),
 					disposer::output< decltype("test3"_s), int, char, float > >
 			> >
-		> >);
+		> const >);
 }

@@ -216,7 +216,7 @@ namespace disposer::interface::module{
 	};
 
 	template < typename Name, typename Types >
-	auto in(Name&&, Types&&){
+	constexpr auto in(Name&&, Types&&){
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
 		using raw_types = std::remove_cv_t< std::remove_reference_t< Types > >;
 
