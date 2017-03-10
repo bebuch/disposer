@@ -84,9 +84,14 @@ exe input
 	/disposer//disposer
 	;
 
-
 exe io
 	:
 	io.cpp
+	/disposer//disposer
+	;
+
+exe module_test
+	:
+	module_test.cpp
 	/disposer//disposer
 	;

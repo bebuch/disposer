@@ -190,7 +190,8 @@ namespace disposer::interface::module{
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
 		using raw_types = std::remove_cv_t< std::remove_reference_t< Types > >;
 
-		static_assert(hana::is_a< hana::string_tag, raw_name >);
+		static_assert(hana::is_a< hana::string_tag, raw_name >,
+			"Name must be of type boost::hana::string< ... >");
 
 		if constexpr(hana::is_a< hana::type_tag, raw_types >){
 			using output_type =
