@@ -203,8 +203,8 @@ namespace disposer::interface::module{
 
 
 	/// \brief Provid types for constructing an input
-	template < typename Name, typename OutputType >
-	struct in_t: io< in_t< Name, OutputType > >{
+	template < typename Name, typename InputType >
+	struct in_t: io< in_t< Name, InputType > >{
 		/// \brief Tag for boost::hana
 		using hana_tag = in_tag;
 
@@ -212,7 +212,7 @@ namespace disposer::interface::module{
 		using name = Name;
 
 		/// \brief Type of a disposer::input
-		using type = OutputType;
+		using type = InputType;
 	};
 
 	template < typename Name, typename Types >
