@@ -83,3 +83,10 @@ exe input
 	input.cpp
 	/disposer//disposer
 	;
+
+
+exe io
+	:
+	io.cpp
+	/disposer//disposer
+	;
