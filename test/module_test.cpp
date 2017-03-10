@@ -10,9 +10,6 @@ constexpr auto types_set = hana::to_set(types);
 
 
 int main(){
-	// TODO: Check forgotten _s to make a hana string literal
-	constexpr auto mx = module("module1", io_list());
-
 	constexpr auto m1 = module("module1"_s,
 		io_list(
 			in("test1"_s, hana::type_c< int >),
@@ -31,71 +28,100 @@ int main(){
 			>
 		> > const >);
 
-// 	M2 m2;
-// 	static_assert(std::is_same_v< decltype(m2.io),
-// 		hana::pair<
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::input< decltype("test1"_s), int > >,
-// 				hana::pair< decltype("test2"_s),
-// 					disposer::input< decltype("test2"_s), char > >,
-// 				hana::pair< decltype("test3"_s),
-// 					disposer::input< decltype("test3"_s), float > >
-// 			> >,
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::output< decltype("test1"_s), int > >,
-// 				hana::pair< decltype("test2"_s),
-// 					disposer::output< decltype("test2"_s), char > >,
-// 				hana::pair< decltype("test3"_s),
-// 					disposer::output< decltype("test3"_s), float > >
-// 			> >
-// 		> >);
-//
-// 	M3 m3;
-// 	static_assert(std::is_same_v< decltype(m3.io),
-// 		hana::pair<
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::input< decltype("test1"_s), int, char, float > >
-// 			> >,
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::output< decltype("test1"_s), int, char, float > >
-// 			> >
-// 		> >);
-//
-// 	M4 m4;
-// 	static_assert(std::is_same_v< decltype(m4.io),
-// 		hana::pair<
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::input< decltype("test1"_s), int, char, float > >
-// 			> >,
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::output< decltype("test1"_s), int, char, float > >
-// 			> >
-// 		> >);
-//
-// 	M5 m5;
-// 	static_assert(std::is_same_v< decltype(m5.io),
-// 		hana::pair<
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::input< decltype("test1"_s), int > >,
-// 				hana::pair< decltype("test2"_s),
-// 					disposer::input< decltype("test2"_s), int, char, float > >,
-// 				hana::pair< decltype("test3"_s),
-// 					disposer::input< decltype("test3"_s), int, char, float > >
-// 			> >,
-// 			hana::type< hana::map<
-// 				hana::pair< decltype("test1"_s),
-// 					disposer::output< decltype("test1"_s), int > >,
-// 				hana::pair< decltype("test2"_s),
-// 					disposer::output< decltype("test2"_s), int, char, float > >,
-// 				hana::pair< decltype("test3"_s),
-// 					disposer::output< decltype("test3"_s), int, char, float > >
-// 			> >
-// 		> >);
+	constexpr auto m2 = module("module2"_s,
+		io_list(
+			out("test1"_s, hana::type_c< int >),
+			in("test1"_s, hana::type_c< int >),
+			out("test2"_s, hana::type_c< char >),
+			out("test3"_s, hana::type_c< float >),
+			in("test2"_s, hana::type_c< char >),
+			in("test3"_s, hana::type_c< float >)
+		));
+	static_assert(std::is_same_v< decltype(m2),
+		hana::type< disposer::module<
+			decltype("module2"_s),
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::input< decltype("test1"_s), int > >,
+				hana::pair< decltype("test2"_s),
+					disposer::input< decltype("test2"_s), char > >,
+				hana::pair< decltype("test3"_s),
+					disposer::input< decltype("test3"_s), float > >
+			>,
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::output< decltype("test1"_s), int > >,
+				hana::pair< decltype("test2"_s),
+					disposer::output< decltype("test2"_s), char > >,
+				hana::pair< decltype("test3"_s),
+					disposer::output< decltype("test3"_s), float > >
+			>
+		> > const >);
+
+	constexpr auto m3 = module("module3"_s,
+		io_list(
+			out("test1"_s, types),
+			in("test1"_s, types)
+		));
+	static_assert(std::is_same_v< decltype(m3),
+		hana::type< disposer::module<
+			decltype("module3"_s),
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::input< decltype("test1"_s), int, char, float > >
+			>,
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::output< decltype("test1"_s), int, char, float > >
+			>
+		> > const >);
+
+	constexpr auto m4 = module("module4"_s,
+		io_list(
+			in("test1"_s, types_set),
+			out("test1"_s, types_set)
+		));
+	static_assert(std::is_same_v< decltype(m4),
+		hana::type< disposer::module<
+			decltype("module4"_s),
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::input< decltype("test1"_s), int, char, float > >
+			>,
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::output< decltype("test1"_s), int, char, float > >
+			>
+		> > const >);
+
+	constexpr auto m5 = module("module5"_s,
+		io_list(
+			out("test1"_s, hana::type_c< int >),
+			in("test1"_s, hana::type_c< int >),
+			in("test2"_s, types),
+			in("test3"_s, types_set),
+			out("test2"_s, types),
+			out("test3"_s, types_set)
+		));
+	static_assert(std::is_same_v< decltype(m5),
+		hana::type< disposer::module<
+			decltype("module5"_s),
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::input< decltype("test1"_s), int > >,
+				hana::pair< decltype("test2"_s),
+					disposer::input< decltype("test2"_s), int, char, float > >,
+				hana::pair< decltype("test3"_s),
+					disposer::input< decltype("test3"_s), int, char, float > >
+			>,
+			hana::map<
+				hana::pair< decltype("test1"_s),
+					disposer::output< decltype("test1"_s), int > >,
+				hana::pair< decltype("test2"_s),
+					disposer::output< decltype("test2"_s), int, char, float > >,
+				hana::pair< decltype("test3"_s),
+					disposer::output< decltype("test3"_s), int, char, float > >
+			>
+		> > const >);
+
 }
