@@ -44,14 +44,15 @@ namespace disposer::interface::module{
 				return hana::is_a< out_tag, typename decltype(+type)::type >;
 			});
 
-		constexpr auto make_list = [](auto ... io){
+		constexpr auto io_type_list = [](auto ... io){
 			return hana::type_c< hana::map< hana::pair<
 				typename decltype(+io)::type::name,
 				typename decltype(+io)::type::type > ... > >;
 		};
 
 		return hana::make_pair(
-			hana::unpack(inputs, make_list), hana::unpack(outputs, make_list));
+			hana::unpack(inputs, io_type_list),
+			hana::unpack(outputs, io_type_list));
 	}
 
 
