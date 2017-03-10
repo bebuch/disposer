@@ -172,8 +172,10 @@ namespace disposer{
 
 
 	protected:
-		/// \brief The actual worker function called one times per trigger
-		virtual void exec() = 0;
+		/// \brief Called while module creation after the inputs are set
+		///
+		/// You should enable your outputs in this function.
+		virtual void input_ready(){}
 
 
 		/// \brief Enables the module for exec calls
@@ -187,12 +189,8 @@ namespace disposer{
 		virtual void disable()noexcept{}
 
 
-
-
-		/// \brief Called while module creation after the inputs are set
-		///
-		/// You should enable your outputs in this function.
-		virtual void input_ready(){}
+		/// \brief The actual worker function called one times per trigger
+		virtual void exec(){}
 
 
 	private:

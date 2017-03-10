@@ -18,10 +18,13 @@
 namespace disposer{
 
 
-	template < typename Name, typename Outputs, typename Inputs >
+	template < typename Name, typename Inputs, typename Outputs >
 	class module: public module_base{
 	public:
 		static_assert(hana::is_a< hana::string_tag, Name >);
+
+		using name = Name;
+
 
 		module(make_data const& data):
 			module_base(data, generate_input_list(), generate_output_list()){}
@@ -32,14 +35,14 @@ namespace disposer{
 
 	private:
 		input_list generate_input_list(){
-			return hana::unpack(in, [](auto const& ... in){
-				return input_list{ std::cref(hana::second(in)) ... };
+			return hana::unpack(in, [](auto& ... in){
+				return input_list{ hana::second(in) ... };
 			});
 		}
 
 		output_list generate_output_list(){
-			return hana::unpack(out, [](auto const& ... out){
-				return output_list{ std::cref(hana::second(out)) ... };
+			return hana::unpack(out, [](auto& ... out){
+				return output_list{ hana::second(out) ... };
 			});
 		}
 	};
