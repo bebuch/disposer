@@ -51,16 +51,15 @@ namespace disposer{
 namespace disposer::interface::module{
 
 
-	template < typename Name, typename IOLists >
-	constexpr auto module(Name&&, IOLists&&){
+	template < typename Name, typename ... IO >
+	constexpr auto module(Name&&, io< IO > ... ios){
 		static_assert(hana::is_a< hana::string_tag, Name >,
 			"Name must be of type boost::hana::string< ... >");
 
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
-		using io_lists = std::remove_cv_t< std::remove_reference_t< IOLists > >;
-
-		auto constexpr in = hana::first(io_lists{});
-		auto constexpr out = hana::second(io_lists{});
+		auto constexpr io_lists = io_list(ios ...);
+		auto constexpr in = hana::first(io_lists);
+		auto constexpr out = hana::second(io_lists);
 
 		return hana::type_c< ::disposer::module<
 				raw_name,

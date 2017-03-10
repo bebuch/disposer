@@ -11,10 +11,9 @@ constexpr auto types_set = hana::to_set(types);
 
 int main(){
 	constexpr auto m1 = module("module1"_s,
-		io_list(
 			in("test1"_s, hana::type_c< int >),
 			out("test1"_s, hana::type_c< int >)
-		));
+		);
 	static_assert(std::is_same_v< decltype(m1),
 		hana::type< disposer::module<
 			decltype("module1"_s),
@@ -29,14 +28,13 @@ int main(){
 		> > const >);
 
 	constexpr auto m2 = module("module2"_s,
-		io_list(
 			out("test1"_s, hana::type_c< int >),
 			in("test1"_s, hana::type_c< int >),
 			out("test2"_s, hana::type_c< char >),
 			out("test3"_s, hana::type_c< float >),
 			in("test2"_s, hana::type_c< char >),
 			in("test3"_s, hana::type_c< float >)
-		));
+		);
 	static_assert(std::is_same_v< decltype(m2),
 		hana::type< disposer::module<
 			decltype("module2"_s),
@@ -59,10 +57,9 @@ int main(){
 		> > const >);
 
 	constexpr auto m3 = module("module3"_s,
-		io_list(
 			out("test1"_s, types),
 			in("test1"_s, types)
-		));
+		);
 	static_assert(std::is_same_v< decltype(m3),
 		hana::type< disposer::module<
 			decltype("module3"_s),
@@ -77,10 +74,9 @@ int main(){
 		> > const >);
 
 	constexpr auto m4 = module("module4"_s,
-		io_list(
 			in("test1"_s, types_set),
 			out("test1"_s, types_set)
-		));
+		);
 	static_assert(std::is_same_v< decltype(m4),
 		hana::type< disposer::module<
 			decltype("module4"_s),
@@ -95,14 +91,13 @@ int main(){
 		> > const >);
 
 	constexpr auto m5 = module("module5"_s,
-		io_list(
 			out("test1"_s, hana::type_c< int >),
 			in("test1"_s, hana::type_c< int >),
 			in("test2"_s, types),
 			in("test3"_s, types_set),
 			out("test2"_s, types),
 			out("test3"_s, types_set)
-		));
+		);
 	static_assert(std::is_same_v< decltype(m5),
 		hana::type< disposer::module<
 			decltype("module5"_s),
