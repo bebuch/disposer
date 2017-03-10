@@ -73,8 +73,8 @@ namespace disposer::interface::module{
 
 
 	template < typename Name, typename Inputs, typename Outputs >
-	auto make_register_fn(
-		hana::type< ::disposer::module< Name, Inputs, Outputs > >
+	constexpr auto make_register_fn(
+		hana::basic_type< ::disposer::module< Name, Inputs, Outputs > >
 	){
 		return [](::disposer::module_declarant& add){
 			add(Name::c_str(), [](::disposer::make_data const& data){
