@@ -57,7 +57,7 @@ namespace disposer::interface::module{
 			"Name must be of type boost::hana::string< ... >");
 
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
-		auto constexpr io_lists = io_list(ios ...);
+		auto constexpr io_lists = make_io_lists(ios ...);
 		auto constexpr in = hana::first(io_lists);
 		auto constexpr out = hana::second(io_lists);
 

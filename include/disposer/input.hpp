@@ -196,12 +196,6 @@ namespace disposer{
 		};
 
 
-}
-
-
-namespace disposer::interface::module{
-
-
 	/// \brief Provid types for constructing an input
 	template < typename Name, typename InputType >
 	struct in_t: io< in_t< Name, InputType > >{
@@ -215,6 +209,13 @@ namespace disposer::interface::module{
 		using type = InputType;
 	};
 
+
+}
+
+
+namespace disposer::interface::module{
+
+
 	template < typename Name, typename Types >
 	constexpr auto in(Name&&, Types&&){
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
@@ -227,7 +228,7 @@ namespace disposer::interface::module{
 			using input_type =
 				::disposer::input< raw_name, typename raw_types::type >;
 
-			return in_t< raw_name, input_type >{};
+			return ::disposer::in_t< raw_name, input_type >{};
 		}else{
 			static_assert(hana::Foldable< raw_types >::value);
 			static_assert(hana::all_of(raw_types{},
@@ -239,7 +240,8 @@ namespace disposer::interface::module{
 			constexpr auto type_input =
 				::disposer::unpack_to< ::disposer::input >(string_and_types);
 
-			return in_t< raw_name, typename decltype(+type_input)::type >{};
+			return ::disposer::in_t<
+				raw_name, typename decltype(+type_input)::type >{};
 		}
 	}
 

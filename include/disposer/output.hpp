@@ -166,12 +166,6 @@ namespace disposer{
 	};
 
 
-}
-
-
-namespace disposer::interface::module{
-
-
 	/// \brief Provid types for constructing an output
 	template < typename Name, typename OutputType >
 	struct out_t: io< out_t< Name, OutputType > >{
@@ -185,6 +179,13 @@ namespace disposer::interface::module{
 		using type = OutputType;
 	};
 
+
+}
+
+
+namespace disposer::interface::module{
+
+
 	template < typename Name, typename Types >
 	constexpr auto out(Name&&, Types&&){
 		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
@@ -197,7 +198,7 @@ namespace disposer::interface::module{
 			using output_type =
 				::disposer::output< raw_name, typename raw_types::type >;
 
-			return out_t< raw_name, output_type >{};
+			return ::disposer::out_t< raw_name, output_type >{};
 		}else{
 			static_assert(hana::Foldable< raw_types >::value);
 			static_assert(hana::all_of(raw_types{},
@@ -209,7 +210,8 @@ namespace disposer::interface::module{
 			constexpr auto type_output =
 				::disposer::unpack_to< ::disposer::output >(string_and_types);
 
-			return out_t< raw_name, typename decltype(+type_output)::type >{};
+			return ::disposer::out_t<
+				raw_name, typename decltype(+type_output)::type >{};
 		}
 	}
 

@@ -18,12 +18,6 @@ namespace disposer{
 	namespace hana = ::boost::hana;
 
 
-}
-
-
-namespace disposer::interface::module{
-
-
 	struct in_tag;
 	struct out_tag;
 
@@ -35,7 +29,7 @@ namespace disposer::interface::module{
 	/// \brief Create two boost::hana::map's from the given input and output
 	///        types
 	template < typename ... IO >
-	constexpr auto io_list(io< IO > ...){
+	constexpr auto make_io_lists(io< IO > ...){
 		constexpr auto types = hana::tuple_t< IO ... >;
 		constexpr auto inputs = hana::filter(types, [](auto&& type){
 				return hana::is_a< in_tag, typename decltype(+type)::type >;
