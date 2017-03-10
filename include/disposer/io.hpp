@@ -24,31 +24,8 @@ namespace disposer{
 namespace disposer::interface::module{
 
 
-	template < typename Name, typename Types >
-	struct in;
-
-	template < typename T >
-	struct is_an_in: std::false_type{};
-
-	template < typename Name, typename Types >
-	struct is_an_in< in< Name, Types > >: std::true_type{};
-
-	template < typename T >
-	constexpr bool is_an_in_v = is_an_in< T >::value;
-
-
-	template < typename Name, typename Types >
-	struct out;
-
-	template < typename T >
-	struct is_an_out: std::false_type{};
-
-	template < typename Name, typename Types >
-	struct is_an_out< out< Name, Types > >: std::true_type{};
-
-	template < typename T >
-	constexpr bool is_an_out_v = is_an_out< T >::value;
-
+	struct in_tag;
+	struct out_tag;
 
 	/// \brief Base of input and output type deduction classes
 	template < typename IO >
@@ -61,10 +38,10 @@ namespace disposer::interface::module{
 	constexpr auto io_list(io< IO > ...){
 		constexpr auto types = hana::tuple_t< IO ... >;
 		constexpr auto inputs = hana::filter(types, [](auto&& type){
-				return hana::bool_c< is_an_in_v< typename decltype(+type)::type > >;
+				return hana::is_a< in_tag, typename decltype(+type)::type >;
 			});
 		constexpr auto outputs = hana::filter(types, [](auto&& type){
-				return hana::bool_c< is_an_out_v< typename decltype(+type)::type > >;
+				return hana::is_a< out_tag, typename decltype(+type)::type >;
 			});
 
 		constexpr auto make_list = [](auto ... io){

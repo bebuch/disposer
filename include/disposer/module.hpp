@@ -13,10 +13,9 @@
 #include "input.hpp"
 #include "output.hpp"
 #include "module_base.hpp"
-#include "disposer.hpp"
 
 
-namespace disposer::interface::module{
+namespace disposer{
 
 
 	template < typename Derived >
@@ -43,6 +42,17 @@ namespace disposer::interface::module{
 			});
 		}
 	};
+
+
+}
+
+namespace disposer::interface::module{
+
+
+	template < typename Name >
+	auto module(Name){
+
+	}
 
 
 }

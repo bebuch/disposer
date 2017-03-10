@@ -21,7 +21,7 @@ namespace disposer{
 	template < template < typename ... > typename Class >
 	struct unpack_to_t{
 		template < typename Seq >
-		auto operator()(Seq&& seq)const{
+		constexpr auto operator()(Seq&& seq)const{
 			return hana::unpack(static_cast< Seq&& >(seq), [](auto&& ... types){
 					return hana::type_c< Class<
 						typename decltype(+types)::type ... > >;
