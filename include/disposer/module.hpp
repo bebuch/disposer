@@ -33,6 +33,23 @@ namespace disposer{
 		Outputs out;
 
 
+// 		template < typename InputName >
+// 		bool is_input_active(InputName&& name){
+// 			static_assert(hana::is_a< hana::string_tag >(name),
+// 				"name must be of type boost::hana::string< ... >");
+// 			static_assert(hana::contains(in, name), "name is not an input");
+// 			return inputs_.find(name.c_str()) != inputs_.end();
+// 		}
+//
+// 		template < typename OutputName >
+// 		bool is_output_active(OutputName&& name){
+// 			static_assert(hana::is_a< hana::string_tag >(name),
+// 				"name must be of type boost::hana::string< ... >");
+// 			static_assert(hana::contains(out, name), "name is not an output");
+// 			return outputs_.find(name.c_str()) != outputs_.end();
+// 		}
+
+
 	private:
 		input_list generate_input_list(){
 			return hana::unpack(in, [](auto& ... in){

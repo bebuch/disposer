@@ -18,8 +18,8 @@ namespace disposer{
 	namespace hana = ::boost::hana;
 
 
-	struct in_tag;
-	struct out_tag;
+	struct in_tag{};
+	struct out_tag{};
 
 	/// \brief Base of input and output type deduction classes
 	template < typename IO >
@@ -40,7 +40,7 @@ namespace disposer{
 
 		constexpr auto io_type_list = [](auto ... io){
 			return hana::type_c< hana::map< hana::pair<
-				typename decltype(+io)::type::name,
+				typename decltype(+io)::type::name::value_type,
 				typename decltype(+io)::type::type > ... > >;
 		};
 

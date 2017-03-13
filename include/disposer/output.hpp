@@ -13,6 +13,7 @@
 #include "output_data.hpp"
 #include "unpack_to.hpp"
 #include "type_index.hpp"
+#include "output_name.hpp"
 #include "io.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -71,7 +72,7 @@ namespace disposer{
 	template < typename Name, typename ... T >
 	class output: public output_base{
 	public:
-		static_assert(hana::is_a< hana::string_tag, Name >);
+		static_assert(hana::is_a< output_name_tag, Name >);
 
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
@@ -166,20 +167,6 @@ namespace disposer{
 	};
 
 
-	/// \brief Provid types for constructing an output
-	template < typename Name, typename OutputType >
-	struct out_t: io< out_t< Name, OutputType > >{
-		/// \brief Tag for boost::hana
-		using hana_tag = out_tag;
-
-		/// \brief Output name as compile time string
-		using name = Name;
-
-		/// \brief Type of a disposer::output
-		using type = OutputType;
-	};
-
-
 }
 
 
@@ -187,34 +174,31 @@ namespace disposer::interface::module{
 
 
 	template < typename Name, typename Types >
-	constexpr auto out(Name&&, Types&&){
-		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
-		using raw_types = std::remove_cv_t< std::remove_reference_t< Types > >;
+	constexpr auto out(Name&& name, Types&& types){
+		using name_type = typename decltype(hana::typeid_(name))::type;
+		using types_type = typename decltype(hana::typeid_(types))::type;
 
-		static_assert(hana::is_a< hana::string_tag, raw_name >,
-			"Name must be of type boost::hana::string< ... >");
+		static_assert(hana::is_a< output_name_tag >(name),
+			"Name must be of type disposer::output_name< ... >");
 
-		if constexpr(hana::is_a< hana::type_tag, raw_types >){
-			using output_type =
-				::disposer::output< raw_name, typename raw_types::type >;
+		if constexpr(hana::is_a< hana::type_tag >(types)){
+			using output_type = ::disposer::output< name_type, types_type >;
 
-			return ::disposer::out_t< raw_name, output_type >{};
+			return ::disposer::out_t< name_type, output_type >{};
 		}else{
-			static_assert(hana::Foldable< raw_types >::value);
-			static_assert(hana::all_of(raw_types{},
-				hana::is_a< hana::type_tag >));
+			static_assert(hana::Foldable< types_type >::value);
+			static_assert(hana::all_of(types, hana::is_a< hana::type_tag >));
 
-			constexpr auto string_and_types = hana::prepend(
-				hana::to_tuple(raw_types{}), hana::type_c< Name >);
+			auto string_and_types =
+				hana::prepend(hana::to_tuple(types), hana::type_c< name_type >);
 
-			constexpr auto type_output =
+			auto type_output =
 				::disposer::unpack_to< ::disposer::output >(string_and_types);
 
 			return ::disposer::out_t<
-				raw_name, typename decltype(+type_output)::type >{};
+				name_type, typename decltype(type_output)::type >{};
 		}
 	}
-
 
 
 }
