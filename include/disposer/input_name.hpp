@@ -16,25 +16,14 @@
 namespace disposer{
 
 
-	/// \brief Provid types for constructing an input
-	template < typename Name, typename InputType >
-	struct in_t: io< in_t< Name, InputType > >{
-		/// \brief Tag for boost::hana
-		using hana_tag = in_tag;
-
-		/// \brief Output name as compile time string
-		using name = Name;
-
-		/// \brief Type of a disposer::input
-		using type = InputType;
-	};
-
-
 	struct input_name_tag{};
 
 	template < char ... C >
 	struct input_name: ct_name< C ... >{
 		using hana_tag = input_name_tag;
+
+		template < typename Types >
+		constexpr auto operator()(Types&& types)const noexcept;
 	};
 
 	template < char ... C >

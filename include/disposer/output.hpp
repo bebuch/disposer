@@ -167,19 +167,26 @@ namespace disposer{
 	};
 
 
-}
+	/// \brief Provid types for constructing an output
+	template < typename Name, typename OutputType >
+	struct out_t: io< out_t< Name, OutputType > >{
+		/// \brief Tag for boost::hana
+		using hana_tag = out_tag;
+
+		/// \brief Output name as compile time string
+		using name = Name;
+
+		/// \brief Type of a disposer::output
+		using type = OutputType;
+	};
 
 
-namespace disposer::interface::module{
-
-
-	template < typename Name, typename Types >
-	constexpr auto out(Name&& name, Types&& types){
-		using name_type = typename decltype(hana::typeid_(name))::type;
+	template < char ... C >
+	template < typename Types >
+	constexpr auto
+	output_name< C ... >::operator()(Types&& types)const noexcept{
+		using name_type = output_name< C ... >;
 		using types_type = typename decltype(hana::typeid_(types))::type;
-
-		static_assert(hana::is_a< output_name_tag >(name),
-			"Name must be of type disposer::output_name< ... >");
 
 		if constexpr(hana::is_a< hana::type_tag >(types)){
 			using output_type = ::disposer::output< name_type, types_type >;

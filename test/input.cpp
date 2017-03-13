@@ -11,7 +11,7 @@ constexpr auto types_set = hana::to_set(types);
 
 int main(){
 	constexpr auto m1 = disposer::make_io_lists(
-			in("test1"_in, hana::type_c< int >)
+			"test1"_in(hana::type_c< int >)
 		);
 	static_assert(std::is_same_v< decltype(m1),
 		hana::pair<
@@ -23,9 +23,9 @@ int main(){
 		> const >);
 
 	constexpr auto m2 = disposer::make_io_lists(
-			in("test1"_in, hana::type_c< int >),
-			in("test2"_in, hana::type_c< char >),
-			in("test3"_in, hana::type_c< float >)
+			"test1"_in(hana::type_c< int >),
+			"test2"_in(hana::type_c< char >),
+			"test3"_in(hana::type_c< float >)
 		);
 	static_assert(std::is_same_v< decltype(m2),
 		hana::pair<
@@ -41,7 +41,7 @@ int main(){
 		> const >);
 
 	constexpr auto m3 = disposer::make_io_lists(
-			in("test1"_in, types)
+			"test1"_in(types)
 		);
 	static_assert(std::is_same_v< decltype(m3),
 		hana::pair<
@@ -53,7 +53,7 @@ int main(){
 		> const >);
 
 	constexpr auto m4 = disposer::make_io_lists(
-			in("test1"_in, types_set)
+			"test1"_in(types_set)
 		);
 	static_assert(std::is_same_v< decltype(m4),
 		hana::pair<
@@ -65,9 +65,9 @@ int main(){
 		> const >);
 
 	constexpr auto m5 = disposer::make_io_lists(
-			in("test1"_in, hana::type_c< int >),
-			in("test2"_in, types),
-			in("test3"_in, types_set)
+			"test1"_in(hana::type_c< int >),
+			"test2"_in(types),
+			"test3"_in(types_set)
 		);
 	static_assert(std::is_same_v< decltype(m5),
 		hana::pair<

@@ -16,25 +16,14 @@
 namespace disposer{
 
 
-	/// \brief Provid types for constructing an output
-	template < typename Name, typename OutputType >
-	struct out_t: io< out_t< Name, OutputType > >{
-		/// \brief Tag for boost::hana
-		using hana_tag = out_tag;
-
-		/// \brief Output name as compile time string
-		using name = Name;
-
-		/// \brief Type of a disposer::output
-		using type = OutputType;
-	};
-
-
 	struct output_name_tag{};
 
 	template < char ... C >
 	struct output_name: ct_name< C ... >{
 		using hana_tag = output_name_tag;
+
+		template < typename Types >
+		constexpr auto operator()(Types&& types)const noexcept;
 	};
 
 	template < char ... C >

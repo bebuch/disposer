@@ -196,19 +196,26 @@ namespace disposer{
 		};
 
 
-}
+	/// \brief Provid types for constructing an input
+	template < typename Name, typename InputType >
+	struct in_t: io< in_t< Name, InputType > >{
+		/// \brief Tag for boost::hana
+		using hana_tag = in_tag;
+
+		/// \brief Output name as compile time string
+		using name = Name;
+
+		/// \brief Type of a disposer::input
+		using type = InputType;
+	};
 
 
-namespace disposer::interface::module{
-
-
-	template < typename Name, typename Types >
-	constexpr auto in(Name&& name, Types&& types){
-		using name_type = typename decltype(hana::typeid_(name))::type;
+	template < char ... C >
+	template < typename Types >
+	constexpr auto
+	input_name< C ... >::operator()(Types&& types)const noexcept{
+		using name_type = input_name< C ... >;
 		using types_type = typename decltype(hana::typeid_(types))::type;
-
-		static_assert(hana::is_a< input_name_tag >(name),
-			"Name must be of type disposer::input_name< ... >");
 
 		if constexpr(hana::is_a< hana::type_tag >(types)){
 			using input_type = ::disposer::input< name_type, types_type >;
