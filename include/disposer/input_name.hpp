@@ -10,7 +10,6 @@
 #define _disposer__input_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-#include "io.hpp"
 
 
 namespace disposer{

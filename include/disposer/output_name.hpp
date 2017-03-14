@@ -10,7 +10,6 @@
 #define _disposer__output_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-#include "io.hpp"
 
 
 namespace disposer{
@@ -37,7 +36,7 @@ namespace disposer{
 }
 
 #define DISPOSER_OUTPUT_NAME(s) \
-	::disposer::to_output_name(BOOST_HANA_STROUTG(s))
+	::disposer::to_output_name(BOOST_HANA_STRING(s))
 
 
 #ifdef BOOST_HANA_CONFIG_ENABLE_STRING_UDL
