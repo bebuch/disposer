@@ -194,7 +194,7 @@ namespace disposer{
 	template < typename Types >
 	constexpr auto
 	output_name< C ... >::operator()(Types const& types)const noexcept{
-		return (*this)(types, interface::module::meta_identity_);
+		return (*this)(types, hana::template_< self_t >);
 	}
 
 	template < char ... C >

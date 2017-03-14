@@ -10,7 +10,8 @@ constexpr auto types_set = hana::to_set(types);
 
 
 int main(){
-	using ident = meta_identity_t;
+	using ident =
+		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
 	constexpr auto m1 = disposer::make_io_lists(
 			"test1"_in(hana::type_c< int >)

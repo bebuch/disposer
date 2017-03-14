@@ -43,6 +43,10 @@ namespace disposer{
 	};
 
 
+	template < typename T >
+	using self_t = T;
+
+
 }
 
 
