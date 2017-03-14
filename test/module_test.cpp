@@ -13,13 +13,13 @@ int main(){
 	using ident =
 		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
-	constexpr auto m1 = module("module1"_s,
+	constexpr auto m1 = "module1"_module(
 			"test1"_in(hana::type_c< int >),
 			"test1"_out(hana::type_c< int >)
 		);
 	static_assert(std::is_same_v< decltype(m1),
 		hana::type< disposer::module<
-			decltype("module1"_s),
+			decltype("module1"_module),
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >
@@ -30,7 +30,7 @@ int main(){
 			>
 		> > const >);
 
-	constexpr auto m2 = module("module2"_s,
+	constexpr auto m2 = "module2"_module(
 			"test1"_out(hana::type_c< int >),
 			"test1"_in(hana::type_c< int >),
 			"test2"_out(hana::type_c< char >),
@@ -40,7 +40,7 @@ int main(){
 		);
 	static_assert(std::is_same_v< decltype(m2),
 		hana::type< disposer::module<
-			decltype("module2"_s),
+			decltype("module2"_module),
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >,
@@ -59,13 +59,13 @@ int main(){
 			>
 		> > const >);
 
-	constexpr auto m3 = module("module3"_s,
+	constexpr auto m3 = "module3"_module(
 			"test1"_out(types),
 			"test1"_in(types)
 		);
 	static_assert(std::is_same_v< decltype(m3),
 		hana::type< disposer::module<
-			decltype("module3"_s),
+			decltype("module3"_module),
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int, char, float > >
@@ -76,13 +76,13 @@ int main(){
 			>
 		> > const >);
 
-	constexpr auto m4 = module("module4"_s,
+	constexpr auto m4 = "module4"_module(
 			"test1"_in(types_set),
 			"test1"_out(types_set)
 		);
 	static_assert(std::is_same_v< decltype(m4),
 		hana::type< disposer::module<
-			decltype("module4"_s),
+			decltype("module4"_module),
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int, char, float > >
@@ -93,7 +93,7 @@ int main(){
 			>
 		> > const >);
 
-	constexpr auto m5 = module("module5"_s,
+	constexpr auto m5 = "module5"_module(
 			"test1"_out(hana::type_c< int >),
 			"test1"_in(hana::type_c< int >),
 			"test2"_in(types),
@@ -103,7 +103,7 @@ int main(){
 		);
 	static_assert(std::is_same_v< decltype(m5),
 		hana::type< disposer::module<
-			decltype("module5"_s),
+			decltype("module5"_module),
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >,

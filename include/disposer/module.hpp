@@ -13,6 +13,7 @@
 #include "input.hpp"
 #include "output.hpp"
 #include "module_base.hpp"
+#include "module_name.hpp"
 
 
 namespace disposer{
@@ -21,7 +22,7 @@ namespace disposer{
 	template < typename Name, typename Inputs, typename Outputs >
 	class module: public module_base{
 	public:
-		static_assert(hana::is_a< hana::string_tag, Name >);
+		static_assert(hana::is_a< module_name_tag, Name >);
 
 		using name = Name;
 
@@ -65,28 +66,27 @@ namespace disposer{
 	};
 
 
-}
+	template < char ... C >
+	template < typename ... IO >
+	constexpr auto
+	module_name< C ... >::operator()(io< IO > const& ... ios)const noexcept{
+		using name_type = module_name< C ... >;
+		auto io_lists = make_io_lists(ios ...);
+		auto in = hana::first(io_lists);
+		auto out = hana::second(io_lists);
 
-
-namespace disposer::interface::module{
-
-
-	template < typename Name, typename ... IO >
-	constexpr auto module(Name&&, io< IO > ... ios){
-		static_assert(hana::is_a< hana::string_tag, Name >,
-			"Name must be of type boost::hana::string< ... >");
-
-		using raw_name = std::remove_cv_t< std::remove_reference_t< Name > >;
-		auto constexpr io_lists = make_io_lists(ios ...);
-		auto constexpr in = hana::first(io_lists);
-		auto constexpr out = hana::second(io_lists);
-
-		return hana::type_c< ::disposer::module<
-				raw_name,
+		return hana::type_c< module<
+				name_type,
 				typename decltype(+in)::type,
 				typename decltype(+out)::type
 			> >;
 	}
+
+
+}
+
+
+namespace disposer::interface::module{
 
 
 	template < typename Name, typename Inputs, typename Outputs >
