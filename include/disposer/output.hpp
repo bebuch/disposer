@@ -162,8 +162,8 @@ namespace disposer{
 		std::vector< type_index > enabled_types()const override{
 			std::vector< type_index > result;
 			result.reserve(type_count);
-			for(auto const& [type, enabled]: enabled_types_){
-				if(enabled) result.push_back(type);
+			for(auto const& pair: enabled_types_){
+				if(pair.second) result.push_back(pair.first);
 			}
 			return result;
 		}
@@ -208,14 +208,14 @@ namespace disposer{
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
-		if constexpr(hana::is_a< hana::type_tag >(types)){
+		if constexpr(hana::is_a< hana::type_tag, Types >){
 			using output_type =
 				output< name_type, TypesMetafunction, typename Types::type >;
 
 			return out_t< name_type, output_type >{};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(types, hana::is_a< hana::type_tag >));
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			auto unpack_types = hana::concat(
 				hana::tuple_t< name_type, TypesMetafunction >,

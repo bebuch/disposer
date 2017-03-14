@@ -238,14 +238,14 @@ namespace disposer{
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
-		if constexpr(hana::is_a< hana::type_tag >(types)){
+		if constexpr(hana::is_a< hana::type_tag, Types >){
 			using input_type =
 				input< name_type, TypesMetafunction, typename Types::type >;
 
 			return in_t< name_type, input_type >{};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(types, hana::is_a< hana::type_tag >));
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			auto unpack_types = hana::concat(
 				hana::tuple_t< name_type, TypesMetafunction >,
