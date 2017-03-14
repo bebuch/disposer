@@ -98,6 +98,9 @@ namespace disposer{
 			"disposer::output types must not be references");
 
 
+		using name_type = Name;
+
+
 		using output_base::output_base;
 
 		output(): output_base(Name::c_str()) {}

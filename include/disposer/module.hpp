@@ -24,7 +24,7 @@ namespace disposer{
 	public:
 		static_assert(hana::is_a< module_name_tag, Name >);
 
-		using name = Name;
+		using name_type = Name;
 
 
 		module(make_data const& data):

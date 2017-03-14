@@ -69,6 +69,9 @@ namespace disposer{
 		>;
 
 
+		using name_type = Name;
+
+
 		using input_base::input_base;
 
 		constexpr input()noexcept: input_base(Name::c_str()) {}
