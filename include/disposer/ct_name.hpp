@@ -15,6 +15,9 @@
 namespace disposer{
 
 
+	namespace hana = boost::hana;
+
+
 	template < std::size_t N >
 	constexpr bool valid_name(std::array< char, N > const& name){
 		for(auto c: name){

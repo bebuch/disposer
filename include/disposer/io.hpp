@@ -53,4 +53,31 @@ namespace disposer{
 }
 
 
+namespace disposer::interface::module{
+
+
+	struct meta_identity_t{
+		template < typename T >
+		struct apply{
+			using type = typename T::type;
+		};
+
+		template < typename T >
+		constexpr auto operator()(T const&)const noexcept
+		{ return hana::type< typename T::type >{}; }
+	};
+
+	constexpr meta_identity_t meta_identity_{};
+
+
+}
+
+
+template <>
+struct boost::hana::Metafunction<
+	::disposer::interface::module::meta_identity_t >{
+	static constexpr bool value = true;
+};
+
+
 #endif

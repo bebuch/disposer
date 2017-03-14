@@ -22,7 +22,13 @@ namespace disposer{
 		using hana_tag = output_name_tag;
 
 		template < typename Types >
-		constexpr auto operator()(Types&& types)const noexcept;
+		constexpr auto operator()(Types const& types)const noexcept;
+
+		template < typename Types, typename TypesMetafunction >
+		constexpr auto operator()(
+			Types const& types,
+			TypesMetafunction const& types_metafunction
+		)const noexcept;
 	};
 
 	template < char ... C >

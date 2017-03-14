@@ -10,6 +10,8 @@ constexpr auto types_set = hana::to_set(types);
 
 
 int main(){
+	using ident = meta_identity_t;
+
 	constexpr auto m1 = disposer::make_io_lists(
 			"test1"_out(hana::type_c< int >)
 		);
@@ -18,7 +20,7 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
-					disposer::output< decltype("test1"_out), int > >
+					disposer::output< decltype("test1"_out), ident, int > >
 			> >
 		> const >);
 
@@ -32,11 +34,11 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
-					disposer::output< decltype("test1"_out), int > >,
+					disposer::output< decltype("test1"_out), ident, int > >,
 				hana::pair< decltype("test2"_s),
-					disposer::output< decltype("test2"_out), char > >,
+					disposer::output< decltype("test2"_out), ident, char > >,
 				hana::pair< decltype("test3"_s),
-					disposer::output< decltype("test3"_out), float > >
+					disposer::output< decltype("test3"_out), ident, float > >
 			> >
 		> const >);
 
@@ -48,7 +50,7 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
-					disposer::output< decltype("test1"_out), int, char, float > >
+					disposer::output< decltype("test1"_out), ident, int, char, float > >
 			> >
 		> const >);
 
@@ -60,7 +62,7 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
-					disposer::output< decltype("test1"_out), int, char, float > >
+					disposer::output< decltype("test1"_out), ident, int, char, float > >
 			> >
 		> const >);
 
@@ -74,11 +76,11 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
-					disposer::output< decltype("test1"_out), int > >,
+					disposer::output< decltype("test1"_out), ident, int > >,
 				hana::pair< decltype("test2"_s),
-					disposer::output< decltype("test2"_out), int, char, float > >,
+					disposer::output< decltype("test2"_out), ident, int, char, float > >,
 				hana::pair< decltype("test3"_s),
-					disposer::output< decltype("test3"_out), int, char, float > >
+					disposer::output< decltype("test3"_out), ident, int, char, float > >
 			> >
 		> const >);
 }

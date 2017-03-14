@@ -11,7 +11,6 @@
 
 #include "input_base.hpp"
 #include "input_data.hpp"
-#include "unpack_to.hpp"
 #include "input_name.hpp"
 #include "io.hpp"
 
@@ -33,10 +32,11 @@ namespace disposer{
 	using first_of_t = typename first_of< T ... >::type;
 
 
-	template < typename Name, typename ... T >
+	template < typename Name, typename TypesMetafunction, typename ... T >
 	class input: public input_base{
 	public:
 		static_assert(hana::is_a< input_name_tag, Name >);
+		static_assert(hana::Metafunction< TypesMetafunction >::value);
 
 		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
 
@@ -186,12 +186,13 @@ namespace disposer{
 	};
 
 
-	template < typename Name, typename ... T >
-	std::unordered_map< type_index, typename input< Name, T ... >
-		::add_function > const input< Name, T ... >::type_map_ = {
+	template < typename Name, typename TypesMetafunction, typename ... T >
+	std::unordered_map< type_index,
+		typename input< Name, TypesMetafunction, T ... >::add_function > const
+		input< Name, TypesMetafunction, T ... >::type_map_ = {
 			{
 				type_index::type_id_with_cvr< T >(),
-				&input< Name, T ... >::add< T >
+				&input< Name, TypesMetafunction, T ... >::add< T >
 			} ...
 		};
 
@@ -213,29 +214,40 @@ namespace disposer{
 	template < char ... C >
 	template < typename Types >
 	constexpr auto
-	input_name< C ... >::operator()(Types&& types)const noexcept{
-		using name_type = input_name< C ... >;
-		using types_type = typename decltype(hana::typeid_(types))::type;
-
-		if constexpr(hana::is_a< hana::type_tag >(types)){
-			using input_type = ::disposer::input< name_type, types_type >;
-
-			return ::disposer::in_t< name_type, input_type >{};
-		}else{
-			static_assert(hana::Foldable< types_type >::value);
-			static_assert(hana::all_of(types, hana::is_a< hana::type_tag >));
-
-			auto string_and_types =
-				hana::prepend(hana::to_tuple(types), hana::type_c< name_type >);
-
-			auto type_input =
-				::disposer::unpack_to< ::disposer::input >(string_and_types);
-
-			return ::disposer::in_t<
-				name_type, typename decltype(type_input)::type >{};
-		}
+	input_name< C ... >::operator()(Types const& types)const noexcept{
+		return (*this)(types, interface::module::meta_identity_);
 	}
 
+	template < char ... C >
+	template < typename Types, typename TypesMetafunction >
+	constexpr auto input_name< C ... >::operator()(
+		Types const& types,
+		TypesMetafunction const&
+	)const noexcept{
+		using name_type = input_name< C ... >;
+
+		static_assert(hana::Metafunction< TypesMetafunction >::value,
+			"TypesMetafunction must model boost::hana::Metafunction");
+
+		if constexpr(hana::is_a< hana::type_tag >(types)){
+			using input_type =
+				input< name_type, TypesMetafunction, typename Types::type >;
+
+			return in_t< name_type, input_type >{};
+		}else{
+			static_assert(hana::Foldable< Types >::value);
+			static_assert(hana::all_of(types, hana::is_a< hana::type_tag >));
+
+			auto unpack_types = hana::concat(
+				hana::tuple_t< name_type, TypesMetafunction >,
+				hana::to_tuple(types));
+
+			auto type_input =
+				hana::unpack(unpack_types, hana::template_< input >);
+
+			return in_t< name_type, typename decltype(type_input)::type >{};
+		}
+	}
 
 }
 
