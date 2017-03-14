@@ -74,7 +74,10 @@ namespace disposer{
 		static_assert(hana::is_a< output_name_tag, Name >);
 		static_assert(hana::Metafunction< TypesMetafunction >::value);
 
-		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
+		static constexpr auto subtypes = hana::make_set(hana::type_c< T > ...);
+
+		static constexpr auto types =
+			hana::make_set(TypesMetafunction{}(hana::type_c< T >) ...);
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
@@ -82,11 +85,17 @@ namespace disposer{
 		static_assert(type_count != 0,
 			"disposer::output needs at least on type");
 
+		static_assert(!hana::any_of(subtypes, hana::traits::is_const),
+			"disposer::output subtypes must not be const");
+
+		static_assert(!hana::any_of(subtypes, hana::traits::is_reference),
+			"disposer::output subtypes must not be references");
+
 		static_assert(!hana::any_of(types, hana::traits::is_const),
-			"disposer::output types are not allowed to be const");
+			"disposer::output types must not be const");
 
 		static_assert(!hana::any_of(types, hana::traits::is_reference),
-			"disposer::output types are not allowed to be references");
+			"disposer::output types must not be references");
 
 
 		using output_base::output_base;

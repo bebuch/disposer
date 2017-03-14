@@ -56,6 +56,7 @@ namespace disposer{
 namespace disposer::interface::module{
 
 
+	/// \brief Hana Metafunction type that does nothing
 	struct meta_identity_t{
 		template < typename T >
 		struct apply{
@@ -67,14 +68,15 @@ namespace disposer::interface::module{
 		{ return hana::type< typename T::type >{}; }
 	};
 
+	/// \brief Hana Metafunction that does nothing
 	constexpr meta_identity_t meta_identity_{};
 
 
 }
 
 
-template <>
-struct boost::hana::Metafunction<
+/// \brief Register disposer::interface::module::meta_identity_t
+template <> struct boost::hana::Metafunction<
 	::disposer::interface::module::meta_identity_t >{
 	static constexpr bool value = true;
 };
