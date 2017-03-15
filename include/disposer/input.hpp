@@ -95,9 +95,9 @@ namespace disposer{
 			return hana::any(hana::values(enabled_map_));
 		}
 
-		template < typename T >
+		template < typename U >
 		constexpr bool
-		is_enabled(hana::basic_type< T > const& type)const noexcept{
+		is_enabled(hana::basic_type< U > const& type)const noexcept{
 			return enabled_map_[type];
 		}
 
@@ -124,8 +124,8 @@ namespace disposer{
 				));
 			}
 
-			// Call add< type >(id, value, last_use)
-			(this->*(iter->second))(id, value, last_use);
+			auto const add_type_fn = this->*(iter->second);
+			add_type_fn(id, value, last_use);
 		}
 
 
