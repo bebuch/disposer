@@ -94,7 +94,7 @@ namespace disposer::interface::module{
 		hana::basic_type< ::disposer::module< Name, Inputs, Outputs > >
 	){
 		return [](::disposer::module_declarant& add){
-			add(Name::c_str(), [](::disposer::make_data const& data){
+			add(Name::value.c_str(), [](::disposer::make_data const& data){
 				return std::make_unique<
 					::disposer::module< Name, Inputs, Outputs > >(data);
 			});

@@ -74,7 +74,7 @@ namespace disposer{
 
 		using input_base::input_base;
 
-		constexpr input()noexcept: input_base(Name::c_str()) {}
+		constexpr input()noexcept: input_base(Name::value.c_str()) {}
 
 
 		std::multimap< std::size_t, value_type > get(){

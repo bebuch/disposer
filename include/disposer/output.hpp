@@ -103,7 +103,7 @@ namespace disposer{
 
 		using output_base::output_base;
 
-		output(): output_base(Name::c_str()) {}
+		output(): output_base(Name::value.c_str()) {}
 
 
 		template < typename V, typename W >
