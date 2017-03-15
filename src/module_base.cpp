@@ -13,27 +13,23 @@ namespace disposer{
 
 
 	module_base::module_base(
-		make_data const& data,
+		std::string const& type_name,
+		std::string const& chain,
+		std::string const& name,
+		std::size_t number,
 		input_list&& inputs,
 		output_list&& outputs
 	):
-		type_name(data.type_name),
-		chain(data.chain),
-		name(data.name),
-		number(data.number),
+		type_name(type_name),
+		chain(chain),
+		name(name),
+		number(number),
 		id_increase(1),
 		id(id_),
 		id_(0),
 		inputs_(std::move(inputs)),
 		outputs_(std::move(outputs))
 		{}
-
-	module_base::module_base(
-		make_data const& data,
-		output_list&& outputs,
-		input_list&& inputs
-	):
-		module_base(data, std::move(inputs), std::move(outputs)){}
 
 
 	void module_base::cleanup(chain_key, std::size_t id)noexcept{

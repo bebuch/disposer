@@ -27,8 +27,14 @@ namespace disposer{
 		using name_type = Name;
 
 
-		module(make_data const& data):
-			module_base(data, generate_input_list(), generate_output_list()){}
+		module(
+			std::string const& chain,
+			std::string const& name,
+			std::size_t number
+		): module_base(
+			Name::value.c_str(), chain, name, number,
+			generate_input_list(), generate_output_list()){}
+
 
 		Inputs in;
 		Outputs out;
@@ -96,7 +102,9 @@ namespace disposer::interface::module{
 		return [](::disposer::module_declarant& add){
 			add(Name::value.c_str(), [](::disposer::make_data const& data){
 				return std::make_unique<
-					::disposer::module< Name, Inputs, Outputs > >(data);
+					::disposer::module< Name, Inputs, Outputs > >(
+						data.chain, data.name, data.number
+					);
 			});
 		};
 	}

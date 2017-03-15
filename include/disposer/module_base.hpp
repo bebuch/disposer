@@ -52,18 +52,14 @@ namespace disposer{
 			std::vector< std::reference_wrapper< output_base > >;
 
 
-		/// \brief Constructor with optional outputs
+		/// \brief Constructor
 		module_base(
-			make_data const& data,
+			std::string const& type_name,
+			std::string const& chain,
+			std::string const& name,
+			std::size_t number,
 			input_list&& inputs,
-			output_list&& outputs = {}
-		);
-
-		/// \brief Constructor with optional inputs
-		module_base(
-			make_data const& data,
-			output_list&& outputs,
-			input_list&& inputs = {}
+			output_list&& outputs
 		);
 
 		/// \brief Modules are not copyable
