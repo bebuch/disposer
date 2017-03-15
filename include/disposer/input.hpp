@@ -90,37 +90,45 @@ namespace disposer{
 			return result;
 		}
 
+		bool has_enabled_types()const noexcept{
+			return hana::any(hana::values(enabled_map_));
+		}
+
+		constexpr auto type_enabled_list()const noexcept{
+			return enabled_map_;
+		}
+
 		std::vector< type_index > enabled_types()const{
 			std::vector< type_index > result;
 			result.reserve(type_count);
-			for(auto& type: enabled_map_){
+			for(auto& type: rt_enabled_map_){
 				if(type.second) result.push_back(type.first);
 			}
 			return result;
 		}
 
 
-		template < typename TransformFunction >
-		std::vector< type_index > enabled_types_transformed(
-			// hana::basic_type< Out >(*fn)(hana::basic_type< In >)
-			TransformFunction fn
-		)const{
-			std::unordered_map< type_index, type_index > transform_map = {
-				{
-					type_index::type_id_with_cvr< T >(),
-					type_index::type_id_with_cvr<
-						typename decltype(fn(hana::type_c< T >))::type >()
-				} ...
-			};
-
-			std::vector< type_index > result;
-			result.reserve(type_count);
-			for(auto& type: enabled_map_){
-				if(!type.second) continue;
-				result.push_back(transform_map.at(type.first));
-			}
-			return result;
-		}
+// 		template < typename TransformFunction >
+// 		std::vector< type_index > enabled_types_transformed(
+// 			// hana::basic_type< Out >(*fn)(hana::basic_type< In >)
+// 			TransformFunction fn
+// 		)const{
+// 			std::unordered_map< type_index, type_index > transform_map = {
+// 				{
+// 					type_index::type_id_with_cvr< T >(),
+// 					type_index::type_id_with_cvr<
+// 						typename decltype(fn(hana::type_c< T >))::type >()
+// 				} ...
+// 			};
+//
+// 			std::vector< type_index > result;
+// 			result.reserve(type_count);
+// 			for(auto& type: enabled_map_){
+// 				if(!type.second) continue;
+// 				result.push_back(transform_map.at(type.first));
+// 			}
+// 			return result;
+// 		}
 
 
 	private:
@@ -155,22 +163,22 @@ namespace disposer{
 
 		virtual std::vector< type_index > type_list()const override{
 			std::vector< type_index > result;
-			result.reserve(enabled_map_.size());
-			for(auto& pair: enabled_map_){
+			result.reserve(type_count);
+			hana::for_each(enabled_map_, [&result](auto const& pair){
 				result.push_back(pair.first);
-			}
+			});
 			return result;
 		}
 
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		)noexcept override{
-			for(auto& type: types){
-				auto iter = enabled_map_.find(type);
+			for(auto const& type: types){
+				auto iter = rt_enabled_map_.find(type);
 
-				if(iter == enabled_map_.end()) return false;
+				if(iter == rt_enabled_map_.end()) return false;
 
-				iter->second = true;
+				iter->second.get() = true;
 			}
 
 			return true;
@@ -188,9 +196,14 @@ namespace disposer{
 
 		static std::unordered_map< type_index, add_function > const type_map_;
 
-		std::unordered_map< type_index, bool > enabled_map_ = {
-			{ type_index::type_id_with_cvr< T >(), false } ...
-		};
+		hana::map< hana::pair< decltype(hana::type_c< T >), bool > ... >
+			enabled_map_;
+
+		std::unordered_map< type_index, std::reference_wrapper< bool > > const
+			rt_enabled_map_ = { {
+				type_index::type_id_with_cvr< T >(),
+				enabled_map_[hana::type_c< T >]
+			} ... };
 
 		std::mutex mutex_;
 
