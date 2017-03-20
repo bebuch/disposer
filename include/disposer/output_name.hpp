@@ -41,7 +41,7 @@ namespace disposer{
 
 }
 
-#define DISPOSER_OUTPUT_NAME(s) \
+#define DISPOSER_OUTPUT(s) \
 	::disposer::to_output_name(BOOST_HANA_STRING(s))
 
 

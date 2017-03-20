@@ -35,7 +35,7 @@ namespace disposer{
 
 }
 
-#define DISPOSER_MODULE_NAME(s) \
+#define DISPOSER_MODULE(s) \
 	::disposer::to_module_name(BOOST_HANA_STRING(s))
 
 
