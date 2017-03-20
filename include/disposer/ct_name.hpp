@@ -11,6 +11,8 @@
 
 #include <boost/hana.hpp>
 
+#include <array>
+
 
 namespace disposer{
 
