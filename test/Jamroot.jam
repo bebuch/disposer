@@ -95,3 +95,9 @@ exe module_test
 	module_test.cpp
 	/disposer//disposer
 	;
+
+exe parameter
+	:
+	parameter.cpp
+	/disposer//disposer
+	;
