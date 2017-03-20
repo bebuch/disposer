@@ -20,30 +20,16 @@ namespace disposer{
 
 	struct stream_parser{
 		template < typename T >
-		T operator()(std::string const& value, hana::basic_type< T > type)const;
+		T operator()(std::string const& value, hana::basic_type< T >)const{
+			std::istringstream is(value);
+			T result;
+			if constexpr(std::is_same_v< T, bool >){
+				is >> std::boolalpha;
+			}
+			is >> result;
+			return result;
+		}
 	};
-
-	template < typename T >
-	T stream_parser::operator()(
-		std::string const& value,
-		hana::basic_type< T >
-	)const{
-		std::istringstream is(value);
-		typename hana::basic_type< T >::type result;
-		is >> result;
-		return result;
-	}
-
-	template <>
-	bool stream_parser::operator()(
-		std::string const& value,
-		hana::basic_type< bool >
-	)const{
-		std::istringstream is(value);
-		bool result;
-		is >> std::boolalpha >> result;
-		return result;
-	}
 
 
 	struct parameter_name_tag{};
