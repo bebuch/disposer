@@ -18,7 +18,7 @@
 namespace disposer{
 
 
-	struct stream_parser{
+	struct parameter_parser{
 		template < typename T >
 		T operator()(std::string const& value, hana::basic_type< T >)const{
 			std::istringstream is(value);
@@ -38,10 +38,10 @@ namespace disposer{
 	struct parameter_name: ct_name< C ... >{
 		using hana_tag = parameter_name_tag;
 
-		template < typename Types, typename ParserFunction = stream_parser >
+		template < typename Types, typename ParserFunction = parameter_parser >
 		constexpr auto operator()(
 			Types const& types,
-			ParserFunction const& parser_fn = stream_parser()
+			ParserFunction const& parser_fn = parameter_parser()
 		)const noexcept;
 	};
 

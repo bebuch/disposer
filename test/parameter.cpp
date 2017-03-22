@@ -15,21 +15,21 @@ int main(){
 	constexpr auto p3 = "p3"_param(types_set);
 
 	static_assert(std::is_same_v< decltype(p1), disposer::param_t<
-			decltype("p1"_param), disposer::stream_parser,
+			decltype("p1"_param), disposer::parameter_parser,
 			disposer::parameter< decltype("p1"_param), int >
 		> const >);
 	static_assert(std::is_same_v< decltype(p2), disposer::param_t<
-			decltype("p2"_param), disposer::stream_parser,
+			decltype("p2"_param), disposer::parameter_parser,
 			disposer::parameter< decltype("p2"_param), int, long, float >
 		> const >);
 	static_assert(std::is_same_v< decltype(p3), disposer::param_t<
-			decltype("p3"_param), disposer::stream_parser,
+			decltype("p3"_param), disposer::parameter_parser,
 			disposer::parameter< decltype("p3"_param), int, long, float >
 		> const >);
 
-	typename decltype(p1)::type pv1(disposer::stream_parser(), "5");
-	typename decltype(p2)::type pv2(disposer::stream_parser(), "5");
-	typename decltype(p3)::type pv3(disposer::stream_parser(), "5");
+	typename decltype(p1)::type pv1(disposer::parameter_parser(), "5");
+	typename decltype(p2)::type pv2(disposer::parameter_parser(), "5");
+	typename decltype(p3)::type pv3(disposer::parameter_parser(), "5");
 
 	(void)pv1;
 	(void)pv2;
