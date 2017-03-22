@@ -20,10 +20,18 @@ namespace disposer{
 	public:
 		static_assert(hana::is_a< parameter_name_tag, Name >);
 
-		static constexpr auto types = hana::make_set(hana::type_c< T > ...);
+		using name_type = Name;
+
+		static constexpr std::string_view name{ name_type::value.c_str() };
+
+
+		static constexpr auto types = hana::tuple_t< T ... >;
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
+
+		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
+			"disposer::parameter needs all types T to be unique");
 
 		static_assert(type_count != 0,
 			"disposer::parameter needs at least on type");
@@ -35,15 +43,17 @@ namespace disposer{
 			"disposer::parameter types must not be references");
 
 
-		using name_type = Name;
-
-
 		template < typename ParserFunction >
 		parameter(ParserFunction&& parser_fn, std::string const& value):
 			type_value_map_(hana::make_map(hana::make_pair(
 				hana::type_c< T >, parser_fn(value, hana::type_c< T >)) ...
 			)){}
 
+
+		decltype(auto) operator()()const{
+			static_assert(type_count == 1);
+			return (*this)(types[hana::int_c< 0 >]);
+		}
 
 		template < typename Type >
 		decltype(auto) operator()(Type const& type)const{
