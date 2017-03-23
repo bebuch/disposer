@@ -41,7 +41,7 @@ namespace disposer{
 		template < typename Types, typename ParserFunction = parameter_parser >
 		constexpr auto operator()(
 			Types const& types,
-			ParserFunction const& parser_fn = parameter_parser()
+			ParserFunction&& parser_fn = parameter_parser()
 		)const noexcept;
 	};
 

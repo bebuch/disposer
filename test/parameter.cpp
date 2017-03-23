@@ -50,6 +50,11 @@ int main(){
 	constexpr auto p3 = "p3"_param(types_set);
 	constexpr auto p4 = "p4"_param(hana::type_c< std::string >,
 		string_parser());
+	constexpr auto p5 = "p5"_param(hana::type_c< int >,
+		[](std::string const&, hana::basic_type< int >){ return 3; });
+	constexpr auto p6 = "p6"_param(types,
+		[](std::string const&, auto t)
+			->typename decltype(t)::type{ return {}; });
 
 	static_assert(std::is_same_v< decltype(p1), disposer::param_t<
 			decltype("p1"_param), disposer::parameter_parser,
@@ -68,10 +73,12 @@ int main(){
 			disposer::parameter< decltype("p4"_param), std::string >
 		> const >);
 
-	typename decltype(p1)::type pv1(disposer::parameter_parser(), "5");
-	typename decltype(p2)::type pv2(disposer::parameter_parser(), "5");
-	typename decltype(p3)::type pv3(disposer::parameter_parser(), "5");
-	typename decltype(p4)::type pv4(disposer::parameter_parser(), "5");
+	typename decltype(p1)::type pv1(std::move(p1.parser), "5");
+	typename decltype(p2)::type pv2(std::move(p2.parser), "5");
+	typename decltype(p3)::type pv3(std::move(p3.parser), "5");
+	typename decltype(p4)::type pv4(std::move(p4.parser), "5");
+	typename decltype(p5)::type pv5(std::move(p5.parser), "5");
+	typename decltype(p6)::type pv6(std::move(p6.parser), "5");
 
 	is_equal(pv1, 5);
 	is_equal(pv2, hana::type_c< int >, 5);
@@ -81,4 +88,8 @@ int main(){
 	is_equal(pv3, hana::type_c< long >, 5l);
 	is_equal(pv3, hana::type_c< float >, 5.f);
 	is_equal(pv4, std::string("5"));
+	is_equal(pv5, 3);
+	is_equal(pv6, hana::type_c< int >, 0);
+	is_equal(pv6, hana::type_c< long >, 0l);
+	is_equal(pv6, hana::type_c< float >, 0.f);
 }

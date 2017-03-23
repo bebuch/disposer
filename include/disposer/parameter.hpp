@@ -82,8 +82,8 @@ namespace disposer{
 		/// \brief Type of a disposer::parameter
 		using type = ParameterType;
 
-		/// \brief Type of the parameter parser
-		using parser = ParserFunction;
+		/// \brief Parameter parser
+		ParserFunction parser;
 	};
 
 
@@ -91,7 +91,7 @@ namespace disposer{
 	template < typename Types, typename ParserFunction >
 	constexpr auto parameter_name< C ... >::operator()(
 		Types const& types,
-		ParserFunction const& parser_fn
+		ParserFunction&& parser_fn
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
 
@@ -104,31 +104,31 @@ namespace disposer{
 		constexpr auto is_parser_callable_with =
 			hana::curry< 2 >(is_callable_with)(hana::type_c< ParserFunction >);
 
-		static_assert(std::is_default_constructible_v< ParserFunction >,
-			"Type of parser_fn must be default constructible");
-
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
 			static_assert(is_parser_callable_with(Types{}),
-				"parser_fn must be callable with hana::type parameter types");
+				"need function signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)'");
 
 			using result_type =
 				decltype(parser_fn(std::declval< std::string >(), types));
 
 			static_assert(std::is_same_v< typename Types::type, result_type >,
-				"need function signature 'T parser_fn(hana::basic_type< T >)'");
+				"need function signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)' (wrong return type)");
 
 			using type_parameter =
 				parameter< name_type, typename Types::type >;
 
-			return param_t< name_type, ParserFunction, type_parameter >{};
+			return param_t< name_type, ParserFunction, type_parameter >{
+				static_cast< ParserFunction&& >(parser_fn)};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			static_assert(hana::all_of(Types{}, is_parser_callable_with),
-				"parser_fn must be callable with any hana::type in parameter "
-				"types");
+				"need function signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)'");
 
 			constexpr auto valid_return_type = [](auto&& t){
 				return std::is_same_v<
@@ -137,7 +137,8 @@ namespace disposer{
 						(std::declval< std::string >(), t)) >;
 			};
 			static_assert(hana::all_of(Types{}, valid_return_type),
-				"need function signature 'T parser_fn(hana::basic_type< T >)'");
+				"need function signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)' (wrong return type)");
 
 			auto unpack_types = hana::concat(
 				hana::tuple_t< name_type >,
@@ -147,7 +148,8 @@ namespace disposer{
 				hana::unpack(unpack_types, hana::template_< parameter >);
 
 			return param_t< name_type, ParserFunction,
-				typename decltype(type_parameter)::type >{};
+				typename decltype(type_parameter)::type >{
+				static_cast< ParserFunction&& >(parser_fn)};
 		}
 	}
 
