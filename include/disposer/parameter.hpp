@@ -41,7 +41,7 @@ namespace disposer{
 
 
 		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
-			"disposer::parameter needs all types T to be unique");
+			"disposer::parameter needs all types T to be distinct");
 
 		static_assert(type_count != 0,
 			"disposer::parameter needs at least on type");

@@ -44,10 +44,10 @@ namespace disposer{
 
 		static_assert(hana::length(subtypes) ==
 			hana::length(hana::to_set(subtypes)),
-			"disposer::input needs all subtypes T to be unique");
+			"disposer::input needs all subtypes T to be distinct");
 
 		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
-			"disposer::input needs all types T to be unique");
+			"disposer::input needs all types T to be distinct");
 
 		static_assert(type_count != 0,
 			"disposer::input needs at least on type");
