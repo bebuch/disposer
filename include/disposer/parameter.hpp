@@ -142,9 +142,10 @@ namespace disposer{
 				decltype(std::declval< ParserFunction >()
 					(std::declval< std::string >(), type));
 
-			static_assert(std::is_same_v< bool, enable_return_type >,
+			static_assert(std::is_convertible_v< enable_return_type, bool >,
 				"need enable_fn signature 'bool enable_fn("
-				"hana::basic_type< T >)' (return type must be bool)");
+				"hana::basic_type< T >)' (return type must be convertible to "
+				"bool)");
 
 			static_assert(std::is_same_v< typename decltype(+type)::type,
 				parser_return_type >,
