@@ -38,6 +38,10 @@ namespace disposer{
 		static_assert(hana::is_a< input_name_tag, Name >);
 		static_assert(hana::Metafunction< TypesMetafunction >::value);
 
+
+		using name_type = Name;
+
+
 		static constexpr auto subtypes = hana::make_set(hana::type_c< T > ...);
 
 		static constexpr auto types =
@@ -67,9 +71,6 @@ namespace disposer{
 			input_data< first_of_t< T ... > >,
 			std::variant< input_data< T > ... >
 		>;
-
-
-		using name_type = Name;
 
 
 		using input_base::input_base;

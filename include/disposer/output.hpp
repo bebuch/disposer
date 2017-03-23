@@ -74,6 +74,10 @@ namespace disposer{
 		static_assert(hana::is_a< output_name_tag, Name >);
 		static_assert(hana::Metafunction< TypesMetafunction >::value);
 
+
+		using name_type = Name;
+
+
 		static constexpr auto subtypes = hana::make_set(hana::type_c< T > ...);
 
 		static constexpr auto types =
@@ -96,9 +100,6 @@ namespace disposer{
 
 		static_assert(!hana::any_of(types, hana::traits::is_reference),
 			"disposer::output types must not be references");
-
-
-		using name_type = Name;
 
 
 		using output_base::output_base;
