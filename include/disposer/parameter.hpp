@@ -128,11 +128,11 @@ namespace disposer{
 						(std::declval< std::string >(), type)){});
 
 			static_assert(is_enable_callable_with(hana::type_c< T >),
-				"need enable_fn signature 'bool enable_fn("
+				"need enable_fn signature 'auto enable_fn("
 				"hana::basic_type< T >)'");
 
 			static_assert(is_parser_callable_with(hana::type_c< T >),
-				"need parser_fn signature 'T parser_fn(std::string, "
+				"need parser_fn signature 'auto parser_fn(std::string, "
 				"hana::basic_type< T >)'");
 
 			using enable_return_type =
@@ -143,9 +143,8 @@ namespace disposer{
 					(std::declval< std::string >(), type));
 
 			static_assert(std::is_convertible_v< enable_return_type, bool >,
-				"need enable_fn signature 'bool enable_fn("
-				"hana::basic_type< T >)' (return type must be convertible to "
-				"bool)");
+				"need enable_fn signature 'Bool enable_fn("
+				"hana::basic_type< T >)' (with Bool convertible to bool)");
 
 			static_assert(std::is_same_v< typename decltype(+type)::type,
 				parser_return_type >,
