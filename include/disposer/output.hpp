@@ -78,13 +78,20 @@ namespace disposer{
 		using name_type = Name;
 
 
-		static constexpr auto subtypes = hana::make_set(hana::type_c< T > ...);
+		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
 		static constexpr auto types =
-			hana::make_set(TypesMetafunction{}(hana::type_c< T >) ...);
+			hana::transform(subtypes, TypesMetafunction{});
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
+
+		static_assert(hana::length(subtypes) ==
+			hana::length(hana::to_set(subtypes)),
+			"disposer::output needs all subtypes T to be unique");
+
+		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
+			"disposer::output needs all types T to be unique");
 
 		static_assert(type_count != 0,
 			"disposer::output needs at least on type");

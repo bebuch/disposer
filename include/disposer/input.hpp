@@ -23,14 +23,6 @@
 
 namespace disposer{
 
-	template < typename T, typename ... >
-	struct first_of{
-		using type = T;
-	};
-
-	template < typename ... T >
-	using first_of_t = typename first_of< T ... >::type;
-
 
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	class input: public input_base{
@@ -42,13 +34,20 @@ namespace disposer{
 		using name_type = Name;
 
 
-		static constexpr auto subtypes = hana::make_set(hana::type_c< T > ...);
+		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
 		static constexpr auto types =
-			hana::make_set(TypesMetafunction{}(hana::type_c< T >) ...);
+			hana::transform(subtypes, TypesMetafunction{});
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
+
+		static_assert(hana::length(subtypes) ==
+			hana::length(hana::to_set(subtypes)),
+			"disposer::input needs all subtypes T to be unique");
+
+		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
+			"disposer::input needs all types T to be unique");
 
 		static_assert(type_count != 0,
 			"disposer::input needs at least on type");
@@ -68,8 +67,10 @@ namespace disposer{
 
 		using value_type = std::conditional_t<
 			type_count == 1,
-			input_data< first_of_t< T ... > >,
-			std::variant< input_data< T > ... >
+			input_data< typename decltype(+types[hana::int_c< 0 >])::type >,
+			decltype(hana::unpack(
+				hana::transform(types, hana::template_< input_data >),
+				hana::template_< std::variant >))
 		>;
 
 
