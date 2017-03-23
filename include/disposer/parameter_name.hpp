@@ -21,13 +21,24 @@ namespace disposer{
 	struct parameter_parser{
 		template < typename T >
 		T operator()(std::string const& value, hana::basic_type< T >)const{
-			std::istringstream is(value);
-			T result;
-			if constexpr(std::is_same_v< T, bool >){
-				is >> std::boolalpha;
+			if constexpr(std::is_same_v< T, std::string >){
+				return value;
+			}else{
+				std::istringstream is(value);
+				T result;
+				if constexpr(std::is_same_v< T, bool >){
+					is >> std::boolalpha;
+				}
+				is >> result;
+				return result;
 			}
-			is >> result;
-			return result;
+		}
+	};
+
+	struct enable_all{
+		template < typename T >
+		constexpr bool operator()(hana::basic_type< T >)const{
+			return true;
 		}
 	};
 
@@ -38,9 +49,13 @@ namespace disposer{
 	struct parameter_name: ct_name< C ... >{
 		using hana_tag = parameter_name_tag;
 
-		template < typename Types, typename ParserFunction = parameter_parser >
+		template <
+			typename Types,
+			typename EnableFunction = enable_all,
+			typename ParserFunction = parameter_parser >
 		constexpr auto operator()(
 			Types const& types,
+			EnableFunction&& enable_fn = enable_all(),
 			ParserFunction&& parser_fn = parameter_parser()
 		)const noexcept;
 	};

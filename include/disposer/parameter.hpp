@@ -10,6 +10,11 @@
 #define _disposer__parameter__hpp_INCLUDED_
 
 #include "parameter_name.hpp"
+#include "type_index.hpp"
+
+#include <io_tools/make_string.hpp>
+
+#include <optional>
 
 
 namespace disposer{
@@ -44,10 +49,17 @@ namespace disposer{
 			"disposer::parameter types must not be references");
 
 
-		template < typename ParserFunction >
-		parameter(ParserFunction&& parser_fn, std::string const& value):
+		template < typename EnableFunction, typename ParserFunction >
+		parameter(
+			EnableFunction&& enable_fn,
+			ParserFunction&& parser_fn,
+			std::string const& value
+		):
 			type_value_map_(hana::make_map(hana::make_pair(
-				hana::type_c< T >, parser_fn(value, hana::type_c< T >)) ...
+				hana::type_c< T >,
+				enable_fn(hana::type_c< T >)
+				? std::optional< T const >(parser_fn(value, hana::type_c< T >))
+				: std::optional< T const >()) ...
 			)){}
 
 
@@ -58,13 +70,20 @@ namespace disposer{
 
 		template < typename Type >
 		decltype(auto) operator()(Type const& type)const{
-			return type_value_map_[type];
+			if(!type_value_map_[type]){
+				throw std::logic_error(io_tools::make_string(
+					"access parameter '", name, "' with disabled type [",
+					type_name< typename Type::type >(), "]"
+				));
+			}
+			return *type_value_map_[type];
 		}
 
 
 	private:
 		decltype(hana::make_map(hana::make_pair(hana::type_c< T >,
-			std::declval< T >()) ... )) const type_value_map_;
+			std::declval< std::optional< T const > >()) ... ))
+				const type_value_map_;
 	};
 
 
@@ -72,7 +91,11 @@ namespace disposer{
 
 
 	/// \brief Provid types for constructing an parameter
-	template < typename Name, typename ParserFunction, typename ParameterType >
+	template <
+		typename Name,
+		typename EnableFunction,
+		typename ParserFunction,
+		typename ParameterType >
 	struct param_t{
 		/// \brief Tag for boost::hana
 		using hana_tag = param_tag;
@@ -83,63 +106,83 @@ namespace disposer{
 		/// \brief Type of a disposer::parameter
 		using type = ParameterType;
 
-		/// \brief Parameter parser
+		/// \brief Enable function
+		EnableFunction enabler;
+
+		/// \brief Parameter parser function
 		ParserFunction parser;
 	};
 
 
+	template < typename EnableFunction, typename ParserFunction >
+	struct verify_parameter{
+		template < typename T >
+		constexpr void operator()(hana::basic_type< T > type)const{
+			constexpr auto is_enable_callable_with =
+				hana::is_valid([](auto&& type)->decltype((void)
+					std::declval< EnableFunction >()(type)){});
+
+			constexpr auto is_parser_callable_with =
+				hana::is_valid([](auto&& type)->decltype(
+					(void)std::declval< ParserFunction >()
+						(std::declval< std::string >(), type)){});
+
+			static_assert(is_enable_callable_with(hana::type_c< T >),
+				"need enable_fn signature 'bool enable_fn("
+				"hana::basic_type< T >)'");
+
+			static_assert(is_parser_callable_with(hana::type_c< T >),
+				"need parser_fn signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)'");
+
+			using enable_return_type =
+				decltype(std::declval< EnableFunction >()(type));
+
+			using parser_return_type =
+				decltype(std::declval< ParserFunction >()
+					(std::declval< std::string >(), type));
+
+			static_assert(std::is_same_v< bool, enable_return_type >,
+				"need enable_fn signature 'bool enable_fn("
+				"hana::basic_type< T >)' (return type must be bool)");
+
+			static_assert(std::is_same_v< typename decltype(+type)::type,
+				parser_return_type >,
+				"need parser_fn signature 'T parser_fn(std::string, "
+				"hana::basic_type< T >)' (wrong return type)");
+		}
+	};
+
+
 	template < char ... C >
-	template < typename Types, typename ParserFunction >
+	template <
+		typename Types,
+		typename EnableFunction,
+		typename ParserFunction >
 	constexpr auto parameter_name< C ... >::operator()(
 		Types const& types,
+		EnableFunction&& enable_fn,
 		ParserFunction&& parser_fn
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
 
-		constexpr auto is_callable_with =
-			hana::is_valid([](auto&& parser_fn_type, auto&& type)->
-				decltype((void)std::declval<
-					typename std::decay_t< decltype(parser_fn_type) >::type >()
-					(std::declval< std::string >(), type)){});
-
-		constexpr auto is_parser_callable_with =
-			hana::curry< 2 >(is_callable_with)(hana::type_c< ParserFunction >);
-
+		constexpr verify_parameter< EnableFunction, ParserFunction > verify;
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
-			static_assert(is_parser_callable_with(Types{}),
-				"need function signature 'T parser_fn(std::string, "
-				"hana::basic_type< T >)'");
-
-			using result_type =
-				decltype(parser_fn(std::declval< std::string >(), types));
-
-			static_assert(std::is_same_v< typename Types::type, result_type >,
-				"need function signature 'T parser_fn(std::string, "
-				"hana::basic_type< T >)' (wrong return type)");
+			verify(types);
 
 			using type_parameter =
 				parameter< name_type, typename Types::type >;
 
-			return param_t< name_type, ParserFunction, type_parameter >{
-				static_cast< ParserFunction&& >(parser_fn)};
+			return param_t< name_type, EnableFunction, ParserFunction,
+				type_parameter >{
+					static_cast< EnableFunction&& >(enable_fn),
+					static_cast< ParserFunction&& >(parser_fn)};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
-			static_assert(hana::all_of(Types{}, is_parser_callable_with),
-				"need function signature 'T parser_fn(std::string, "
-				"hana::basic_type< T >)'");
-
-			constexpr auto valid_return_type = [](auto&& t){
-				return std::is_same_v<
-					typename decltype(+t)::type,
-					decltype(std::declval< ParserFunction >()
-						(std::declval< std::string >(), t)) >;
-			};
-			static_assert(hana::all_of(Types{}, valid_return_type),
-				"need function signature 'T parser_fn(std::string, "
-				"hana::basic_type< T >)' (wrong return type)");
+			hana::for_each(types, verify);
 
 			auto unpack_types = hana::concat(
 				hana::tuple_t< name_type >,
@@ -148,9 +191,10 @@ namespace disposer{
 			auto type_parameter =
 				hana::unpack(unpack_types, hana::template_< parameter >);
 
-			return param_t< name_type, ParserFunction,
+			return param_t< name_type, EnableFunction, ParserFunction,
 				typename decltype(type_parameter)::type >{
-				static_cast< ParserFunction&& >(parser_fn)};
+					static_cast< EnableFunction&& >(enable_fn),
+					static_cast< ParserFunction&& >(parser_fn)};
 		}
 	}
 
