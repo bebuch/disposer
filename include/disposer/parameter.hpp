@@ -26,13 +26,17 @@ namespace disposer{
 		static_assert(hana::is_a< parameter_name_tag, Name >);
 
 
+		/// \brief Compile time name of the parameter
 		using name_type = Name;
 
+		/// \brief Name of the parameter as string_view
 		static constexpr std::string_view name{ name_type::value.c_str() };
 
 
+		/// \brief Types of the parameter
 		static constexpr auto types = hana::tuple_t< T ... >;
 
+		/// \brief Count of parameter types
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
@@ -49,6 +53,7 @@ namespace disposer{
 			"disposer::parameter types must not be references");
 
 
+		/// \brief Parse enabled parameters and store them
 		template < typename EnableFunction, typename ParserFunction >
 		parameter(
 			EnableFunction&& enable_fn,
@@ -63,11 +68,13 @@ namespace disposer{
 			)){}
 
 
+		/// \brief Access the value if parameter has only one type
 		decltype(auto) operator()()const{
 			static_assert(type_count == 1);
 			return (*this)(types[hana::int_c< 0 >]);
 		}
 
+		/// \brief Access parameter of given type
 		template < typename Type >
 		decltype(auto) operator()(Type const& type)const{
 			if(!type_value_map_[type]){
@@ -81,12 +88,14 @@ namespace disposer{
 
 
 	private:
+		/// \brief Map parameter types to values
 		decltype(hana::make_map(hana::make_pair(hana::type_c< T >,
 			std::declval< std::optional< T const > >()) ... ))
 				const type_value_map_;
 	};
 
 
+	/// \brief Tag for param_t
 	struct param_tag{};
 
 
@@ -114,6 +123,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Verify function signature of parameter enable_fn and parser_fn
 	template < typename EnableFunction, typename ParserFunction >
 	struct verify_parameter{
 		template < typename T >
