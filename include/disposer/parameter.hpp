@@ -68,6 +68,13 @@ namespace disposer{
 			)){}
 
 
+		/// \brief true if type is enabled, otherwise false
+		template < typename Type >
+		bool is_enabled(Type const& type)const{
+			return static_cast< bool >(type_value_map_[type]);
+		}
+
+
 		/// \brief Access the value if parameter has only one type
 		decltype(auto) operator()()const{
 			static_assert(type_count == 1);
@@ -77,7 +84,7 @@ namespace disposer{
 		/// \brief Access parameter of given type
 		template < typename Type >
 		decltype(auto) operator()(Type const& type)const{
-			if(!type_value_map_[type]){
+			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
 					"access parameter '", name, "' with disabled type [",
 					type_name< typename Type::type >(), "]"
