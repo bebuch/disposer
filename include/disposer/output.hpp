@@ -194,7 +194,7 @@ namespace disposer{
 		using hana_tag = out_tag;
 
 		/// \brief Output name as compile time string
-		using name = Name;
+		using name_type = Name;
 
 		/// \brief Type of a disposer::output
 		using type = OutputType;

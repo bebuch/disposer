@@ -126,8 +126,8 @@ namespace disposer{
 				));
 			}
 
-			auto const add_type_fn = this->*(iter->second);
-			add_type_fn(id, value, last_use);
+			// Call add< type >(id, value, last_use)
+			(this->*(iter->second))(id, value, last_use);
 		}
 
 
@@ -142,7 +142,8 @@ namespace disposer{
 			std::vector< type_index > result;
 			result.reserve(type_count);
 			hana::for_each(enabled_map_, [&result](auto const& pair){
-				result.push_back(pair.first);
+				using type = typename decltype(+hana::first(pair))::type;
+				result.push_back(type_index::type_id_with_cvr< type >());
 			});
 			return result;
 		}
@@ -206,7 +207,7 @@ namespace disposer{
 		using hana_tag = in_tag;
 
 		/// \brief Output name as compile time string
-		using name = Name;
+		using name_type = Name;
 
 		/// \brief Type of a disposer::input
 		using type = InputType;

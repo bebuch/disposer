@@ -43,7 +43,7 @@ namespace disposer{
 
 		constexpr auto io_type_list = [](auto ... io){
 			return hana::type_c< hana::map< hana::pair<
-				typename decltype(+io)::type::name::value_type,
+				typename decltype(+io)::type::name_type::value_type,
 				typename decltype(+io)::type::type > ... > >;
 		};
 

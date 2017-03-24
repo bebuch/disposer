@@ -30,7 +30,9 @@ namespace disposer{
 		using name_type = Name;
 
 		/// \brief Name of the parameter as string_view
-		static constexpr std::string_view name{ name_type::value.c_str() };
+		static constexpr std::string_view name{
+			// Second parameter for libstdc++ ...
+			name_type::value.c_str(), hana::length(name_type::value) };
 
 
 		/// \brief Types of the parameter
@@ -183,7 +185,7 @@ namespace disposer{
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
 
-		constexpr verify_parameter< EnableFunction, ParserFunction > verify;
+		constexpr verify_parameter< EnableFunction, ParserFunction > verify{};
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
 			verify(types);

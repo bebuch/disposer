@@ -1,5 +1,9 @@
 #include <disposer/module.hpp>
 
+#include <iostream>
+#include <iomanip>
+
+
 namespace hana = boost::hana;
 
 using namespace hana::literals;
@@ -7,6 +11,26 @@ using namespace disposer::interface::module;
 
 constexpr auto types = hana::tuple_t< int, char, float >;
 constexpr auto types_set = hana::to_set(types);
+
+
+void check_impl(std::string_view name, bool enabled, bool expected){
+	if(enabled == expected){
+		std::cout << " \033[0;32msuccess:\033[0m ";
+	}else{
+		std::cout << " \033[0;31mfail:\033[0m ";
+	}
+	std::cout << name << " = " << std::boolalpha << expected << "\n";
+}
+
+template < typename IO >
+void check(IO& io, bool expected){
+	check_impl(io.name, io.is_enabled(), expected);
+}
+
+template < typename IO, typename Type >
+void check(IO& io, Type const& type, bool expected){
+	check_impl(io.name, io.is_enabled(type), expected);
+}
 
 
 int main(){
@@ -29,6 +53,14 @@ int main(){
 					disposer::output< decltype("test1"_out), ident, int > >
 			>
 		> > const >);
+	typename decltype(m1)::type mv1("chain", "name", 0);
+	auto& mv1i = mv1("test1"_in);
+	auto& mv1o = mv1("test1"_out); (void)mv1o;
+
+	check(mv1i, false);
+	check(mv1i, hana::type_c< int >, false);
+// 	check(mv1o, false);
+// 	check(mv1o, hana::type_c< int >, false);
 
 	constexpr auto m2 = "module2"_module(
 			"test1"_out(hana::type_c< int >),

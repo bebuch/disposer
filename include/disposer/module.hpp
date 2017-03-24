@@ -36,8 +36,22 @@ namespace disposer{
 			generate_input_list(), generate_output_list()){}
 
 
-		Inputs in;
-		Outputs out;
+		template < typename IO >
+		decltype(auto) operator()(IO&&){
+			using io_t = std::remove_cv_t< std::remove_reference_t< IO > >;
+			static_assert(
+				hana::is_a< input_name_tag, io_t > ||
+				hana::is_a< output_name_tag, io_t >,
+				"parameter io must be an input_name or an output_name");
+
+			if constexpr(hana::is_a< input_name_tag, io_t >){
+// 				static_assert(hana::contains(hana::keys(in), io_t::value)); // TODO: in is not an constexpr ...
+				return in[io_t::value];
+			}else{
+// 				static_assert(hana::contains(hana::keys(out), io_t::value)); // TODO: out is not an constexpr ...
+				return out[io_t::value];
+			}
+		}
 
 
 // 		template < typename InputName >
@@ -69,6 +83,10 @@ namespace disposer{
 				return output_list{ hana::second(out) ... };
 			});
 		}
+
+
+		Inputs in;
+		Outputs out;
 	};
 
 
