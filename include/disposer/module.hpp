@@ -75,9 +75,9 @@ namespace disposer{
 	template < char ... C >
 	template < typename ... IO >
 	constexpr auto
-	module_name< C ... >::operator()(io< IO > const& ... ios)const noexcept{
+	module_name< C ... >::operator()(IO&& ... ios)const noexcept{
 		using name_type = module_name< C ... >;
-		auto io_lists = make_io_lists(ios ...);
+		auto io_lists = make_io_lists(static_cast< IO&& >(ios) ...);
 		auto in = hana::first(io_lists);
 		auto out = hana::second(io_lists);
 

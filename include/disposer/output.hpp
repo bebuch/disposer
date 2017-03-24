@@ -189,7 +189,7 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an output
 	template < typename Name, typename OutputType >
-	struct out_t: io< out_t< Name, OutputType > >{
+	struct out_t{
 		/// \brief Tag for boost::hana
 		using hana_tag = out_tag;
 

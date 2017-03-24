@@ -21,16 +21,19 @@ namespace disposer{
 	struct in_tag{};
 	struct out_tag{};
 
-	/// \brief Base of input and output type deduction classes
-	template < typename IO >
-	struct io{};
-
 
 	/// \brief Create two boost::hana::map's from the given input and output
 	///        types
 	template < typename ... IO >
-	constexpr auto make_io_lists(io< IO > ...){
-		constexpr auto types = hana::tuple_t< IO ... >;
+	constexpr auto make_io_lists(IO&& ...){
+		constexpr auto types = hana::make_tuple(hana::type_c<
+			std::remove_cv_t< std::remove_reference_t< IO > > > ...);
+
+		static_assert(hana::all_of(types, [](auto&& t){
+			using type = typename decltype(+t)::type;
+			return hana::is_a< in_tag, type > || hana::is_a< out_tag, type >;
+		}), "only inputs and outputs are allowed as argument");
+
 		constexpr auto inputs = hana::filter(types, [](auto&& type){
 				return hana::is_a< in_tag, typename decltype(+type)::type >;
 			});

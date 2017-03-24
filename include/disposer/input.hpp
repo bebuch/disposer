@@ -201,7 +201,7 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an input
 	template < typename Name, typename InputType >
-	struct in_t: io< in_t< Name, InputType > >{
+	struct in_t{
 		/// \brief Tag for boost::hana
 		using hana_tag = in_tag;
 

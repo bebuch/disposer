@@ -22,7 +22,7 @@ namespace disposer{
 		using hana_tag = module_name_tag;
 
 		template < typename ... IO >
-		constexpr auto operator()(io< IO > const& ... ios)const noexcept;
+		constexpr auto operator()(IO&& ... ios)const noexcept;
 	};
 
 	template < char ... C >
