@@ -11,7 +11,7 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
-#include <logsys/log_base.hpp>
+#include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
 #include <fstream>

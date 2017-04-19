@@ -2,7 +2,7 @@
 #include <disposer/module_base.hpp>
 #include <disposer/make_data.hpp>
 
-#include <logsys/log_base.hpp>
+#include <logsys/stdlogb.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -61,7 +61,7 @@ namespace disposer{ namespace{
 		try{
 			auto result = iter->second(data);
 			for(auto const& param: data.params.unused()){
-				logsys::log([&data, &param](logsys::log_base& os){
+				logsys::log([&data, &param](logsys::stdlogb& os){
 					os << "In chain '" << data.chain << "' module '"
 						<< data.name << "': Unused data '" << param.first
 						<< "'='" << param.second << "'"; });
@@ -85,7 +85,7 @@ namespace disposer{ namespace{
 		for(std::size_t i = 0; i < config_chain.modules.size(); ++i){
 			auto& config_module = config_chain.modules[i];
 
-			logsys::log([&config_module](logsys::log_base& os){
+			logsys::log([&config_module](logsys::stdlogb& os){
 				os << "create module '" << config_module.module.first << "'";
 			}, [&](){
 				io_list config_inputs;
@@ -138,7 +138,7 @@ namespace disposer{ namespace{
 		for(auto& config_module: config_chain.modules){
 			auto& module = **module_ptr_iter++;
 
-			logsys::log([&config_module](logsys::log_base& os){
+			logsys::log([&config_module](logsys::stdlogb& os){
 				os << "enable input and output types in module '"
 					<< config_module.module.first << "'";
 			}, [&](){
@@ -196,7 +196,7 @@ namespace disposer{ namespace{
 					}
 				}
 
-				logsys::log([&config_module](logsys::log_base& os){
+				logsys::log([&config_module](logsys::stdlogb& os){
 					os << "call input_ready() in module '"
 						<< config_module.module.first << "'";
 				}, [&module](){
@@ -237,7 +237,7 @@ namespace disposer{ namespace{
 			--module_ptr_iter;
 			auto& module = **module_ptr_iter;
 
-			logsys::log([&config_module](logsys::log_base& os){
+			logsys::log([&config_module](logsys::stdlogb& os){
 				os << "connect inputs of module '" << config_module.module.first
 					<< "'";
 			}, [&](){
