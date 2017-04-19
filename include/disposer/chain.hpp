@@ -12,8 +12,6 @@
 #include "module_ptr.hpp"
 #include "id_generator.hpp"
 #include "merge.hpp"
-#include "log_base.hpp"
-#include "log.hpp"
 
 #include <mutex>
 #include <string>

@@ -13,6 +13,8 @@
 #include <disposer/make_data.hpp>
 #include <disposer/module_base.hpp>
 
+#include <logsys/log_base.hpp>
+
 
 namespace disposer{
 
@@ -31,7 +33,7 @@ namespace disposer{
 			> groups;
 
 			for(auto& config_chain: config.chains){
-				log([&config_chain](log_base& os){
+				logsys::log([&config_chain](logsys::log_base& os){
 					os << "create chain '" << config_chain.name << "'";
 				}, [&](){
 					// add the new group if not exist and get pointer
@@ -78,7 +80,7 @@ namespace disposer{
 		std::string const& type_name,
 		module_maker_function&& function
 	){
-		log([&type_name](log_base& os){
+		logsys::log([&type_name](logsys::log_base& os){
 			os << "register module type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.maker_list_.insert(
@@ -99,21 +101,22 @@ namespace disposer{
 	}
 
 	void disposer::load(std::string const& filename){
-		auto config = log([&](log_base& os){
+		auto config = logsys::log([&](logsys::log_base& os){
 				os << "parse '" << filename << "'";
 			}, [&](){ return parse(filename); });
 
-		log([](log_base& os){ os << "check semantic"; },
+		logsys::log([](logsys::log_base& os){ os << "check semantic"; },
 			[&config](){ check_semantic(config); });
 
-		log([](log_base& os){
+		logsys::log([](logsys::log_base& os){
 			os << "look for unused stuff and warn about it";
 			}, [&config](){ unused_warnings(config); });
 
-		auto merged_config = log([](log_base& os){ os << "merge"; },
+		auto merged_config = logsys::log(
+			[](logsys::log_base& os){ os << "merge"; },
 			[&config](){ return merge(std::move(config)); });
 
-		log([](log_base& os){ os << "create chains"; },
+		logsys::log([](logsys::log_base& os){ os << "create chains"; },
 			[this, &merged_config](){
 				std::tie(chains_, id_generators_, groups_) =
 					create_chains(maker_list_, std::move(merged_config));

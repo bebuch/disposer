@@ -8,8 +8,8 @@
 //-----------------------------------------------------------------------------
 #include <disposer/unused_warnings.hpp>
 
-#include <disposer/log_base.hpp>
-#include <disposer/log.hpp>
+#include <logsys/log_base.hpp>
+#include <logsys/log.hpp>
 
 #include <map>
 
@@ -35,7 +35,7 @@ namespace disposer{
 		for(auto const& set: parameter_sets){
 			if(set.second) continue;
 
-			log([&set](log_base& os){
+			logsys::log([&set](logsys::log_base& os){
 				os << "parameter_set '" + set.first + "' is not used";
 			});
 		}
@@ -57,7 +57,7 @@ namespace disposer{
 			for(auto const& var: variables){
 				if(var.second) continue;
 
-				log([&var, &chain](log_base& os){
+				logsys::log([&var, &chain](logsys::log_base& os){
 					os << "In chain '" << chain.name << "': variable '"
 						<< var.first << "' is not used";
 				});
@@ -67,7 +67,7 @@ namespace disposer{
 		for(auto const& module: modules){
 			if(module.second) continue;
 
-			log([&module](log_base& os){
+			logsys::log([&module](logsys::log_base& os){
 				os << "module '" + module.first + "' is not used";
 			});
 		}

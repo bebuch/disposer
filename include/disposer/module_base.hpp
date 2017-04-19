@@ -13,7 +13,8 @@
 #include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
-#include "log.hpp"
+
+#include <logsys/log.hpp>
 
 #include <functional>
 
@@ -87,20 +88,20 @@ namespace disposer{
 		/// \brief Add a line to the log
 		template < typename Log >
 		void log(Log&& f)const{
-			::disposer::log(module_log(f));
+			logsys::log(module_log(f));
 		}
 
 		/// \brief Add a line to the log with linked code block
 		template < typename Log, typename Body >
 		decltype(auto) log(Log&& f, Body&& body)const{
-			return ::disposer::log(module_log(f), static_cast< Body&& >(body));
+			return logsys::log(module_log(f), static_cast< Body&& >(body));
 		}
 
 		/// \brief Add a line to the log with linked code block and catch all
 		///        exceptions
 		template < typename Log, typename Body >
 		decltype(auto) exception_catching_log(Log&& f, Body&& body)const{
-			return ::disposer::exception_catching_log(
+			return logsys::exception_catching_log(
 				module_log(f), static_cast< Body&& >(body));
 		}
 
@@ -210,7 +211,7 @@ namespace disposer{
 		/// \brief Helper for log message functions
 		template < typename Log >
 		auto module_log(Log& log)const{
-			using log_t = detail::log::extract_log_t< Log >;
+			using log_t = logsys::detail::extract_log_t< Log >;
 			return [&](log_t& os){
 				os << "id(" << id << "." << number << ") exec chain '"
 					<< chain << "' module '" << name << "': ";
