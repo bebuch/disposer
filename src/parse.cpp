@@ -15,8 +15,8 @@
 #include <string>
 #include <map>
 
-#include <disposer/log_base.hpp>
-#include <disposer/log.hpp>
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
 
 
 

@@ -90,7 +90,7 @@ namespace disposer{
 		std::size_t const run = next_run_++;
 
 		// exec any module, call cleanup instead if the module throw
-		log([this, id](log_base& os){
+		logsys::log([this, id](logsys::stdlogb& os){
 			os << "id(" << id << ") chain '" << name << "'";
 		}, [this, id, run]{
 			try{
@@ -124,13 +124,16 @@ namespace disposer{
 
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
-		log([this](log_base& os){ os << "chain '" << name << "' enable"; },
+		logsys::log(
+			[this](logsys::stdlogb& os){
+				os << "chain '" << name << "' enable";
+			},
 			[this]{
 				std::size_t i = 0;
 				try{
 					// enable all modules
 					for(; i < modules_.size(); ++i){
-						log([this, i](log_base& os){
+						logsys::log([this, i](logsys::stdlogb& os){
 								os << "chain '" << name << "' module '"
 									<< modules_[i]->name << "' enable";
 							}, [this, i]{
@@ -140,7 +143,7 @@ namespace disposer{
 				}catch(...){
 					// disable all modules until the one who throw
 					for(std::size_t j = 0; j < i; ++j){
-						log([this, i, j](log_base& os){
+						logsys::log([this, i, j](logsys::stdlogb& os){
 								os << "chain '" << name << "' module '"
 									<< modules_[j]->name
 									<< "' disable because of exception while "
@@ -166,11 +169,14 @@ namespace disposer{
 
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
-		log([this](log_base& os){ os << "chain '" << name << "' disable"; },
+		logsys::log(
+			[this](logsys::stdlogb& os){
+				os << "chain '" << name << "' disable";
+			},
 			[this]{
 				// disable all modules
 				for(std::size_t i = 0; i < modules_.size(); ++i){
-					log([this, i](log_base& os){
+					logsys::log([this, i](logsys::stdlogb& os){
 							os << "chain '" << name << "' module '"
 								<< modules_[i]->name << "' disable";
 						}, [this, i]{
@@ -193,7 +199,7 @@ namespace disposer{
 		module_cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });
 
 		// exec or cleanup the module
-		log([this, i, action_name](log_base& os){
+		logsys::log([this, i, action_name](logsys::stdlogb& os){
 			os << "id(" << modules_[i]->id << "." << i << ") " << action_name
 				<< " chain '" << modules_[i]->chain << "' module '"
 				<< modules_[i]->name << "'";

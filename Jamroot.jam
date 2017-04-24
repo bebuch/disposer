@@ -1,11 +1,17 @@
 import os ;
 local boost = [ os.environ BOOST ] ;
 local io_tools = ../io_tools ;
+local logsys = ../logsys ;
 
 
 use-project /boost
 	: $(boost)
 	;
+
+use-project /logsys
+	: $(logsys)
+	;
+
 
 project disposer
 	:
@@ -36,6 +42,7 @@ project disposer
 
 	<include>$(boost)
 	<include>$(io_tools)/include
+	<include>$(logsys)/include
 	:
 	usage-requirements <include>include
 	;
@@ -43,4 +50,5 @@ project disposer
 lib disposer
 	:
 	[ glob *.cpp ]
+	/logsys//logsys
 	;
