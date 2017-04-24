@@ -6,62 +6,62 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/log_base.hpp>
-#include <disposer/log.hpp>
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
 
 #include <boost/type_index.hpp>
 
 #include <iostream>
 
 
-using disposer::log_base;
+using logsys::stdlogb;
 
 
 // log function types
 
 struct fo1{
-	void operator()(log_base& os){
+	void operator()(stdlogb& os){
 		os << "struct";
 	}
 };
 
 struct fo2{
-	void operator()(log_base& os)const{
+	void operator()(stdlogb& os)const{
 		os << "struct const";
 	}
 };
 
 struct fo3{
-	void operator()(log_base& os)volatile{
+	void operator()(stdlogb& os)volatile{
 		os << "struct volatile";
 	}
 };
 
 struct fo4{
-	void operator()(log_base& os)const volatile{
+	void operator()(stdlogb& os)const volatile{
 		os << "struct const volatile";
 	}
 };
 
 
-void f(log_base& os){
+void f(stdlogb& os){
 	os << "f";
 }
 
-void fp(log_base& os){
+void fp(stdlogb& os){
 	os << "fp";
 }
 
-void fr(log_base& os){
+void fr(stdlogb& os){
 	os << "fr";
 }
 
-void fpr(log_base& os){
+void fpr(stdlogb& os){
 	os << "fpr";
 }
 
-void (*p)(log_base& os) = &fp;
-void (&r)(log_base& os) = fr;
+void (*p)(stdlogb& os) = &fp;
+void (&r)(stdlogb& os) = fr;
 
 
 
@@ -82,27 +82,27 @@ struct t2{
 
 
 int main(){
-	std::function< void(log_base&) > stdf_r = [](log_base& os){ os << "stdf_r"; };
-	auto lambda_r = [](log_base& os){ os << "lambda_r"; };
+	std::function< void(stdlogb&) > stdf_r = [](stdlogb& os){ os << "stdf_r"; };
+	auto lambda_r = [](stdlogb& os){ os << "lambda_r"; };
 
 	// log function types
-	disposer::log([](log_base& os){ os << "lambda"; });
-	disposer::log(fo1());
-	disposer::log(fo2());
-	disposer::log(fo3());
-	disposer::log(fo4());
-	disposer::log(f);
-	disposer::log(&fp);
-	disposer::log(p);
-	disposer::log(r);
-	disposer::log(std::function< void(log_base&) >([](log_base& os){ os << "stdf"; }));
-	disposer::log(stdf_r);
-	disposer::log(lambda_r);
+	logsys::log([](stdlogb& os){ os << "lambda"; });
+	logsys::log(fo1());
+	logsys::log(fo2());
+	logsys::log(fo3());
+	logsys::log(fo4());
+	logsys::log(f);
+	logsys::log(&fp);
+	logsys::log(p);
+	logsys::log(r);
+	logsys::log(std::function< void(stdlogb&) >([](stdlogb& os){ os << "stdf"; }));
+	logsys::log(stdf_r);
+	logsys::log(lambda_r);
 
 
 	// body return type
-	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, t1{})) >().pretty_name() << " == int" << std::endl;
-	std::cout << boost::typeindex::type_id_with_cvr< decltype(disposer::log(f, t2{})) >().pretty_name() << " == int&" << std::endl;
+	std::cout << boost::typeindex::type_id_with_cvr< decltype(logsys::log(f, t1{})) >().pretty_name() << " == int" << std::endl;
+	std::cout << boost::typeindex::type_id_with_cvr< decltype(logsys::log(f, t2{})) >().pretty_name() << " == int&" << std::endl;
 
 	int a = 0;
 	decltype(auto) w1 = []{ return 1; }();
@@ -110,30 +110,30 @@ int main(){
 	decltype(auto) w2 = [&a]()->decltype(auto){ return (a); }();
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(w2) >().pretty_name() << std::endl;
 
-	disposer::log([](log_base& os){ os << "lambda"; }, []{  });
-	decltype(auto) v2 = disposer::log([](log_base& os){ os << "lambda"; }, []{ return 1; });
+	logsys::log([](stdlogb& os){ os << "lambda"; }, []{  });
+	decltype(auto) v2 = logsys::log([](stdlogb& os){ os << "lambda"; }, []{ return 1; });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(v2) >().pretty_name() << std::endl;
-	decltype(auto) v3 = disposer::log([](log_base& os){ os << "lambda"; }, [&a]()->decltype(auto){ return (a); });
+	decltype(auto) v3 = logsys::log([](stdlogb& os){ os << "lambda"; }, [&a]()->decltype(auto){ return (a); });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(v3) >().pretty_name() << std::endl;
 
-	decltype(auto) x1 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{  });
+	decltype(auto) x1 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{  });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(x1) >().pretty_name() << std::endl;
-	decltype(auto) x2 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{ return 1; });
+	decltype(auto) x2 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{ return 1; });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(x2) >().pretty_name() << std::endl;
-	decltype(auto) x3 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ return (a); });
+	decltype(auto) x3 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ return (a); });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(x3) >().pretty_name() << std::endl;
 
-	decltype(auto) y1 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{ throw std::runtime_error("test"); });
+	decltype(auto) y1 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{ throw std::runtime_error("test"); });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(y1) >().pretty_name() << std::endl;
-	decltype(auto) y2 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{ throw std::logic_error("test"); return 1; });
+	decltype(auto) y2 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{ throw std::logic_error("test"); return 1; });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(y2) >().pretty_name() << std::endl;
-	decltype(auto) y3 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ throw std::out_of_range("test"); return (a); });
+	decltype(auto) y3 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ throw std::out_of_range("test"); return (a); });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(y3) >().pretty_name() << std::endl;
 
-	decltype(auto) z1 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{ throw ""; });
+	decltype(auto) z1 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{ throw ""; });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(z1) >().pretty_name() << std::endl;
-	decltype(auto) z2 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, []{ throw 5; return 1; });
+	decltype(auto) z2 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, []{ throw 5; return 1; });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(z2) >().pretty_name() << std::endl;
-	decltype(auto) z3 = disposer::exception_catching_log([](log_base& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ throw 3.9; return (a); });
+	decltype(auto) z3 = logsys::exception_catching_log([](stdlogb& os){ os << "exception_catching"; }, [&a]()->decltype(auto){ throw 3.9; return (a); });
 	std::cout << boost::typeindex::type_id_with_cvr< decltype(z3) >().pretty_name() << std::endl;
 }
