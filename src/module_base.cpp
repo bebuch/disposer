@@ -12,6 +12,15 @@
 namespace disposer{
 
 
+	/// \brief Class module_base access key
+	struct module_base_key{
+	private:
+		/// \brief Constructor
+		constexpr module_base_key()noexcept = default;
+		friend class module_base;
+	};
+
+
 	module_base::module_base(
 		std::string const& type_name,
 		std::string const& chain,
@@ -33,8 +42,8 @@ namespace disposer{
 
 
 	void module_base::cleanup(chain_key, std::size_t id)noexcept{
-		for(auto& input: inputs_){
-			input.get().cleanup(module_base_key(), id);
+		for(auto& output: outputs_){
+			output.get().cleanup(module_base_key(), id);
 		}
 	}
 

@@ -21,11 +21,8 @@ namespace disposer{
 namespace disposer{ namespace{
 
 
-	/// \brief A reference to the output with last_use flag
-	using output_pair = std::pair< output_base&, bool >;
-
 	/// \brief Map from a variable name to an output
-	using variables_map = std::unordered_map< std::string, output_pair >;
+	using variables_map = std::unordered_map< std::string, output_base* >;
 
 
 	auto find(module_base::input_list& container, std::string const& data){
@@ -117,7 +114,7 @@ namespace disposer{ namespace{
 
 					variables.emplace(
 						config_output.variable,
-						std::pair< output_base&, bool >(output, true)
+						&output
 					);
 				}
 			});
@@ -145,7 +142,7 @@ namespace disposer{ namespace{
 					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
 
-					auto& output = output_iter->second.first;
+					auto output_ptr = output_iter->second;
 					auto& input = find(
 							module.inputs(make_creator_key()),
 							config_input.name
@@ -153,7 +150,7 @@ namespace disposer{ namespace{
 
 					// try to enable the types from output in input
 					if(!input.enable_types(
-						make_creator_key(), output.enabled_types())
+						make_creator_key(), output_ptr->enabled_types())
 					){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
@@ -164,7 +161,7 @@ namespace disposer{ namespace{
 							<< config_input.variable << "' types: ";
 
 						bool first = true;
-						for(auto& type: output.enabled_types()){
+						for(auto& type: output_ptr->enabled_types()){
 							if(first){
 								first = false;
 							}else{
@@ -206,9 +203,9 @@ namespace disposer{ namespace{
 					auto output_iter = variables.find(config_output.variable);
 					assert(output_iter != variables.end());
 
-					auto& output = output_iter->second.first;
+					auto output_ptr = output_iter->second;
 
-					if(output.enabled_types().empty()){
+					if(output_ptr->enabled_types().empty()){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
 							<< module.name << "': Output '" + config_output.name
@@ -227,37 +224,30 @@ namespace disposer{ namespace{
 		std::vector< module_ptr > const& modules,
 		variables_map& variables
 	){
-		namespace adaptors = boost::adaptors;
-
-		// go backward through all modules, because of the last_use information
-		auto module_ptr_iter = modules.end();
-		for(auto& config_module: adaptors::reverse(config_chain.modules)){
-			--module_ptr_iter;
-			auto& module = **module_ptr_iter;
+		assert(modules.size() == config_chain.modules.size());
+		auto config_iter = config_chain.modules.begin();
+		for(auto& module: modules){
+			auto& config_module = *config_iter++;
 
 			logsys::log([&config_module](logsys::stdlogb& os){
-				os << "connect inputs of module '" << config_module.module.first
+				os << "connect inputs of module '"
+					<< config_module.module.first
 					<< "'";
-			}, [&](){
+			}, [&module, &config_module, &variables]{
 				// config_module.inputs containes all enabled input names
 				for(auto& config_input: config_module.inputs){
 					auto output_iter = variables.find(config_input.variable);
 					assert(output_iter != variables.end());
 
-					auto& output = output_iter->second.first;
-					auto& last_use = output_iter->second.second;
+					auto output_ptr = output_iter->second;
 
 					auto& input = find(
-							module.inputs(make_creator_key()),
+							module->inputs(make_creator_key()),
 							config_input.name
 						).get();
 
 					// connect input to output
-					output.get_signal(make_creator_key())
-						.connect(input, last_use);
-
-					// the next one is no more the last use of the variable
-					last_use = false;
+					input.set_output(make_creator_key(), output_ptr);
 				}
 			});
 		}

@@ -10,7 +10,6 @@
 #define _disposer__output__hpp_INCLUDED_
 
 #include "output_base.hpp"
-#include "output_data.hpp"
 #include "type_index.hpp"
 #include "output_name.hpp"
 #include "io.hpp"
@@ -18,54 +17,10 @@
 #include <io_tools/make_string.hpp>
 
 #include <functional>
+#include <variant>
 
 
 namespace disposer{
-
-
-	template < typename T >
-	class output_interface{
-	public:
-		using value_type = T;
-
-
-		output_interface(signal_t& signal): signal_(signal) {}
-
-
-		void operator()(std::size_t id, value_type&& value){
-			exec_signal(
-				id,
-				std::make_shared< output_data< value_type > >(std::move(value))
-			);
-		}
-
-		void operator()(std::size_t id, value_type const& value){
-			exec_signal(
-				id,
-				std::make_shared< output_data< value_type > >(value)
-			);
-		}
-
-		void operator()(
-			std::size_t id, output_data_ptr< value_type > const& value
-		){
-			exec_signal(id, value);
-		}
-
-
-	private:
-		signal_t& signal_;
-
-		void exec_signal(
-			std::size_t id, output_data_ptr< value_type > const& value
-		){
-			signal_(
-				id,
-				reinterpret_cast< any_type const& >(value),
-				type_index::type_id_with_cvr< T >()
-			);
-		}
-	};
 
 
 	template < typename Name, typename TypesMetafunction, typename ... T >
@@ -109,27 +64,32 @@ namespace disposer{
 			"disposer::output types must not be references");
 
 
-		using output_base::output_base;
+		using value_type = std::conditional_t<
+			type_count == 1,
+			typename decltype(+types[hana::int_c< 0 >])::type,
+			decltype(hana::unpack(types, hana::template_< std::variant >))
+		>;
+
 
 		output(): output_base(Name::value.c_str()) {}
 
 
-		template < typename V, typename W >
-		void put(W&& value){
+		template < typename V >
+		void put(V&& value){
 			static_assert(
-				hana::contains(types, hana::type_c< V >),
-				"type V in put< V > is not a output type"
+				hana::contains(types, hana::type_c< std::decay_t< V > >),
+				"type V in put< V > is not an output type"
 			);
 
-			if(!enabled_types_[type_index::type_id_with_cvr< V >()]){
+			if(!enabled_types_[type_index::type_id< V >()]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
 					"output '", name, "' put disabled type [",
-					type_name_with_cvr< V >(), "]"
+					type_name< V >(), "]"
 				));
 			}
 
-			output_interface< V >{signal}(id, static_cast< W&& >(value));
+			data_.emplace(current_id(), static_cast< V&& >(value));
 		}
 
 
@@ -137,7 +97,7 @@ namespace disposer{
 		void enable(){
 			static_assert(
 				hana::contains(types, hana::type_c< V >),
-				"type V in enable< V > is not a output type"
+				"type V in enable< V > is not an output type"
 			);
 
 			enabled_types_[type_index::type_id_with_cvr< V >()] = true;
@@ -181,9 +141,105 @@ namespace disposer{
 
 
 	private:
+		virtual std::vector< reference_carrier >
+		get_references(std::size_t id)override{
+			std::lock_guard< std::mutex > lock(mutex_);
+
+			assert(id >= next_id_);
+
+			auto from = data_.lower_bound(next_id_);
+			auto const to = data_.upper_bound(id);
+
+			std::vector< reference_carrier > result;
+			result.reserve(std::distance(from, to));
+
+			for(; from != to; ++from){
+				if constexpr(type_count == 1){
+					result.emplace_back(
+						from->first,
+						type_index::type_id< decltype(from->second) >(),
+						reinterpret_cast< any_type const& >(from->second));
+				}else{
+					result.emplace_back(
+						from->first,
+						std::visit([](auto const& data){
+							return type_index::type_id< decltype(data) >();
+						}, from->second),
+						std::visit([](auto const& data){
+							return reinterpret_cast< any_type const& >(data);
+						}, from->second));
+				}
+			}
+
+			next_id_ = id + 1;
+
+			return result;
+		}
+
+		virtual void transfer_values(
+			std::size_t id,
+			TransferFn const& fn
+		)override{
+			std::lock_guard< std::mutex > lock(mutex_);
+
+			assert(id >= next_id_);
+
+			auto from = data_.lower_bound(next_id_);
+			auto const to = data_.upper_bound(id);
+
+			std::vector< value_carrier > result;
+			result.reserve(std::distance(from, to));
+
+			for(; from != to; ++from){
+				if constexpr(type_count == 1){
+					result.emplace_back(
+						from->first,
+						type_index::type_id< decltype(from->second) >(),
+						reinterpret_cast< any_type&& >(from->second));
+				}else{
+					result.emplace_back(
+						from->first,
+						std::visit([](auto&& data){
+							return type_index::type_id< decltype(data) >();
+						}, from->second),
+						std::visit([](auto&& data){
+							return reinterpret_cast< any_type&& >(data);
+						}, from->second));
+				}
+			}
+
+			fn(std::move(result));
+
+			remove_until(id);
+		}
+
+		virtual void cleanup(std::size_t id)noexcept override{
+			std::lock_guard< std::mutex > lock(mutex_);
+
+			assert(id >= next_id_);
+
+			remove_until(id);
+		}
+
+		void remove_until(std::size_t id)noexcept{
+			auto from = data_.begin();
+			auto to = data_.upper_bound(id);
+			data_.erase(from, to);
+
+			if(next_id_ < id + 1) next_id_ = id + 1;
+		}
+
+
+
+		std::mutex mutex_;
+
+		std::size_t next_id_{0};
+
 		std::unordered_map< type_index, bool > enabled_types_{
 				{type_index::type_id_with_cvr< T >(), false} ...
 			};
+
+		std::multimap< std::size_t, value_type > data_;
 	};
 
 

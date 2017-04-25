@@ -9,32 +9,13 @@
 #ifndef _disposer__input_base__hpp_INCLUDED_
 #define _disposer__input_base__hpp_INCLUDED_
 
-#include "any_type.hpp"
 #include "type_index.hpp"
 
+#include <string_view>
 #include <vector>
-#include <stdexcept>
-#include <unordered_map>
 
 
 namespace disposer{
-
-
-	/// \brief Class module_base access key
-	struct module_base_key{
-	private:
-		/// \brief Constructor
-		constexpr module_base_key()noexcept = default;
-		friend class module_base;
-	};
-
-	/// \brief Class signal_t access key
-	struct signal_t_key{
-	private:
-		/// \brief Constructor
-		constexpr signal_t_key()noexcept = default;
-		friend class signal_t;
-	};
 
 
 	struct creator_key;
@@ -51,6 +32,10 @@ namespace disposer{
 	};
 
 
+	struct module_base_key;
+
+	class output_base;
+
 
 	/// \brief Base for module inputs
 	///
@@ -62,7 +47,7 @@ namespace disposer{
 	public:
 		/// \brief Constructor
 		constexpr input_base(std::string_view name)noexcept:
-			name(name), id(id_), id_(0) {}
+			name(name), output_(nullptr), id_(0) {}
 
 
 		/// \brief Inputs are not copyable
@@ -87,27 +72,20 @@ namespace disposer{
 		virtual std::vector< type_index > type_list()const = 0;
 
 		/// \brief Enable the given types
+		void set_output(creator_key, output_base* output)noexcept{
+			output_ = output;
+		}
+
+
+		/// \brief Enable the given types
 		bool enable_types(
 			creator_key,
 			std::vector< type_index > const& types
-		) noexcept{ return enable_types(types); }
-
-
-		/// \brief Call add(id, value, type, last_use)
-		void add(
-			signal_t_key,
-			std::size_t id,
-			any_type const& value,
-			type_index const& type,
-			bool last_use
-		){ add(id, value, type, last_use); }
+		)noexcept{ return enable_types(types); }
 
 
 		/// \brief Set the new id for the next exec or cleanup
-		void set_id(module_base_key, std::size_t id)noexcept{ id_ = id; }
-
-		/// \brief Call cleanup(id)
-		void cleanup(module_base_key, std::size_t id)noexcept{ cleanup(id); }
+		void set_id(module_base_key&&, std::size_t id)noexcept{ id_ = id; }
 
 
 		/// \brief Name of the input in the config file
@@ -115,30 +93,23 @@ namespace disposer{
 
 
 	protected:
-		/// \brief Add data to an input
-		virtual void add(
-			std::size_t id,
-			any_type const& value,
-			type_index const& type,
-			bool last_use
-		) = 0;
-
-
 		/// \brief Enable the given types
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		) noexcept = 0;
 
 
-		/// \brief Clean up all data with ID less or equal id
-		virtual void cleanup(std::size_t id)noexcept = 0;
+		/// \brief Get the current ID
+		std::size_t current_id()noexcept{ return id_; }
 
-		/// \brief Read only reference to the actual ID while module::exec()
-		///        is running
-		std::size_t const& id;
+		/// \brief Get connected output or nullptr
+		output_base* output_ptr()noexcept{ return output_; }
 
 
 	private:
+		/// \brief Pointer to the linked output
+		output_base* output_;
+
 		/// \brief The actual ID while module::exec() is running
 		std::size_t id_;
 	};

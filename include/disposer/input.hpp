@@ -10,8 +10,8 @@
 #define _disposer__input__hpp_INCLUDED_
 
 #include "input_base.hpp"
-#include "input_data.hpp"
 #include "input_name.hpp"
+#include "output_base.hpp"
 #include "io.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -65,30 +65,59 @@ namespace disposer{
 			"disposer::input types must not be references");
 
 
-		using value_type = std::conditional_t<
+		using values_type = std::conditional_t<
 			type_count == 1,
-			input_data< typename decltype(+types[hana::int_c< 0 >])::type >,
+			typename decltype(+types[hana::int_c< 0 >])::type,
+			decltype(hana::unpack(types, hana::template_< std::variant >))
+		>;
+
+		using references_type = std::conditional_t<
+			type_count == 1,
+			std::reference_wrapper<
+				typename decltype(+types[hana::int_c< 0 >])::type >,
 			decltype(hana::unpack(
-				hana::transform(types, hana::template_< input_data >),
+				hana::transform(
+					hana::transform(types, hana::traits::add_const),
+					hana::template_< std::reference_wrapper >),
 				hana::template_< std::variant >))
 		>;
 
 
-		using input_base::input_base;
-
 		constexpr input()noexcept: input_base(Name::value.c_str()) {}
 
 
-		std::multimap< std::size_t, value_type > get(){
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
+		std::multimap< std::size_t, references_type > get_references(){
+			if(!output_ptr()){
+				throw std::logic_error("input is not linked to an output");
+			}
 
-			std::multimap< std::size_t, value_type > result(
-				std::make_move_iterator(from), std::make_move_iterator(to)
-			);
-			data_.erase(from, to);
+			std::multimap< std::size_t, references_type > result;
+			for(auto& carrier: output_ptr()->get_references()){
+				result.emplace_hint(
+					result.end(),
+					carrier.id,
+					ref_convert_rt(carrier.type, carrier.data)
+				);
+			}
+			return result;
+		}
 
+		std::multimap< std::size_t, values_type > get_values(){
+			if(!output_ptr()){
+				throw std::logic_error("input is not linked to an output");
+			}
+
+			std::multimap< std::size_t, values_type > result;
+			output_ptr()->transfer_values(
+				[&result](std::vector< value_carrier >&& list){
+					for(auto& carrier: list){
+						result.emplace_hint(
+							result.end(),
+							carrier.id,
+							val_convert_rt(carrier.type, carrier.data)
+						);
+					}
+				});
 			return result;
 		}
 
@@ -109,34 +138,43 @@ namespace disposer{
 
 
 	private:
-		using add_function = void(input::*)(std::size_t, any_type const&, bool);
+		using ref_convert_fn = references_type(*)(any_type const& data);
+		using val_convert_fn = values_type(*)(any_type&& data);
 
 
-		virtual void add(
-			std::size_t id,
-			any_type const& value,
+		static std::unordered_map< type_index, ref_convert_fn > const ref_map_;
+		static std::unordered_map< type_index, val_convert_fn > const val_map_;
+
+
+		template < typename U >
+		static references_type ref_convert(any_type const& data)noexcept{
+			return std::cref(reinterpret_cast< U const& >(data));
+		}
+
+		template < typename U >
+		static values_type val_convert(any_type&& data){
+			return reinterpret_cast< U&& >(data);
+		}
+
+		static references_type ref_convert_rt(
 			type_index const& type,
-			bool last_use
-		)override{
-			auto iter = type_map_.find(type);
-			if(iter == type_map_.end()){
-				throw std::logic_error(io_tools::make_string(
-					"unknown add type [", type.pretty_name(),
-					"] in input '", name, "'"
-				));
-			}
-
-			// Call add< type >(id, value, last_use)
-			(this->*(iter->second))(id, value, last_use);
+			any_type const& data
+		)noexcept{
+			auto iter = ref_map_.find(type);
+			assert(iter != ref_map_.end());
+			return (iter->second)(data);
 		}
 
+		static values_type val_convert_rt(
+			type_index const& type,
+			any_type&& data
+		){
+			auto iter = val_map_.find(type);
+			assert(iter != val_map_.end());
+			return (iter->second)(data);
 
-		virtual void cleanup(std::size_t id)noexcept override{
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-			data_.erase(from, to);
 		}
+
 
 		virtual std::vector< type_index > type_list()const override{
 			std::vector< type_index > result;
@@ -163,17 +201,6 @@ namespace disposer{
 		}
 
 
-		template < typename V >
-		void add(std::size_t id, any_type const& value, bool last_use){
-			auto data = reinterpret_cast< output_data_ptr< V > const& >(value);
-
-			std::lock_guard< std::mutex > lock(mutex_);
-			data_.emplace(id, input_data< V >(data, last_use));
-		}
-
-
-		static std::unordered_map< type_index, add_function > const type_map_;
-
 		hana::map< hana::pair< decltype(hana::type_c< T >), bool > ... >
 			enabled_map_;
 
@@ -182,22 +209,29 @@ namespace disposer{
 				type_index::type_id_with_cvr< T >(),
 				enabled_map_[hana::type_c< T >]
 			} ... };
-
-		std::mutex mutex_;
-
-		std::multimap< std::size_t, value_type > data_;
 	};
 
 
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	std::unordered_map< type_index,
-		typename input< Name, TypesMetafunction, T ... >::add_function > const
-		input< Name, TypesMetafunction, T ... >::type_map_ = {
+		typename input< Name, TypesMetafunction, T ... >::ref_convert_fn > const
+		input< Name, TypesMetafunction, T ... >::ref_map_ = {
 			{
 				type_index::type_id_with_cvr< T >(),
-				&input< Name, TypesMetafunction, T ... >::add< T >
+				&input< Name, TypesMetafunction, T ... >::ref_convert< T >
 			} ...
 		};
+
+	template < typename Name, typename TypesMetafunction, typename ... T >
+	std::unordered_map< type_index,
+		typename input< Name, TypesMetafunction, T ... >::val_convert_fn > const
+		input< Name, TypesMetafunction, T ... >::val_map_ = {
+			{
+				type_index::type_id_with_cvr< T >(),
+				&input< Name, TypesMetafunction, T ... >::val_convert< T >
+			} ...
+		};
+
 
 
 	/// \brief Provid types for constructing an input
