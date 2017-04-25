@@ -18,21 +18,8 @@
 namespace disposer{
 
 
-	struct creator_key;
-
-	/// \brief Defined in create_chain_modules.cpp
-	creator_key make_creator_key();
-
-	/// \brief Access key creator functions
-	struct creator_key{
-	private:
-		/// \brief Constructor
-		constexpr creator_key()noexcept = default;
-		friend creator_key make_creator_key();
-	};
-
-
 	struct module_base_key;
+	struct creator_key;
 
 	class output_base;
 
@@ -72,14 +59,14 @@ namespace disposer{
 		virtual std::vector< type_index > type_list()const = 0;
 
 		/// \brief Enable the given types
-		void set_output(creator_key, output_base* output)noexcept{
+		void set_output(creator_key&&, output_base* output)noexcept{
 			output_ = output;
 		}
 
 
 		/// \brief Enable the given types
 		bool enable_types(
-			creator_key,
+			creator_key&&,
 			std::vector< type_index > const& types
 		)noexcept{ return enable_types(types); }
 

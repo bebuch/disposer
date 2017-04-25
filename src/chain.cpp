@@ -16,6 +16,15 @@
 namespace disposer{
 
 
+	/// \brief Class disposer access key
+	struct chain_key{
+	private:
+		/// \brief Constructor
+		constexpr chain_key()noexcept = default;
+		friend class chain;
+	};
+
+
 	chain::chain(
 		module_maker_list const& maker_list,
 		types::merge::chain const& config_chain,

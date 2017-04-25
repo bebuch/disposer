@@ -22,13 +22,7 @@
 namespace disposer{
 
 
-	/// \brief Class disposer access key
-	struct chain_key{
-	private:
-		/// \brief Constructor
-		constexpr chain_key()noexcept = default;
-		friend class chain;
-	};
+	struct chain_key;
 
 
 	/// \brief Exception class for modules that need input variables
@@ -103,36 +97,36 @@ namespace disposer{
 
 
 		/// \brief Set for next exec ID
-		void set_id(chain_key, std::size_t id);
+		void set_id(chain_key&&, std::size_t id);
 
 
 		/// \brief Call the actual worker function exec()
-		void exec(chain_key){ exec(); }
+		void exec(chain_key&&){ exec(); }
 
 
 		/// \brief Call the actual enable() function
-		void enable(chain_key){ enable(); }
+		void enable(chain_key&&){ enable(); }
 
 		/// \brief Call the actual disable() function
-		void disable(chain_key)noexcept{ disable(); }
+		void disable(chain_key&&)noexcept{ disable(); }
 
 
 		/// \brief Call input_ready()
-		void input_ready(creator_key){ input_ready(); }
+		void input_ready(creator_key&&){ input_ready(); }
 
 
 		/// \brief Called for a modules wich failed by exception and all
 		///        following modules in the chain instead of exec()
 		///
 		/// Removes all input data whichs ID is less or equal to the actual ID.
-		void cleanup(chain_key, std::size_t id)noexcept;
+		void cleanup(chain_key&&, std::size_t id)noexcept;
 
 
 		/// \brief Access to internal inputs_
-		input_list& inputs(creator_key){ return inputs_; }
+		input_list& inputs(creator_key&&){ return inputs_; }
 
 		/// \brief Access to internal outputs_
-		output_list& outputs(creator_key){ return outputs_; }
+		output_list& outputs(creator_key&&){ return outputs_; }
 
 
 		/// \brief Name of the module type given via class module_declarant

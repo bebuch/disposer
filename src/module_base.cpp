@@ -41,13 +41,13 @@ namespace disposer{
 		{}
 
 
-	void module_base::cleanup(chain_key, std::size_t id)noexcept{
+	void module_base::cleanup(chain_key&&, std::size_t id)noexcept{
 		for(auto& output: outputs_){
 			output.get().cleanup(module_base_key(), id);
 		}
 	}
 
-	void module_base::set_id(chain_key, std::size_t id){
+	void module_base::set_id(chain_key&&, std::size_t id){
 		id_ = id;
 		for(auto& input: inputs_){
 			input.get().set_id(module_base_key(), id);

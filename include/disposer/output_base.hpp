@@ -21,18 +21,8 @@
 namespace disposer{
 
 
-	class input_base;
-
-	/// \brief Class input_base_key access key
-	struct input_base_key{
-	private:
-		/// \brief Constructor
-		constexpr input_base_key()noexcept = default;
-		friend class input_base;
-	};
-
-
 	struct module_base_key;
+	struct input_key;
 
 
 	/// \brief Transfer reference to data from output to input
@@ -115,13 +105,13 @@ namespace disposer{
 
 		/// \brief get_references(id)
 		std::vector< reference_carrier >
-		get_references(input_base_key, std::size_t id){
+		get_references(input_key&&, std::size_t id){
 			return get_references(id);
 		}
 
 		/// \brief transfer_values(id, fn)
 		void transfer_values(
-			input_base_key,
+			input_key&&,
 			std::size_t id,
 			TransferFn const& fn
 		){

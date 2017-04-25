@@ -10,6 +10,19 @@
 namespace disposer{
 
 
+	struct creator_key;
+
+	/// \brief Defined in create_chain_modules.cpp
+	creator_key make_creator_key();
+
+	/// \brief Access key creator functions
+	struct creator_key{
+	private:
+		/// \brief Constructor
+		constexpr creator_key()noexcept = default;
+		friend creator_key make_creator_key();
+	};
+
 	creator_key make_creator_key(){
 		return creator_key();
 	}

@@ -25,6 +25,20 @@ namespace disposer{
 
 
 	template < typename Name, typename TypesMetafunction, typename ... T >
+	class input;
+
+	/// \brief Class input_key access key
+	struct input_key{
+	private:
+		/// \brief Constructor
+		constexpr input_key()noexcept = default;
+
+		template < typename Name, typename TypesMetafunction, typename ... T >
+		friend class input;
+	};
+
+
+	template < typename Name, typename TypesMetafunction, typename ... T >
 	class input: public input_base{
 	public:
 		static_assert(hana::is_a< input_name_tag, Name >);
@@ -92,7 +106,9 @@ namespace disposer{
 			}
 
 			std::multimap< std::size_t, references_type > result;
-			for(auto& carrier: output_ptr()->get_references()){
+			for(auto& carrier: output_ptr()->get_references(
+				input_key(), current_id()
+			)){
 				result.emplace_hint(
 					result.end(),
 					carrier.id,
@@ -108,7 +124,7 @@ namespace disposer{
 			}
 
 			std::multimap< std::size_t, values_type > result;
-			output_ptr()->transfer_values(
+			output_ptr()->transfer_values(input_key(), current_id(),
 				[&result](std::vector< value_carrier >&& list){
 					for(auto& carrier: list){
 						result.emplace_hint(
