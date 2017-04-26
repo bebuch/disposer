@@ -45,10 +45,10 @@ namespace disposer{
 				"parameter io must be an input_name or an output_name");
 
 			if constexpr(hana::is_a< input_name_tag, io_t >){
-// 				static_assert(hana::contains(hana::keys(in), io_t::value)); // TODO: in is not an constexpr ...
+				static_assert(have_input(io_t::value));
 				return in[io_t::value];
 			}else{
-// 				static_assert(hana::contains(hana::keys(out), io_t::value)); // TODO: out is not an constexpr ...
+				static_assert(have_output(io_t::value));
 				return out[io_t::value];
 			}
 		}
@@ -84,6 +84,16 @@ namespace disposer{
 			});
 		}
 
+
+		template < typename String >
+		constexpr static bool have_input(String){
+			return hana::contains(decltype(hana::keys(in))(), String());
+		}
+
+		template < typename String >
+		constexpr static bool have_output(String){
+			return hana::contains(decltype(hana::keys(in))(), String());
+		}
 
 		Inputs in;
 		Outputs out;

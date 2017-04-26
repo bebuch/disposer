@@ -79,7 +79,8 @@ namespace disposer{
 
 		/// \brief Access the value if parameter has only one type
 		decltype(auto) operator()()const{
-			static_assert(type_count == 1);
+			static_assert(type_count == 1,
+				"you must call with a type: parameter(hana::type_c< Type >)");
 			return (*this)(types[hana::int_c< 0 >]);
 		}
 
@@ -132,7 +133,7 @@ namespace disposer{
 	};
 
 
-	/// \brief Verify function signature of parameter enable_fn and parser_fn
+	/// \brief Verify function signatures of parameters enable_fn and parser_fn
 	template < typename EnableFunction, typename ParserFunction >
 	struct verify_parameter{
 		template < typename T >
