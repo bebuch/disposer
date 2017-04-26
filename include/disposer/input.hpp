@@ -12,7 +12,7 @@
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
-#include "io.hpp"
+#include "module_config_lists.hpp"
 
 #include <io_tools/make_string.hpp>
 

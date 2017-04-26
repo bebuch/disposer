@@ -11,6 +11,7 @@
 
 #include "parameter_name.hpp"
 #include "type_index.hpp"
+#include "module_config_lists.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -103,10 +104,6 @@ namespace disposer{
 			std::declval< std::optional< T const > >()) ... ))
 				const type_value_map_;
 	};
-
-
-	/// \brief Tag for param_t
-	struct param_tag{};
 
 
 	/// \brief Provid types for constructing an parameter

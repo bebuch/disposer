@@ -51,7 +51,8 @@ int main(){
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_out), ident, int > >
-			>
+			>,
+			hana::map<>
 		> > const >);
 	typename decltype(m1)::type mv1("chain", "name", 0);
 	auto& mv1i = mv1("test1"_in);
@@ -88,7 +89,8 @@ int main(){
 					disposer::output< decltype("test2"_out), ident, char > >,
 				hana::pair< decltype("test3"_s),
 					disposer::output< decltype("test3"_out), ident, float > >
-			>
+			>,
+			hana::map<>
 		> > const >);
 
 	constexpr auto m3 = "module3"_module(
@@ -105,7 +107,8 @@ int main(){
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_out), ident, int, char, float > >
-			>
+			>,
+			hana::map<>
 		> > const >);
 
 	constexpr auto m4 = "module4"_module(
@@ -122,7 +125,8 @@ int main(){
 			hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::output< decltype("test1"_out), ident, int, char, float > >
-			>
+			>,
+			hana::map<>
 		> > const >);
 
 	constexpr auto m5 = "module5"_module(
@@ -151,7 +155,8 @@ int main(){
 					disposer::output< decltype("test2"_out), ident, int, char, float > >,
 				hana::pair< decltype("test3"_s),
 					disposer::output< decltype("test3"_out), ident, int, char, float > >
-			>
+			>,
+			hana::map<>
 		> > const >);
 
 }

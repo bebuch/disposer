@@ -13,25 +13,26 @@ int main(){
 	using ident =
 		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
-	constexpr auto m1 = disposer::make_io_lists(
+	constexpr auto m1 = disposer::separate_module_config_lists(
 			"test1"_in(hana::type_c< int >)
 		);
 	static_assert(std::is_same_v< decltype(m1),
-		hana::pair<
+		hana::tuple<
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >
 			> >,
+			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
 
-	constexpr auto m2 = disposer::make_io_lists(
+	constexpr auto m2 = disposer::separate_module_config_lists(
 			"test1"_in(hana::type_c< int >),
 			"test2"_in(hana::type_c< char >),
 			"test3"_in(hana::type_c< float >)
 		);
 	static_assert(std::is_same_v< decltype(m2),
-		hana::pair<
+		hana::tuple<
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >,
@@ -40,40 +41,43 @@ int main(){
 				hana::pair< decltype("test3"_s),
 					disposer::input< decltype("test3"_in), ident, float > >
 			> >,
+			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
 
-	constexpr auto m3 = disposer::make_io_lists(
+	constexpr auto m3 = disposer::separate_module_config_lists(
 			"test1"_in(types)
 		);
 	static_assert(std::is_same_v< decltype(m3),
-		hana::pair<
+		hana::tuple<
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int, char, float > >
 			> >,
+			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
 
-	constexpr auto m4 = disposer::make_io_lists(
+	constexpr auto m4 = disposer::separate_module_config_lists(
 			"test1"_in(types_set)
 		);
 	static_assert(std::is_same_v< decltype(m4),
-		hana::pair<
+		hana::tuple<
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int, char, float > >
 			> >,
+			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
 
-	constexpr auto m5 = disposer::make_io_lists(
+	constexpr auto m5 = disposer::separate_module_config_lists(
 			"test1"_in(hana::type_c< int >),
 			"test2"_in(types),
 			"test3"_in(types_set)
 		);
 	static_assert(std::is_same_v< decltype(m5),
-		hana::pair<
+		hana::tuple<
 			hana::type< hana::map<
 				hana::pair< decltype("test1"_s),
 					disposer::input< decltype("test1"_in), ident, int > >,
@@ -82,6 +86,7 @@ int main(){
 				hana::pair< decltype("test3"_s),
 					disposer::input< decltype("test3"_in), ident, int, char, float > >
 			> >,
+			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
 }

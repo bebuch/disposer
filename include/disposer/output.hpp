@@ -12,7 +12,7 @@
 #include "output_base.hpp"
 #include "type_index.hpp"
 #include "output_name.hpp"
-#include "io.hpp"
+#include "module_config_lists.hpp"
 
 #include <io_tools/make_string.hpp>
 

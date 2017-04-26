@@ -21,8 +21,8 @@ namespace disposer{
 	struct module_name: ct_name< C ... >{
 		using hana_tag = module_name_tag;
 
-		template < typename ... IO >
-		constexpr auto operator()(IO&& ... ios)const noexcept;
+		template < typename ... ConfigList >
+		constexpr auto operator()(ConfigList&& ... list)const noexcept;
 	};
 
 	template < char ... C >

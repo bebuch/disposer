@@ -92,9 +92,9 @@ exe input
 	/disposer//disposer
 	;
 
-exe io
+exe module_config_lists
 	:
-	io.cpp
+	module_config_lists.cpp
 	/disposer//disposer
 	;
 
