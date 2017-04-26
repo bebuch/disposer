@@ -108,22 +108,22 @@ int main(){
 	constexpr auto p8 = "p8"_param(types,
 		[](auto t){ return t == hana::type_c< int >; });
 
-	static_assert(std::is_same_v< decltype(p1), disposer::param_t<
+	static_assert(std::is_same_v< decltype(p1), disposer::parameter_maker<
 			decltype("p1"_param),
 			disposer::enable_all, disposer::parameter_parser,
 			disposer::parameter< decltype("p1"_param), int >
 		> const >);
-	static_assert(std::is_same_v< decltype(p2), disposer::param_t<
+	static_assert(std::is_same_v< decltype(p2), disposer::parameter_maker<
 			decltype("p2"_param),
 			disposer::enable_all, disposer::parameter_parser,
 			disposer::parameter< decltype("p2"_param), int, long, float >
 		> const >);
-	static_assert(std::is_same_v< decltype(p3), disposer::param_t<
+	static_assert(std::is_same_v< decltype(p3), disposer::parameter_maker<
 			decltype("p3"_param),
 			disposer::enable_all, disposer::parameter_parser,
 			disposer::parameter< decltype("p3"_param), int, long, float >
 		> const >);
-	static_assert(std::is_same_v< decltype(p4), disposer::param_t<
+	static_assert(std::is_same_v< decltype(p4), disposer::parameter_maker<
 			decltype("p4"_param),
 			disposer::enable_all, string_parser,
 			disposer::parameter< decltype("p4"_param), std::string >

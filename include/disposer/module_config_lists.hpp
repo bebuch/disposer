@@ -18,14 +18,14 @@ namespace disposer{
 	namespace hana = ::boost::hana;
 
 
-	/// \brief Tag for in_t
-	struct in_tag{};
+	/// \brief Tag for input_maker
+	struct input_maker_tag{};
 
-	/// \brief Tag for out_t
-	struct out_tag{};
+	/// \brief Tag for output_maker
+	struct output_maker_tag{};
 
-	/// \brief Tag for param_t
-	struct param_tag{};
+	/// \brief Tag for parameter_maker
+	struct parameter_maker_tag{};
 
 
 	/// \brief Create three boost::hana::map's from the given input, output
@@ -38,19 +38,22 @@ namespace disposer{
 		static_assert(hana::all_of(types, [](auto&& t){
 			using type = typename decltype(+t)::type;
 			return
-				hana::is_a< in_tag, type > ||
-				hana::is_a< out_tag, type > ||
-				hana::is_a< param_tag, type >;
+				hana::is_a< input_maker_tag, type > ||
+				hana::is_a< output_maker_tag, type > ||
+				hana::is_a< parameter_maker_tag, type >;
 		}), "only inputs, outputs and parameters are allowed as argument");
 
 		constexpr auto inputs = hana::filter(types, [](auto&& type){
-				return hana::is_a< in_tag, typename decltype(+type)::type >;
+				return hana::is_a<
+					input_maker_tag, typename decltype(+type)::type >;
 			});
 		constexpr auto outputs = hana::filter(types, [](auto&& type){
-				return hana::is_a< out_tag, typename decltype(+type)::type >;
+				return hana::is_a<
+					output_maker_tag, typename decltype(+type)::type >;
 			});
 		constexpr auto parameters = hana::filter(types, [](auto&& type){
-				return hana::is_a< param_tag, typename decltype(+type)::type >;
+				return hana::is_a<
+					parameter_maker_tag, typename decltype(+type)::type >;
 			});
 
 		constexpr auto io_type_list = [](auto ... io){

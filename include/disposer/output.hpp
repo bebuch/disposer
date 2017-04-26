@@ -246,9 +246,9 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an output
 	template < typename Name, typename OutputType >
-	struct out_t{
+	struct output_maker{
 		/// \brief Tag for boost::hana
-		using hana_tag = out_tag;
+		using hana_tag = output_maker_tag;
 
 		/// \brief Output name as compile time string
 		using name_type = Name;
@@ -280,7 +280,7 @@ namespace disposer{
 			using output_type =
 				output< name_type, TypesMetafunction, typename Types::type >;
 
-			return out_t< name_type, output_type >{};
+			return output_maker< name_type, output_type >{};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
@@ -292,7 +292,8 @@ namespace disposer{
 			auto type_output =
 				hana::unpack(unpack_types, hana::template_< output >);
 
-			return out_t< name_type, typename decltype(type_output)::type >{};
+			return output_maker< name_type,
+				typename decltype(type_output)::type >{};
 		}
 	}
 

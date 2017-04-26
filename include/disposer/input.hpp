@@ -252,9 +252,9 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an input
 	template < typename Name, typename InputType >
-	struct in_t{
+	struct input_maker{
 		/// \brief Tag for boost::hana
-		using hana_tag = in_tag;
+		using hana_tag = input_maker_tag;
 
 		/// \brief Output name as compile time string
 		using name_type = Name;
@@ -286,7 +286,7 @@ namespace disposer{
 			using input_type =
 				input< name_type, TypesMetafunction, typename Types::type >;
 
-			return in_t< name_type, input_type >{};
+			return input_maker< name_type, input_type >{};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
@@ -298,7 +298,8 @@ namespace disposer{
 			auto type_input =
 				hana::unpack(unpack_types, hana::template_< input >);
 
-			return in_t< name_type, typename decltype(type_input)::type >{};
+			return input_maker< name_type,
+				typename decltype(type_input)::type >{};
 		}
 	}
 

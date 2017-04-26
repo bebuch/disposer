@@ -112,9 +112,9 @@ namespace disposer{
 		typename EnableFunction,
 		typename ParserFunction,
 		typename ParameterType >
-	struct param_t{
+	struct parameter_maker{
 		/// \brief Tag for boost::hana
-		using hana_tag = param_tag;
+		using hana_tag = parameter_maker_tag;
 
 		/// \brief Parameter name as compile time string
 		using name = Name;
@@ -191,7 +191,7 @@ namespace disposer{
 			using type_parameter =
 				parameter< name_type, typename Types::type >;
 
-			return param_t< name_type, EnableFunction, ParserFunction,
+			return parameter_maker< name_type, EnableFunction, ParserFunction,
 				type_parameter >{
 					static_cast< EnableFunction&& >(enable_fn),
 					static_cast< ParserFunction&& >(parser_fn)};
@@ -208,7 +208,7 @@ namespace disposer{
 			auto type_parameter =
 				hana::unpack(unpack_types, hana::template_< parameter >);
 
-			return param_t< name_type, EnableFunction, ParserFunction,
+			return parameter_maker< name_type, EnableFunction, ParserFunction,
 				typename decltype(type_parameter)::type >{
 					static_cast< EnableFunction&& >(enable_fn),
 					static_cast< ParserFunction&& >(parser_fn)};
