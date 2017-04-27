@@ -54,20 +54,6 @@ project disposer_tests
 	;
 
 
-exe test1
-	:
-	test1.cpp
-	/logsys//logsys
-	/disposer//disposer
-	;
-
-exe test2
-	:
-	test2.cpp
-	/logsys//logsys
-	/disposer//disposer
-	;
-
 exe parse_errors
 	:
 	parse_errors.cpp
