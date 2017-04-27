@@ -23,27 +23,12 @@ namespace disposer{
 			parameter_sets.emplace(set.name, false);
 		}
 
-		std::map< std::string, bool > modules;
-		for(auto& module: config.modules){
-			modules.emplace(module.name, false);
-
-			for(auto& set: module.parameter_sets){
-				parameter_sets[set] = true;
-			}
-		}
-
-		for(auto const& set: parameter_sets){
-			if(set.second) continue;
-
-			logsys::log([&set](logsys::stdlogb& os){
-				os << "parameter_set '" + set.first + "' is not used";
-			});
-		}
-
 		for(auto& chain: config.chains){
 			std::map< std::string, bool > variables;
 			for(auto& module: chain.modules){
-				modules[module.name] = true;
+				for(auto& set: module.parameter_sets){
+					parameter_sets[set] = true;
+				}
 
 				for(auto& input: module.inputs){
 					variables[input.variable] = true;
@@ -64,11 +49,11 @@ namespace disposer{
 			}
 		}
 
-		for(auto const& module: modules){
-			if(module.second) continue;
+		for(auto const& set: parameter_sets){
+			if(set.second) continue;
 
-			logsys::log([&module](logsys::stdlogb& os){
-				os << "module '" + module.first + "' is not used";
+			logsys::log([&set](logsys::stdlogb& os){
+				os << "parameter_set '" + set.first + "' is not used";
 			});
 		}
 	}

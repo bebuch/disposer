@@ -33,23 +33,15 @@ namespace disposer{
 		using parameter_sets = std::vector< parameter_set >;
 
 
-		struct module{
-			std::string name;
-			std::string type_name;
-			std::vector< std::string > parameter_sets;
-			std::vector< parameter > parameters;
-		};
-
-		using modules = std::vector< module >;
-
-
 		struct io{
 			std::string name;
 			std::string variable;
 		};
 
-		struct chain_module{
-			std::string name;
+		struct module{
+			std::string type_name;
+			std::vector< std::string > parameter_sets;
+			std::vector< parameter > parameters;
 			std::vector< io > inputs;
 			std::vector< io > outputs;
 		};
@@ -58,7 +50,7 @@ namespace disposer{
 			std::string name;
 			std::optional< std::string > group;
 			std::optional< std::string > id_generator;
-			std::vector< chain_module > modules;
+			std::vector< module > modules;
 		};
 
 		using chains = std::vector< chain >;
@@ -66,7 +58,6 @@ namespace disposer{
 
 		struct config{
 			parse::parameter_sets sets;
-			parse::modules modules;
 			parse::chains chains;
 		};
 

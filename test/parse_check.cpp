@@ -164,13 +164,12 @@ std::vector< std::pair< std::string, config > > tests{
 R"file(parameter_set
 	ps1
 		param1 = v1
-module
-	mod1 = dmod1
-		parameter_set = ps1
-		param2 = v2
 chain
 	chain1
-		mod1
+		dmod1
+			parameter
+				parameter_set = ps1
+				param2 = v2
 			->
 				out = x1
 )file"
@@ -186,23 +185,19 @@ chain
 			},
 			{
 				{
-					"mod1",
-					"dmod1",
-					{
-						{"ps1"}
-					}, {
-						{"param2", "v2"}
-					}
-				}
-			},
-			{
-				{
 					"chain1",
 					{},
 					{},
 					{
 						{
-							"mod1",
+							"dmod1",
+							{
+								{
+									{"ps1"}
+								}, {
+									{"param2", "v2"}
+								}
+							},
 							{},
 							{
 								{"out", "x1"}

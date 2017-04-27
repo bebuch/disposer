@@ -20,33 +20,23 @@ namespace disposer{
 	namespace types{ namespace merge{
 
 
+		using io = parse::io;
+
 		struct module{
 			std::string type_name;
 			std::map< std::string, std::string > parameters;
-		};
-
-		using modules = std::map< std::string, module >;
-
-
-		struct chain_module{
-			std::pair< std::string const, merge::module >& module;
-			std::vector< parse::io > inputs;
-			std::vector< parse::io > outputs;
+			std::vector< io > inputs;
+			std::vector< io > outputs;
 		};
 
 		struct chain{
 			std::string name;
 			std::string id_generator;
 			std::string group;
-			std::vector< chain_module > modules;
+			std::vector< module > modules;
 		};
 
-		using chains = std::vector< chain >;
-
-		struct config{
-			merge::modules modules;
-			merge::chains chains;
-		};
+		using config = std::vector< chain >;
 
 
 	} }

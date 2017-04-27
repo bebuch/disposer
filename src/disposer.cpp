@@ -30,7 +30,7 @@ namespace disposer{
 				std::string, std::vector< std::reference_wrapper< chain > >
 			> groups;
 
-			for(auto& config_chain: config.chains){
+			for(auto& config_chain: config){
 				logsys::log([&config_chain](logsys::stdlogb& os){
 					os << "create chain '" << config_chain.name << "'";
 				}, [&](){
