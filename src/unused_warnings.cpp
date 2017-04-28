@@ -26,7 +26,7 @@ namespace disposer{
 		for(auto& chain: config.chains){
 			std::map< std::string, bool > variables;
 			for(auto& module: chain.modules){
-				for(auto& set: module.parameter_sets){
+				for(auto& set: module.parameters.parameter_sets){
 					parameter_sets[set] = true;
 				}
 

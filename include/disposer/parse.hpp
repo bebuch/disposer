@@ -17,7 +17,7 @@
 namespace disposer{
 
 
-	namespace types{ namespace parse{
+	namespace types::parse{
 
 
 		struct parameter{
@@ -38,10 +38,14 @@ namespace disposer{
 			std::string variable;
 		};
 
-		struct module{
-			std::string type_name;
+		struct module_parameters{
 			std::vector< std::string > parameter_sets;
 			std::vector< parameter > parameters;
+		};
+
+		struct module{
+			std::string type_name;
+			module_parameters parameters;
 			std::vector< io > inputs;
 			std::vector< io > outputs;
 		};
@@ -62,7 +66,7 @@ namespace disposer{
 		};
 
 
-	} }
+	}
 
 
 	types::parse::config parse(std::istream& is);

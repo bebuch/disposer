@@ -46,18 +46,17 @@ namespace disposer{ namespace types{ namespace parse{
 		return os << "{" << v.name << "," << v.parameters << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, module const& v){
-		return os << "{" << v.name << "," << v.type_name << ","
-			<< v.parameter_sets << "," << v.parameters << "}";
-	}
-
 	std::ostream& operator<<(std::ostream& os, io const& v){
 		return os << "{" << v.name << "," << v.variable << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, chain_module const& v){
-		return os << "{" << v.name << "," << v.inputs << ","
-			<< v.outputs << "}";
+	std::ostream& operator<<(std::ostream& os, module_parameters const& v){
+		return os << "{" << v.parameter_sets << "," << v.parameters << "}";
+	}
+
+	std::ostream& operator<<(std::ostream& os, module const& v){
+		return os << "{" << v.type_name << "," << v.parameters << ","
+			<< v.inputs << "," << v.outputs << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, chain const& v){
@@ -66,8 +65,7 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	std::ostream& operator<<(std::ostream& os, config const& v){
-		return os << "{" << v.sets << "," << v.modules << ","
-			<< v.chains << "}";
+		return os << "{" << v.sets << "," << v.chains << "}";
 	}
 
 	bool operator==(
@@ -87,16 +85,6 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
-		module const& l,
-		module const& r
-	){
-		return l.name == r.name
-			&& l.type_name == r.type_name
-			&& l.parameter_sets == r.parameter_sets
-			&& l.parameters == r.parameters;
-	}
-
-	bool operator==(
 		io const& l,
 		io const& r
 	){
@@ -105,10 +93,19 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
-		chain_module const& l,
-		chain_module const& r
+		module_parameters const& l,
+		module_parameters const& r
 	){
-		return l.name == r.name
+		return l.parameter_sets == r.parameter_sets
+			&& l.parameters == r.parameters;
+	}
+
+	bool operator==(
+		module const& l,
+		module const& r
+	){
+		return l.type_name == r.type_name
+			&& l.parameters == r.parameters
 			&& l.inputs == r.inputs
 			&& l.outputs == r.outputs;
 	}
@@ -128,7 +125,6 @@ namespace disposer{ namespace types{ namespace parse{
 		config const& r
 	){
 		return l.sets == r.sets
-			&& l.modules == r.modules
 			&& l.chains == r.chains;
 	}
 

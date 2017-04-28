@@ -46,7 +46,7 @@ namespace disposer{
 			std::set< std::string > chain_modules;
 			for(auto& module: chain.modules){
 				std::set< std::string > sets;
-				for(auto& set: module.parameter_sets){
+				for(auto& set: module.parameters.parameter_sets){
 					if(parameter_sets.find(set) == parameter_sets.end()){
 						throw std::logic_error(
 							"In module '" + module.type_name +
@@ -63,7 +63,7 @@ namespace disposer{
 				}
 
 				std::set< std::string > keys;
-				for(auto& param: module.parameters){
+				for(auto& param: module.parameters.parameters){
 					if(!keys.insert(param.key).second){
 						throw std::logic_error(
 							"In module '" + module.type_name +

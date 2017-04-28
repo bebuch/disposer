@@ -39,7 +39,7 @@ namespace disposer{
 				std::map< std::string, std::string > parameters;
 
 				// add all parameters from module
-				for(auto& parameter: reverse(module.parameters)){
+				for(auto& parameter: reverse(module.parameters.parameters)){
 					parameters.emplace(
 						std::move(parameter.key),
 						std::move(parameter.value)
@@ -48,7 +48,7 @@ namespace disposer{
 
 				// add all parameters from the last to the first parameter set
 				// (skip already existing ones)
-				for(auto& set: reverse(module.parameter_sets)){
+				for(auto& set: reverse(module.parameters.parameter_sets)){
 					auto iter = parameter_sets.find(set);
 
 					// set was found

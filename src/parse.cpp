@@ -32,7 +32,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 	parameters
 )
 
-
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::io,
 	name,
@@ -40,9 +39,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
+	disposer::types::parse::module_parameters,
+	parameter_sets,
+	parameters
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::module,
 	type_name,
-	parameter_sets,
 	parameters,
 	inputs,
 	outputs
@@ -55,7 +59,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 	id_generator,
 	modules
 )
-
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::config,
@@ -151,6 +154,7 @@ namespace disposer::parser{
 	};
 
 
+	namespace type = types::parse;
 
 	struct space_tag;
 	x3::rule< space_tag > const space("space");
@@ -168,108 +172,9 @@ namespace disposer::parser{
 	x3::rule< keyword_spaces_tag > const
 		keyword_spaces("keyword_spaces");
 
-	struct keyword_tag;
-	x3::rule< keyword_tag, std::string > const keyword("keyword");
-
 	struct value_spaces_tag;
 	x3::rule< value_spaces_tag > const
 		value_spaces("value_spaces");
-
-	struct value_tag;
-	x3::rule< value_tag, std::string > const value("value");
-
-	struct set_parameter_tag;
-	x3::rule< set_parameter_tag, types::parse::parameter > const
-		set_parameter("set_parameter");
-
-	struct prevent_set_parameter_set_tag;
-	x3::rule< prevent_set_parameter_set_tag > const
-		prevent_set_parameter_set("prevent_set_parameter_set");
-
-	struct parameter_set_tag;
-	x3::rule< parameter_set_tag, types::parse::parameter_set > const
-		parameter_set("parameter_set");
-
-	struct parameter_set_params_tag;
-	x3::rule< parameter_set_params_tag, std::vector< types::parse::parameter > >
-		const parameter_set_params("parameter_set_params");
-
-	struct parameter_sets_tag;
-	x3::rule< parameter_sets_tag, types::parse::parameter_sets > const
-		parameter_sets("parameter_sets");
-
-	struct parameter_sets_params_tag;
-	x3::rule< parameter_sets_params_tag, types::parse::parameter_sets > const
-		parameter_sets_params("parameter_sets_params");
-
-	struct module_parameter_tag;
-	x3::rule< module_parameter_tag, types::parse::module > const
-		module_parameter("module_parameter");
-
-	struct module_parameter_sets_tag;
-	x3::rule< module_parameter_sets_tag, std::vector< std::string > > const
-		module_parameter_sets("module_parameter_sets");
-
-	struct prevent_parameter_set_tag;
-	x3::rule< prevent_parameter_set_tag > const
-		prevent_parameter_set("prevent_parameter_set");
-
-	struct parameter_tag;
-	x3::rule< parameter_tag, types::parse::parameter > const
-		parameter("parameter");
-
-	struct input_tag;
-	x3::rule< input_tag, types::parse::io > const input("input");
-
-	struct output_tag;
-	x3::rule< output_tag, types::parse::io > const output("output");
-
-	struct input_params_tag;
-	x3::rule< input_params_tag, std::vector< types::parse::io > >
-		const input_params("input_params");
-
-	struct output_params_tag;
-	x3::rule< output_params_tag, std::vector< types::parse::io > >
-		const output_params("output_params");
-
-	struct inputs_tag;
-	x3::rule< inputs_tag, std::vector< types::parse::io > > const
-		inputs("inputs");
-
-	struct outputs_tag;
-	x3::rule< outputs_tag, std::vector< types::parse::io > > const
-		outputs("outputs");
-
-	struct module_tag;
-	x3::rule< module_tag, types::parse::module > const
-		module("module");
-
-	struct chain_tag;
-	x3::rule< chain_tag, types::parse::chain > const chain("chain");
-
-	struct chain_params_tag;
-	x3::rule< chain_params_tag, std::vector< types::parse::module > >
-		const chain_params("chain_params");
-
-	struct group_tag;
-	x3::rule< group_tag, std::string > const group("group");
-
-	struct id_generator_tag;
-	x3::rule< id_generator_tag, std::string > const
-		id_generator("id_generator");
-
-	struct chains_tag;
-	x3::rule< chains_tag, types::parse::chains > const
-		chains("chains");
-
-	struct chains_params_tag;
-	x3::rule< chains_params_tag, types::parse::chains > const
-		chains_params("chains_params");
-
-	struct config_tag;
-	x3::rule< config_tag, types::parse::config >
-		const config("config");
-
 
 	auto const space_def =
 		lit(' ') | '\t'
@@ -291,13 +196,20 @@ namespace disposer::parser{
 		+(char_(' ') | char_('\t')) >> !(eol | '=')
 	;
 
+	auto const value_spaces_def =
+		+(char_(' ') | char_('\t')) >> !(eol | eoi)
+	;
+
+
+	struct keyword_tag;
+	x3::rule< keyword_tag, std::string > const keyword("keyword");
+
+	struct value_tag;
+	x3::rule< value_tag, std::string > const value("value");
+
 	auto const keyword_def =
 		(char_ - space - '=' - eol) >>
 		*(keyword_spaces | +(char_ - space - eol - '='))
-	;
-
-	auto const value_spaces_def =
-		+(char_(' ') | char_('\t')) >> !(eol | eoi)
 	;
 
 	auto const value_def =
@@ -305,58 +217,137 @@ namespace disposer::parser{
 		*(value_spaces | +(char_ - space - eol))
 	;
 
-	auto const prevent_set_parameter_set_def =
-		x3::expect[!("parameter_set" >> *space >> '=')]
-	;
 
-	auto const set_parameter_def =
-		("\t\t" >> prevent_parameter_set) > keyword  >
+	struct sets_param_tag;
+	x3::rule< sets_param_tag, type::parameter > const
+		sets_param("sets_param");
+
+	struct sets_param_prevent_tag;
+	x3::rule< sets_param_prevent_tag > const
+		sets_param_prevent("sets_param_prevent");
+
+	struct sets_param_list_tag;
+	x3::rule< sets_param_list_tag, std::vector< type::parameter > > const
+		sets_param_list("sets_param_list");
+
+	struct sets_set_tag;
+	x3::rule< sets_set_tag, type::parameter_set > const
+		sets_set("sets_set");
+
+	struct sets_set_list_tag;
+	x3::rule< sets_set_list_tag, type::parameter_set > const
+		sets_set_list("sets_set_list");
+
+	struct sets_config_tag;
+	x3::rule< sets_config_tag, type::parameter_set > const
+		sets_config("sets_config");
+
+	auto const sets_param_def =
+		("\t\t" >> sets_param_prevent) > keyword  >
 		*space > '=' > *space > value > separator
 	;
 
-	auto const parameter_set_def =
-		('\t' > keyword > separator) >>
-		parameter_set_params
-	;
-
-	auto const parameter_set_params_def =
-		x3::expect[+set_parameter]
-	;
-
-	auto const parameter_sets_def =
-		(("parameter_set" > separator) >> parameter_sets_params) |
-		&x3::expect["chain" >> separator]
-	;
-
-	auto const parameter_sets_params_def =
-		x3::expect[+parameter_set]
-	;
-
-	auto const module_parameter_def =
-		("\t\t\tparameter" > separator) >>
-		module_parameter_sets >> *module_parameter
-	;
-
-	auto const module_parameter_sets_def =
-		*(
-			("\t\t\t\tparameter_set" >> *space >> '=')
-			> *space > value > separator
-		) >> &x3::expect[
-			("\t\t\t\t" >> keyword) |
-			("\t\t\t<-") |
-			("\t\t\t->") |
-			("\t\t" >> keyword) |
-			("\t" >> keyword) |
-			(*space >> x3::eoi)
-		]
-	;
-
-	auto const prevent_parameter_set_def =
+	auto const sets_param_prevent_def =
 		x3::expect[!("parameter_set" >> *space >> '=')]
 	;
 
-	auto const parameter_def =
-		("\t\t\t\t" >> prevent_parameter_set) > keyword  >
+	auto const sets_param_list_def =
+		x3::expect[+sets_param]
+	;
+
+	auto const sets_set_def =
+		('\t' > keyword > separator) >>
+		sets_param_list
+	;
+
+	auto const sets_set_list_def =
+		x3::expect[+sets_set]
+	;
+
+	auto const sets_config_def =
+		(("parameter_set" > separator) >> sets_set_list) |
+		&x3::expect["chain" >> separator]
+	;
+
+
+	struct params_tag;
+	x3::rule< params_tag, type::module_parameters > const
+		params("params");
+
+	struct set_list_tag;
+	x3::rule< set_list_tag, std::vector< std::string > > const
+		set_list("set_list");
+
+	struct param_prevent_tag;
+	x3::rule< param_prevent_tag > const
+		param_prevent("param_prevent");
+
+	struct param_tag;
+	x3::rule< param_tag, type::parameter > const
+		param("param");
+
+	struct input_tag;
+	x3::rule< input_tag, type::io > const input("input");
+
+	struct output_tag;
+	x3::rule< output_tag, type::io > const output("output");
+
+	struct input_params_tag;
+	x3::rule< input_params_tag, std::vector< type::io > >
+		const input_params("input_params");
+
+	struct output_params_tag;
+	x3::rule< output_params_tag, std::vector< type::io > >
+		const output_params("output_params");
+
+	struct inputs_tag;
+	x3::rule< inputs_tag, std::vector< type::io > > const
+		inputs("inputs");
+
+	struct outputs_tag;
+	x3::rule< outputs_tag, std::vector< type::io > > const
+		outputs("outputs");
+
+	struct module_tag;
+	x3::rule< module_tag, type::module > const
+		module("module");
+
+	struct chain_tag;
+	x3::rule< chain_tag, type::chain > const chain("chain");
+
+	struct chain_params_tag;
+	x3::rule< chain_params_tag, std::vector< type::module > >
+		const chain_params("chain_params");
+
+	struct group_tag;
+	x3::rule< group_tag, std::string > const group("group");
+
+	struct id_generator_tag;
+	x3::rule< id_generator_tag, std::string > const
+		id_generator("id_generator");
+
+	struct chains_tag;
+	x3::rule< chains_tag, type::chains > const
+		chains("chains");
+
+	struct chains_params_tag;
+	x3::rule< chains_params_tag, type::chains > const
+		chains_params("chains_params");
+
+
+	auto const set_list_def =
+		*(
+			("\t\t\t\tparameter_set" >> *space >> '=')
+			> *space > value > separator
+		)
+	;
+
+	auto const param_prevent_def =
+		x3::expect[!("parameter_set" >> *space >> '=')]
+	;
+
+	auto const param_def =
+		("\t\t\t\t" >> param_prevent) > keyword  >
 		*space > '=' > *space > value > separator
 	;
 
@@ -378,6 +369,11 @@ namespace disposer::parser{
 		x3::expect[+output]
 	;
 
+	auto const params_def =
+		("\t\t\tparameter" > separator) >>
+		set_list >> *param
+	;
+
 	auto const inputs_def =
 		("\t\t\t<-" > separator) >>
 		input_params
@@ -390,6 +386,7 @@ namespace disposer::parser{
 
 	auto const module_def =
 		("\t\t" > keyword > separator) >>
+		-params >>
 		-inputs >>
 		-outputs
 	;
@@ -422,20 +419,25 @@ namespace disposer::parser{
 		x3::expect[+chain]
 	;
 
+
+	struct config_tag;
+	x3::rule< config_tag, type::config >
+		const config("config");
+
 	auto const config_def = x3::no_skip[x3::expect[
 		space_lines >> -comment >>
-		-parameter_sets >> chains
+		-sets_config >> chains
 	]];
 
 
-	struct prevent_set_parameter_set_tag: error_base{
+	struct sets_param_prevent_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter, but a parameter name "
 				"('\t\tname = value\n') must not be 'parameter_set'";
 		}
 	};
 
-	struct set_parameter_tag: error_base{
+	struct sets_param_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter '\t\tname = value\n' with name != "
 				"'parameter_set'";
@@ -446,27 +448,27 @@ namespace disposer::parser{
 		virtual const char* message()const override;
 	};
 
-	struct parameter_set_tag: error_base{
+	struct sets_set_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter '\t\tname = value\n' with name != "
 				"'parameter_set'";
 		}
 	};
 
-	struct parameter_set_params_tag: error_base{
+	struct sets_param_list_tag: error_base{
 		virtual const char* message()const override{
 			return "at least one parameter line '\t\tname = value\n' "
 				"with name != 'parameter_set'";
 		}
 	};
 
-	struct parameter_sets_tag: error_base{
+	struct sets_config_tag: error_base{
 		template < typename Iter, typename Exception, typename Context >
 		x3::error_handler_result on_error(
 			Iter& first, Iter const& last,
 			Exception const& x, Context const& context
 		){
-			msg_ = "keyword line 'parameter_set\n'";
+			msg_ = "keyword line 'sets_set\n'";
 			if(x.which() != "separator"){
 				msg_ += " or ";
 				msg_ += chains_tag().message();
@@ -481,31 +483,31 @@ namespace disposer::parser{
 		std::string msg_;
 	};
 
-	struct parameter_sets_params_tag: error_base{
+	struct sets_set_list_tag: error_base{
 		virtual const char* message()const override{
 			return "at least one parameter set line '\tname\n'";
 		}
 	};
 
-	struct module_parameter_tag: error_base{
+	struct params_tag: error_base{
 		virtual const char* message()const override{
 			return "keyword line '\t\t\tparameter\n'";
 		}
 	};
 
-	struct module_parameter_sets_tag: error_base{
+	struct set_list_tag: error_base{
 		template < typename Iter, typename Exception, typename Context >
 		x3::error_handler_result on_error(
 			Iter& first, Iter const& last,
 			Exception const& x, Context const& context
 		){
-			msg_ = "a parameter_set reference "
+			msg_ = "a sets_set reference "
 				"'\t\tparameter_set = name\n', where 'parameter_set' "
 				"is a keyword and 'name' the name of the referenced "
 				"parameter set";
 			if(x.which() != "value"){
 				msg_ += " or ";
-				msg_ += module_parameter_tag().message();
+				msg_ += params_tag().message();
 				msg_ += " or ";
 				msg_ += chains_tag().message();
 			}
@@ -525,14 +527,14 @@ namespace disposer::parser{
 		}
 	};
 
-	struct prevent_parameter_set_tag: error_base{
+	struct param_prevent_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter, but a parameter name "
 				"('\t\t\t\tname = value\n') must not be 'parameter_set'";
 		}
 	};
 
-	struct parameter_tag: error_base{
+	struct param_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter '\t\t\t\tname = value\n' with name != "
 				"'parameter_set'";
@@ -608,7 +610,7 @@ namespace disposer::parser{
 
 	struct config_tag: error_base{
 		virtual const char* message()const override{
-			return "keyword line 'parameter_set\n' or keyword line "
+			return "keyword line 'sets_set\n' or keyword line "
 				"'chain\n'";
 		}
 	};
@@ -620,19 +622,19 @@ namespace disposer::parser{
 		separator,
 		comment,
 		keyword_spaces,
-		keyword,
 		value_spaces,
+		keyword,
 		value,
-		prevent_set_parameter_set,
-		set_parameter,
-		prevent_parameter_set,
-		parameter,
-		parameter_set,
-		parameter_set_params,
-		parameter_sets,
-		parameter_sets_params,
-		module_parameter,
-		module_parameter_sets,
+		sets_param,
+		sets_param_prevent,
+		sets_param_list,
+		sets_set,
+		sets_set_list,
+		sets_config,
+		param,
+		param_prevent,
+		params,
+		set_list,
 		input,
 		output,
 		inputs,
@@ -647,7 +649,7 @@ namespace disposer::parser{
 		chains_params,
 		chains,
 		config
-	);
+	)
 
 
 	auto const grammar = config;
