@@ -74,13 +74,13 @@ namespace disposer{
 			std::function< void(std::vector< value_carrier >&&) >;
 
 		/// \brief Constructor
-		output_base(std::string_view name): name(name), id_(0) {}
+		constexpr output_base(std::string_view name)noexcept: name(name), id_(0) {}
 
 		/// \brief Outputs are not copyable
 		output_base(output_base const&) = delete;
 
-		/// \brief Outputs are not movable
-		output_base(output_base&& other) = delete;
+		/// \brief Outputs are default-movable
+		constexpr output_base(output_base&& other)noexcept = default;
 
 
 		/// \brief Outputs are not copy-assignable

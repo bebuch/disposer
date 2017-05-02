@@ -72,7 +72,7 @@ namespace disposer{
 		>;
 
 
-		output(): output_base(Name::value.c_str()) {}
+		constexpr output()noexcept: output_base(Name::value.c_str()) {}
 
 
 		template < typename V >
