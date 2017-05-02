@@ -29,9 +29,6 @@ namespace disposer{
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
 
-		/// \brief Name of the module in config file section 'module'
-		std::string const name;
-
 		/// \brief Position of the module in the process chain
 		///
 		/// The first module has number 0, the second 1 and so on.

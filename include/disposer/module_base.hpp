@@ -51,7 +51,6 @@ namespace disposer{
 		module_base(
 			std::string const& type_name,
 			std::string const& chain,
-			std::string const& name,
 			std::size_t number,
 			input_list&& inputs,
 			output_list&& outputs
@@ -135,9 +134,6 @@ namespace disposer{
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
 
-		/// \brief Name of the module in config file section 'module'
-		std::string const name;
-
 		/// \brief Position of the module in the process chain
 		///
 		/// The first module has number 0, the second 1 and so on.
@@ -202,7 +198,7 @@ namespace disposer{
 			using log_t = logsys::detail::extract_log_t< Log >;
 			return [&](log_t& os){
 				os << "id(" << id << "." << number << ") exec chain '"
-					<< chain << "' module '" << name << "': ";
+					<< chain << "': ";
 				log(os);
 			};
 		}

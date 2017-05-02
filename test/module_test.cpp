@@ -54,7 +54,7 @@ int main(){
 			>,
 			hana::map<>
 		> > const >);
-	typename decltype(m1)::type mv1("chain", "name", 0);
+	typename decltype(m1)::type mv1("chain", 0);
 	auto& mv1i = mv1("test1"_in);
 	auto& mv1o = mv1("test1"_out); (void)mv1o;
 

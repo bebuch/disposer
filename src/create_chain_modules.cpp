@@ -61,8 +61,8 @@ namespace disposer{ namespace{
 
 		if(iter == maker_list.end()){
 			throw std::logic_error(
-				"Module '" + data.chain + "'.'" + data.name + "': "
-				+ "Type '" + data.type_name + "' is unknown!"
+				"Module '" + data.chain + "'.'" + std::to_string(data.number)
+				+ "': " + "Type '" + data.type_name + "' is unknown!"
 			);
 		}
 
@@ -71,14 +71,14 @@ namespace disposer{ namespace{
 			for(auto const& param: data.params.unused()){
 				logsys::log([&data, &param](logsys::stdlogb& os){
 					os << "In chain '" << data.chain << "' module '"
-						<< data.name << "': Unused data '" << param.first
+						<< data.number << "': Unused data '" << param.first
 						<< "'='" << param.second << "'"; });
 			}
 			return result;
 		}catch(std::exception const& error){
 			throw std::runtime_error(
-				"Module '" + data.chain + "'.'" + data.name + "': "
-				+ error.what()
+				"Module '" + data.chain + "'.'" + std::to_string(data.number)
+				+ "': " + error.what()
 			);
 		}
 	}
@@ -94,7 +94,7 @@ namespace disposer{ namespace{
 			auto& config_module = config_chain.modules[i];
 
 			logsys::log([&config_module](logsys::stdlogb& os){
-				os << "create module '" << config_module.module.first << "'";
+				os << "create module '" << config_module.type_name << "'";
 			}, [&](){
 				io_list config_inputs;
 				for(auto& config_input: config_module.inputs){
@@ -107,13 +107,12 @@ namespace disposer{ namespace{
 				}
 
 				modules.push_back(create_module(maker_list, {
-					config_module.module.second.type_name,
+					config_module.type_name,
 					config_chain.name,
-					config_module.module.first,
 					i,
 					std::move(config_inputs),
 					std::move(config_outputs),
-					config_module.module.second.parameters
+					config_module.parameters
 				}));
 
 				auto& module = *modules.back();
@@ -148,7 +147,7 @@ namespace disposer{ namespace{
 
 			logsys::log([&config_module](logsys::stdlogb& os){
 				os << "enable input and output types in module '"
-					<< config_module.module.first << "'";
+					<< config_module.type_name << "'";
 			}, [&](){
 				// config_module.inputs containes all enabled input names
 				for(auto& config_input: config_module.inputs){
@@ -167,7 +166,7 @@ namespace disposer{ namespace{
 					){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
-							<< module.name << "': Variable '"
+							<< std::to_string(module.number) << "': Variable '"
 							<< config_input.variable
 							<< "' is incompatible with input '"
 							<< config_input.name << "'" << " (enabled '"
@@ -206,7 +205,7 @@ namespace disposer{ namespace{
 
 				logsys::log([&config_module](logsys::stdlogb& os){
 					os << "call input_ready() in module '"
-						<< config_module.module.first << "'";
+						<< config_module.type_name << "'";
 				}, [&module](){
 					module.input_ready(make_creator_key());
 				});
@@ -221,8 +220,9 @@ namespace disposer{ namespace{
 					if(output_ptr->enabled_types().empty()){
 						std::ostringstream os;
 						os << "In chain '" << config_chain.name << "' module '"
-							<< module.name << "': Output '" + config_output.name
-							<< "' (Variable: '" << config_output.variable
+							<< module.number << "': Output '"
+							<< config_output.name << "' (Variable: '"
+							<< config_output.variable
 							<< "') has no enabled output types";
 
 						throw std::logic_error(os.str());
@@ -244,7 +244,7 @@ namespace disposer{ namespace{
 
 			logsys::log([&config_module](logsys::stdlogb& os){
 				os << "connect inputs of module '"
-					<< config_module.module.first
+					<< config_module.type_name
 					<< "'";
 			}, [&module, &config_module, &variables]{
 				// config_module.inputs containes all enabled input names

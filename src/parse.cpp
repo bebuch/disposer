@@ -156,6 +156,7 @@ namespace disposer::parser{
 
 	namespace type = types::parse;
 
+
 	struct space_tag;
 	x3::rule< space_tag > const space("space");
 
@@ -235,11 +236,15 @@ namespace disposer::parser{
 		sets_set("sets_set");
 
 	struct sets_set_list_tag;
-	x3::rule< sets_set_list_tag, type::parameter_set > const
+	x3::rule< sets_set_list_tag, type::parameter_sets > const
 		sets_set_list("sets_set_list");
 
+	struct sets_set_list_checked_tag;
+	x3::rule< sets_set_list_checked_tag, type::parameter_sets > const
+		sets_set_list_checked("sets_set_list_checked");
+
 	struct sets_config_tag;
-	x3::rule< sets_config_tag, type::parameter_set > const
+	x3::rule< sets_config_tag, type::parameter_sets > const
 		sets_config("sets_config");
 
 	auto const sets_param_def =
@@ -256,27 +261,94 @@ namespace disposer::parser{
 	;
 
 	auto const sets_set_def =
-		('\t' > keyword > separator) >>
-		sets_param_list
+		'\t' > keyword > separator > sets_param_list
 	;
 
 	auto const sets_set_list_def =
 		x3::expect[+sets_set]
 	;
 
+	auto const sets_set_list_checked_def =
+		sets_set_list > &x3::expect["chain" > separator]
+	;
+
 	auto const sets_config_def =
-		(("parameter_set" > separator) >> sets_set_list) |
+		("parameter_set" > separator > sets_set_list_checked) |
 		&x3::expect["chain" >> separator]
 	;
+
+	struct sets_param_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter '\t\tname = value\n' with name != "
+				"'parameter_set'";
+		}
+	};
+
+	struct sets_param_prevent_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter, but a parameter name "
+				"('\t\tname = value\n') must not be 'parameter_set'";
+		}
+	};
+
+	struct sets_param_list_tag: error_base{
+		virtual const char* message()const override{
+			return "at least one parameter line '\t\tname = value\n' "
+				"with name != 'parameter_set'";
+		}
+	};
+
+	struct sets_set_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter set line '\tname\n'";
+		}
+	};
+
+	struct sets_set_list_tag: error_base{
+		virtual const char* message()const override{
+			return "at least one parameter set line '\tname\n'";
+		}
+	};
+
+	struct sets_set_list_checked_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter set line '\tname\n' or a parameter definition "
+				"('\t\tname = value\n') or keyword line 'chain\n'";
+		}
+	};
+
+	struct sets_config_tag: error_base{
+		template < typename Iter, typename Exception, typename Context >
+		x3::error_handler_result on_error(
+			Iter& first, Iter const& last,
+			Exception const& x, Context const& context
+		){
+			msg_ = "keyword line 'parameter_set\n'";
+			if(x.which() != "separator"){
+				msg_ += " or keyword line 'chain\n'";
+			}
+			return error_base::on_error(first, last, x, context);
+		}
+
+		virtual const char* message()const override{
+			return msg_.c_str();
+		}
+
+		std::string msg_;
+	};
 
 
 	struct params_tag;
 	x3::rule< params_tag, type::module_parameters > const
 		params("params");
 
-	struct set_list_tag;
-	x3::rule< set_list_tag, std::vector< std::string > > const
-		set_list("set_list");
+	struct params_checked_tag;
+	x3::rule< params_checked_tag, type::module_parameters > const
+		params_checked("params_checked");
+
+	struct set_ref_tag;
+	x3::rule< set_ref_tag, std::string > const
+		set_ref("set_ref");
 
 	struct param_prevent_tag;
 	x3::rule< param_prevent_tag > const
@@ -326,20 +398,18 @@ namespace disposer::parser{
 	x3::rule< id_generator_tag, std::string > const
 		id_generator("id_generator");
 
-	struct chains_tag;
-	x3::rule< chains_tag, type::chains > const
-		chains("chains");
-
 	struct chains_params_tag;
 	x3::rule< chains_params_tag, type::chains > const
 		chains_params("chains_params");
 
+	struct chains_tag;
+	x3::rule< chains_tag, type::chains > const
+		chains("chains");
 
-	auto const set_list_def =
-		*(
-			("\t\t\t\tparameter_set" >> *space >> '=')
-			> *space > value > separator
-		)
+
+	auto const set_ref_def =
+		("\t\t\t\tparameter_set" >> *space >> '=')
+		> *space > value > separator
 	;
 
 	auto const param_prevent_def =
@@ -370,8 +440,12 @@ namespace disposer::parser{
 	;
 
 	auto const params_def =
-		("\t\t\tparameter" > separator) >>
-		set_list >> *param
+		"\t\t\tparameter" > separator > params_checked
+	;
+
+	auto const params_checked_def =
+		&x3::expect[set_ref | param] >>
+		(*set_ref >> *param)
 	;
 
 	auto const inputs_def =
@@ -410,13 +484,13 @@ namespace disposer::parser{
 		chain_params
 	;
 
+	auto const chains_params_def =
+		x3::expect[+chain]
+	;
+
 	auto const chains_def =
 		(x3::expect["chain"] > separator) >>
 		chains_params
-	;
-
-	auto const chains_params_def =
-		x3::expect[+chain]
 	;
 
 
@@ -430,95 +504,27 @@ namespace disposer::parser{
 	]];
 
 
-	struct sets_param_prevent_tag: error_base{
-		virtual const char* message()const override{
-			return "a parameter, but a parameter name "
-				"('\t\tname = value\n') must not be 'parameter_set'";
-		}
-	};
-
-	struct sets_param_tag: error_base{
-		virtual const char* message()const override{
-			return "a parameter '\t\tname = value\n' with name != "
-				"'parameter_set'";
-		}
-	};
-
-	struct chains_tag: error_base{
-		virtual const char* message()const override;
-	};
-
-	struct sets_set_tag: error_base{
-		virtual const char* message()const override{
-			return "a parameter '\t\tname = value\n' with name != "
-				"'parameter_set'";
-		}
-	};
-
-	struct sets_param_list_tag: error_base{
-		virtual const char* message()const override{
-			return "at least one parameter line '\t\tname = value\n' "
-				"with name != 'parameter_set'";
-		}
-	};
-
-	struct sets_config_tag: error_base{
-		template < typename Iter, typename Exception, typename Context >
-		x3::error_handler_result on_error(
-			Iter& first, Iter const& last,
-			Exception const& x, Context const& context
-		){
-			msg_ = "keyword line 'sets_set\n'";
-			if(x.which() != "separator"){
-				msg_ += " or ";
-				msg_ += chains_tag().message();
-			}
-			return error_base::on_error(first, last, x, context);
-		}
-
-		virtual const char* message()const override{
-			return msg_.c_str();
-		}
-
-		std::string msg_;
-	};
-
-	struct sets_set_list_tag: error_base{
-		virtual const char* message()const override{
-			return "at least one parameter set line '\tname\n'";
-		}
-	};
-
 	struct params_tag: error_base{
 		virtual const char* message()const override{
 			return "keyword line '\t\t\tparameter\n'";
 		}
 	};
 
-	struct set_list_tag: error_base{
-		template < typename Iter, typename Exception, typename Context >
-		x3::error_handler_result on_error(
-			Iter& first, Iter const& last,
-			Exception const& x, Context const& context
-		){
-			msg_ = "a sets_set reference "
-				"'\t\tparameter_set = name\n', where 'parameter_set' "
-				"is a keyword and 'name' the name of the referenced "
-				"parameter set";
-			if(x.which() != "value"){
-				msg_ += " or ";
-				msg_ += params_tag().message();
-				msg_ += " or ";
-				msg_ += chains_tag().message();
-			}
-			return error_base::on_error(first, last, x, context);
-		}
-
+	struct params_checked_tag: error_base{
 		virtual const char* message()const override{
-			return msg_.c_str();
+			return "at least one parameter set reference line "
+				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+				"keyword and 'name' the name of the referenced parameter set "
+				"or one parameter '\t\t\t\tname = value\n'";
 		}
+	};
 
-		std::string msg_;
+	struct set_ref_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter set reference line "
+				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+				"keyword and 'name' the name of the referenced parameter set";
+		}
 	};
 
 	struct modules_params_tag: error_base{
@@ -529,7 +535,7 @@ namespace disposer::parser{
 
 	struct param_prevent_tag: error_base{
 		virtual const char* message()const override{
-			return "a parameter, but a parameter name "
+			return "another parameter, but a parameter name "
 				"('\t\t\t\tname = value\n') must not be 'parameter_set'";
 		}
 	};
@@ -540,10 +546,6 @@ namespace disposer::parser{
 				"'parameter_set'";
 		}
 	};
-
-	const char* chains_tag::message()const{
-		return "keyword line 'chain\n'";
-	}
 
 	struct input_tag: error_base{
 		virtual const char* message()const override{
@@ -573,13 +575,13 @@ namespace disposer::parser{
 
 	struct inputs_tag: error_base{
 		virtual const char* message()const override{
-			return "keyword line '\t\t\t->\n'";
+			return "keyword line '\t\t\t<-\n'";
 		}
 	};
 
 	struct outputs_tag: error_base{
 		virtual const char* message()const override{
-			return "keyword line '\t\t\t<-\n'";
+			return "keyword line '\t\t\t->\n'";
 		}
 	};
 
@@ -608,48 +610,54 @@ namespace disposer::parser{
 		}
 	};
 
+	struct chains_tag: error_base{
+		virtual const char* message()const override{
+			return "keyword line 'chain\n'";
+		}
+	};
+
 	struct config_tag: error_base{
 		virtual const char* message()const override{
-			return "keyword line 'sets_set\n' or keyword line "
+			return "keyword line 'parameter_set\n' or keyword line "
 				"'chain\n'";
 		}
 	};
 
 
-	BOOST_SPIRIT_DEFINE(
-		space,
-		space_lines,
-		separator,
-		comment,
-		keyword_spaces,
-		value_spaces,
-		keyword,
-		value,
-		sets_param,
-		sets_param_prevent,
-		sets_param_list,
-		sets_set,
-		sets_set_list,
-		sets_config,
-		param,
-		param_prevent,
-		params,
-		set_list,
-		input,
-		output,
-		inputs,
-		outputs,
-		input_params,
-		output_params,
-		module,
-		chain_params,
-		chain,
-		group,
-		id_generator,
-		chains_params,
-		chains,
-		config
-	)
+	BOOST_SPIRIT_DEFINE(space)
+	BOOST_SPIRIT_DEFINE(space_lines)
+	BOOST_SPIRIT_DEFINE(separator)
+	BOOST_SPIRIT_DEFINE(comment)
+	BOOST_SPIRIT_DEFINE(keyword_spaces)
+	BOOST_SPIRIT_DEFINE(value_spaces)
+	BOOST_SPIRIT_DEFINE(keyword)
+	BOOST_SPIRIT_DEFINE(value)
+	BOOST_SPIRIT_DEFINE(sets_param)
+	BOOST_SPIRIT_DEFINE(sets_param_prevent)
+	BOOST_SPIRIT_DEFINE(sets_param_list)
+	BOOST_SPIRIT_DEFINE(sets_set)
+	BOOST_SPIRIT_DEFINE(sets_set_list)
+	BOOST_SPIRIT_DEFINE(sets_set_list_checked)
+	BOOST_SPIRIT_DEFINE(sets_config)
+	BOOST_SPIRIT_DEFINE(param)
+	BOOST_SPIRIT_DEFINE(param_prevent)
+	BOOST_SPIRIT_DEFINE(params)
+	BOOST_SPIRIT_DEFINE(params_checked)
+	BOOST_SPIRIT_DEFINE(set_ref)
+	BOOST_SPIRIT_DEFINE(input)
+	BOOST_SPIRIT_DEFINE(output)
+	BOOST_SPIRIT_DEFINE(inputs)
+	BOOST_SPIRIT_DEFINE(outputs)
+	BOOST_SPIRIT_DEFINE(input_params)
+	BOOST_SPIRIT_DEFINE(output_params)
+	BOOST_SPIRIT_DEFINE(module)
+	BOOST_SPIRIT_DEFINE(chain_params)
+	BOOST_SPIRIT_DEFINE(chain)
+	BOOST_SPIRIT_DEFINE(group)
+	BOOST_SPIRIT_DEFINE(id_generator)
+	BOOST_SPIRIT_DEFINE(chains_params)
+	BOOST_SPIRIT_DEFINE(chains)
+	BOOST_SPIRIT_DEFINE(config)
 
 
 	auto const grammar = config;

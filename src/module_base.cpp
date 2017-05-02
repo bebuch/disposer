@@ -24,14 +24,12 @@ namespace disposer{
 	module_base::module_base(
 		std::string const& type_name,
 		std::string const& chain,
-		std::string const& name,
 		std::size_t number,
 		input_list&& inputs,
 		output_list&& outputs
 	):
 		type_name(type_name),
 		chain(chain),
-		name(name),
 		number(number),
 		id_increase(1),
 		id(id_),

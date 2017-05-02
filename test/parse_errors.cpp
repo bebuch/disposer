@@ -29,13 +29,15 @@ int fail(std::size_t i, std::string const& msg){
 }
 
 std::vector< std::pair< std::string, std::string > > tests{
+	// 000
 	{
 R"file(xparameter_set)file"
 	,
 "Syntax error at line 1, pos 0: 'xparameter_set', expected keyword line "
-"'parameter_set\n' or keyword line 'module\n'"
+"'parameter_set\n' or keyword line 'chain\n'"
 	}
 	,
+	// 001
 	{
 R"file(parameter_setx)file"
 	,
@@ -43,6 +45,7 @@ R"file(parameter_setx)file"
 "'parameter_set\n'"
 	}
 	,
+	// 002
 	{
 R"file(parameter_set)file"
 	,
@@ -50,6 +53,7 @@ R"file(parameter_set)file"
 "'parameter_set\n'"
 	}
 	,
+	// 003
 	{
 R"file(parameter_set
 )file"
@@ -58,6 +62,7 @@ R"file(parameter_set
 "line '\tname\n'"
 	}
 	,
+	// 004
 	{
 R"file(parameter_set
 	name1
@@ -68,6 +73,7 @@ R"file(parameter_set
 "parameter line '\t\tname = value\n' with name != 'parameter_set'"
 	}
 	,
+	// 005
 	{
 R"file(parameter_set
 	name1
@@ -79,6 +85,7 @@ R"file(parameter_set
 "'parameter_set'"
 	}
 	,
+	// 006
 	{
 R"file(parameter_set
 	name1
@@ -90,6 +97,7 @@ R"file(parameter_set
 "parameter line '\t\tname = value\n' with name != 'parameter_set'"
 	}
 	,
+	// 007
 	{
 R"file(parameter_set
 	name1
@@ -98,326 +106,227 @@ R"file(parameter_set
 		test=b
 )file"
 	,
-"Syntax error at line 6, pos 0: '', expected keyword line 'module\n'"
+"Syntax error at line 6, pos 0: '', expected a parameter set line "
+"'\tname\n' or a parameter definition ('\t\tname = value\n') or "
+"keyword line 'chain\n'"
 	}
 	,
+	// 008
 	{
-R"file(module)file"
+R"file(chain)file"
 	,
-"Syntax error at line 1, pos 0: 'module', expected keyword line "
-"'parameter_set\n' or keyword line 'module\n'"
+"Syntax error at line 1, pos 0: 'chain', expected keyword line "
+"'parameter_set\n' or keyword line 'chain\n'"
 	}
 	,
-	{
-R"file(parameter_set
-	name1
-		test=a
-	name2
-		test=b
-module)file"
-	,
-"Syntax error at line 6, pos 6: 'module', expected keyword line 'module\n'"
-	}
-	,
+	// 009
 	{
 R"file(parameter_set
 	name1
 		test=a
 	name2
 		test=b
-module
-)file"
-	,
-"Syntax error at line 7, pos 0: '', expected at least one module line "
-"'\tname = module\n'"
-	}
-	,
-	{
-R"file(module
-)file"
-	,
-"Syntax error at line 2, pos 0: '', expected at least one module line "
-"'\tname = module\n'"
-	}
-	,
-	{
-R"file(module
-	name3)file"
-	,
-"Syntax error at line 2, pos 6: '\tname3', expected a module line "
-"'\tname = module\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1)file"
-	,
-"Syntax error at line 2, pos 16: '\tname3 = module1', expected a module line "
-"'\tname = module\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-)file"
-	,
-"Syntax error at line 3, pos 0: '', expected a parameter_set "
-"reference '\t\tparameter_set = name\n', where 'parameter_set' is a keyword "
-"and 'name' the name of the referenced parameter set or a parameter "
-"'\t\tname = value\n' with name != 'parameter_set' or a module line "
-"'\tname = module\n' or keyword line 'chain\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set =)file"
-	,
-"Syntax error at line 3, pos 17: '\t\tparameter_set =', expected a "
-"parameter_set reference '\t\tparameter_set = name\n', where 'parameter_set' "
-"is a keyword and 'name' the name of the referenced parameter set"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set = name1
-)file"
-	,
-"Syntax error at line 4, pos 0: '', expected "
-"a parameter_set reference '\t\tparameter_set = name\n', where "
-"'parameter_set' is a keyword and 'name' the name of the referenced parameter "
-"set or a parameter '\t\tname = value\n' with name != 'parameter_set' or a "
-"module line '\tname = module\n' or keyword line 'chain\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set = name1
-			test
-)file"
-	,
-"Syntax error at line 4, pos 0: '\t\t\ttest\n', expected "
-"a parameter_set reference '\t\tparameter_set = name\n', where "
-"'parameter_set' is a keyword and 'name' the name of the referenced parameter "
-"set or a parameter '\t\tname = value\n' with name != 'parameter_set' or a "
-"module line '\tname = module\n' or keyword line 'chain\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-			parameter_set = name1
-)file"
-	,
-"Syntax error at line 3, pos 0: '\t\t\tparameter_set = name1\n', expected a "
-"parameter_set reference '\t\tparameter_set = name\n', where 'parameter_set' "
-"is a keyword and 'name' the name of the referenced parameter set or a "
-"parameter '\t\tname = value\n' with name != 'parameter_set' or a module line "
-"'\tname = module\n' or keyword line 'chain\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set = name1
-		test = 5)file"
-	,
-"Syntax error at line 4, pos 10: '\t\ttest = 5', expected "
-"a parameter '\t\tname = value\n' with name != 'parameter_set'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set = name1
-		test1 = 5
-		test2 = 2)file"
-	,
-"Syntax error at line 5, pos 11: '\t\ttest2 = 2', expected "
-"a parameter '\t\tname = value\n' with name != 'parameter_set'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		parameter_set = name1
-		test1 = 5
-		parameter_set = name2
-)file"
-	,
-"Syntax error at line 5, pos 2: '\t\tparameter_set = name2\n', expected "
-"a parameter, but a parameter name ('\t\tname = value\n') must not be "
-"'parameter_set'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		test1 = 5
-		parameter_set = name2
-)file"
-	,
-"Syntax error at line 4, pos 2: '\t\tparameter_set = name2\n', expected "
-"a parameter, but a parameter name ('\t\tname = value\n') must not be "
-"'parameter_set'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		test1 = 5
-	name4 = module2
-)file"
-	,
-"Syntax error at line 5, pos 0: '', expected a parameter_set reference "
-"'\t\tparameter_set = name\n', where 'parameter_set' is a keyword and 'name' "
-"the name of the referenced parameter set or a parameter '\t\tname = value\n' "
-"with name != 'parameter_set' or a module line '\tname = module\n' or keyword "
-"line 'chain\n'"
-	}
-	,
-	{
-R"file(module
-	name3 = module1
-		test1 = 5
 chain)file"
 	,
-"Syntax error at line 4, pos 5: 'chain', expected keyword line 'chain\n'"
+"Syntax error at line 6, pos 5: 'chain', expected a parameter set line "
+"'\tname\n' or a parameter definition ('\t\tname = value\n') or "
+"keyword line 'chain\n'"
 	}
 	,
+	// 010
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
 chain
 )file"
 	,
-"Syntax error at line 5, pos 0: '', expected at least one chain line "
+"Syntax error at line 7, pos 0: '', expected at least one chain line "
 "'\tname [= group]\n'"
 	}
 	,
+	// 011
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
-	name5 =
+R"file(chain
 )file"
 	,
-"Syntax error at line 5, pos 8: '\tname5 =\n', expected a chain line with "
+"Syntax error at line 2, pos 0: '', expected at least one chain line "
+"'\tname [= group]\n'"
+	}
+	,
+	// 012
+	{
+R"file(chain
+	chain1 =
+)file"
+	,
+"Syntax error at line 2, pos 9: '\tchain1 =\n', expected a chain line with "
 "group '\tname = group\n'"
 	}
 	,
+	// 013
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
-	name5
+R"file(chain
+	chain1
 		id_generator
 )file"
 	,
-"Syntax error at line 6, pos 14: '\t\tid_generator\n', expected a "
+"Syntax error at line 3, pos 14: '\t\tid_generator\n', expected a "
 "id_generator line '\t\tid_generator = name\n', where id_generator is a "
 "keyword"
 	}
 	,
+	// 014
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
-	name5
+R"file(chain
+	chain1
 		id_generator = x1
 		id_generator = x2
 )file"
 	,
-"Syntax error at line 7, pos 14: '\t\tid_generator = x2\n', expected a module "
+"Syntax error at line 4, pos 14: '\t\tid_generator = x2\n', expected a module "
 "'\t\tmodule\n'"
 	}
 	,
+	// 015
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
-	name5
-		load
-			->
-)file"
+R"file(chain
+	chain1
+		module1
+			parameter)file"
 	,
-"Syntax error at line 8, pos 0: '', expected at least one output map "
-"'\t\t\t\tparameter = variable'"
+"Syntax error at line 4, pos 12: '\t\t\tparameter', expected keyword line "
+"'\t\t\tparameter\n'"
 	}
 	,
+	// 016
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
-	name5
-		load
-			->
-				name
+R"file(chain
+	chain1
+		module1
+			parameter
 )file"
 	,
-"Syntax error at line 8, pos 8: '\t\t\t\tname\n', expected output map "
-"'\t\t\t\tparameter = variable'"
+"Syntax error at line 5, pos 0: '', expected at least one parameter set "
+"reference line '\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+"keyword and 'name' the name of the referenced parameter set or one parameter "
+"'\t\t\t\tname = value\n'"
 	}
 	,
+	// 017
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
+R"file(chain
+	chain1
+		module1
+			parameter
+				parameter_set =
+)file"
+	,
+"Syntax error at line 5, pos 19: '\t\t\t\tparameter_set =\n', expected a "
+"parameter set reference line '\t\t\t\tparameter_set = name\n', where "
+"'parameter_set' is a keyword and 'name' the name of the referenced parameter "
+"set"
+	}
+	,
+	// 018
+	{
+R"file(chain
+	chain1
+		module1
+			parameter
+				parameter_set = ref1
+				name2 =
+)file"
+	,
+"Syntax error at line 6, pos 11: '\t\t\t\tname2 =\n', expected a parameter "
+"'\t\t\t\tname = value\n' with name != 'parameter_set'"
+	}
+	,
+	// 019
+	{
+R"file(chain
+	chain1
+		module1
+			parameter
+				name2 = value
+				parameter_set = ref1
+)file"
+	,
+"Syntax error at line 6, pos 4: '\t\t\t\tparameter_set = ref1\n', expected "
+"another parameter, but a parameter name ('\t\t\t\tname = value\n') must not "
+"be 'parameter_set'"
+	}
+	,
+	// 020
+	{
+R"file(chain
+	name5
+		load
+			<-)file"
+	,
+"Syntax error at line 4, pos 5: '\t\t\t<-', expected keyword line '\t\t\t<-\n'"
+	}
+	,
+	// 021
+	{
+R"file(chain
 	name5
 		load
 			<-
 )file"
 	,
-"Syntax error at line 8, pos 0: '', expected at least one input map "
+"Syntax error at line 5, pos 0: '', expected at least one input map "
 "'\t\t\t\tparameter = variable'"
 	}
 	,
+	// 022
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
+R"file(chain
 	name5
 		load
 			<-
 				name =
 )file"
 	,
-"Syntax error at line 8, pos 10: '\t\t\t\tname =\n', expected input map "
+"Syntax error at line 5, pos 10: '\t\t\t\tname =\n', expected input map "
 "'\t\t\t\tparameter = variable'"
 	}
 	,
+	// 023
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
+R"file(chain
 	name5
 		load
 			->)file"
 	,
-"Syntax error at line 7, pos 5: '\t\t\t->', expected keyword line '\t\t\t<-\n'"
+"Syntax error at line 4, pos 5: '\t\t\t->', expected keyword line '\t\t\t->\n'"
 	}
 	,
+	// 024
 	{
-R"file(module
-	name3 = module1
-		test1 = 5
-chain
+R"file(chain
 	name5
 		load
-			<-)file"
+			->
+)file"
 	,
-"Syntax error at line 7, pos 5: '\t\t\t<-', expected keyword line '\t\t\t->\n'"
+"Syntax error at line 5, pos 0: '', expected at least one output map "
+"'\t\t\t\tparameter = variable'"
+	}
+	,
+	// 025
+	{
+R"file(chain
+	name5
+		load
+			->
+				name
+)file"
+	,
+"Syntax error at line 5, pos 8: '\t\t\t\tname\n', expected output map "
+"'\t\t\t\tparameter = variable'"
 	}
 };
 
