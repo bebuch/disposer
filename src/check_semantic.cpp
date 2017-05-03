@@ -44,20 +44,26 @@ namespace disposer{
 
 			std::set< std::string > variables;
 			std::set< std::string > chain_modules;
+			std::size_t module_number = 1;
 			for(auto& module: chain.modules){
+				auto location = [&chain, &module, module_number]{
+					return "In chain '" + chain.name + "' module "
+						+ std::to_string(module_number) + " (Type '"
+						+ module.type_name + "': ";
+				};
+
 				std::set< std::string > sets;
 				for(auto& set: module.parameters.parameter_sets){
 					if(parameter_sets.find(set) == parameter_sets.end()){
 						throw std::logic_error(
-							"In module '" + module.type_name +
-							"': Unknown parameter_set '" + set + "'"
+							location() + "Unknown parameter_set '" + set + "'"
 						);
 					}
 
 					if(!sets.insert(set).second){
 						throw std::logic_error(
-							"In module '" + module.type_name +
-							"': Duplicate use of parameter_set '" + set + "'"
+							location() + "Duplicate use of parameter_set '"
+							+ set + "'"
 						);
 					}
 				}
@@ -66,18 +72,24 @@ namespace disposer{
 				for(auto& param: module.parameters.parameters){
 					if(!keys.insert(param.key).second){
 						throw std::logic_error(
-							"In module '" + module.type_name +
-							"': Duplicate key '" + param.key + "'"
+							location() + "Duplicate key '" + param.key + "'"
 						);
 					}
 				}
 
 				std::set< std::string > inputs;
 				for(auto& input: module.inputs){
+					if(!inputs.insert(input.name).second){
+						throw std::logic_error(
+							location() + "Duplicate input '" + input.name + "'"
+						);
+					}
+				}
+
+				for(auto& input: module.inputs){
 					if(variables.find(input.variable) == variables.end()){
 						throw std::logic_error(
-							"In chain '" + chain.name + "' module '" +
-							module.type_name + "': Unknown variable '" +
+							location() + "Unknown variable '" +
 							input.variable + "' as input of '" + input.name +
 							"'"
 						);
@@ -88,22 +100,30 @@ namespace disposer{
 				for(auto& output: module.outputs){
 					if(!outputs.insert(output.name).second){
 						throw std::logic_error(
-							"In chain '" + chain.name + "' module '" +
-							module.type_name + "': Duplicate output '" +
+							location() + "Duplicate output '" + output.name
+							+ "'"
+						);
+					}
+				}
+
+				for(auto& output: module.outputs){
+					if(!outputs.insert(output.name).second){
+						throw std::logic_error(
+							location() + "Duplicate output '" +
 							output.name + "'"
 						);
 					}
 
 					if(!variables.insert(output.variable).second){
 						throw std::logic_error(
-							"In chain '" + chain.name + "' module '" +
-							module.type_name +
-							"': Duplicate use of variable '" +
+							location() + "Duplicate use of variable '" +
 							output.variable + "' as output of '" +
 							output.name + "'"
 						);
 					}
 				}
+
+				++module_number;
 			}
 		}
 	}
