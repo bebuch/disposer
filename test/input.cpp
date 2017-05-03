@@ -25,6 +25,8 @@ int main(){
 			hana::type< hana::map<> >,
 			hana::type< hana::map<> >
 		> const >);
+// 	constexpr auto mv1_1 =
+// 		std::remove_reference_t< decltype((typename decltype(+m1[0_c])::type{})["test1"_s]) >(nullptr);
 
 	constexpr auto m2 = disposer::separate_module_config_lists(
 			"test1"_in(hana::type_c< int >),

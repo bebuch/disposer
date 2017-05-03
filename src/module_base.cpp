@@ -55,5 +55,15 @@ namespace disposer{
 		}
 	}
 
+	std::map< std::string, output_base* >
+	module_base::get_outputs(creator_key&&)const{
+		std::map< std::string, output_base* > map;
+		for(auto output: outputs_){
+			map.emplace(output.get().name, &output.get());
+		}
+		return map;
+	}
+
+
 
 }

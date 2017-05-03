@@ -121,11 +121,8 @@ namespace disposer{
 		void cleanup(chain_key&&, std::size_t id)noexcept;
 
 
-		/// \brief Access to internal inputs_
-		input_list& inputs(creator_key&&){ return inputs_; }
-
-		/// \brief Access to internal outputs_
-		output_list& outputs(creator_key&&){ return outputs_; }
+		/// \brief Map from output names to addresses
+		std::map< std::string, output_base* > get_outputs(creator_key&&)const;
 
 
 		/// \brief Name of the module type given via class module_declarant
@@ -136,7 +133,7 @@ namespace disposer{
 
 		/// \brief Position of the module in the process chain
 		///
-		/// The first module has number 0, the second 1 and so on.
+		/// The first module has number 1.
 		std::size_t const number;
 
 

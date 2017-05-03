@@ -19,7 +19,7 @@ namespace disposer{
 		for(auto& set: config.sets){
 			if(!parameter_sets.insert(set.name).second){
 				throw std::logic_error(
-					"In parameter_set list: Duplicate name '" + set.name + "'"
+					"in parameter_set list: duplicate name '" + set.name + "'"
 				);
 			}
 
@@ -27,8 +27,8 @@ namespace disposer{
 			for(auto& param: set.parameters){
 				if(!keys.insert(param.key).second){
 					throw std::logic_error(
-						"In parameter_set '" + set.name +
-						"': Duplicate key '" + param.key + "'"
+						"in parameter_set '" + set.name +
+						"': duplicate key '" + param.key + "'"
 					);
 				}
 			}
@@ -38,7 +38,7 @@ namespace disposer{
 		for(auto& chain: config.chains){
 			if(!chains.insert(chain.name).second){
 				throw std::logic_error(
-					"In chain list: Duplicate name '" + chain.name + "'"
+					"in chain list: duplicate name '" + chain.name + "'"
 				);
 			}
 
@@ -47,7 +47,7 @@ namespace disposer{
 			std::size_t module_number = 1;
 			for(auto& module: chain.modules){
 				auto location = [&chain, &module, module_number]{
-					return "In chain '" + chain.name + "' module "
+					return "in chain '" + chain.name + "' module "
 						+ std::to_string(module_number) + " (Type '"
 						+ module.type_name + "': ";
 				};
@@ -56,13 +56,13 @@ namespace disposer{
 				for(auto& set: module.parameters.parameter_sets){
 					if(parameter_sets.find(set) == parameter_sets.end()){
 						throw std::logic_error(
-							location() + "Unknown parameter_set '" + set + "'"
+							location() + "unknown parameter_set '" + set + "'"
 						);
 					}
 
 					if(!sets.insert(set).second){
 						throw std::logic_error(
-							location() + "Duplicate use of parameter_set '"
+							location() + "duplicate use of parameter_set '"
 							+ set + "'"
 						);
 					}
@@ -72,7 +72,7 @@ namespace disposer{
 				for(auto& param: module.parameters.parameters){
 					if(!keys.insert(param.key).second){
 						throw std::logic_error(
-							location() + "Duplicate key '" + param.key + "'"
+							location() + "duplicate key '" + param.key + "'"
 						);
 					}
 				}
@@ -81,7 +81,7 @@ namespace disposer{
 				for(auto& input: module.inputs){
 					if(!inputs.insert(input.name).second){
 						throw std::logic_error(
-							location() + "Duplicate input '" + input.name + "'"
+							location() + "duplicate input '" + input.name + "'"
 						);
 					}
 				}
@@ -89,7 +89,7 @@ namespace disposer{
 				for(auto& input: module.inputs){
 					if(variables.find(input.variable) == variables.end()){
 						throw std::logic_error(
-							location() + "Unknown variable '" +
+							location() + "unknown variable '" +
 							input.variable + "' as input of '" + input.name +
 							"'"
 						);
@@ -100,7 +100,7 @@ namespace disposer{
 				for(auto& output: module.outputs){
 					if(!outputs.insert(output.name).second){
 						throw std::logic_error(
-							location() + "Duplicate output '" + output.name
+							location() + "duplicate output '" + output.name
 							+ "'"
 						);
 					}
@@ -109,14 +109,14 @@ namespace disposer{
 				for(auto& output: module.outputs){
 					if(!outputs.insert(output.name).second){
 						throw std::logic_error(
-							location() + "Duplicate output '" +
+							location() + "duplicate output '" +
 							output.name + "'"
 						);
 					}
 
 					if(!variables.insert(output.variable).second){
 						throw std::logic_error(
-							location() + "Duplicate use of variable '" +
+							location() + "duplicate use of variable '" +
 							output.variable + "' as output of '" +
 							output.name + "'"
 						);

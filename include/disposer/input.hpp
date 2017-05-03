@@ -97,7 +97,8 @@ namespace disposer{
 		>;
 
 
-		constexpr input()noexcept: input_base(Name::value.c_str()) {}
+		constexpr input(output_base* output)noexcept:
+			input_base(Name::value.c_str(), output) {}
 
 
 		std::multimap< std::size_t, references_type > get_references(){
@@ -261,6 +262,10 @@ namespace disposer{
 
 		/// \brief Type of a disposer::input
 		using type = InputType;
+
+		auto operator()(output_base* output){
+			return type(output);
+		}
 	};
 
 

@@ -33,8 +33,14 @@ namespace disposer{
 	class input_base{
 	public:
 		/// \brief Constructor
-		constexpr input_base(std::string_view name)noexcept:
-			name(name), output_(nullptr), id_(0) {}
+		constexpr input_base(
+			std::string_view name,
+			output_base* output
+		)noexcept:
+			name(name),
+			output_(output),
+			id_(0)
+			{}
 
 
 		/// \brief Inputs are not copyable
@@ -57,11 +63,6 @@ namespace disposer{
 
 		/// \brief Get a list of all input data types
 		virtual std::vector< type_index > type_list()const = 0;
-
-		/// \brief Enable the given types
-		void set_output(creator_key&&, output_base* output)noexcept{
-			output_ = output;
-		}
 
 
 		/// \brief Enable the given types

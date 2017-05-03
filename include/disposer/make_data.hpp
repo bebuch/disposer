@@ -9,16 +9,23 @@
 #ifndef _disposer__make_data__hpp_INCLUDED_
 #define _disposer__make_data__hpp_INCLUDED_
 
-#include "parameter_processor.hpp"
+#include "output_base.hpp"
 
-#include <unordered_set>
+#include <set>
+#include <map>
 
 
 namespace disposer{
 
 
-	/// \brief Type for input and output name lists
-	using io_list = std::unordered_set< std::string >;
+	/// \brief Map from input names to output pointers
+	using input_list = std::map< std::string, output_base* >;
+
+	/// \brief Output name lists
+	using output_list = std::set< std::string >;
+
+	/// \brief List of parameter name value pairs
+	using parameter_list = std::map< std::string, std::string >;
 
 
 	/// \brief Dataset for disposer to construct and initialize a module
@@ -31,21 +38,23 @@ namespace disposer{
 
 		/// \brief Position of the module in the process chain
 		///
-		/// The first module has number 0, the second 1 and so on.
+		/// The first module has number 1.
 		std::size_t const number;
 
-		/// \brief List of the input names
-		io_list const inputs;
+		/// \brief Map of the input names and corresponding output pointers
+		input_list const inputs;
 
 		/// \brief List of the output names
-		io_list const outputs;
+		output_list const outputs;
 
 		/// \brief Parameters from the config file
-		parameter_processor params;
+		parameter_list params;
 
-
-		/// \brief true if module is the first in the chain, false otherwise
-		bool is_first()const{ return number == 0; }
+		/// \brief Header for log messages
+		std::string location()const{
+			return "chain '" + chain + "' module number "
+				+ std::to_string(number) + " (type '" + type_name + "'): ";
+		}
 	};
 
 

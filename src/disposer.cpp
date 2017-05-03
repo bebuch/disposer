@@ -87,7 +87,7 @@ namespace disposer{
 
 			if(!iter.second){
 				throw std::logic_error(
-					"Module type name '" + type_name + "' is double registered!"
+					"module type name '" + type_name + "' is double registered!"
 				);
 			}
 		});
