@@ -21,13 +21,15 @@ namespace disposer{
 	struct output_name: ct_name< C ... >{
 		using hana_tag = output_name_tag;
 
-		template < typename Types >
-		constexpr auto operator()(Types const& types)const noexcept;
-
-		template < typename Types, typename TypesMetafunction >
+		template <
+			typename Types,
+			typename TypesMetafunction = decltype(hana::template_< self_t >),
+			typename EnableFunction = enable_all >
 		constexpr auto operator()(
 			Types const& types,
 			TypesMetafunction const& types_metafunction
+				= hana::template_< self_t >,
+			EnableFunction&& enable_fn = enable_all()
 		)const noexcept;
 	};
 

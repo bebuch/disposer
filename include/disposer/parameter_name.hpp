@@ -35,13 +35,6 @@ namespace disposer{
 		}
 	};
 
-	struct enable_all{
-		template < typename T >
-		constexpr bool operator()(hana::basic_type< T >)const{
-			return true;
-		}
-	};
-
 
 	struct parameter_name_tag{};
 

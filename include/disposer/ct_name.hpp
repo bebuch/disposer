@@ -48,6 +48,13 @@ namespace disposer{
 	template < typename T >
 	using self_t = T;
 
+	struct enable_all{
+		template < typename Get, typename T >
+		constexpr bool operator()(Get const&, hana::basic_type< T >)const{
+			return true;
+		}
+	};
+
 
 }
 

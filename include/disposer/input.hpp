@@ -12,7 +12,7 @@
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
-#include "module_config_lists.hpp"
+#include "iop_list.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -38,11 +38,16 @@ namespace disposer{
 	};
 
 
+	struct input_tag{};
+
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	class input: public input_base{
 	public:
 		static_assert(hana::is_a< input_name_tag, Name >);
 		static_assert(hana::Metafunction< TypesMetafunction >::value);
+
+
+		using hana_tag = input_tag;
 
 
 		using name_type = Name;
@@ -250,9 +255,10 @@ namespace disposer{
 		};
 
 
-
 	/// \brief Provid types for constructing an input
-	template < typename Name, typename InputType >
+	template <
+		typename Name,
+		typename InputType >
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
@@ -260,11 +266,21 @@ namespace disposer{
 		/// \brief Output name as compile time string
 		using name_type = Name;
 
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
 		/// \brief Type of a disposer::input
 		using type = InputType;
 
-		auto operator()(output_base* output){
-			return type(output);
+		template < typename IOP_List >
+		constexpr auto operator()(
+			IOP_List const& iop_list,
+			output_base* output
+		)const{
+			auto input = type(output);
+			verify_fn(input, iop_list);
+			verify_fn(input, iop_list);
+			return input;
 		}
 	};
 

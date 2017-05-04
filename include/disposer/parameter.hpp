@@ -11,7 +11,7 @@
 
 #include "parameter_name.hpp"
 #include "type_index.hpp"
-#include "module_config_lists.hpp"
+#include "iop_list.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -21,10 +21,15 @@
 namespace disposer{
 
 
+	struct parameter_tag{};
+
 	template < typename Name, typename ... T >
 	class parameter{
 	public:
 		static_assert(hana::is_a< parameter_name_tag, Name >);
+
+
+		using hana_tag = parameter_tag;
 
 
 		/// \brief Compile time name of the parameter
@@ -57,17 +62,23 @@ namespace disposer{
 
 
 		/// \brief Parse enabled parameters and store them
-		template < typename EnableFunction, typename ParserFunction >
+		template <
+			typename EnableFunction,
+			typename ParserFunction,
+			typename DefaultValues >
 		parameter(
-			EnableFunction&& enable_fn,
-			ParserFunction&& parser_fn,
-			std::string const& value
+			EnableFunction const& enable_fn,
+			ParserFunction const& parser_fn,
+			DefaultValues const& default_values,
+			std::optional< std::string >&& value
 		):
 			type_value_map_(hana::make_map(hana::make_pair(
 				hana::type_c< T >,
 				enable_fn(hana::type_c< T >)
 				? std::optional< T const >(parser_fn(value, hana::type_c< T >))
-				: std::optional< T const >()) ...
+				: default_values
+					? std::get< T const >(std::move(default_values))
+					: std::optional< T const >()) ...
 			)){}
 
 
@@ -109,9 +120,9 @@ namespace disposer{
 	/// \brief Provid types for constructing an parameter
 	template <
 		typename Name,
+		typename ParameterType,
 		typename EnableFunction,
-		typename ParserFunction,
-		typename ParameterType >
+		typename ParserFunction >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = parameter_maker_tag;
@@ -119,14 +130,33 @@ namespace disposer{
 		/// \brief Parameter name as compile time string
 		using name = Name;
 
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
 		/// \brief Type of a disposer::parameter
 		using type = ParameterType;
+
+		/// \brief Type for default values
+		using tuple_type = decltype(hana::unroll(
+			hana::transform(type::types, hana::traits::add_const),
+			hana::template_< std::tuple >))::type;
+
+		/// \brief Optional default values
+		std::optional< tuple_type > default_values;
 
 		/// \brief Enable function
 		EnableFunction enabler;
 
 		/// \brief Parameter parser function
 		ParserFunction parser;
+
+		template < typename IOP_List >
+		constexpr auto operator()(
+			IOP_List const& iop_list,
+			std::optional< std::string >&& value
+		)const{
+			return type(enabler, parser, std::move(value));
+		}
 	};
 
 

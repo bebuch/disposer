@@ -12,7 +12,7 @@
 #include "output_base.hpp"
 #include "type_index.hpp"
 #include "output_name.hpp"
-#include "module_config_lists.hpp"
+#include "iop_list.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -24,11 +24,16 @@
 namespace disposer{
 
 
+	struct output_tag{};
+
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	class output: public output_base{
 	public:
 		static_assert(hana::is_a< output_name_tag, Name >);
 		static_assert(hana::Metafunction< TypesMetafunction >::value);
+
+
+		using hana_tag = output_tag;
 
 
 		using name_type = Name;
@@ -40,6 +45,10 @@ namespace disposer{
 			hana::transform(subtypes, TypesMetafunction{});
 
 		static constexpr std::size_t type_count = sizeof...(T);
+
+
+		using enabled_list_type = decltype(hana::make_map(
+			hana::make_pair(hana::type_c< T >, false) ...));
 
 
 		static_assert(hana::length(subtypes) ==
@@ -68,11 +77,22 @@ namespace disposer{
 		using value_type = std::conditional_t<
 			type_count == 1,
 			typename decltype(+types[hana::int_c< 0 >])::type,
-			decltype(hana::unpack(types, hana::template_< std::variant >))
+			typename decltype(
+				hana::unpack(types, hana::template_< std::variant >))::type
 		>;
 
 
-		constexpr output()noexcept: output_base(Name::value.c_str()) {}
+		template < typename IOP_List, typename EnabledFn >
+		constexpr output(
+			IOP_List const& iop_list,
+			EnabledFn const& enabled_fn
+		)noexcept:
+			output_base(Name::value.c_str()),
+			enabled_types_(hana::make_map(hana::make_pair(
+				hana::type_c< T >,
+				enabled_fn(iop_list, hana::type_c< T >)
+			) ... ))
+			{}
 
 
 		template < typename V >
@@ -82,7 +102,7 @@ namespace disposer{
 				"type V in put< V > is not an output type"
 			);
 
-			if(!enabled_types_[type_index::type_id< V >()]){
+			if(!enabled_types_[hana::type_c< V >]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
 					"output '", name, "' put disabled type [",
@@ -94,49 +114,15 @@ namespace disposer{
 		}
 
 
-		template < typename V >
-		void enable(){
-			static_assert(
-				hana::contains(types, hana::type_c< V >),
-				"type V in enable< V > is not an output type"
-			);
-
-			enabled_types_[type_index::type_id_with_cvr< V >()] = true;
-		}
-
-		template < typename V, typename W, typename ... X >
-		void enable(){
-			enable< V >();
-			enable< W, X ... >();
-		}
-
-		void enable_types(std::vector< type_index > const& types){
-			for(auto& type: types){
-				auto iter = std::find(
-					enabled_types_.begin(),
-					enabled_types_.end(),
-					type
-				);
-
-				if(iter == enabled_types_.end()){
-					throw std::logic_error(io_tools::make_string(
-						"type [", type.pretty_name(),
-						"] is not an output type of '", name, "'"
-					));
-				}
-
-				iter->second = true;
-			}
-		}
-
-
 	protected:
 		std::vector< type_index > enabled_types()const override{
 			std::vector< type_index > result;
 			result.reserve(type_count);
-			for(auto const& pair: enabled_types_){
-				if(pair.second) result.push_back(pair.first);
-			}
+			hana::for_each(enabled_types_, [&result](auto&& x){
+				if(!hana::second(x)) return;
+				result.push_back(type_index::type_id<
+					typename decltype(+hana::first(x))::type >());
+			});
 			return result;
 		}
 
@@ -166,7 +152,7 @@ namespace disposer{
 						std::visit([](auto const& data){
 							return type_index::type_id< decltype(data) >();
 						}, from->second),
-						std::visit([](auto const& data){
+						std::visit([](auto const& data)->any_type const&{
 							return reinterpret_cast< any_type const& >(data);
 						}, from->second));
 				}
@@ -202,10 +188,10 @@ namespace disposer{
 						from->first,
 						std::visit([](auto&& data){
 							return type_index::type_id< decltype(data) >();
-						}, from->second),
-						std::visit([](auto&& data){
+						}, std::move(from->second)),
+						std::visit([](auto&& data)->any_type&&{
 							return reinterpret_cast< any_type&& >(data);
-						}, from->second));
+						}, std::move(from->second)));
 				}
 			}
 
@@ -236,16 +222,17 @@ namespace disposer{
 
 		std::size_t next_id_{0};
 
-		std::unordered_map< type_index, bool > enabled_types_{
-				{type_index::type_id_with_cvr< T >(), false} ...
-			};
+		enabled_list_type enabled_types_;
 
 		std::multimap< std::size_t, value_type > data_;
 	};
 
 
 	/// \brief Provid types for constructing an output
-	template < typename Name, typename OutputType >
+	template <
+		typename Name,
+		typename OutputType,
+		typename EnableFunction >
 	struct output_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = output_maker_tag;
@@ -253,47 +240,60 @@ namespace disposer{
 		/// \brief Output name as compile time string
 		using name_type = Name;
 
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
 		/// \brief Type of a disposer::output
 		using type = OutputType;
+
+		/// \brief Enable function
+		EnableFunction enabler;
+
+		template < typename IOP_List >
+		constexpr auto operator()(IOP_List const& iop_list)const{
+			return type(iop_list, enabler);
+		}
 	};
 
 
 	template < char ... C >
-	template < typename Types >
-	constexpr auto
-	output_name< C ... >::operator()(Types const& types)const noexcept{
-		return (*this)(types, hana::template_< self_t >);
-	}
-
-	template < char ... C >
-	template < typename Types, typename TypesMetafunction >
+	template <
+		typename Types,
+		typename TypesMetafunction,
+		typename EnableFunction >
 	constexpr auto output_name< C ... >::operator()(
 		Types const& types,
-		TypesMetafunction const&
+		TypesMetafunction const&,
+		EnableFunction&& enable_fn
 	)const noexcept{
 		using name_type = output_name< C ... >;
+		using type_fn = std::remove_const_t< TypesMetafunction >;
 
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using output_type =
-				output< name_type, TypesMetafunction, typename Types::type >;
+			using output_type = output< name_type, type_fn,
+				typename Types::type >;
 
-			return output_maker< name_type, output_type >{};
+			return output_maker< name_type, output_type, EnableFunction >{
+				static_cast< EnableFunction&& >(enable_fn)
+			};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			auto unpack_types = hana::concat(
-				hana::tuple_t< name_type, TypesMetafunction >,
+				hana::tuple_t< name_type, type_fn >,
 				hana::to_tuple(types));
 
 			auto type_output =
 				hana::unpack(unpack_types, hana::template_< output >);
 
 			return output_maker< name_type,
-				typename decltype(type_output)::type >{};
+				typename decltype(type_output)::type, EnableFunction >{
+					static_cast< EnableFunction&& >(enable_fn)
+				};
 		}
 	}
 
