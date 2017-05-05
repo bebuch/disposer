@@ -115,13 +115,13 @@ namespace disposer{
 
 
 	protected:
-		std::set< type_index > enabled_types()const override{
-			std::set< type_index > result;
+		std::map< type_index, bool > enabled_types()const override{
+			std::map< type_index, bool > result;
 			hana::for_each(enabled_types_, [&result](auto const& x){
-				if(!hana::second(x)) return;
 				auto transformed_type = TypesMetafunction{}(hana::first(x));
-				result.insert(type_index::type_id<
-					typename decltype(transformed_type)::type >());
+				result.emplace(type_index::type_id<
+					typename decltype(transformed_type)::type >(),
+					hana::second(x));
 			});
 			return result;
 		}

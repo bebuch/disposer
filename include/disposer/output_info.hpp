@@ -9,6 +9,8 @@
 #ifndef _disposer__output_info__hpp_INCLUDED_
 #define _disposer__output_info__hpp_INCLUDED_
 
+#include "type_index.hpp"
+
 #include <boost/hana/type.hpp>
 
 #include <set>
@@ -24,27 +26,32 @@ namespace disposer{
 
 	class output_info{
 	public:
-		output_info(std::set< type_index > const& enabled_types):
+		output_info(std::map< type_index, bool > const& enabled_types):
 			enabled_types_(enabled_types) {}
 
 		/// \brief true if type is enabled, false otherwise
 		///
 		/// \throw std::logic_error if type doesn't exist
 		bool is_type_enabled(type_index const& type)const{
-			if(enabled_types_.find(type) == enabled_types_.end()){
+			auto iter = enabled_types_.find(type);
+			if(iter == enabled_types_.end()){
 				std::ostringstream os;
 				os << "requested type [" << type.pretty_name()
 					<< "] is not in the connected output type list, valid "
 					"types are";
 
 				bool first = true;
-				for(auto const& valid_type: enabled_types_){
+				for(auto const& [type, active]: enabled_types_){
+					using namespace std::literals::string_view_literals;
 					if(!first){ os << ", "; }else{ first = false; }
-					os << '[' << valid_type.pretty_name() << ']';
+					os << '[' << type.pretty_name() << "]("
+						<< (active ? "on"sv : "off"sv) << ')';
 				}
 
 				throw std::logic_error(os.str());
 			}
+
+			return iter->second;
 		}
 
 
@@ -59,7 +66,7 @@ namespace disposer{
 
 
 	private:
-		std::set< type_index > const enabled_types_;
+		std::map< type_index, bool > const enabled_types_;
 	};
 
 

@@ -12,10 +12,13 @@ int fail(std::size_t i){
 }
 
 
+using type_index = boost::typeindex::ctti_type_index;
+
+
 int check(
 	std::size_t i,
-	std::set< boost::typeindex::ctti_type_index > const& active_types,
-	std::set< boost::typeindex::ctti_type_index > const& expected
+	std::map< type_index, bool > const& active_types,
+	std::map< type_index, bool > const& expected
 ){
 	if(active_types == expected){
 		return success(i);
@@ -66,7 +69,7 @@ int main(){
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
-					{ boost::typeindex::ctti_type_index::type_id< int >() }
+					{ type_index::type_id< int >(), true }
 				});
 		}
 
@@ -92,8 +95,8 @@ int main(){
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
-					{ boost::typeindex::ctti_type_index::type_id< int >() },
-					{ boost::typeindex::ctti_type_index::type_id< float >() }
+					{ type_index::type_id< int >(), true },
+					{ type_index::type_id< float >(), true }
 				});
 		}
 
@@ -119,8 +122,8 @@ int main(){
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
-					{ boost::typeindex::ctti_type_index::type_id< int >() },
-					{ boost::typeindex::ctti_type_index::type_id< float >() }
+					{ type_index::type_id< int >(), true },
+					{ type_index::type_id< float >(), true }
 				});
 		}
 

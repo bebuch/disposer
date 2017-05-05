@@ -95,7 +95,7 @@ namespace disposer{
 
 
 		/// \brief List of enabled output types
-		virtual std::set< type_index > enabled_types()const = 0;
+		virtual std::map< type_index, bool > enabled_types()const = 0;
 
 
 		/// \brief Set the new id for the next exec or cleanup

@@ -10,6 +10,7 @@
 #define _disposer__input_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
+#include "output_info.hpp"
 
 
 namespace disposer{
@@ -26,7 +27,8 @@ namespace disposer{
 		template < typename Get, typename T >
 		constexpr bool operator()(
 			Get const& /*get*/,
-			hana::basic_type< T >
+			hana::basic_type< T >,
+			output_info const& /*info*/
 		)const{
 			return true;
 		}

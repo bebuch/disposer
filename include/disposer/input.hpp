@@ -9,7 +9,6 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
-#include "output_info.hpp"
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
@@ -18,8 +17,8 @@
 #include <io_tools/make_string.hpp>
 
 #include <variant>
-#include <set>
-#include <map>
+#include <optional>
+#include <unordered_map>
 
 
 namespace disposer{
@@ -145,7 +144,7 @@ namespace disposer{
 		}
 
 
-		bool is_enabled()const noexcept{
+		constexpr bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
@@ -259,7 +258,9 @@ namespace disposer{
 	/// \brief Provid types for constructing an input
 	template <
 		typename Name,
-		typename InputType >
+		typename InputType,
+		typename VerifyConnectFunction,
+		typename VerifyTypesFunction >
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
@@ -273,6 +274,13 @@ namespace disposer{
 		/// \brief Type of a disposer::input
 		using type = InputType;
 
+		/// \brief Function which verifies the connection with an output
+		VerifyConnectFunction verify_connect_fn;
+
+		/// \brief Function which verifies the active types
+		VerifyTypesFunction verify_type_fn;
+
+
 		template < typename IOP_List >
 		constexpr auto operator()(
 			IOP_List const& iop_list,
@@ -280,19 +288,19 @@ namespace disposer{
 			std::optional< output_info > const& info
 		)const{
 			auto input = type(output);
-// 			verify_fn(input, iop_list);
-// 			verify_fn(input, iop_list);
+			verify_connect_fn(iop_list, static_cast< bool >(info));
+
+			if(info){
+				hana::for_each(input.types,
+					[this, &iop_list, &info](auto const& type){
+						verify_type_fn(iop_list, type, *info);
+					});
+			}
+
 			return input;
 		}
 	};
 
-
-	template < char ... C >
-	template < typename Types >
-	constexpr auto
-	input_name< C ... >::operator()(Types const& types)const noexcept{
-		return (*this)(types, hana::template_< self_t >);
-	}
 
 	template < char ... C >
 	template <
@@ -302,33 +310,41 @@ namespace disposer{
 		typename VerifyTypesFunction >
 	constexpr auto input_name< C ... >::operator()(
 		Types const& types,
-		TypesMetafunction const& types_metafunction,
+		TypesMetafunction const&,
 		VerifyConnectFunction&& verify_connect_fn,
 		VerifyTypesFunction&& verify_type_fn
 	)const noexcept{
 		using name_type = input_name< C ... >;
+		using type_fn = std::remove_const_t< TypesMetafunction >;
 
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
 			using input_type =
-				input< name_type, TypesMetafunction, typename Types::type >;
+				input< name_type, type_fn, typename Types::type >;
 
-			return input_maker< name_type, input_type >{};
+			return input_maker< name_type, input_type,
+				VerifyConnectFunction, VerifyTypesFunction >{
+					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
+					static_cast< VerifyTypesFunction&& >(verify_type_fn)
+				};
 		}else{
 			static_assert(hana::Foldable< Types >::value);
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 
 			auto unpack_types = hana::concat(
-				hana::tuple_t< name_type, TypesMetafunction >,
+				hana::tuple_t< name_type, type_fn >,
 				hana::to_tuple(types));
 
 			auto type_input =
 				hana::unpack(unpack_types, hana::template_< input >);
 
-			return input_maker< name_type,
-				typename decltype(type_input)::type >{};
+			return input_maker< name_type, typename decltype(type_input)::type,
+				VerifyConnectFunction, VerifyTypesFunction >{
+					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
+					static_cast< VerifyTypesFunction&& >(verify_type_fn)
+				};
 		}
 	}
 
