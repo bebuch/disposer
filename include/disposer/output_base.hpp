@@ -12,13 +12,17 @@
 #include "any_type.hpp"
 #include "type_index.hpp"
 
+#include <boost/hana.hpp>
+
 #include <utility>
 #include <vector>
 #include <stdexcept>
-#include <unordered_map>
 
 
 namespace disposer{
+
+
+	namespace hana = boost::hana;
 
 
 	struct module_base_key;
@@ -91,7 +95,7 @@ namespace disposer{
 
 
 		/// \brief List of enabled output types
-		virtual std::vector< type_index > enabled_types()const = 0;
+		virtual std::set< type_index > enabled_types()const = 0;
 
 
 		/// \brief Set the new id for the next exec or cleanup
@@ -103,13 +107,13 @@ namespace disposer{
 		}
 
 
-		/// \brief get_references(id)
+		/// \brief Call get_references(id)
 		std::vector< reference_carrier >
 		get_references(input_key&&, std::size_t id){
 			return get_references(id);
 		}
 
-		/// \brief transfer_values(id, fn)
+		/// \brief Call transfer_values(id, fn)
 		void transfer_values(
 			input_key&&,
 			std::size_t id,

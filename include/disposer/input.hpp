@@ -9,6 +9,7 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
+#include "output_info.hpp"
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
@@ -275,11 +276,12 @@ namespace disposer{
 		template < typename IOP_List >
 		constexpr auto operator()(
 			IOP_List const& iop_list,
-			output_base* output
+			output_base* output,
+			std::optional< output_info > const& info
 		)const{
 			auto input = type(output);
-			verify_fn(input, iop_list);
-			verify_fn(input, iop_list);
+// 			verify_fn(input, iop_list);
+// 			verify_fn(input, iop_list);
 			return input;
 		}
 	};
@@ -293,10 +295,16 @@ namespace disposer{
 	}
 
 	template < char ... C >
-	template < typename Types, typename TypesMetafunction >
+	template <
+		typename Types,
+		typename TypesMetafunction,
+		typename VerifyConnectFunction,
+		typename VerifyTypesFunction >
 	constexpr auto input_name< C ... >::operator()(
 		Types const& types,
-		TypesMetafunction const&
+		TypesMetafunction const& types_metafunction,
+		VerifyConnectFunction&& verify_connect_fn,
+		VerifyTypesFunction&& verify_type_fn
 	)const noexcept{
 		using name_type = input_name< C ... >;
 

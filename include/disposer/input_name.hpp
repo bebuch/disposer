@@ -15,19 +15,41 @@
 namespace disposer{
 
 
+	struct verify_connect{
+		template < typename Get >
+		constexpr bool operator()(Get const& /*get*/, bool /*connected*/)const{
+			return true;
+		}
+	};
+
+	struct verify_all{
+		template < typename Get, typename T >
+		constexpr bool operator()(
+			Get const& /*get*/,
+			hana::basic_type< T >
+		)const{
+			return true;
+		}
+	};
+
+
 	struct input_name_tag{};
 
 	template < char ... C >
 	struct input_name: ct_name< C ... >{
 		using hana_tag = input_name_tag;
 
-		template < typename Types >
-		constexpr auto operator()(Types const& types)const noexcept;
-
-		template < typename Types, typename TypesMetafunction >
+		template <
+			typename Types,
+			typename TypesMetafunction = decltype(hana::template_< self_t >),
+			typename VerifyConnectFunction = verify_connect,
+			typename VerifyTypesFunction = verify_all >
 		constexpr auto operator()(
 			Types const& types,
 			TypesMetafunction const& types_metafunction
+				= hana::template_< self_t >,
+			VerifyConnectFunction&& verify_connect_fn = verify_connect(),
+			VerifyTypesFunction&& verify_type_fn = verify_all()
 		)const noexcept;
 	};
 

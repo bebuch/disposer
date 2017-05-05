@@ -32,6 +32,7 @@ namespace disposer{
 	using type_index = boost::typeindex::ctti_type_index;
 
 
+
 	template < typename T >
 	std::string type_name(T&& value){
 		try{

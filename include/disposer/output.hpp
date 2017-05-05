@@ -90,7 +90,7 @@ namespace disposer{
 			output_base(Name::value.c_str()),
 			enabled_types_(hana::make_map(hana::make_pair(
 				hana::type_c< T >,
-				enabled_fn(iop_list, hana::type_c< T >)
+				enabled_fn(iop_list, TypesMetafunction{}(hana::type_c< T >))
 			) ... ))
 			{}
 
@@ -115,17 +115,16 @@ namespace disposer{
 
 
 	protected:
-		std::vector< type_index > enabled_types()const override{
-			std::vector< type_index > result;
-			result.reserve(type_count);
-			hana::for_each(enabled_types_, [&result](auto&& x){
+		std::set< type_index > enabled_types()const override{
+			std::set< type_index > result;
+			hana::for_each(enabled_types_, [&result](auto const& x){
 				if(!hana::second(x)) return;
-				result.push_back(type_index::type_id<
-					typename decltype(+hana::first(x))::type >());
+				auto transformed_type = TypesMetafunction{}(hana::first(x));
+				result.insert(type_index::type_id<
+					typename decltype(transformed_type)::type >());
 			});
 			return result;
 		}
-
 
 	private:
 		virtual std::vector< reference_carrier >
