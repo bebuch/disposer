@@ -30,7 +30,7 @@ namespace disposer{
 	template < typename Tuple >
 	struct iop_list{
 	public:
-		constexpr iop_list(Tuple const& tuple): tuple(tuple) {}
+		constexpr iop_list(Tuple const& tuple)noexcept: tuple(tuple) {}
 
 		template < char ... C >
 		constexpr auto const& operator()(
@@ -74,6 +74,11 @@ namespace disposer{
 	private:
 		Tuple const& tuple;
 	};
+
+	template < typename Tuple >
+	constexpr auto make_iop_list(Tuple const& tuple)noexcept{
+		return iop_list< Tuple >(tuple);
+	}
 
 
 }

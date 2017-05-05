@@ -81,7 +81,7 @@ namespace disposer{
 		constexpr output_base(std::string_view name)noexcept: name(name), id_(0) {}
 
 		/// \brief Outputs are not copyable
-		output_base(output_base const&) = delete;
+		output_base(output_base const&) = default;
 
 		/// \brief Outputs are default-movable
 		constexpr output_base(output_base&& other)noexcept = default;

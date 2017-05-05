@@ -52,6 +52,9 @@ namespace disposer{
 
 		using name_type = Name;
 
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
 
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
@@ -265,7 +268,7 @@ namespace disposer{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
 
-		/// \brief Output name as compile time string
+		/// \brief Input name as compile time string
 		using name_type = Name;
 
 		/// \brief Name as hana::string

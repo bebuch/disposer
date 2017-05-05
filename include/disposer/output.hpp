@@ -38,6 +38,9 @@ namespace disposer{
 
 		using name_type = Name;
 
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
 
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
@@ -94,6 +97,13 @@ namespace disposer{
 			) ... ))
 			{}
 
+		/// \brief Outputs are default-movable
+		constexpr output(output&& other):
+			output_base(std::move(other)),
+			next_id_(other.next_id_),
+			enabled_types_(std::move(other.enabled_types_)),
+			data_(std::move(other.data_)){}
+
 
 		template < typename V >
 		void put(V&& value){
@@ -105,7 +115,7 @@ namespace disposer{
 			if(!enabled_types_[hana::type_c< V >]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
-					"output '", name, "' put disabled type [",
+					"output '", name.c_str(), "' put disabled type [",
 					type_name< V >(), "]"
 				));
 			}

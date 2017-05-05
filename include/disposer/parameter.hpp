@@ -35,10 +35,8 @@ namespace disposer{
 		/// \brief Compile time name of the parameter
 		using name_type = Name;
 
-		/// \brief Name of the parameter as string_view
-		static constexpr std::string_view name{
-			// Second parameter for libstdc++ ...
-			name_type::value.c_str(), hana::length(name_type::value) };
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
 
 
 		/// \brief Types of the parameter
@@ -112,7 +110,8 @@ namespace disposer{
 		decltype(auto) operator()(Type const& type)const{
 			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
-					"access parameter '", name, "' with disabled type [",
+					"access parameter '", name.c_str(),
+					"' with disabled type [",
 					type_name< typename Type::type >(), "]"
 				));
 			}

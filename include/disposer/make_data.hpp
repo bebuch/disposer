@@ -48,7 +48,7 @@ namespace disposer{
 		output_list const outputs;
 
 		/// \brief Parameters from the config file
-		parameter_list params;
+		parameter_list const parameters;
 
 		/// \brief Header for log messages
 		std::string location()const{

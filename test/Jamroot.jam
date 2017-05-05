@@ -82,6 +82,7 @@ exe module_test
 	:
 	module_test.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe parameter

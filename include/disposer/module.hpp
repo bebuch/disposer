@@ -42,9 +42,9 @@ namespace disposer{
 		): module_base(
 			Name::value.c_str(), chain, number,
 			generate_input_list(), generate_output_list()),
-			in(std::move(inputs)),
-			out(std::move(outputs)),
-			params(std::move(parameters)){}
+			inputs(std::move(inputs)),
+			outputs(std::move(outputs)),
+			parameters(std::move(parameters)){}
 
 
 		template < typename ConfigList >
@@ -60,82 +60,150 @@ namespace disposer{
 
 			if constexpr(hana::is_a< input_name_tag, io_t >){
 				static_assert(have_input(io_t::value));
-				return in[io_t::value];
+				return inputs[io_t::value];
 			}else if constexpr(hana::is_a< output_name_tag, io_t >){
 				static_assert(have_output(io_t::value));
-				return out[io_t::value];
+				return outputs[io_t::value];
 			}else{
 				static_assert(have_parameter(io_t::value));
-				return param[io_t::value];
+				return parameters[io_t::value];
 			}
-		}
-
-
-		constexpr auto get_input_names()const{
-			auto input_names = hana::keys(in);
-			return input_names;
-		}
-
-		constexpr auto get_output_names()const{
-			auto output_names = hana::keys(out);
-			return output_names;
-		}
-
-		constexpr auto get_parameter_names()const{
-			auto parameter_names = hana::keys(params);
-			return parameter_names;
 		}
 
 
 	private:
 		input_list generate_input_list(){
-			return hana::unpack(in, [](auto& ... in){
-				return input_list{ hana::second(in) ... };
+			return hana::unpack(inputs, [](auto& ... input){
+				return input_list{ hana::second(input) ... };
 			});
 		}
 
 		output_list generate_output_list(){
-			return hana::unpack(out, [](auto& ... out){
-				return output_list{ hana::second(out) ... };
+			return hana::unpack(outputs, [](auto& ... output){
+				return output_list{ hana::second(output) ... };
 			});
 		}
 
 
 		template < typename String >
 		constexpr static bool have_input(String){
-			return hana::contains(decltype(hana::keys(in))(), String());
+			return hana::contains(decltype(hana::keys(inputs))(), String());
 		}
 
 		template < typename String >
 		constexpr static bool have_output(String){
-			return hana::contains(decltype(hana::keys(out))(), String());
+			return hana::contains(decltype(hana::keys(outputs))(), String());
 		}
 
 		template < typename String >
 		constexpr static bool have_parameter(String){
-			return hana::contains(decltype(hana::keys(param))(), String());
+			return hana::contains(decltype(hana::keys(parameters))(), String());
 		}
 
-		Inputs in;
-		Outputs out;
-		Parameters param;
+		Inputs inputs;
+		Outputs outputs;
+		Parameters parameters;
 	};
 
 
-	template < typename Makers >
+	template <
+		typename Name,
+		typename Makers >
 	struct module_maker{
+		/// \brief Output name as compile time string
+		using name_type = Name;
+
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
+		/// \brief Tuple of input/output/parameter-maker objects
 		Makers makers;
 
-		module_ptr operator()(make_data const& data)const{
+		auto operator()(make_data const& data)const{
+			// Check config file data for undefined inputs, outputs and
+			// parameters, warn about parameters, throw for inputs and outputs
+			auto input_names = hana::transform(
+				hana::filter(makers, hana::is_a< input_maker_tag >),
+				[](auto const& input_maker){
+					return input_maker.name;
+				});
+
+			std::set< std::string > input_name_list;
+			std::transform(data.inputs.begin(), data.inputs.end(),
+				std::inserter(input_name_list, input_name_list.end()),
+				[](auto const& pair){ return pair.first; });
+			hana::for_each(input_names,
+				[&input_name_list](auto const& name){
+					input_name_list.erase(name.c_str());
+				});
+
+			for(auto const& in: input_name_list){
+				logsys::log([&data, &in](logsys::stdlogb& os){
+					os << data.location() << "ERROR: input '"
+						<< in << "' doesn't exist";
+				});
+			}
+
+
+			auto output_names = hana::transform(
+				hana::filter(makers, hana::is_a< output_maker_tag >),
+				[](auto const& output_maker){
+					return output_maker.name;
+				});
+
+			std::set< std::string > output_name_list = data.outputs;
+			hana::for_each(output_names,
+				[&output_name_list](auto const& name){
+					output_name_list.erase(name.c_str());
+				});
+
+			for(auto const& out: output_name_list){
+				logsys::log([&data, &out](logsys::stdlogb& os){
+					os << data.location() << "ERROR: output '"
+						<< out << "' doesn't exist";
+				});
+			}
+
+
+			auto parameters_names = hana::transform(
+				hana::filter(makers, hana::is_a< parameter_maker_tag >),
+				[](auto const& parameters_maker){
+					return parameters_maker.name;
+				});
+
+			std::set< std::string > parameter_name_list;
+			std::transform(data.parameters.begin(), data.parameters.end(),
+				std::inserter(parameter_name_list, parameter_name_list.end()),
+				[](auto const& pair){ return pair.first; });
+			hana::for_each(parameters_names,
+				[&parameter_name_list](auto const& name){
+					parameter_name_list.erase(name.c_str());
+				});
+
+			for(auto const& param: parameter_name_list){
+				logsys::log([&data, &param](logsys::stdlogb& os){
+					os << data.location() << "Warning: parameter '"
+						<< param << "' doesn't exist";
+				});
+			}
+
+
+			if(!input_name_list.empty() || !output_name_list.empty()){
+				throw std::logic_error(data.location() + "some inputs or "
+					"outputs don't exist, see previos log messages for more "
+					"details");
+			}
+
+
 			// create inputs, outputs and parameter in the order of there
 			// definition in the module
 			auto iop_list = hana::fold_left(makers, hana::make_tuple(),
 				[&data](auto&& get, auto&& maker){
-					constexpr auto is_input =
+					auto is_input =
 						hana::is_a< input_maker_tag >(maker);
-					constexpr auto is_output =
+					auto is_output =
 						hana::is_a< output_maker_tag >(maker);
-					constexpr auto is_parameter =
+					auto is_parameter =
 						hana::is_a< parameter_maker_tag >(maker);
 
 					static_assert(is_input || is_output || is_parameter,
@@ -144,7 +212,8 @@ namespace disposer{
 					if constexpr(is_input){
 						auto iter = data.inputs.find(maker.name.c_str());
 						auto output = iter == data.inputs.end()
-							? output_base*(nullptr) : iter->second;
+							? static_cast< output_base* >(nullptr)
+							: iter->second;
 
 						auto info = output
 							? std::optional< output_info >(
@@ -153,11 +222,11 @@ namespace disposer{
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(iop_list, output, info));
+							maker(make_iop_list(get), output, info));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(iop_list));
+							maker(make_iop_list(get)));
 					}else{
 						auto iter = data.parameters.find(maker.name.c_str());
 						auto value = iter == data.parameters.end()
@@ -166,7 +235,7 @@ namespace disposer{
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(iop_list, value));
+							maker(make_iop_list(get), std::move(value)));
 					}
 				}
 			);
@@ -176,76 +245,31 @@ namespace disposer{
 				return hana::to_map(hana::transform(
 					static_cast< decltype(xs)&& >(xs),
 					[](auto&& x){
-						return hana::make_pair(x.name.value, std::move(x));
+						return hana::make_pair(x.name, std::move(x));
 					}));
 			};
 
+			auto inputs = as_map(hana::filter(
+				std::move(iop_list), hana::is_a< input_tag >));
+			auto outputs = as_map(hana::filter(
+				std::move(iop_list), hana::is_a< output_tag >));
+			auto parameters = as_map(hana::filter(
+				std::move(iop_list), hana::is_a< parameter_tag >));
+
 			// Create the module
-			auto module = std::make_unique< module >(
-				data.chain, data.number,
-				as_map(hana::filter(
-					std::move(iop_list), hana::is_a< input_tag >)),
-				as_map(hana::filter(
-					std::move(iop_list), hana::is_a< output_tag >)),
-				as_map(hana::filter(
-					std::move(iop_list), hana::is_a< parameter_tag >))
-			);
+			auto module_ptr = std::make_unique< module<
+					name_type,
+					decltype(inputs),
+					decltype(outputs),
+					decltype(parameters)
+				> >(
+					data.chain, data.number,
+					std::move(inputs),
+					std::move(outputs),
+					std::move(parameters)
+				);
 
-			// Check config file data for undefined inputs, outputs and
-			// parameters, warn about parameters, throw for inputs and outputs
-			// TODO: Do this checks as first action in this function, because
-			//       we can report multiple errors/warnings with this and it is
-			//       better to do it as soon as possible, so the user can fix
-			//       more failures with one run
-			std::set< std::string > input_name_list = data.inputs;
-			hana::for_each(module->get_input_names(),
-				[&input_name_list](auto const& name){
-					input_name_list.erase(name.c_str());
-				});
-			for(auto const& in: input_name_list){
-				logsys::log([&data, &in](logsys::stdlogb& os){
-					os << data.location() << "ERROR: input '"
-						<< in << "' doesn't exist";
-				});
-			}
-
-			std::set< std::string > output_name_list;
-			std::transform(data.outputs.begin(), data.outputs.end(),
-				std::back_inserter(output_name_list),
-				[](auto const& pair){ return pair.first; });
-			hana::for_each(module->get_output_names(),
-				[&output_name_list](auto const& name){
-					output_name_list.erase(name.c_str());
-				});
-			for(auto const& out: output_name_list){
-				logsys::log([&data, &out](logsys::stdlogb& os){
-					os << data.location() << "ERROR: output '"
-						<< out << "' doesn't exist";
-				});
-			}
-
-			std::set< std::string > parameter_name_list;
-			std::transform(data.parameters.begin(), data.parameters.end(),
-				std::back_inserter(parameter_name_list),
-				[](auto const& pair){ return pair.first; });
-			hana::for_each(module->get_parameter_names(),
-				[&parameter_name_list](auto const& name){
-					parameter_name_list.erase(name.c_str());
-				});
-			for(auto const& param: parameter_name_list){
-				logsys::log([&data, &param](logsys::stdlogb& os){
-					os << data.location() << "Warning: parameter '"
-						<< param << "' doesn't exist";
-				});
-			}
-
-			if(!input_name_list.empty() || !output_name_list.empty()){
-				throw std::logic_error(data.location() + "some inputs or "
-					"outputs don't exist, see previos log messages for more "
-					"details");
-			}
-
-			return module;
+			return module_ptr;
 		}
 	};
 
@@ -254,21 +278,10 @@ namespace disposer{
 	template < typename ... ConfigList >
 	constexpr auto
 	module_name< C ... >::operator()(ConfigList&& ... list)const noexcept{
-		using name_type = module_name< C ... >;
-		auto config_lists =
-			separate_module_config_lists(static_cast< ConfigList&& >(list) ...);
-
-		using namespace hana::literals;
-		auto in = config_lists[0_c];
-		auto out = config_lists[1_c];
-		auto param = config_lists[2_c];
-
-		return hana::type_c< module<
-				name_type,
-				typename decltype(+in)::type,
-				typename decltype(+out)::type,
-				typename decltype(+param)::type
-			> >;
+		return module_maker<
+				module_name< C ... >,
+				hana::tuple< std::remove_reference_t< ConfigList > ... >
+			>{hana::make_tuple(static_cast< ConfigList&& >(list) ...)};
 	}
 
 
