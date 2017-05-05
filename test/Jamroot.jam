@@ -78,12 +78,6 @@ exe input
 	/disposer//disposer
 	;
 
-exe module_config_lists
-	:
-	module_config_lists.cpp
-	/disposer//disposer
-	;
-
 exe module_test
 	:
 	module_test.cpp
