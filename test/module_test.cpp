@@ -9,8 +9,6 @@ namespace hana = boost::hana;
 using namespace hana::literals;
 using namespace disposer::interface::module;
 
-constexpr auto types = hana::tuple_t< int, char, float >;
-
 
 void check_impl(std::string_view name, bool enabled, bool expected){
 	if(enabled == expected){

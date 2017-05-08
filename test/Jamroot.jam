@@ -78,6 +78,12 @@ exe input
 	/disposer//disposer
 	;
 
+exe parameter
+	:
+	parameter.cpp
+	/disposer//disposer
+	;
+
 exe module_test
 	:
 	module_test.cpp
@@ -85,8 +91,9 @@ exe module_test
 	/logsys//logsys
 	;
 
-exe parameter
+exe register
 	:
-	parameter.cpp
+	register.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;

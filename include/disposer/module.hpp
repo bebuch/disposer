@@ -285,28 +285,14 @@ namespace disposer{
 	}
 
 
-}
-
-
-namespace disposer::interface::module{
-
-
-	template <
-		typename Name,
-		typename Inputs,
-		typename Outputs,
-		typename Parameters >
+	template < typename Name, typename Maker >
 	constexpr auto make_register_fn(
-		hana::basic_type<
-			::disposer::module< Name, Inputs, Outputs, Parameters > >
-	){
-		return [](::disposer::module_declarant& add){
-			add(Name::value.c_str(), [](::disposer::make_data const& data){
-				return std::make_unique<
-					::disposer::module< Name, Inputs, Outputs, Parameters > >(
-						data.chain, data.number
-					);
-			});
+		module_maker< Name, Maker >&& maker
+	)noexcept{
+		return [maker = std::move(maker)](module_declarant& add){
+			add(Name::value.c_str(), [&maker](make_data const& data){
+					return maker(data);
+				});
 		};
 	}
 
