@@ -12,6 +12,8 @@
 #include "parameter_name.hpp"
 #include "type_index.hpp"
 #include "iop_list.hpp"
+#include "as_text.hpp"
+#include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -62,20 +64,21 @@ namespace disposer{
 			typename IOP_List,
 			typename EnableFunction,
 			typename ParserFunction,
-			typename DefaultValues >
+			typename DefaultValues,
+			typename Values >
 		parameter(
 			IOP_List const& iop_list,
 			EnableFunction const& enable_fn,
 			ParserFunction const& parser_fn,
 			DefaultValues const& default_values,
-			std::optional< std::string >&& value
+			Values const& values
 		):
 			type_value_map_(hana::make_map(hana::make_pair(
 				hana::type_c< T >,
 				enable_fn(iop_list, hana::type_c< T >)
 				? std::optional< T const >(
-					value
-					? parser_fn(*value, hana::type_c< T >)
+					values[hana::type_c< T >]
+					? parser_fn(*values[hana::type_c< T >], hana::type_c< T >)
 					: (default_values
 						? std::get< T const >(*default_values)
 						: std::optional< T const >()
@@ -149,9 +152,12 @@ namespace disposer{
 		/// \brief Type of a disposer::parameter
 		using type = ParameterType;
 
+		/// \brief Possible types of the parameter value
+		static constexpr auto types = type::types;
+
 		/// \brief Type for default values
 		using tuple_type = typename decltype(hana::unpack(
-			hana::transform(type::types, hana::traits::add_const),
+			hana::transform(types, hana::traits::add_const),
 			hana::template_< std::tuple >))::type;
 
 		/// \brief Enable function
@@ -163,13 +169,12 @@ namespace disposer{
 		/// \brief Optional default values
 		std::optional< tuple_type > default_values;
 
-		template < typename IOP_List >
+		template < typename IOP_List, typename Values >
 		constexpr auto operator()(
 			IOP_List const& iop_list,
-			std::optional< std::string >&& value
+			Values const& values
 		)const{
-			return type(
-				iop_list, enabler, parser, default_values, std::move(value));
+			return type(iop_list, enabler, parser, default_values, values);
 		}
 	};
 

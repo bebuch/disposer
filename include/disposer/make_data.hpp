@@ -9,13 +9,16 @@
 #ifndef _disposer__make_data__hpp_INCLUDED_
 #define _disposer__make_data__hpp_INCLUDED_
 
-#include "output_base.hpp"
+#include "merge.hpp"
 
 #include <set>
 #include <map>
 
 
 namespace disposer{
+
+
+	class output_base;
 
 
 	/// \brief Map from input names to output pointers
@@ -25,7 +28,7 @@ namespace disposer{
 	using output_list = std::set< std::string >;
 
 	/// \brief List of parameter name value pairs
-	using parameter_list = std::map< std::string, std::string >;
+	using parameter_list = std::map< std::string, parameter_data >;
 
 
 	/// \brief Dataset for disposer to construct and initialize a module

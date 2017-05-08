@@ -204,7 +204,7 @@ int main(){
 				return false;
 			};
 
-			constexpr auto parser = [](std::string const& /*value*/, auto type){
+			constexpr auto parser = [](std::string_view /*value*/, auto type){
 				static_assert(type == hana::type_c< int >);
 				return 5;
 			};

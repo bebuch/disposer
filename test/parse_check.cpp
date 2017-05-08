@@ -28,6 +28,15 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	template < typename T >
+	std::ostream& operator<<(std::ostream& os, std::optional< T > const& v){
+		os << '{';
+		if(v) std::operator<<(os, *v);
+		os << '}';
+
+		return os;
+	}
+
+	template < typename T >
 	std::ostream& operator<<(std::ostream& os, std::vector< T > const& v){
 		os << '{';
 		auto iter = v.cbegin();
@@ -38,8 +47,13 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 
+	std::ostream& operator<<(std::ostream& os, specialized_parameter const& v){
+		return os << "{" << v.type << "," << v.value << "}";
+	}
+
 	std::ostream& operator<<(std::ostream& os, parameter const& v){
-		return os << "{" << v.key << "," << v.value << "}";
+		return os << "{" << v.key << "," << v.generic_value << ","
+			<< v.specialized_values << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, parameter_set const& v){
@@ -69,11 +83,20 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
+		specialized_parameter const& l,
+		specialized_parameter const& r
+	){
+		return l.type == r.type
+			&& l.value == r.value;
+	}
+
+	bool operator==(
 		parameter const& l,
 		parameter const& r
 	){
 		return l.key == r.key
-			&& l.value == r.value;
+			&& l.generic_value == r.generic_value
+			&& l.specialized_values == r.specialized_values;
 	}
 
 	bool operator==(
@@ -175,7 +198,7 @@ chain
 				{
 					"ps1",
 					{
-						{"param1", "v1"}
+						{"param1", {"v1"}, {}}
 					}
 				}
 			},
@@ -191,7 +214,7 @@ chain
 								{
 									{"ps1"}
 								}, {
-									{"param2", "v2"}
+									{"param2", {"v2"}, {}}
 								}
 							},
 							{},

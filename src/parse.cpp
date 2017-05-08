@@ -21,9 +21,16 @@
 
 
 BOOST_FUSION_ADAPT_STRUCT(
+	disposer::types::parse::specialized_parameter,
+	type,
+	value
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::parameter,
 	key,
-	value
+	generic_value,
+	specialized_values
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -218,6 +225,9 @@ namespace disposer::parser{
 		*(value_spaces | +(char_ - space - eol))
 	;
 
+	struct sets_param_specialization_tag;
+	x3::rule< sets_param_specialization_tag, type::specialized_parameter > const
+		sets_param_specialization("sets_param_specialization");
 
 	struct sets_param_tag;
 	x3::rule< sets_param_tag, type::parameter > const
@@ -247,9 +257,14 @@ namespace disposer::parser{
 	x3::rule< sets_config_tag, type::parameter_sets > const
 		sets_config("sets_config");
 
+	auto const sets_param_specialization_def =
+		"\t\t\t" > keyword > *space > '=' > *space > value > separator
+	;
+
 	auto const sets_param_def =
-		("\t\t" >> sets_param_prevent) > keyword  >
-		*space > '=' > *space > value > separator
+		("\t\t" >> sets_param_prevent >> keyword)
+		> -(*space >> ('=' > *space > value))
+		> separator > *sets_param_specialization
 	;
 
 	auto const sets_param_prevent_def =
@@ -277,9 +292,15 @@ namespace disposer::parser{
 		&x3::expect["chain" >> separator]
 	;
 
+	struct sets_param_specialization_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter specialization '\t\t\ttype = value\n'";
+		}
+	};
+
 	struct sets_param_tag: error_base{
 		virtual const char* message()const override{
-			return "a parameter '\t\tname = value\n' with name != "
+			return "a parameter '\t\tname [= value]\n' with name != "
 				"'parameter_set'";
 		}
 	};
@@ -287,13 +308,13 @@ namespace disposer::parser{
 	struct sets_param_prevent_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter, but a parameter name "
-				"('\t\tname = value\n') must not be 'parameter_set'";
+				"('\t\tname [= value]\n') must not be 'parameter_set'";
 		}
 	};
 
 	struct sets_param_list_tag: error_base{
 		virtual const char* message()const override{
-			return "at least one parameter line '\t\tname = value\n' "
+			return "at least one parameter line '\t\tname [= value]\n' "
 				"with name != 'parameter_set'";
 		}
 	};
@@ -313,7 +334,7 @@ namespace disposer::parser{
 	struct sets_set_list_checked_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter set line '\tname\n' or a parameter definition "
-				"('\t\tname = value\n') or keyword line 'chain\n'";
+				"('\t\tname [= value]\n') or keyword line 'chain\n'";
 		}
 	};
 
@@ -349,6 +370,10 @@ namespace disposer::parser{
 	struct set_ref_tag;
 	x3::rule< set_ref_tag, std::string > const
 		set_ref("set_ref");
+
+	struct param_specialization_tag;
+	x3::rule< param_specialization_tag, type::specialized_parameter > const
+		param_specialization("param_specialization");
 
 	struct param_prevent_tag;
 	x3::rule< param_prevent_tag > const
@@ -416,9 +441,14 @@ namespace disposer::parser{
 		x3::expect[!("parameter_set" >> *space >> '=')]
 	;
 
+	auto const param_specialization_def =
+		"\t\t\t\t\t" > keyword > *space > '=' > *space > value > separator
+	;
+
 	auto const param_def =
-		("\t\t\t\t" >> param_prevent) > keyword  >
-		*space > '=' > *space > value > separator
+		("\t\t\t\t" >> param_prevent >> keyword)
+		> -(*space >> ('=' > *space > value))
+		> separator > *param_specialization
 	;
 
 	auto const input_def =
@@ -515,7 +545,7 @@ namespace disposer::parser{
 			return "at least one parameter set reference line "
 				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
 				"keyword and 'name' the name of the referenced parameter set "
-				"or one parameter '\t\t\t\tname = value\n'";
+				"or one parameter '\t\t\t\tname [= value]\n'";
 		}
 	};
 
@@ -536,13 +566,19 @@ namespace disposer::parser{
 	struct param_prevent_tag: error_base{
 		virtual const char* message()const override{
 			return "another parameter, but a parameter name "
-				"('\t\t\t\tname = value\n') must not be 'parameter_set'";
+				"('\t\t\t\tname [= value]\n') must not be 'parameter_set'";
+		}
+	};
+
+	struct param_specialization_tag: error_base{
+		virtual const char* message()const override{
+			return "a parameter specialization '\t\t\t\t\ttype = value\n'";
 		}
 	};
 
 	struct param_tag: error_base{
 		virtual const char* message()const override{
-			return "a parameter '\t\t\t\tname = value\n' with name != "
+			return "a parameter '\t\t\t\tname [= value]\n' with name != "
 				"'parameter_set'";
 		}
 	};
@@ -632,6 +668,7 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(value_spaces)
 	BOOST_SPIRIT_DEFINE(keyword)
 	BOOST_SPIRIT_DEFINE(value)
+	BOOST_SPIRIT_DEFINE(sets_param_specialization)
 	BOOST_SPIRIT_DEFINE(sets_param)
 	BOOST_SPIRIT_DEFINE(sets_param_prevent)
 	BOOST_SPIRIT_DEFINE(sets_param_list)
@@ -639,6 +676,7 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(sets_set_list)
 	BOOST_SPIRIT_DEFINE(sets_set_list_checked)
 	BOOST_SPIRIT_DEFINE(sets_config)
+	BOOST_SPIRIT_DEFINE(param_specialization)
 	BOOST_SPIRIT_DEFINE(param)
 	BOOST_SPIRIT_DEFINE(param_prevent)
 	BOOST_SPIRIT_DEFINE(params)

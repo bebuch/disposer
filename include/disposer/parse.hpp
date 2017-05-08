@@ -20,9 +20,15 @@ namespace disposer{
 	namespace types::parse{
 
 
+		struct specialized_parameter{
+			std::string type;
+			std::string value;
+		};
+
 		struct parameter{
 			std::string key;
-			std::string value;
+			std::optional< std::string > generic_value;
+			std::vector< specialized_parameter > specialized_values;
 		};
 
 		struct parameter_set{

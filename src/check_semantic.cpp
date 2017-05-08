@@ -75,6 +75,17 @@ namespace disposer{
 							location() + "duplicate key '" + param.key + "'"
 						);
 					}
+
+					std::set< std::string > types;
+					for(auto& specialization: param.specialized_values){
+						if(!keys.insert(specialization.type).second){
+							throw std::logic_error(
+								location() + "duplicate parameter "
+								"specialization type '" + specialization.type
+								+ "' for parameter '" + param.key + "'"
+							);
+						}
+					}
 				}
 
 				std::set< std::string > inputs;

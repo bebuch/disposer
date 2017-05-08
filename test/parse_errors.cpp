@@ -70,7 +70,7 @@ R"file(parameter_set
 )file"
 	,
 "Syntax error at line 3, pos 0: '\tname2\n', expected at least one "
-"parameter line '\t\tname = value\n' with name != 'parameter_set'"
+"parameter line '\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
 	// 005
@@ -81,7 +81,7 @@ R"file(parameter_set
 )file"
 	,
 "Syntax error at line 3, pos 2: '\t\tparameter_set = a\n', expected a "
-"parameter, but a parameter name ('\t\tname = value\n') must not be "
+"parameter, but a parameter name ('\t\tname [= value]\n') must not be "
 "'parameter_set'"
 	}
 	,
@@ -94,7 +94,7 @@ R"file(parameter_set
 )file"
 	,
 "Syntax error at line 5, pos 0: '', expected at least one "
-"parameter line '\t\tname = value\n' with name != 'parameter_set'"
+"parameter line '\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
 	// 007
@@ -107,7 +107,7 @@ R"file(parameter_set
 )file"
 	,
 "Syntax error at line 6, pos 0: '', expected a parameter set line "
-"'\tname\n' or a parameter definition ('\t\tname = value\n') or "
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or "
 "keyword line 'chain\n'"
 	}
 	,
@@ -129,7 +129,7 @@ R"file(parameter_set
 chain)file"
 	,
 "Syntax error at line 6, pos 5: 'chain', expected a parameter set line "
-"'\tname\n' or a parameter definition ('\t\tname = value\n') or "
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or "
 "keyword line 'chain\n'"
 	}
 	,
@@ -212,7 +212,7 @@ R"file(chain
 "Syntax error at line 5, pos 0: '', expected at least one parameter set "
 "reference line '\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
 "keyword and 'name' the name of the referenced parameter set or one parameter "
-"'\t\t\t\tname = value\n'"
+"'\t\t\t\tname [= value]\n'"
 	}
 	,
 	// 017
@@ -241,7 +241,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 6, pos 11: '\t\t\t\tname2 =\n', expected a parameter "
-"'\t\t\t\tname = value\n' with name != 'parameter_set'"
+"'\t\t\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
 	// 019
@@ -255,7 +255,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 6, pos 4: '\t\t\t\tparameter_set = ref1\n', expected "
-"another parameter, but a parameter name ('\t\t\t\tname = value\n') must not "
+"another parameter, but a parameter name ('\t\t\t\tname [= value]\n') must not "
 "be 'parameter_set'"
 	}
 	,

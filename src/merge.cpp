@@ -36,13 +36,23 @@ namespace disposer{
 			auto& result_chain = result.back();
 
 			for(auto& module: chain.modules){
-				std::map< std::string, std::string > parameters;
+				std::map< std::string, parameter_data > parameters;
 
 				// add all parameters from module
 				for(auto& parameter: reverse(module.parameters.parameters)){
+					std::map< std::string, std::string > specialized_values;
+					for(auto& specialization: parameter.specialized_values){
+						specialized_values.emplace(
+							std::move(specialization.type),
+							std::move(specialization.value)
+						);
+					}
+
 					parameters.emplace(
-						std::move(parameter.key),
-						std::move(parameter.value)
+						std::move(parameter.key), parameter_data{
+							std::move(parameter.generic_value),
+							std::move(specialized_values)
+						}
 					);
 				}
 
@@ -57,9 +67,19 @@ namespace disposer{
 					for(auto& parameter: iter->second.parameters){
 						// parameter set parameters can not be moved
 						// (multiple use!)
+						std::map< std::string, std::string > specialized_values;
+						for(auto& specialization: parameter.specialized_values){
+							specialized_values.emplace(
+								specialization.type,
+								specialization.value
+							);
+						}
+
 						parameters.emplace(
-							parameter.key,
-							parameter.value
+							parameter.key, parameter_data{
+								parameter.generic_value,
+								std::move(specialized_values)
+							}
 						);
 					}
 				}

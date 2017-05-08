@@ -92,7 +92,7 @@ int main(){
 						assert(!active1 && !active2);
 						return false;
 					},
-					[](std::string const& /*value*/, auto type){
+					[](std::string_view /*value*/, auto type){
 						static_assert(type == hana::type_c< int >);
 						return 5;
 					},

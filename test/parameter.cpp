@@ -34,6 +34,7 @@ int check(std::size_t i, T const& test, T const& ref){
 
 
 int main(){
+	using namespace std::literals::string_view_literals;
 	using hana::type_c;
 
 	static constexpr auto iops = hana::make_tuple();
@@ -42,6 +43,15 @@ int main(){
 
 	std::size_t ct = 0;
 	std::size_t error_count = 0;
+
+	auto const value_int = hana::make_map(
+		hana::make_pair(hana::type_c< int >, std::make_optional("5"sv))
+	);
+
+	auto const value_int_float = hana::make_map(
+		hana::make_pair(hana::type_c< int >, std::make_optional("5"sv)),
+		hana::make_pair(hana::type_c< float >, std::make_optional("5"sv))
+	);
 
 	try{
 		{
@@ -55,7 +65,7 @@ int main(){
 					disposer::parameter_parser
 				> const >);
 
-			auto object = maker(get_object, "5");
+			auto object = maker(get_object, value_int);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int > >);
@@ -87,7 +97,7 @@ int main(){
 					disposer::parameter_parser
 				> const >);
 
-			auto object = maker(get_object, "5");
+			auto object = maker(get_object, value_int_float);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);
@@ -124,7 +134,7 @@ int main(){
 					disposer::parameter_parser
 				> const >);
 
-			auto object = maker(get_object, "5");
+			auto object = maker(get_object, value_int_float);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);

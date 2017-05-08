@@ -17,14 +17,20 @@
 namespace disposer{
 
 
-	namespace types{ namespace merge{
+	struct parameter_data{
+		std::optional< std::string > generic_value;
+		std::map< std::string, std::string > specialized_values;
+	};
+
+
+	namespace types::merge{
 
 
 		using io = parse::io;
 
 		struct module{
 			std::string type_name;
-			std::map< std::string, std::string > parameters;
+			std::map< std::string, parameter_data > parameters;
 			std::vector< io > inputs;
 			std::vector< io > outputs;
 		};
@@ -39,7 +45,7 @@ namespace disposer{
 		using config = std::vector< chain >;
 
 
-	} }
+	}
 
 
 	types::merge::config merge(types::parse::config&& config);

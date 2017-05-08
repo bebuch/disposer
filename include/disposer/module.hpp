@@ -15,7 +15,6 @@
 #include "output.hpp"
 #include "parameter.hpp"
 #include "module_base.hpp"
-#include "module_name.hpp"
 
 
 namespace disposer{
@@ -81,17 +80,17 @@ namespace disposer{
 
 
 		template < typename String >
-		constexpr static bool have_input(String){
+		constexpr static auto have_input(String){
 			return hana::contains(decltype(hana::keys(inputs))(), String());
 		}
 
 		template < typename String >
-		constexpr static bool have_output(String){
+		constexpr static auto have_output(String){
 			return hana::contains(decltype(hana::keys(outputs))(), String());
 		}
 
 		template < typename String >
-		constexpr static bool have_parameter(String){
+		constexpr static auto have_parameter(String){
 			return hana::contains(decltype(hana::keys(parameters))(), String());
 		}
 
@@ -215,14 +214,46 @@ namespace disposer{
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(get)));
 					}else{
-						auto iter = data.parameters.find(maker.name.c_str());
-						auto value = iter == data.parameters.end()
-							? std::optional< std::string >()
-							: std::make_optional(iter->second);
+						auto const iter = data.parameters.find(maker.name.c_str());
+						auto const found = iter == data.parameters.end();
+
+						auto get_value = [&data, found, iter](auto type)
+							-> std::optional< std::string_view >
+						{
+							if(!found) return {};
+
+							auto const specialization = iter->second
+								.specialized_values.find(
+									std::string(as_text[type])
+								);
+							auto const end =
+								iter->second.specialized_values.end();
+							if(specialization == end){
+								if(!iter->second.generic_value){
+									throw std::logic_error(
+										data.location() + "parameter '"
+										+ iter->first + "' has nighter a "
+										"generic value but a specialization "
+										"for type '" + specialization->first
+										+ "'"
+									);
+								}else{
+									return {*iter->second.generic_value};
+								}
+							}else{
+								return {specialization->second};
+							}
+						};
+
+						auto params = hana::to_map(hana::transform(
+							maker.types,
+							[&get_value](auto&& type){
+								return hana::make_pair(type, get_value(type));
+							}));
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(get), std::move(value)));
+							maker(make_iop_list(get), std::move(params)));
 					}
 				}
 			);
