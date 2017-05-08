@@ -9,9 +9,6 @@ namespace hana = boost::hana;
 using namespace hana::literals;
 using namespace disposer::interface::module;
 
-constexpr auto types = hana::tuple_t< int, char, float >;
-
-
 void check_impl(std::string_view name, bool enabled, bool expected){
 	if(enabled == expected){
 		std::cout << " \033[0;32msuccess:\033[0m ";
@@ -43,93 +40,75 @@ int main(){
 		auto& declarant = program.declarant();
 
 		{
-			auto maker = "m1"_module();
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			auto register_fn = disposer::make_register_fn();
+			register_fn("m1", declarant);
 		}
 
 		{
-			auto maker = "m2"_module(
+			auto register_fn = disposer::make_register_fn(
 				"v"_in(hana::type_c< int >)
 			);
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			register_fn("m2", declarant);
 		}
 
 
 		{
-			auto maker = "m3"_module(
+			auto register_fn = disposer::make_register_fn(
 				"v"_out(hana::type_c< int >)
 			);
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			register_fn("m3", declarant);
 		}
 
 
 		{
-			auto maker = "m4"_module(
+			auto register_fn = disposer::make_register_fn(
 				"v"_param(hana::type_c< int >)
 			);
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			register_fn("m4", declarant);
 		}
 
 		{
-			auto maker = "m5"_module(
+			auto register_fn = disposer::make_register_fn(
 				"v"_in(hana::type_c< int >),
 				"v"_out(hana::type_c< int >),
 				"v"_param(hana::type_c< int >)
 			);
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			register_fn("m5", declarant);
 		}
 
 		{
-			constexpr auto enable_out = [](auto const& get, auto type){
-				bool active = get("v"_in).is_enabled(type);
-				assert(!active);
-				return active;
-			};
-
-			constexpr auto enable_in_c = [](auto const&, bool connected){
-				assert(!connected);
-			};
-
-			constexpr auto enable_param = [](auto const& get, auto type){
-				bool active1 = get("v"_in).is_enabled(type);
-				bool active2 = get("v"_out).is_enabled(type);
-				assert(!active1 && !active2);
-				return false;
-			};
-
-			constexpr auto parser = [](std::string const& /*value*/, auto type){
-				static_assert(type == hana::type_c< int >);
-				return 5;
-			};
-
-			constexpr auto enable_in_t =
-				[](auto const& get, auto type, disposer::output_info const&){
-					bool active1 = get("v"_in).is_enabled(type);
-					bool active2 = get("v"_out).is_enabled(type);
-					bool active3 = get("v"_param).is_enabled(type);
-					assert(!active1 && !active2 && !active3);
-				};
-
-			auto maker = "m6"_module(
+			auto register_fn = disposer::make_register_fn(
 				"v"_in(hana::type_c< int >),
-				"v"_out(hana::type_c< int >, ident{}, enable_out),
-				"v"_param(hana::type_c< int >, enable_param, parser,
+				"v"_out(hana::type_c< int >, ident{},
+					[](auto const& get, auto type){
+						bool active = get("v"_in).is_enabled(type);
+						assert(!active);
+						return active;
+					}),
+				"v"_param(hana::type_c< int >,
+					[](auto const& get, auto type){
+						bool active1 = get("v"_in).is_enabled(type);
+						bool active2 = get("v"_out).is_enabled(type);
+						assert(!active1 && !active2);
+						return false;
+					},
+					[](std::string const& /*value*/, auto type){
+						static_assert(type == hana::type_c< int >);
+						return 5;
+					},
 					std::make_tuple(7)),
-				"w"_in(hana::type_c< int >, ident{}, enable_in_c, enable_in_t)
+				"w"_in(hana::type_c< int >, ident{},
+					[](auto const&, bool connected){
+						assert(!connected);
+					},
+					[](auto const& get, auto type, disposer::output_info const&){
+						bool active1 = get("v"_in).is_enabled(type);
+						bool active2 = get("v"_out).is_enabled(type);
+						bool active3 = get("v"_param).is_enabled(type);
+						assert(!active1 && !active2 && !active3);
+					})
 			);
-
-			auto register_fn = disposer::make_register_fn(std::move(maker));
-			register_fn(declarant);
+			register_fn("m6", declarant);
 		}
 
 		if(error_count == 0){

@@ -38,16 +38,16 @@ int main(){
 
 	try{
 		{
-			auto const maker = "v"_module();
+			auto const maker = disposer::make_module();
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 				> > const >);
 
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map()),
 					decltype(hana::make_map()),
 					decltype(hana::make_map())
@@ -55,12 +55,12 @@ int main(){
 		}
 
 		{
-			auto const maker = "v"_module(
+			auto const maker = disposer::make_module(
 				"v"_in(hana::type_c< int >)
 			);
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
@@ -72,7 +72,7 @@ int main(){
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::input<
 							decltype("v"_in), ident, int > >())
@@ -84,12 +84,12 @@ int main(){
 
 
 		{
-			auto const maker = "v"_module(
+			auto const maker = disposer::make_module(
 				"v"_out(hana::type_c< int >)
 			);
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 					disposer::output_maker<
 						decltype("v"_out),
 						disposer::output< decltype("v"_out), ident, int >,
@@ -100,7 +100,7 @@ int main(){
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map()),
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::output<
@@ -112,12 +112,12 @@ int main(){
 
 
 		{
-			auto const maker = "v"_module(
+			auto const maker = disposer::make_module(
 				"v"_param(hana::type_c< int >)
 			);
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 					disposer::parameter_maker<
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
@@ -129,7 +129,7 @@ int main(){
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map()),
 					decltype(hana::make_map()),
 					decltype(hana::make_map(
@@ -140,14 +140,14 @@ int main(){
 		}
 
 		{
-			auto const maker = "v"_module(
+			auto const maker = disposer::make_module(
 				"v"_in(hana::type_c< int >),
 				"v"_out(hana::type_c< int >),
 				"v"_param(hana::type_c< int >)
 			);
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
@@ -170,7 +170,7 @@ int main(){
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::input<
 							decltype("v"_in), ident, int > >())
@@ -217,7 +217,7 @@ int main(){
 					assert(!active1 && !active2 && !active3);
 				};
 
-			auto const maker = "v"_module(
+			auto const maker = disposer::make_module(
 				"v"_in(hana::type_c< int >),
 				"v"_out(hana::type_c< int >, ident{}, enable_out),
 				"v"_param(hana::type_c< int >, enable_param, parser,
@@ -226,7 +226,7 @@ int main(){
 			);
 
 			static_assert(std::is_same_v< decltype(maker),
-				disposer::module_maker< decltype("v"_module), hana::tuple<
+				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
@@ -255,7 +255,7 @@ int main(){
 			auto object = maker(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
-				std::unique_ptr< disposer::module< decltype("v"_module),
+				std::unique_ptr< disposer::module<
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::input<
 							decltype("v"_in), ident, int > >()),

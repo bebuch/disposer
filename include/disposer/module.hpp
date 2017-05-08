@@ -22,25 +22,20 @@ namespace disposer{
 
 
 	template <
-		typename Name,
 		typename Inputs,
 		typename Outputs,
 		typename Parameters >
 	class module: public module_base{
 	public:
-		static_assert(hana::is_a< module_name_tag, Name >);
-
-		using name_type = Name;
-
-
 		module(
+			std::string const& module_type,
 			std::string const& chain,
 			std::size_t number,
 			Inputs&& inputs,
 			Outputs&& outputs,
 			Parameters&& parameters
 		): module_base(
-			Name::value.c_str(), chain, number,
+			module_type, chain, number,
 			generate_input_list(), generate_output_list()),
 			inputs(std::move(inputs)),
 			outputs(std::move(outputs)),
@@ -106,16 +101,8 @@ namespace disposer{
 	};
 
 
-	template <
-		typename Name,
-		typename Makers >
+	template < typename Makers >
 	struct module_maker{
-		/// \brief Output name as compile time string
-		using name_type = Name;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
-
 		/// \brief Tuple of input/output/parameter-maker objects
 		Makers makers;
 
@@ -258,12 +245,11 @@ namespace disposer{
 
 			// Create the module
 			auto module_ptr = std::make_unique< module<
-					name_type,
 					decltype(inputs),
 					decltype(outputs),
 					decltype(parameters)
 				> >(
-					data.chain, data.number,
+					data.type_name, data.chain, data.number,
 					std::move(inputs),
 					std::move(outputs),
 					std::move(parameters)
@@ -274,26 +260,22 @@ namespace disposer{
 	};
 
 
-	template < char ... C >
 	template < typename ... ConfigList >
-	constexpr auto
-	module_name< C ... >::operator()(ConfigList&& ... list)const noexcept{
+	constexpr auto make_module(ConfigList&& ... list)noexcept{
 		return module_maker<
-				module_name< C ... >,
 				hana::tuple< std::remove_reference_t< ConfigList > ... >
 			>{hana::make_tuple(static_cast< ConfigList&& >(list) ...)};
 	}
 
 
-	template < typename Name, typename Maker >
-	constexpr auto make_register_fn(
-		module_maker< Name, Maker >&& maker
-	)noexcept{
-		return [maker = std::move(maker)](module_declarant& add){
-			add(Name::value.c_str(), [&maker](make_data const& data){
+	template < typename ... ConfigList >
+	constexpr auto make_register_fn(ConfigList&& ... list)noexcept{
+		return [maker = make_module(static_cast< ConfigList&& >(list) ...)]
+			(std::string const& module_type, module_declarant& add){
+				add(module_type, [&maker](make_data const& data){
 					return maker(data);
 				});
-		};
+			};
 	}
 
 
