@@ -38,8 +38,6 @@ namespace disposer{
 	};
 
 
-	struct input_tag{};
-
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	class input: public input_base{
 	public:
@@ -319,6 +317,10 @@ namespace disposer{
 	)const noexcept{
 		using name_type = input_name< C ... >;
 		using type_fn = std::remove_const_t< TypesMetafunction >;
+		using verify_connect_fn_t =
+			std::remove_reference_t< VerifyConnectFunction >;
+		using verify_type_fn_t =
+			std::remove_reference_t< VerifyTypesFunction >;
 
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
@@ -328,7 +330,7 @@ namespace disposer{
 				input< name_type, type_fn, typename Types::type >;
 
 			return input_maker< name_type, input_type,
-				VerifyConnectFunction, VerifyTypesFunction >{
+				verify_connect_fn_t, verify_type_fn_t >{
 					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
 					static_cast< VerifyTypesFunction&& >(verify_type_fn)
 				};
@@ -344,7 +346,7 @@ namespace disposer{
 				hana::unpack(unpack_types, hana::template_< input >);
 
 			return input_maker< name_type, typename decltype(type_input)::type,
-				VerifyConnectFunction, VerifyTypesFunction >{
+				verify_connect_fn_t, verify_type_fn_t >{
 					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
 					static_cast< VerifyTypesFunction&& >(verify_type_fn)
 				};

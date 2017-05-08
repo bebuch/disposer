@@ -21,8 +21,6 @@
 namespace disposer{
 
 
-	struct parameter_tag{};
-
 	template < typename Name, typename ... T >
 	class parameter{
 	public:
@@ -183,17 +181,16 @@ namespace disposer{
 		default_value_type< Types >&& default_values
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
+		using enable_fn_t = std::remove_reference_t< EnableFunction >;
+		using parser_fn_t = std::remove_reference_t< ParserFunction >;
 
 		if constexpr(hana::is_a< hana::type_tag, Types >){
 			using type_parameter =
 				parameter< name_type, typename Types::type >;
 
 			return
-				parameter_maker<
-					name_type,
-					type_parameter,
-					std::remove_reference_t< EnableFunction >,
-					std::remove_reference_t< ParserFunction >
+				parameter_maker< name_type, type_parameter,
+					enable_fn_t, parser_fn_t
 				>{
 					static_cast< EnableFunction&& >(enable_fn),
 					static_cast< ParserFunction&& >(parser_fn),
@@ -211,12 +208,10 @@ namespace disposer{
 				hana::unpack(unpack_types, hana::template_< parameter >);
 
 			return
-				parameter_maker<
-					name_type,
+				parameter_maker< name_type,
 					typename decltype(type_parameter)::type,
-					std::remove_reference_t< EnableFunction >,
-					std::remove_reference_t< ParserFunction >
-				 >{
+					enable_fn_t, parser_fn_t
+				>{
 					static_cast< EnableFunction&& >(enable_fn),
 					static_cast< ParserFunction&& >(parser_fn),
 					std::move(default_values)

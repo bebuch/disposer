@@ -24,8 +24,6 @@
 namespace disposer{
 
 
-	struct output_tag{};
-
 	template < typename Name, typename TypesMetafunction, typename ... T >
 	class output: public output_base{
 	public:
@@ -277,6 +275,7 @@ namespace disposer{
 	)const noexcept{
 		using name_type = output_name< C ... >;
 		using type_fn = std::remove_const_t< TypesMetafunction >;
+		using enable_fn_t = std::remove_reference_t< EnableFunction >;
 
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
@@ -285,7 +284,7 @@ namespace disposer{
 			using output_type = output< name_type, type_fn,
 				typename Types::type >;
 
-			return output_maker< name_type, output_type, EnableFunction >{
+			return output_maker< name_type, output_type, enable_fn_t >{
 				static_cast< EnableFunction&& >(enable_fn)
 			};
 		}else{
@@ -300,7 +299,7 @@ namespace disposer{
 				hana::unpack(unpack_types, hana::template_< output >);
 
 			return output_maker< name_type,
-				typename decltype(type_output)::type, EnableFunction >{
+				typename decltype(type_output)::type, enable_fn_t >{
 					static_cast< EnableFunction&& >(enable_fn)
 				};
 		}
