@@ -48,7 +48,7 @@ namespace disposer{
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
-		using enabled_list_type = decltype(hana::make_map(
+		using enabled_map_type = decltype(hana::make_map(
 			hana::make_pair(hana::type_c< T >, false) ...));
 
 
@@ -89,7 +89,7 @@ namespace disposer{
 			EnabledFn const& enabled_fn
 		)noexcept:
 			output_base(Name::value.c_str()),
-			enabled_types_(hana::make_map(hana::make_pair(
+			enabled_map_(hana::make_map(hana::make_pair(
 				hana::type_c< T >,
 				enabled_fn(iop_list, TypesMetafunction{}(hana::type_c< T >))
 			) ... ))
@@ -99,7 +99,7 @@ namespace disposer{
 		constexpr output(output&& other):
 			output_base(std::move(other)),
 			next_id_(other.next_id_),
-			enabled_types_(std::move(other.enabled_types_)),
+			enabled_map_(std::move(other.enabled_map_)),
 			data_(std::move(other.data_)){}
 
 
@@ -110,7 +110,7 @@ namespace disposer{
 				"type V in put< V > is not an output type"
 			);
 
-			if(!enabled_types_[hana::type_c< V >]){
+			if(!enabled_map_[hana::type_c< V >]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
 					"output '", name.c_str(), "' put disabled type [",
@@ -121,11 +121,21 @@ namespace disposer{
 			data_.emplace(current_id(), static_cast< V&& >(value));
 		}
 
+		constexpr bool is_enabled()const noexcept{
+			return hana::any(hana::values(enabled_map_));
+		}
+
+		template < typename U >
+		constexpr bool
+		is_enabled(hana::basic_type< U > const& type)const noexcept{
+			return enabled_map_[type];
+		}
+
 
 	protected:
 		std::map< type_index, bool > enabled_types()const override{
 			std::map< type_index, bool > result;
-			hana::for_each(enabled_types_, [&result](auto const& x){
+			hana::for_each(enabled_map_, [&result](auto const& x){
 				auto transformed_type = TypesMetafunction{}(hana::first(x));
 				result.emplace(type_index::type_id<
 					typename decltype(transformed_type)::type >(),
@@ -229,7 +239,7 @@ namespace disposer{
 
 		std::size_t next_id_{0};
 
-		enabled_list_type enabled_types_;
+		enabled_map_type enabled_map_;
 
 		std::multimap< std::size_t, value_type > data_;
 	};

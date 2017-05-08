@@ -89,6 +89,11 @@ namespace disposer{
 			)){}
 
 
+		/// \brief true if any type is enabled, otherwise false
+		constexpr bool is_enabled()const noexcept{
+			return hana::any(hana::values(type_value_map_));
+		}
+
 		/// \brief true if type is enabled, otherwise false
 		template < typename Type >
 		bool is_enabled(Type const& type)const{
@@ -108,7 +113,7 @@ namespace disposer{
 		decltype(auto) operator()(Type const& type)const{
 			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
-					"access parameter '", name.c_str(),
+					"accessed parameter '", name.c_str(),
 					"' with disabled type [",
 					type_name< typename Type::type >(), "]"
 				));

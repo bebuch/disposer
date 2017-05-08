@@ -15,12 +15,9 @@ int fail(std::size_t i){
 using type_index = boost::typeindex::ctti_type_index;
 
 
-int check(
-	std::size_t i,
-	std::map< type_index, bool > const& active_types,
-	std::map< type_index, bool > const& expected
-){
-	if(active_types == expected){
+template < typename T >
+int check(std::size_t i, T const& test, T const& ref){
+	if(test == ref){
 		return success(i);
 	}else{
 		return fail(i);
@@ -38,6 +35,8 @@ constexpr auto types_set = hana::to_set(types);
 
 
 int main(){
+	using hana::type_c;
+
 	using ident =
 		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
@@ -45,6 +44,7 @@ int main(){
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iops);
 
+	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
 	try{
@@ -65,12 +65,15 @@ int main(){
 
 			object.put(0);
 
-			error_count = check(0,
+			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
 					{ type_index::type_id< int >(), true }
 				});
+
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
 		}
 
 		{
@@ -91,13 +94,17 @@ int main(){
 			object.put(3);
 			object.put(3.f);
 
-			error_count = check(1,
+			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
 					{ type_index::type_id< int >(), true },
 					{ type_index::type_id< float >(), true }
 				});
+
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
+			error_count = check(ct++, object.is_enabled(type_c< float >), true);
 		}
 
 		{
@@ -118,13 +125,17 @@ int main(){
 			object.put(3);
 			object.put(3.f);
 
-			error_count = check(2,
+			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)
 					.enabled_types(),
 				{
 					{ type_index::type_id< int >(), true },
 					{ type_index::type_id< float >(), true }
 				});
+
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
+			error_count = check(ct++, object.is_enabled(type_c< float >), true);
 		}
 
 		if(error_count == 0){

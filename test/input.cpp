@@ -12,12 +12,9 @@ int fail(std::size_t i){
 }
 
 
-int check(
-	std::size_t i,
-	std::set< boost::typeindex::ctti_type_index > const& active_types,
-	std::set< boost::typeindex::ctti_type_index > const& expected
-){
-	if(active_types == expected){
+template < typename T >
+int check(std::size_t i, T const& test, T const& ref){
+	if(test == ref){
 		return success(i);
 	}else{
 		return fail(i);
@@ -35,6 +32,8 @@ constexpr auto types_set = hana::to_set(types);
 
 
 int main(){
+	using hana::type_c;
+
 	using ident =
 		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
@@ -44,6 +43,7 @@ int main(){
 
 	std::optional< disposer::output_info > const info;
 
+	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
 	try{
@@ -63,12 +63,8 @@ int main(){
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int > >);
 
-// 			error_count = check(0,
-// 				static_cast< disposer::input_base const& >(object)
-// 					.enabled_types(),
-// 				{
-// 					{ boost::typeindex::ctti_type_index::type_id< int >() }
-// 				});
+			error_count = check(ct++, object.is_enabled(), false);
+			error_count = check(ct++, object.is_enabled(type_c< int >), false);
 		}
 
 		{
@@ -87,13 +83,8 @@ int main(){
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int, float > >);
 
-// 			error_count = check(1,
-// 				static_cast< disposer::input_base const& >(object)
-// 					.enabled_types(),
-// 				{
-// 					{ boost::typeindex::ctti_type_index::type_id< int >() },
-// 					{ boost::typeindex::ctti_type_index::type_id< float >() }
-// 				});
+			error_count = check(ct++, object.is_enabled(), false);
+			error_count = check(ct++, object.is_enabled(type_c< int >), false);
 		}
 
 		{
@@ -112,13 +103,8 @@ int main(){
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int, float > >);
 
-// 			error_count = check(2,
-// 				static_cast< disposer::input_base const& >(object)
-// 					.enabled_types(),
-// 				{
-// 					{ boost::typeindex::ctti_type_index::type_id< int >() },
-// 					{ boost::typeindex::ctti_type_index::type_id< float >() }
-// 				});
+			error_count = check(ct++, object.is_enabled(), false);
+			error_count = check(ct++, object.is_enabled(type_c< int >), false);
 		}
 
 		if(error_count == 0){

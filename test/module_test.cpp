@@ -10,7 +10,6 @@ using namespace hana::literals;
 using namespace disposer::interface::module;
 
 constexpr auto types = hana::tuple_t< int, char, float >;
-constexpr auto types_set = hana::to_set(types);
 
 
 void check_impl(std::string_view name, bool enabled, bool expected){
@@ -177,6 +176,92 @@ int main(){
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::input<
 							decltype("v"_in), ident, int > >())
+					)),
+					decltype(hana::make_map(
+						hana::make_pair("v"_s, std::declval< disposer::output<
+							decltype("v"_out), ident, int > >())
+					)),
+					decltype(hana::make_map(
+						hana::make_pair("v"_s, std::declval<
+							disposer::parameter< decltype("v"_param), int > >())
+					))
+				> > >);
+		}
+
+		{
+			constexpr auto enable_out = [](auto const& get, auto type){
+				bool active = get("v"_in).is_enabled(type);
+				assert(!active);
+				return active;
+			};
+
+			constexpr auto enable_in_c = [](auto const&, bool connected){
+				assert(!connected);
+			};
+
+			constexpr auto enable_param = [](auto const& get, auto type){
+				bool active1 = get("v"_in).is_enabled(type);
+				bool active2 = get("v"_out).is_enabled(type);
+				assert(!active1 && !active2);
+				return false;
+			};
+
+			constexpr auto parser = [](std::string const& /*value*/, auto type){
+				static_assert(type == hana::type_c< int >);
+				return 5;
+			};
+
+			constexpr auto enable_in_t =
+				[](auto const& get, auto type, disposer::output_info const&){
+					bool active1 = get("v"_in).is_enabled(type);
+					bool active2 = get("v"_out).is_enabled(type);
+					bool active3 = get("v"_param).is_enabled(type);
+					assert(!active1 && !active2 && !active3);
+				};
+
+			auto const maker = "v"_module(
+				"v"_in(hana::type_c< int >),
+				"v"_out(hana::type_c< int >, ident{}, enable_out),
+				"v"_param(hana::type_c< int >, enable_param, parser),
+				"w"_in(hana::type_c< int >, ident{}, enable_in_c, enable_in_t)
+			);
+
+			static_assert(std::is_same_v< decltype(maker),
+				disposer::module_maker< decltype("v"_module), hana::tuple<
+					disposer::input_maker<
+						decltype("v"_in),
+						disposer::input< decltype("v"_in), ident, int >,
+						disposer::verify_connect,
+						disposer::verify_all
+					>,
+					disposer::output_maker<
+						decltype("v"_out),
+						disposer::output< decltype("v"_out), ident, int >,
+						decltype(enable_out)
+					>,
+					disposer::parameter_maker<
+						decltype("v"_param),
+						disposer::parameter< decltype("v"_param), int >,
+						decltype(enable_param),
+						decltype(parser)
+					>,
+					disposer::input_maker<
+						decltype("w"_in),
+						disposer::input< decltype("w"_in), ident, int >,
+						decltype(enable_in_c),
+						decltype(enable_in_t)
+					>
+				> > const >);
+
+			auto object = maker(disposer::make_data{});
+
+			static_assert(std::is_same_v< decltype(object),
+				std::unique_ptr< disposer::module< decltype("v"_module),
+					decltype(hana::make_map(
+						hana::make_pair("v"_s, std::declval< disposer::input<
+							decltype("v"_in), ident, int > >()),
+						hana::make_pair("w"_s, std::declval< disposer::input<
+							decltype("w"_in), ident, int > >())
 					)),
 					decltype(hana::make_map(
 						hana::make_pair("v"_s, std::declval< disposer::output<

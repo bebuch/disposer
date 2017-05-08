@@ -62,6 +62,10 @@ namespace disposer{
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
+		using enabled_map_type = decltype(hana::make_map(
+			hana::make_pair(hana::type_c< T >, false) ...));
+
+
 		static_assert(hana::length(subtypes) ==
 			hana::length(hana::to_set(subtypes)),
 			"disposer::input needs all subtypes T to be distinct");
@@ -155,10 +159,6 @@ namespace disposer{
 			return enabled_map_[type];
 		}
 
-		constexpr auto enabled_map()const noexcept{
-			return enabled_map_;
-		}
-
 
 	private:
 		using ref_convert_fn = references_type(*)(any_type const& data);
@@ -224,8 +224,7 @@ namespace disposer{
 		}
 
 
-		hana::map< hana::pair< decltype(hana::type_c< T >), bool > ... >
-			enabled_map_;
+		enabled_map_type enabled_map_;
 
 		std::unordered_map< type_index, std::reference_wrapper< bool > > const
 			rt_enabled_map_ = { {

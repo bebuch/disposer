@@ -34,6 +34,8 @@ int check(std::size_t i, T const& test, T const& ref){
 
 
 int main(){
+	using hana::type_c;
+
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iops);
