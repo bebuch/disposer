@@ -222,7 +222,8 @@ int main(){
 			auto const maker = "v"_module(
 				"v"_in(hana::type_c< int >),
 				"v"_out(hana::type_c< int >, ident{}, enable_out),
-				"v"_param(hana::type_c< int >, enable_param, parser),
+				"v"_param(hana::type_c< int >, enable_param, parser,
+					std::make_tuple(7)),
 				"w"_in(hana::type_c< int >, ident{}, enable_in_c, enable_in_t)
 			);
 
