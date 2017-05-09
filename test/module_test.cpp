@@ -31,6 +31,8 @@ void check(IO& io, Type const& type, bool expected){
 
 
 int main(){
+	using namespace hana::literals;
+
 	using ident =
 		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
 
@@ -122,7 +124,10 @@ int main(){
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
 						disposer::enable_all,
-						disposer::parameter_parser
+						disposer::parameter_parser,
+						decltype(hana::make_map(
+							hana::make_pair(hana::type_c< int >, "sint32"_s)
+						))
 					>
 				> > const >);
 
@@ -163,7 +168,10 @@ int main(){
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
 						disposer::enable_all,
-						disposer::parameter_parser
+						disposer::parameter_parser,
+						decltype(hana::make_map(
+							hana::make_pair(hana::type_c< int >, "sint32"_s)
+						))
 					>
 				> > const >);
 
@@ -242,7 +250,10 @@ int main(){
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
 						decltype(enable_param),
-						decltype(parser)
+						decltype(parser),
+						decltype(hana::make_map(
+							hana::make_pair(hana::type_c< int >, "sint32"_s)
+						))
 					>,
 					disposer::input_maker<
 						decltype("w"_in),

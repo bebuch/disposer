@@ -223,16 +223,14 @@ namespace disposer{
 							if(!found) return {};
 
 							auto const specialization = iter->second
-								.specialized_values.find(
-									std::string(as_text[type])
-								);
+								.specialized_values.find(as_text[type].c_str());
 							auto const end =
 								iter->second.specialized_values.end();
 							if(specialization == end){
 								if(!iter->second.generic_value){
 									throw std::logic_error(
 										data.location() + "parameter '"
-										+ iter->first + "' has nighter a "
+										+ iter->first + "' has neither a "
 										"generic value but a specialization "
 										"for type '" + specialization->first
 										+ "'"

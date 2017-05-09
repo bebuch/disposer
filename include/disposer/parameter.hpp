@@ -12,8 +12,8 @@
 #include "parameter_name.hpp"
 #include "type_index.hpp"
 #include "iop_list.hpp"
-#include "as_text.hpp"
 #include "merge.hpp"
+#include "as_text.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -138,7 +138,8 @@ namespace disposer{
 		typename Name,
 		typename ParameterType,
 		typename EnableFunction,
-		typename ParserFunction >
+		typename ParserFunction,
+		typename TypeToText >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = parameter_maker_tag;
@@ -169,6 +170,9 @@ namespace disposer{
 		/// \brief Optional default values
 		std::optional< tuple_type > default_values;
 
+		/// \brief hana::map from hana::type to hana::string
+		TypeToText to_text;
+
 		template < typename IOP_List, typename Values >
 		constexpr auto operator()(
 			IOP_List const& iop_list,
@@ -183,50 +187,74 @@ namespace disposer{
 	template <
 		typename Types,
 		typename EnableFunction,
-		typename ParserFunction >
+		typename ParserFunction,
+		typename AsText >
 	constexpr auto parameter_name< C ... >::operator()(
-		Types const& types,
+		Types const&,
 		EnableFunction&& enable_fn,
 		ParserFunction&& parser_fn,
-		default_value_type< Types >&& default_values
+		default_value_type< Types >&& default_values,
+		AsText&&
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
 		using enable_fn_t = std::remove_reference_t< EnableFunction >;
 		using parser_fn_t = std::remove_reference_t< ParserFunction >;
 
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using type_parameter =
-				parameter< name_type, typename Types::type >;
+		constexpr auto typelist = to_typelist(Types{});
 
-			return
-				parameter_maker< name_type, type_parameter,
-					enable_fn_t, parser_fn_t
-				>{
-					static_cast< EnableFunction&& >(enable_fn),
-					static_cast< ParserFunction&& >(parser_fn),
-					std::move(default_values)
-				};
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+		static_assert(hana::is_a< hana::map_tag, AsText >,
+			"AsText must be a hana::map of hana::type's and hana::string's");
+		constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
+		static_assert(
+			hana::all_of(keys, hana::is_a< hana::type_tag >),
+			"AsText must be a hana::map with hana::type's as keys");
+		static_assert(hana::all_of(hana::values(AsText{}),
+				hana::is_a< hana::string_tag >),
+			"AsText must be a hana::map with hana::string's as values");
+		static_assert(hana::is_subset(keys, typelist),
+			"AsText must contain only types which are also in the parameter's "
+			"type list");
+		static_assert(hana::all_of(typelist, [keys](auto type){
+				return hana::or_(
+					hana::contains(keys, type), hana::contains(as_text, type)
+				);
+			}),
+			"At least one of the parameter's types has neither a hana::string "
+			"representation in the default disposer as_text-list nor in the "
+			"parameters AsText-list");
 
-			auto unpack_types = hana::concat(
-				hana::tuple_t< name_type >,
-				hana::to_tuple(types));
+		constexpr auto unpack_types =
+			hana::concat(hana::tuple_t< name_type >, typelist);
 
-			auto type_parameter =
-				hana::unpack(unpack_types, hana::template_< parameter >);
+		constexpr auto type_parameter =
+			hana::unpack(unpack_types, hana::template_< parameter >);
 
-			return
-				parameter_maker< name_type,
-					typename decltype(type_parameter)::type,
-					enable_fn_t, parser_fn_t
-				>{
-					static_cast< EnableFunction&& >(enable_fn),
-					static_cast< ParserFunction&& >(parser_fn),
-					std::move(default_values)
-				};
-		}
+
+		constexpr auto type_to_text = hana::unpack(hana::transform(typelist,
+			[keys](auto type){
+				if constexpr(hana::contains(keys, type)){
+					return hana::make_pair(type, AsText{}[type]);
+				}else{
+					return hana::make_pair(type, as_text[type]);
+				}
+			}), hana::make_map);
+
+		constexpr auto text_list = hana::values(type_to_text);
+		static_assert(hana::length(text_list) ==
+			hana::length(hana::to_set(text_list)),
+			"At least two of the parameter types have the same text "
+			"representation, check the parameters AsText-list");
+
+		return
+			parameter_maker< name_type,
+				typename decltype(type_parameter)::type,
+				enable_fn_t, parser_fn_t,
+				std::remove_const_t< decltype(type_to_text) >
+			>{
+				static_cast< EnableFunction&& >(enable_fn),
+				static_cast< ParserFunction&& >(parser_fn),
+				std::move(default_values), type_to_text
+			};
 	}
 
 

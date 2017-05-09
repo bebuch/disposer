@@ -326,10 +326,10 @@ namespace disposer{
 
 		constexpr auto typelist = to_typelist(Types{});
 
-		auto unpack_types =
+		constexpr auto unpack_types =
 			hana::concat(hana::tuple_t< name_type, type_fn >, typelist);
 
-		auto type_input =
+		constexpr auto type_input =
 			hana::unpack(unpack_types, hana::template_< input >);
 
 		return input_maker< name_type, typename decltype(type_input)::type,

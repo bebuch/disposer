@@ -35,6 +35,7 @@ int check(std::size_t i, T const& test, T const& ref){
 
 int main(){
 	using namespace std::literals::string_view_literals;
+	using namespace hana::literals;
 	using hana::type_c;
 
 	static constexpr auto iops = hana::make_tuple();
@@ -62,7 +63,10 @@ int main(){
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int >,
 					disposer::enable_all,
-					disposer::parameter_parser
+					disposer::parameter_parser,
+					decltype(hana::make_map(
+						hana::make_pair(hana::type_c< int >, "sint32"_s)
+					))
 				> const >);
 
 			auto object = maker(get_object, value_int);
@@ -94,7 +98,11 @@ int main(){
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
 					disposer::enable_all,
-					disposer::parameter_parser
+					disposer::parameter_parser,
+					decltype(hana::make_map(
+						hana::make_pair(hana::type_c< int >, "sint32"_s),
+						hana::make_pair(hana::type_c< float >, "float32"_s)
+					))
 				> const >);
 
 			auto object = maker(get_object, value_int_float);
@@ -131,7 +139,11 @@ int main(){
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
 					disposer::enable_all,
-					disposer::parameter_parser
+					disposer::parameter_parser,
+					decltype(hana::make_map(
+						hana::make_pair(hana::type_c< int >, "sint32"_s),
+						hana::make_pair(hana::type_c< float >, "float32"_s)
+					))
 				> const >);
 
 			auto object = maker(get_object, value_int_float);
