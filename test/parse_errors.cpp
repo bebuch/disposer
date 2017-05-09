@@ -89,6 +89,18 @@ R"file(parameter_set
 	{
 R"file(parameter_set
 	name1
+		param1
+			type
+)file"
+	,
+"Syntax error at line 4, pos 7: '\t\t\ttype\n', expected a parameter "
+"specialization '\t\t\ttype = value\n'"
+	}
+	,
+	// 007
+	{
+R"file(parameter_set
+	name1
 		test=a
 	name2
 )file"
@@ -97,7 +109,7 @@ R"file(parameter_set
 "parameter line '\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
-	// 007
+	// 008
 	{
 R"file(parameter_set
 	name1
@@ -107,11 +119,11 @@ R"file(parameter_set
 )file"
 	,
 "Syntax error at line 6, pos 0: '', expected a parameter set line "
-"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or "
-"keyword line 'chain\n'"
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
+"specialization '\t\t\ttype = value\n' or keyword line 'chain\n'"
 	}
 	,
-	// 008
+	// 009
 	{
 R"file(chain)file"
 	,
@@ -119,7 +131,7 @@ R"file(chain)file"
 "'parameter_set\n' or keyword line 'chain\n'"
 	}
 	,
-	// 009
+	// 010
 	{
 R"file(parameter_set
 	name1
@@ -129,11 +141,11 @@ R"file(parameter_set
 chain)file"
 	,
 "Syntax error at line 6, pos 5: 'chain', expected a parameter set line "
-"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or "
-"keyword line 'chain\n'"
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
+"specialization '\t\t\ttype = value\n' or keyword line 'chain\n'"
 	}
 	,
-	// 010
+	// 011
 	{
 R"file(parameter_set
 	name1
@@ -147,7 +159,7 @@ chain
 "'\tname [= group]\n'"
 	}
 	,
-	// 011
+	// 012
 	{
 R"file(chain
 )file"
@@ -156,7 +168,7 @@ R"file(chain
 "'\tname [= group]\n'"
 	}
 	,
-	// 012
+	// 013
 	{
 R"file(chain
 	chain1 =
@@ -166,7 +178,7 @@ R"file(chain
 "group '\tname = group\n'"
 	}
 	,
-	// 013
+	// 014
 	{
 R"file(chain
 	chain1
@@ -178,7 +190,7 @@ R"file(chain
 "keyword"
 	}
 	,
-	// 014
+	// 015
 	{
 R"file(chain
 	chain1
@@ -190,7 +202,7 @@ R"file(chain
 "'\t\tmodule\n'"
 	}
 	,
-	// 015
+	// 016
 	{
 R"file(chain
 	chain1
@@ -201,7 +213,7 @@ R"file(chain
 "'\t\t\tparameter\n'"
 	}
 	,
-	// 016
+	// 017
 	{
 R"file(chain
 	chain1
@@ -215,7 +227,7 @@ R"file(chain
 "'\t\t\t\tname [= value]\n'"
 	}
 	,
-	// 017
+	// 018
 	{
 R"file(chain
 	chain1
@@ -230,7 +242,7 @@ R"file(chain
 "set"
 	}
 	,
-	// 018
+	// 019
 	{
 R"file(chain
 	chain1
@@ -244,7 +256,21 @@ R"file(chain
 "'\t\t\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
-	// 019
+	// 020
+	{
+R"file(chain
+	chain1
+		module1
+			parameter
+				name2
+					type =
+)file"
+	,
+"Syntax error at line 6, pos 11: '\t\t\t\t\ttype =\n', expected a parameter "
+"specialization '\t\t\t\t\ttype = value\n'"
+	}
+	,
+	// 021
 	{
 R"file(chain
 	chain1
@@ -259,7 +285,7 @@ R"file(chain
 "be 'parameter_set'"
 	}
 	,
-	// 020
+	// 022
 	{
 R"file(chain
 	name5
@@ -269,7 +295,7 @@ R"file(chain
 "Syntax error at line 4, pos 5: '\t\t\t<-', expected keyword line '\t\t\t<-\n'"
 	}
 	,
-	// 021
+	// 023
 	{
 R"file(chain
 	name5
@@ -281,7 +307,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 022
+	// 024
 	{
 R"file(chain
 	name5
@@ -294,7 +320,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 023
+	// 025
 	{
 R"file(chain
 	name5
@@ -304,7 +330,7 @@ R"file(chain
 "Syntax error at line 4, pos 5: '\t\t\t->', expected keyword line '\t\t\t->\n'"
 	}
 	,
-	// 024
+	// 026
 	{
 R"file(chain
 	name5
@@ -316,7 +342,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 025
+	// 027
 	{
 R"file(chain
 	name5

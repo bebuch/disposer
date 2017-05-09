@@ -334,7 +334,8 @@ namespace disposer::parser{
 	struct sets_set_list_checked_tag: error_base{
 		virtual const char* message()const override{
 			return "a parameter set line '\tname\n' or a parameter definition "
-				"('\t\tname [= value]\n') or keyword line 'chain\n'";
+				"('\t\tname [= value]\n') or a parameter specialization "
+				"'\t\t\ttype = value\n' or keyword line 'chain\n'";
 		}
 	};
 
