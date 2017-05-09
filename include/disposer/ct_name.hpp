@@ -56,6 +56,20 @@ namespace disposer{
 	};
 
 
+	/// \brief Create a hana::tuple of hana::type's with a given hana::type or
+	///        a hana::Sequence of hana::type's
+	template < typename Types >
+	constexpr auto to_typelist(Types const&)noexcept{
+		if constexpr(hana::is_a< hana::type_tag, Types >){
+			return hana::make_tuple(Types{});
+		}else{
+			static_assert(hana::Foldable< Types >::value);
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+			return hana::to_tuple(Types{});
+		}
+	}
+
+
 }
 
 

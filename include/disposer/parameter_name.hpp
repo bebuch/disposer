@@ -37,23 +37,9 @@ namespace disposer{
 		}
 	};
 
-	template < typename Types >
-	struct default_value_type_impl{
-		using typelist = std::conditional_t<
-			hana::is_a< hana::type_tag, Types >,
-			hana::tuple< Types >,
-			Types >;
-
-		using type = std::optional< typename decltype(hana::unpack(
-			typelist{}, hana::template_< std::tuple >))::type >;
-	};
-
-	template < typename Types >
-	using default_value_type =
-		typename default_value_type_impl< Types >::type;
-
-
 	struct parameter_name_tag{};
+
+	struct no_defaults{};
 
 	template < char ... C >
 	struct parameter_name: ct_name< C ... >{
@@ -63,12 +49,13 @@ namespace disposer{
 			typename Types,
 			typename EnableFunction = enable_all,
 			typename ParserFunction = parameter_parser,
+			typename DefaultValues = no_defaults,
 			typename AsText = hana::map<> >
 		constexpr auto operator()(
 			Types const& types,
 			EnableFunction&& enable_fn = enable_all(),
 			ParserFunction&& parser_fn = parameter_parser(),
-			default_value_type< Types >&& default_values = {},
+			DefaultValues&& default_values = no_defaults(),
 			AsText&& to_text = hana::make_map()
 		)const noexcept;
 	};

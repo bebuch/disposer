@@ -80,13 +80,13 @@ namespace disposer{
 					values[hana::type_c< T >]
 					? parser_fn(*values[hana::type_c< T >], hana::type_c< T >)
 					: (default_values
-						? std::get< T const >(*default_values)
+						? (*default_values)[hana::type_c< T >]
 						: std::optional< T const >()
 					)
 				)
 				: std::optional< T const >(
 					default_values
-					? std::get< T const >(*default_values)
+					? (*default_values)[hana::type_c< T >]
 					: std::optional< T const >()
 				)) ...
 			)){}
@@ -133,6 +133,20 @@ namespace disposer{
 	};
 
 
+	struct default_value_type_impl{
+		template < typename ... T >
+		constexpr auto operator()(T ... v)const noexcept{
+			return hana::type_c< std::optional< decltype(hana::make_map(
+				hana::make_pair(v, std::declval< typename T::type >()) ...
+			)) > >;
+		}
+	};
+
+	template < typename Types >
+	using default_value_type = typename decltype(
+		hana::unpack(Types{}, default_value_type_impl{}))::type;
+
+
 	/// \brief Provid types for constructing an parameter
 	template <
 		typename Name,
@@ -156,11 +170,6 @@ namespace disposer{
 		/// \brief Possible types of the parameter value
 		static constexpr auto types = type::types;
 
-		/// \brief Type for default values
-		using tuple_type = typename decltype(hana::unpack(
-			hana::transform(types, hana::traits::add_const),
-			hana::template_< std::tuple >))::type;
-
 		/// \brief Enable function
 		EnableFunction enabler;
 
@@ -168,7 +177,7 @@ namespace disposer{
 		ParserFunction parser;
 
 		/// \brief Optional default values
-		std::optional< tuple_type > default_values;
+		default_value_type< decltype(types) > default_values;
 
 		/// \brief hana::map from hana::type to hana::string
 		TypeToText to_text;
@@ -188,12 +197,13 @@ namespace disposer{
 		typename Types,
 		typename EnableFunction,
 		typename ParserFunction,
+		typename DefaultValues,
 		typename AsText >
 	constexpr auto parameter_name< C ... >::operator()(
 		Types const&,
 		EnableFunction&& enable_fn,
 		ParserFunction&& parser_fn,
-		default_value_type< Types >&& default_values,
+		DefaultValues&& default_values,
 		AsText&&
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
@@ -201,6 +211,42 @@ namespace disposer{
 		using parser_fn_t = std::remove_reference_t< ParserFunction >;
 
 		constexpr auto typelist = to_typelist(Types{});
+
+		auto default_value_map = [typelist,
+			default_values = static_cast< DefaultValues&& >(default_values)
+		]()mutable{
+			if constexpr(
+				hana::type_c< DefaultValues > == hana::type_c< no_defaults >
+			){
+				(void)default_values; // silence clang ...
+				(void)typelist; // silence clang ...
+				return default_value_type< decltype(typelist) >();
+			}else{
+				static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
+					"DefaultValues must be a hana::tuple with a value for "
+					"every of the parameters type's");
+				static_assert(
+					hana::length(DefaultValues{}) == hana::length(typelist),
+					"DefaultValues must have the same number of values as the "
+					"parameter has types");
+				static_assert(
+					hana::all_of(hana::zip(typelist, DefaultValues{}),
+						[](auto&& tuple){
+							using namespace hana::literals;
+							return tuple[0_c] == hana::typeid_(tuple[1_c]);
+						}
+					),
+					"DefaultValues must have the same types in the same order "
+					"as parameter's type's");
+				return std::make_optional(hana::unpack(
+					static_cast< DefaultValues&& >(default_values),
+					[](auto&& ... values){
+						return hana::make_map(
+							hana::make_pair(hana::typeid_(values),
+								static_cast< decltype(values)&& >(values)) ...);
+					}));
+			}
+		}();
 
 		static_assert(hana::is_a< hana::map_tag, AsText >,
 			"AsText must be a hana::map of hana::type's and hana::string's");
@@ -231,7 +277,8 @@ namespace disposer{
 
 
 		constexpr auto type_to_text = hana::unpack(hana::transform(typelist,
-			[keys](auto type){
+			[](auto type){
+				constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
 				if constexpr(hana::contains(keys, type)){
 					return hana::make_pair(type, AsText{}[type]);
 				}else{
@@ -253,7 +300,7 @@ namespace disposer{
 			>{
 				static_cast< EnableFunction&& >(enable_fn),
 				static_cast< ParserFunction&& >(parser_fn),
-				std::move(default_values), type_to_text
+				std::move(default_value_map), type_to_text
 			};
 	}
 

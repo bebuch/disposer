@@ -96,7 +96,7 @@ int main(){
 						static_assert(type == hana::type_c< int >);
 						return 5;
 					},
-					std::make_tuple(7)),
+					hana::make_tuple(7)),
 				"w"_in(hana::type_c< int >, ident{},
 					[](auto const&, bool connected){
 						assert(!connected);

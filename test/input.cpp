@@ -48,7 +48,7 @@ int main(){
 
 	try{
 		{
-			auto const maker = "v"_in(hana::type_c< int >);
+			constexpr auto maker = "v"_in(hana::type_c< int >);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
@@ -68,7 +68,7 @@ int main(){
 		}
 
 		{
-			auto const maker = "v"_in(types);
+			constexpr auto maker = "v"_in(types);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
@@ -88,7 +88,7 @@ int main(){
 		}
 
 		{
-			auto const maker = "v"_in(types_set);
+			constexpr auto maker = "v"_in(types_set);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
