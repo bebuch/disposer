@@ -215,7 +215,7 @@ namespace disposer{
 							maker(make_iop_list(get)));
 					}else{
 						auto const iter = data.parameters.find(maker.name.c_str());
-						auto const found = iter == data.parameters.end();
+						auto const found = iter != data.parameters.end();
 
 						auto get_value = [&data, found, iter](auto type)
 							-> std::optional< std::string_view >
