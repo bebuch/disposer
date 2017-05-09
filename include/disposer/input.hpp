@@ -309,7 +309,7 @@ namespace disposer{
 		typename VerifyConnectFunction,
 		typename VerifyTypesFunction >
 	constexpr auto input_name< C ... >::operator()(
-		Types const& types,
+		Types const&,
 		TypesMetafunction const&,
 		VerifyConnectFunction&& verify_connect_fn,
 		VerifyTypesFunction&& verify_type_fn
@@ -324,32 +324,19 @@ namespace disposer{
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using input_type =
-				input< name_type, type_fn, typename Types::type >;
+		constexpr auto typelist = to_typelist(Types{});
 
-			return input_maker< name_type, input_type,
-				verify_connect_fn_t, verify_type_fn_t >{
-					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
-					static_cast< VerifyTypesFunction&& >(verify_type_fn)
-				};
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+		auto unpack_types =
+			hana::concat(hana::tuple_t< name_type, type_fn >, typelist);
 
-			auto unpack_types = hana::concat(
-				hana::tuple_t< name_type, type_fn >,
-				hana::to_tuple(types));
+		auto type_input =
+			hana::unpack(unpack_types, hana::template_< input >);
 
-			auto type_input =
-				hana::unpack(unpack_types, hana::template_< input >);
-
-			return input_maker< name_type, typename decltype(type_input)::type,
-				verify_connect_fn_t, verify_type_fn_t >{
-					static_cast< VerifyConnectFunction&& >(verify_connect_fn),
-					static_cast< VerifyTypesFunction&& >(verify_type_fn)
-				};
-		}
+		return input_maker< name_type, typename decltype(type_input)::type,
+			verify_connect_fn_t, verify_type_fn_t >{
+				static_cast< VerifyConnectFunction&& >(verify_connect_fn),
+				static_cast< VerifyTypesFunction&& >(verify_type_fn)
+			};
 	}
 
 }

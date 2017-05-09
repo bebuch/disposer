@@ -279,7 +279,7 @@ namespace disposer{
 		typename TypesMetafunction,
 		typename EnableFunction >
 	constexpr auto output_name< C ... >::operator()(
-		Types const& types,
+		Types const&,
 		TypesMetafunction const&,
 		EnableFunction&& enable_fn
 	)const noexcept{
@@ -290,29 +290,18 @@ namespace disposer{
 		static_assert(hana::Metafunction< TypesMetafunction >::value,
 			"TypesMetafunction must model boost::hana::Metafunction");
 
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			using output_type = output< name_type, type_fn,
-				typename Types::type >;
+		constexpr auto typelist = to_typelist(Types{});
 
-			return output_maker< name_type, output_type, enable_fn_t >{
+		auto unpack_types =
+			hana::concat(hana::tuple_t< name_type, type_fn >, typelist);
+
+		auto type_output =
+			hana::unpack(unpack_types, hana::template_< output >);
+
+		return output_maker< name_type,
+			typename decltype(type_output)::type, enable_fn_t >{
 				static_cast< EnableFunction&& >(enable_fn)
 			};
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
-
-			auto unpack_types = hana::concat(
-				hana::tuple_t< name_type, type_fn >,
-				hana::to_tuple(types));
-
-			auto type_output =
-				hana::unpack(unpack_types, hana::template_< output >);
-
-			return output_maker< name_type,
-				typename decltype(type_output)::type, enable_fn_t >{
-					static_cast< EnableFunction&& >(enable_fn)
-				};
-		}
 	}
 
 
