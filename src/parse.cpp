@@ -40,7 +40,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
-	disposer::types::parse::io,
+	disposer::types::parse::in,
+	name,
+	transfer,
+	variable
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+	disposer::types::parse::out,
 	name,
 	variable
 )
@@ -98,6 +105,14 @@ namespace disposer::parser{
 	using x3::char_;
 	using x3::eol;
 	using x3::eoi;
+
+	struct transfer_: x3::symbols< in_transfer >{
+		transfer_(){
+			add
+				("&", in_transfer::copy)
+				("<", in_transfer::move);
+		}
+	} transfer;
 
 
 	/// \brief Parser for line counting
@@ -384,25 +399,25 @@ namespace disposer::parser{
 		param("param");
 
 	struct input_tag;
-	x3::rule< input_tag, type::io > const input("input");
+	x3::rule< input_tag, type::in > const input("input");
 
 	struct output_tag;
-	x3::rule< output_tag, type::io > const output("output");
+	x3::rule< output_tag, type::out > const output("output");
 
 	struct input_params_tag;
-	x3::rule< input_params_tag, std::vector< type::io > >
+	x3::rule< input_params_tag, std::vector< type::in > >
 		const input_params("input_params");
 
 	struct output_params_tag;
-	x3::rule< output_params_tag, std::vector< type::io > >
+	x3::rule< output_params_tag, std::vector< type::out > >
 		const output_params("output_params");
 
 	struct inputs_tag;
-	x3::rule< inputs_tag, std::vector< type::io > > const
+	x3::rule< inputs_tag, std::vector< type::in > > const
 		inputs("inputs");
 
 	struct outputs_tag;
-	x3::rule< outputs_tag, std::vector< type::io > > const
+	x3::rule< outputs_tag, std::vector< type::out > > const
 		outputs("outputs");
 
 	struct module_tag;
@@ -450,12 +465,12 @@ namespace disposer::parser{
 
 	auto const input_def =
 		"\t\t\t\t" > (keyword >> *space) >
-			('=' >> *space) > value > separator
+			('=' >> *space) > transfer > value > separator
 	;
 
 	auto const output_def =
 		"\t\t\t\t" > (keyword >> *space) >
-			('=' >> *space) > value > separator
+			('=' >> *space) > '>' > value > separator
 	;
 
 	auto const input_params_def =
@@ -576,27 +591,27 @@ namespace disposer::parser{
 
 	struct input_tag: error_base{
 		virtual const char* message()const override{
-			return "input map '\t\t\t\tparameter = variable'";
+			return "input map '\t\t\t\tinput = {< or &}variable'";
 		}
 	};
 
 	struct output_tag: error_base{
 		virtual const char* message()const override{
-			return "output map '\t\t\t\tparameter = variable'";
+			return "output map '\t\t\t\toutput = >variable'";
 		}
 	};
 
 	struct input_params_tag: error_base{
 		virtual const char* message()const override{
 			return "at least one input map "
-				"'\t\t\t\tparameter = variable'";
+				"'\t\t\t\tinput = {< or &}variable'";
 		}
 	};
 
 	struct output_params_tag: error_base{
 		virtual const char* message()const override{
 			return "at least one output map "
-				"'\t\t\t\tparameter = variable'";
+				"'\t\t\t\toutput = >variable'";
 		}
 	};
 

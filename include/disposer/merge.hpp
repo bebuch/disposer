@@ -26,13 +26,14 @@ namespace disposer{
 	namespace types::merge{
 
 
-		using io = parse::io;
+		using in = parse::in;
+		using out = parse::out;
 
 		struct module{
 			std::string type_name;
 			std::map< std::string, parameter_data > parameters;
-			std::vector< io > inputs;
-			std::vector< io > outputs;
+			std::vector< in > inputs;
+			std::vector< out > outputs;
 		};
 
 		struct chain{

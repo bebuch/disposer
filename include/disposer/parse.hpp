@@ -17,6 +17,12 @@
 namespace disposer{
 
 
+	enum class in_transfer{
+		copy,
+		move
+	};
+
+
 	namespace types::parse{
 
 
@@ -38,8 +44,13 @@ namespace disposer{
 
 		using parameter_sets = std::vector< parameter_set >;
 
+		struct in{
+			std::string name;
+			in_transfer transfer;
+			std::string variable;
+		};
 
-		struct io{
+		struct out{
 			std::string name;
 			std::string variable;
 		};
@@ -52,8 +63,8 @@ namespace disposer{
 		struct module{
 			std::string type_name;
 			module_parameters parameters;
-			std::vector< io > inputs;
-			std::vector< io > outputs;
+			std::vector< in > inputs;
+			std::vector< out > outputs;
 		};
 
 		struct chain{

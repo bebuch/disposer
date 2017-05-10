@@ -60,7 +60,16 @@ namespace disposer{ namespace types{ namespace parse{
 		return os << "{" << v.name << "," << v.parameters << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, io const& v){
+	std::ostream& operator<<(std::ostream& os, in const& v){
+		os << "{" << v.name << ",";
+		switch(v.transfer){
+			case disposer::in_transfer::copy: os << '&'; break;
+			case disposer::in_transfer::move: os << '<'; break;
+		}
+		return os << "," << v.variable << "}";
+	}
+
+	std::ostream& operator<<(std::ostream& os, out const& v){
 		return os << "{" << v.name << "," << v.variable << "}";
 	}
 
@@ -108,8 +117,17 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
-		io const& l,
-		io const& r
+		in const& l,
+		in const& r
+	){
+		return l.name == r.name
+			&& l.transfer == r.transfer
+			&& l.variable == r.variable;
+	}
+
+	bool operator==(
+		out const& l,
+		out const& r
 	){
 		return l.name == r.name
 			&& l.variable == r.variable;
@@ -195,7 +213,7 @@ chain
 				param4
 					uint16 = 2
 			->
-				out = x1
+				out = >x1
 )file"
 	,
 		config{

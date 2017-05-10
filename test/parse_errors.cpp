@@ -280,7 +280,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 5, pos 0: '', expected at least one input map "
-"'\t\t\t\tparameter = variable'"
+"'\t\t\t\tinput = {< or &}variable'"
 	}
 	,
 	// 022
@@ -293,7 +293,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 5, pos 10: '\t\t\t\tname =\n', expected input map "
-"'\t\t\t\tparameter = variable'"
+"'\t\t\t\tinput = {< or &}variable'"
 	}
 	,
 	// 023
@@ -315,7 +315,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 5, pos 0: '', expected at least one output map "
-"'\t\t\t\tparameter = variable'"
+"'\t\t\t\toutput = >variable'"
 	}
 	,
 	// 025
@@ -328,7 +328,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 5, pos 8: '\t\t\t\tname\n', expected output map "
-"'\t\t\t\tparameter = variable'"
+"'\t\t\t\toutput = >variable'"
 	}
 };
 
