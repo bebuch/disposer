@@ -217,7 +217,10 @@ namespace disposer{
 						auto const iter = data.parameters.find(maker.name.c_str());
 						auto const found = iter != data.parameters.end();
 
-						auto get_value = [&data, found, iter](auto type)
+						bool all_specialized = true;
+
+						auto get_value =
+							[&data, &all_specialized, found, iter](auto type)
 							-> std::optional< std::string_view >
 						{
 							if(!found) return {};
@@ -227,6 +230,7 @@ namespace disposer{
 							auto const end =
 								iter->second.specialized_values.end();
 							if(specialization == end){
+								all_specialized = false;
 								if(!iter->second.generic_value){
 									throw std::logic_error(
 										data.location() + "parameter '"
@@ -248,6 +252,15 @@ namespace disposer{
 							[&get_value](auto&& type){
 								return hana::make_pair(type, get_value(type));
 							}));
+
+						if(all_specialized && iter->second.generic_value){
+							logsys::log([&data, iter](logsys::stdlogb& os){
+								os << data.location() << "Warning: parameter '"
+									<< iter->first << "' has specialized "
+									"values for all its types, the also given "
+									"generic value will never be used";
+							});
+						}
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
