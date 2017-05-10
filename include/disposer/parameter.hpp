@@ -210,16 +210,15 @@ namespace disposer{
 		using enable_fn_t = std::remove_reference_t< EnableFunction >;
 		using parser_fn_t = std::remove_reference_t< ParserFunction >;
 
-		constexpr auto typelist = to_typelist(Types{});
-
-		auto default_value_map = [typelist,
+		auto default_value_map = [
 			default_values = static_cast< DefaultValues&& >(default_values)
 		]()mutable{
+			constexpr auto typelist = to_typelist(Types{});
+
 			if constexpr(
 				hana::type_c< DefaultValues > == hana::type_c< no_defaults >
 			){
 				(void)default_values; // silence clang ...
-				(void)typelist; // silence clang ...
 				return default_value_type< decltype(typelist) >();
 			}else{
 				static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
@@ -247,6 +246,8 @@ namespace disposer{
 					}));
 			}
 		}();
+
+		constexpr auto typelist = to_typelist(Types{});
 
 		static_assert(hana::is_a< hana::map_tag, AsText >,
 			"AsText must be a hana::map of hana::type's and hana::string's");
