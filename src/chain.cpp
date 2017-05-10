@@ -28,11 +28,9 @@ namespace disposer{
 	chain::chain(
 		module_maker_list const& maker_list,
 		types::merge::chain const& config_chain,
-		id_generator& generate_id,
-		std::string const& group
+		id_generator& generate_id
 	):
 		name(config_chain.name),
-		group(group),
 		modules_(create_chain_modules(maker_list, config_chain)),
 		id_increase_(std::accumulate(
 			modules_.cbegin(),

@@ -58,7 +58,6 @@ namespace disposer{
 
 		struct chain{
 			std::string name;
-			std::optional< std::string > group;
 			std::optional< std::string > id_generator;
 			std::vector< module > modules;
 		};

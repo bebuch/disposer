@@ -156,7 +156,7 @@ chain
 )file"
 	,
 "Syntax error at line 7, pos 0: '', expected at least one chain line "
-"'\tname [= group]\n'"
+"'\tname [= id_generator]\n'"
 	}
 	,
 	// 012
@@ -165,7 +165,7 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 2, pos 0: '', expected at least one chain line "
-"'\tname [= group]\n'"
+"'\tname [= id_generator]\n'"
 	}
 	,
 	// 013
@@ -175,34 +175,10 @@ R"file(chain
 )file"
 	,
 "Syntax error at line 2, pos 9: '\tchain1 =\n', expected a chain line with "
-"group '\tname = group\n'"
+"id_generator '\tname = id_generator\n'"
 	}
 	,
 	// 014
-	{
-R"file(chain
-	chain1
-		id_generator
-)file"
-	,
-"Syntax error at line 3, pos 14: '\t\tid_generator\n', expected a "
-"id_generator line '\t\tid_generator = name\n', where id_generator is a "
-"keyword"
-	}
-	,
-	// 015
-	{
-R"file(chain
-	chain1
-		id_generator = x1
-		id_generator = x2
-)file"
-	,
-"Syntax error at line 4, pos 14: '\t\tid_generator = x2\n', expected a module "
-"'\t\tmodule\n'"
-	}
-	,
-	// 016
 	{
 R"file(chain
 	chain1
@@ -213,7 +189,7 @@ R"file(chain
 "'\t\t\tparameter\n'"
 	}
 	,
-	// 017
+	// 015
 	{
 R"file(chain
 	chain1
@@ -227,7 +203,7 @@ R"file(chain
 "'\t\t\t\tname [= value]\n'"
 	}
 	,
-	// 018
+	// 016
 	{
 R"file(chain
 	chain1
@@ -242,7 +218,7 @@ R"file(chain
 "set"
 	}
 	,
-	// 019
+	// 017
 	{
 R"file(chain
 	chain1
@@ -256,7 +232,7 @@ R"file(chain
 "'\t\t\t\tname [= value]\n' with name != 'parameter_set'"
 	}
 	,
-	// 020
+	// 018
 	{
 R"file(chain
 	chain1
@@ -270,7 +246,7 @@ R"file(chain
 "specialization '\t\t\t\t\ttype = value\n'"
 	}
 	,
-	// 021
+	// 019
 	{
 R"file(chain
 	chain1
@@ -285,7 +261,7 @@ R"file(chain
 "be 'parameter_set'"
 	}
 	,
-	// 022
+	// 020
 	{
 R"file(chain
 	name5
@@ -295,7 +271,7 @@ R"file(chain
 "Syntax error at line 4, pos 5: '\t\t\t<-', expected keyword line '\t\t\t<-\n'"
 	}
 	,
-	// 023
+	// 021
 	{
 R"file(chain
 	name5
@@ -307,7 +283,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 024
+	// 022
 	{
 R"file(chain
 	name5
@@ -320,7 +296,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 025
+	// 023
 	{
 R"file(chain
 	name5
@@ -330,7 +306,7 @@ R"file(chain
 "Syntax error at line 4, pos 5: '\t\t\t->', expected keyword line '\t\t\t->\n'"
 	}
 	,
-	// 026
+	// 024
 	{
 R"file(chain
 	name5
@@ -342,7 +318,7 @@ R"file(chain
 "'\t\t\t\tparameter = variable'"
 	}
 	,
-	// 027
+	// 025
 	{
 R"file(chain
 	name5

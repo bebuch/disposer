@@ -62,7 +62,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::chain,
 	name,
-	group,
 	id_generator,
 	modules
 )
@@ -417,9 +416,6 @@ namespace disposer::parser{
 	x3::rule< chain_params_tag, std::vector< type::module > >
 		const chain_params("chain_params");
 
-	struct group_tag;
-	x3::rule< group_tag, std::string > const group("group");
-
 	struct id_generator_tag;
 	x3::rule< id_generator_tag, std::string > const
 		id_generator("id_generator");
@@ -496,13 +492,8 @@ namespace disposer::parser{
 		-outputs
 	;
 
-	auto const group_def =
-		('=' >> *space) > value
-	;
-
 	auto const id_generator_def =
-		("\t\tid_generator" >> *space) >
-			('=' >> *space) > value > separator
+		('=' >> *space) > value
 	;
 
 	auto const chain_params_def =
@@ -510,8 +501,7 @@ namespace disposer::parser{
 	;
 
 	auto const chain_def =
-		('\t' > (keyword >> *space) > -group > separator) >>
-		-id_generator >>
+		('\t' > (keyword >> *space) > -id_generator > separator) >>
 		chain_params
 	;
 
@@ -630,20 +620,13 @@ namespace disposer::parser{
 
 	struct chains_params_tag: error_base{
 		virtual const char* message()const override{
-			return "at least one chain line '\tname [= group]\n'";
-		}
-	};
-
-	struct group_tag: error_base{
-		virtual const char* message()const override{
-			return "a chain line with group '\tname = group\n'";
+			return "at least one chain line '\tname [= id_generator]\n'";
 		}
 	};
 
 	struct id_generator_tag: error_base{
 		virtual const char* message()const override{
-			return "a id_generator line '\t\tid_generator = name\n', "
-				"where id_generator is a keyword";
+			return "a chain line with id_generator '\tname = id_generator\n'";
 		}
 	};
 
@@ -692,7 +675,6 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(module)
 	BOOST_SPIRIT_DEFINE(chain_params)
 	BOOST_SPIRIT_DEFINE(chain)
-	BOOST_SPIRIT_DEFINE(group)
 	BOOST_SPIRIT_DEFINE(id_generator)
 	BOOST_SPIRIT_DEFINE(chains_params)
 	BOOST_SPIRIT_DEFINE(chains)

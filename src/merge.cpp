@@ -26,11 +26,10 @@ namespace disposer{
 		types::merge::config result;
 
 		for(auto& chain: config.chains){
-			auto group = chain.group.value_or("default");
 			result.emplace_back(types::merge::chain{
 				std::move(chain.name),
-				std::move(chain.id_generator).value_or(group),
-				group, {}
+				chain.id_generator.value_or("default"),
+				{}
 			});
 
 			auto& result_chain = result.back();

@@ -85,31 +85,14 @@ namespace disposer{
 		/// \brief List of all chaines
 		std::unordered_set< std::string > chains()const;
 
-		/// \brief List of all chaines in group
-		std::vector< std::string > chains(std::string const& group)const;
-
 
 		/// \brief Get a reference to the chain, throw if it does not exist
 		chain& get_chain(std::string const& chain);
 
 
-		/// \brief List of all groups of chains
-		///
-		/// Groups have no special use in the disposer, they are comfore for
-		/// the user, to bind associated chains under one name.
-		///
-		/// The standard id_generator of group member chains is the group name.
-		std::unordered_set< std::string > groups()const;
-
-
 	private:
 		/// \brief List of id_generators (map from name to object)
 		std::unordered_map< std::string, id_generator > id_generators_;
-
-		/// \brief List of groups (map from name to chain list)
-		std::unordered_map<
-			std::string, std::vector< std::reference_wrapper< chain > >
-		> groups_;
 
 		/// \brief List of modules (map from module type name to maker function)
 		module_maker_list maker_list_;

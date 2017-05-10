@@ -74,7 +74,7 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	std::ostream& operator<<(std::ostream& os, chain const& v){
-		return os << "{" << v.name << "," << *v.group << ","
+		return os << "{" << v.name << ","
 			<< *v.id_generator << "," << v.modules << "}";
 	}
 
@@ -138,7 +138,6 @@ namespace disposer{ namespace types{ namespace parse{
 		chain const& r
 	){
 		return l.name == r.name
-			&& l.group == r.group
 			&& l.id_generator == r.id_generator
 			&& l.modules == r.modules;
 	}
@@ -212,7 +211,6 @@ chain
 			{
 				{
 					"chain1",
-					{},
 					{},
 					{
 						{
