@@ -214,14 +214,15 @@ namespace disposer{
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(get)));
 					}else{
-						auto const iter = data.parameters.find(maker.name.c_str());
+						auto const name = maker.name.c_str();
+						auto const iter = data.parameters.find(name);
 						auto const found = iter != data.parameters.end();
 
 						bool all_specialized = true;
 
 						auto get_value =
-							[&data, &all_specialized, found, iter](auto type)
-							-> std::optional< std::string_view >
+							[&data, &all_specialized, found, name, iter]
+							(auto type) -> std::optional< std::string_view >
 						{
 							if(!found) return {};
 
@@ -234,7 +235,7 @@ namespace disposer{
 								if(!iter->second.generic_value){
 									throw std::logic_error(
 										data.location() + "parameter '"
-										+ iter->first + "' has neither a "
+										+ std::string(name) + "' has neither a "
 										"generic value but a specialization "
 										"for type '" + specialization->first
 										+ "'"
@@ -253,10 +254,12 @@ namespace disposer{
 								return hana::make_pair(type, get_value(type));
 							}));
 
-						if(all_specialized && iter->second.generic_value){
-							logsys::log([&data, iter](logsys::stdlogb& os){
+						if(found && all_specialized
+							&& iter->second.generic_value
+						){
+							logsys::log([&data, name](logsys::stdlogb& os){
 								os << data.location() << "Warning: parameter '"
-									<< iter->first << "' has specialized "
+									<< name << "' has specialized "
 									"values for all its types, the also given "
 									"generic value will never be used";
 							});
