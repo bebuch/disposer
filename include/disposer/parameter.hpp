@@ -192,6 +192,48 @@ namespace disposer{
 	};
 
 
+	template <
+		typename Types,
+		typename DefaultValues >
+	constexpr auto make_default_value_map(
+		Types const&,
+		DefaultValues&& default_values
+	){
+		constexpr auto typelist = to_typelist(Types{});
+
+		if constexpr(
+			hana::type_c< DefaultValues > == hana::type_c< no_defaults >
+		){
+			(void)default_values; // silence clang ...
+			return default_value_type< decltype(typelist) >();
+		}else{
+			static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
+				"DefaultValues must be a hana::tuple with a value for "
+				"every of the parameters type's");
+			static_assert(
+				hana::length(DefaultValues{}) == hana::length(typelist),
+				"DefaultValues must have the same number of values as the "
+				"parameter has types");
+			static_assert(
+				hana::all_of(hana::zip(typelist, DefaultValues{}),
+					[](auto&& tuple){
+						using namespace hana::literals;
+						return tuple[0_c] == hana::typeid_(tuple[1_c]);
+					}
+				),
+				"DefaultValues must have the same types in the same order "
+				"as parameter's type's");
+			return std::make_optional(hana::unpack(
+				static_cast< DefaultValues&& >(default_values),
+				[](auto&& ... values){
+					return hana::make_map(
+						hana::make_pair(hana::typeid_(values),
+							static_cast< decltype(values)&& >(values)) ...);
+				}));
+		}
+	}
+
+
 	template < char ... C >
 	template <
 		typename Types,
@@ -200,7 +242,7 @@ namespace disposer{
 		typename DefaultValues,
 		typename AsText >
 	constexpr auto parameter_name< C ... >::operator()(
-		Types const&,
+		Types const& types,
 		EnableFunction&& enable_fn,
 		ParserFunction&& parser_fn,
 		DefaultValues&& default_values,
@@ -209,43 +251,6 @@ namespace disposer{
 		using name_type = parameter_name< C ... >;
 		using enable_fn_t = std::remove_reference_t< EnableFunction >;
 		using parser_fn_t = std::remove_reference_t< ParserFunction >;
-
-		auto default_value_map = [
-			default_values = static_cast< DefaultValues&& >(default_values)
-		]()mutable{
-			constexpr auto typelist = to_typelist(Types{});
-
-			if constexpr(
-				hana::type_c< DefaultValues > == hana::type_c< no_defaults >
-			){
-				(void)default_values; // silence clang ...
-				return default_value_type< decltype(typelist) >();
-			}else{
-				static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
-					"DefaultValues must be a hana::tuple with a value for "
-					"every of the parameters type's");
-				static_assert(
-					hana::length(DefaultValues{}) == hana::length(typelist),
-					"DefaultValues must have the same number of values as the "
-					"parameter has types");
-				static_assert(
-					hana::all_of(hana::zip(typelist, DefaultValues{}),
-						[](auto&& tuple){
-							using namespace hana::literals;
-							return tuple[0_c] == hana::typeid_(tuple[1_c]);
-						}
-					),
-					"DefaultValues must have the same types in the same order "
-					"as parameter's type's");
-				return std::make_optional(hana::unpack(
-					static_cast< DefaultValues&& >(default_values),
-					[](auto&& ... values){
-						return hana::make_map(
-							hana::make_pair(hana::typeid_(values),
-								static_cast< decltype(values)&& >(values)) ...);
-					}));
-			}
-		}();
 
 		constexpr auto typelist = to_typelist(Types{});
 
@@ -301,7 +306,9 @@ namespace disposer{
 			>{
 				static_cast< EnableFunction&& >(enable_fn),
 				static_cast< ParserFunction&& >(parser_fn),
-				std::move(default_value_map), type_to_text
+				make_default_value_map(types,
+					static_cast< DefaultValues&& >(default_values)
+				), type_to_text
 			};
 	}
 

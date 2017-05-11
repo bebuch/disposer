@@ -306,7 +306,7 @@ namespace disposer{
 
 
 	template < typename ... ConfigList >
-	constexpr auto make_module(ConfigList&& ... list)noexcept{
+	constexpr auto make_module(ConfigList&& ... list){
 		return module_maker<
 				hana::tuple< std::remove_reference_t< ConfigList > ... >
 			>{hana::make_tuple(static_cast< ConfigList&& >(list) ...)};
@@ -314,7 +314,7 @@ namespace disposer{
 
 
 	template < typename ... ConfigList >
-	constexpr auto make_register_fn(ConfigList&& ... list)noexcept{
+	constexpr auto make_register_fn(ConfigList&& ... list){
 		return [maker = make_module(static_cast< ConfigList&& >(list) ...)]
 			(std::string const& module_type, module_declarant& add){
 				add(module_type, [&maker](make_data const& data){
