@@ -16,6 +16,8 @@
 #include "parameter.hpp"
 #include "module_base.hpp"
 
+#include <type_traits>
+
 
 namespace disposer{
 
@@ -23,26 +25,32 @@ namespace disposer{
 	template <
 		typename Inputs,
 		typename Outputs,
-		typename Parameters >
+		typename Parameters,
+		typename EnableFunction >
 	class module: public module_base{
 	public:
+		/// \brief Constructor
 		module(
 			std::string const& module_type,
 			std::string const& chain,
 			std::size_t number,
 			Inputs&& inputs,
 			Outputs&& outputs,
-			Parameters&& parameters
+			Parameters&& parameters,
+			EnableFunction const& enable_fn
 		): module_base(
 			module_type, chain, number,
 			generate_input_list(), generate_output_list()),
-			inputs(std::move(inputs)),
-			outputs(std::move(outputs)),
-			parameters(std::move(parameters)){}
+			inputs_(std::move(inputs)),
+			outputs_(std::move(outputs)),
+			parameters_(std::move(parameters)),
+			enable_fn_(enable_fn){}
 
 
+		/// \brief Get reference to an input-, output- or parameter-object via
+		///        its corresponding compile time name
 		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&&){
+		decltype(auto) operator()(ConfigList&&)noexcept{
 			using io_t =
 				std::remove_cv_t< std::remove_reference_t< ConfigList > >;
 			static_assert(
@@ -54,56 +62,88 @@ namespace disposer{
 
 			if constexpr(hana::is_a< input_name_tag, io_t >){
 				static_assert(have_input(io_t::value));
-				return inputs[io_t::value];
+				return inputs_[io_t::value];
 			}else if constexpr(hana::is_a< output_name_tag, io_t >){
 				static_assert(have_output(io_t::value));
-				return outputs[io_t::value];
+				return outputs_[io_t::value];
 			}else{
 				static_assert(have_parameter(io_t::value));
-				return parameters[io_t::value];
+				return parameters_[io_t::value];
 			}
 		}
 
 
 	private:
+		/// \brief std::vector with references to all input's (input_base)
 		input_list generate_input_list(){
-			return hana::unpack(inputs, [](auto& ... input){
+			return hana::unpack(inputs_, [](auto& ... input){
 				return input_list{ hana::second(input) ... };
 			});
 		}
 
+		/// \brief std::vector with references to all output's (output_base)
 		output_list generate_output_list(){
-			return hana::unpack(outputs, [](auto& ... output){
+			return hana::unpack(outputs_, [](auto& ... output){
 				return output_list{ hana::second(output) ... };
 			});
 		}
 
 
+		/// \brief hana::true_ if input_name exists
 		template < typename String >
 		constexpr static auto have_input(String){
-			return hana::contains(decltype(hana::keys(inputs))(), String());
+			return
+				hana::contains(decltype(hana::keys(inputs_))(), String());
 		}
 
+		/// \brief hana::true_ if output_name exists
 		template < typename String >
 		constexpr static auto have_output(String){
-			return hana::contains(decltype(hana::keys(outputs))(), String());
+			return
+				hana::contains(decltype(hana::keys(outputs_))(), String());
 		}
 
+		/// \brief hana::true_ if parameter_name exists
 		template < typename String >
 		constexpr static auto have_parameter(String){
-			return hana::contains(decltype(hana::keys(parameters))(), String());
+			return
+				hana::contains(decltype(hana::keys(parameters_))(), String());
 		}
 
-		Inputs inputs;
-		Outputs outputs;
-		Parameters parameters;
+
+		/// \brief hana::map from input_name's to input's
+		Inputs inputs_;
+
+		/// \brief hana::map from output_name's to output's
+		Outputs outputs_;
+
+		/// \brief hana::map from parameter_name's to parameter's
+		Parameters parameters_;
+
+
+		/// \brief Type of the exec-function
+		using exec_fn_type = // TODO: use invoke_result_t instead of result_of_t
+			std::result_of_t< EnableFunction(module const&) >;
+
+
+		/// \brief The function object that is called in enable()
+		EnableFunction enable_fn_;
+
+		/// \brief The function object that is called in exec()
+		std::optional< exec_fn_type > exec_fn_;
 	};
 
 
-	template < typename Makers >
+	template <
+		typename IOP_MakerList,
+		typename EnableFunction >
 	struct module_maker{
 		/// \brief Tuple of input/output/parameter-maker objects
-		Makers makers;
+		IOP_MakerList makers;
+
+		/// \brief The function object that is called in enable()
+		EnableFunction enable_fn;
+
 
 		auto operator()(make_data const& data)const{
 			// Check config file data for undefined inputs, outputs and
@@ -292,12 +332,14 @@ namespace disposer{
 			auto module_ptr = std::make_unique< module<
 					decltype(inputs),
 					decltype(outputs),
-					decltype(parameters)
+					decltype(parameters),
+					decltype(enable_fn)
 				> >(
 					data.type_name, data.chain, data.number,
 					std::move(inputs),
 					std::move(outputs),
-					std::move(parameters)
+					std::move(parameters),
+					enable_fn
 				);
 
 			return module_ptr;
@@ -305,22 +347,50 @@ namespace disposer{
 	};
 
 
-	template < typename ... ConfigList >
-	constexpr auto make_module(ConfigList&& ... list){
-		return module_maker<
-				hana::tuple< std::remove_reference_t< ConfigList > ... >
-			>{hana::make_tuple(static_cast< ConfigList&& >(list) ...)};
+	template < typename ... IOP_Makers >
+	constexpr auto configure(IOP_Makers&& ... list){
+		static_assert(hana::and_(hana::true_c, hana::or_(
+			hana::is_a< input_maker_tag, IOP_Makers >(),
+			hana::is_a< output_maker_tag, IOP_Makers >(),
+			hana::is_a< parameter_maker_tag, IOP_Makers >()) ...),
+			"at least one of the configure arguments is not a disposer input, "
+			"output or parameter maker");
+
+		return hana::make_tuple(static_cast< IOP_Makers&& >(list) ...);
 	}
 
 
-	template < typename ... ConfigList >
-	constexpr auto make_register_fn(ConfigList&& ... list){
-		return [maker = make_module(static_cast< ConfigList&& >(list) ...)]
-			(std::string const& module_type, module_declarant& add){
-				add(module_type, [&maker](make_data const& data){
-					return maker(data);
-				});
-			};
+	template <
+		typename IOP_MakerList,
+		typename EnableFunction >
+	struct register_fn{
+		/// \brief The module_maker object
+		module_maker< IOP_MakerList, EnableFunction > maker;
+
+		/// \brief Call this function to register the module with the given type
+		///        name via the given module_declarant
+		void operator()(std::string const& module_type, module_declarant& add){
+			add(module_type, [this](make_data const& data){
+				return maker(data);
+			});
+		}
+	};
+
+
+	template <
+		typename IOP_MakerList,
+		typename EnableFunction >
+	constexpr auto make_register_fn(
+		IOP_MakerList&& list,
+		EnableFunction&& enable_fn
+	){
+		return register_fn<
+				std::remove_reference_t< IOP_MakerList >,
+				std::remove_reference_t< EnableFunction >
+			>{{
+				static_cast< IOP_MakerList&& >(list),
+				static_cast< EnableFunction&& >(enable_fn)
+			}};
 	}
 
 

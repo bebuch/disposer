@@ -40,13 +40,19 @@ int main(){
 		auto& declarant = program.declarant();
 
 		{
-			auto register_fn = disposer::make_register_fn();
+			auto register_fn = disposer::make_register_fn(
+				disposer::configure(),
+				[](auto const&){ return [](auto&, std::size_t){}; }
+			);
 			register_fn("m1", declarant);
 		}
 
 		{
 			auto register_fn = disposer::make_register_fn(
-				"v"_in(hana::type_c< int >)
+				disposer::configure(
+					"v"_in(hana::type_c< int >)
+				),
+				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
 			register_fn("m2", declarant);
 		}
@@ -54,7 +60,10 @@ int main(){
 
 		{
 			auto register_fn = disposer::make_register_fn(
-				"v"_out(hana::type_c< int >)
+				disposer::configure(
+					"v"_out(hana::type_c< int >)
+				),
+				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
 			register_fn("m3", declarant);
 		}
@@ -62,51 +71,64 @@ int main(){
 
 		{
 			auto register_fn = disposer::make_register_fn(
-				"v"_param(hana::type_c< int >)
+				disposer::configure(
+					"v"_param(hana::type_c< int >)
+				),
+				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
 			register_fn("m4", declarant);
 		}
 
 		{
 			auto register_fn = disposer::make_register_fn(
-				"v"_in(hana::type_c< int >),
-				"v"_out(hana::type_c< int >),
-				"v"_param(hana::type_c< int >)
+				disposer::configure(
+					"v"_in(hana::type_c< int >),
+					"v"_out(hana::type_c< int >),
+					"v"_param(hana::type_c< int >)
+				),
+				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
 			register_fn("m5", declarant);
 		}
 
 		{
 			auto register_fn = disposer::make_register_fn(
-				"v"_in(hana::type_c< int >),
-				"v"_out(hana::type_c< int >, ident{},
-					[](auto const& get, auto type){
-						bool active = get("v"_in).is_enabled(type);
-						assert(!active);
-						return active;
-					}),
-				"v"_param(hana::type_c< int >,
-					[](auto const& get, auto type){
-						bool active1 = get("v"_in).is_enabled(type);
-						bool active2 = get("v"_out).is_enabled(type);
-						assert(!active1 && !active2);
-						return false;
-					},
-					[](std::string_view /*value*/, auto type){
-						static_assert(type == hana::type_c< int >);
-						return 5;
-					},
-					hana::make_tuple(7)),
-				"w"_in(hana::type_c< int >, ident{},
-					[](auto const&, bool connected){
-						assert(!connected);
-					},
-					[](auto const& get, auto type, disposer::output_info const&){
-						bool active1 = get("v"_in).is_enabled(type);
-						bool active2 = get("v"_out).is_enabled(type);
-						bool active3 = get("v"_param).is_enabled(type);
-						assert(!active1 && !active2 && !active3);
-					})
+				disposer::configure(
+					"v"_in(hana::type_c< int >),
+					"v"_out(hana::type_c< int >, ident{},
+						[](auto const& get, auto type){
+							bool active = get("v"_in).is_enabled(type);
+							assert(!active);
+							return active;
+						}),
+					"v"_param(hana::type_c< int >,
+						[](auto const& get, auto type){
+							bool active1 = get("v"_in).is_enabled(type);
+							bool active2 = get("v"_out).is_enabled(type);
+							assert(!active1 && !active2);
+							return false;
+						},
+						[](std::string_view /*value*/, auto type){
+							static_assert(type == hana::type_c< int >);
+							return 5;
+						},
+						hana::make_tuple(7)),
+					"w"_in(hana::type_c< int >, ident{},
+						[](auto const&, bool connected){
+							assert(!connected);
+						},
+						[](
+							auto const& get,
+							auto type,
+							disposer::output_info const&
+						){
+							bool active1 = get("v"_in).is_enabled(type);
+							bool active2 = get("v"_out).is_enabled(type);
+							bool active3 = get("v"_param).is_enabled(type);
+							assert(!active1 && !active2 && !active3);
+						})
+				),
+				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
 			register_fn("m6", declarant);
 		}
