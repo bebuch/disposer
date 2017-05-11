@@ -110,10 +110,6 @@ namespace disposer{
 		void disable(chain_key&&)noexcept{ disable(); }
 
 
-		/// \brief Call input_ready()
-		void input_ready(creator_key&&){ input_ready(); }
-
-
 		/// \brief Called for a modules wich failed by exception and all
 		///        following modules in the chain instead of exec()
 		///
@@ -156,12 +152,6 @@ namespace disposer{
 
 
 	protected:
-		/// \brief Called while module creation after the inputs are set
-		///
-		/// You should enable your outputs in this function.
-		virtual void input_ready(){}
-
-
 		/// \brief Enables the module for exec calls
 		///
 		/// By default the function does nothing.
