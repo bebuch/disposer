@@ -29,6 +29,15 @@ namespace disposer{
 		typename EnableFunction >
 	class module: public module_base{
 	public:
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+		static_assert(std::is_callable_v< EnableFunction(module const&) >);
+#else
+		static_assert(std::is_invocable_v< EnableFunction, module const& >);
+#endif
+
+
+
 		/// \brief Constructor
 		module(
 			std::string const& module_type,
@@ -122,15 +131,25 @@ namespace disposer{
 
 
 		/// \brief Type of the exec-function
-		using exec_fn_type = // TODO: use invoke_result_t instead of result_of_t
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+		using exec_fn_t =
 			std::result_of_t< EnableFunction(module const&) >;
+
+		static_assert(std::is_callable_v< exec_fn_t(module&, std::size_t) >);
+#else
+		using exec_fn_t =
+			std::invoke_result_t< EnableFunction, module const& >;
+
+		static_assert(std::is_invocable_v< exec_fn_t, module&, std::size_t >);
+#endif
 
 
 		/// \brief The function object that is called in enable()
 		EnableFunction enable_fn_;
 
 		/// \brief The function object that is called in exec()
-		std::optional< exec_fn_type > exec_fn_;
+		std::optional< exec_fn_t > exec_fn_;
 	};
 
 
