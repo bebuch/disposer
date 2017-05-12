@@ -82,8 +82,12 @@ namespace disposer{
 				// create input list
 				input_list config_inputs;
 				for(auto& config_input: config_module.inputs){
+					bool const last_use =
+						config_input.transfer == in_transfer::move;
 					auto output_ptr = variables[config_input.variable];
-					config_inputs.emplace(config_input.name, output_ptr);
+					config_inputs.emplace(config_input.name,
+						std::make_tuple(output_ptr, last_use));
+					if(last_use) variables.erase(config_input.variable);
 				}
 
 				// create output list

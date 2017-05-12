@@ -279,7 +279,11 @@ namespace disposer{
 						auto iter = data.inputs.find(maker.name.c_str());
 						auto output = iter == data.inputs.end()
 							? static_cast< output_base* >(nullptr)
-							: iter->second;
+							: std::get< 0 >(iter->second);
+
+						auto last_use = output
+							? true
+							: std::get< 1 >(iter->second);
 
 						auto info = output
 							? std::optional< output_info >(
@@ -288,7 +292,7 @@ namespace disposer{
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(get), output, info));
+							maker(make_iop_list(get), output, last_use, info));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(get)&& >(get),

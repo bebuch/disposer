@@ -22,7 +22,8 @@ namespace disposer{
 
 
 	/// \brief Map from input names to output pointers
-	using input_list = std::map< std::string, output_base* >;
+	using input_list =
+		std::map< std::string, std::tuple< output_base*, bool > >;
 
 	/// \brief Output name lists
 	using output_list = std::set< std::string >;

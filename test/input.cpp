@@ -58,7 +58,7 @@ int main(){
 					disposer::verify_all
 				> const >);
 
-			auto object = maker(get_object, nullptr, info);
+			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int > >);
@@ -78,7 +78,7 @@ int main(){
 					disposer::verify_all
 				> const >);
 
-			auto object = maker(get_object, nullptr, info);
+			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int, float > >);
@@ -98,7 +98,7 @@ int main(){
 					disposer::verify_all
 				> const >);
 
-			auto object = maker(get_object, nullptr, info);
+			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in), ident, int, float > >);

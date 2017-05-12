@@ -105,6 +105,10 @@ namespace disposer{
 							"'"
 						);
 					}
+
+					if(input.transfer == in_transfer::move){
+						variables.erase(input.variable);
+					}
 				}
 
 				std::set< std::string > outputs;

@@ -107,8 +107,8 @@ namespace disposer{
 		>;
 
 
-		constexpr input(output_base* output)noexcept:
-			input_base(Name::value.c_str(), output) {}
+		constexpr input(output_base* output, bool last_use)noexcept:
+			input_base(Name::value.c_str(), output), last_use_(last_use) {}
 
 
 		std::multimap< std::size_t, references_type > get_references(){
@@ -135,16 +135,28 @@ namespace disposer{
 			}
 
 			std::multimap< std::size_t, values_type > result;
-			output_ptr()->transfer_values(input_key(), current_id(),
-				[&result](std::vector< value_carrier >&& list){
-					for(auto& carrier: list){
-						result.emplace_hint(
-							result.end(),
-							carrier.id,
-							val_convert_rt(carrier.type, carrier.data)
-						);
-					}
-				});
+			if(last_use_){
+				output_ptr()->transfer_values(input_key(), current_id(),
+					[&result](std::vector< value_carrier >&& list){
+						for(auto& carrier: list){
+							result.emplace_hint(
+								result.end(),
+								carrier.id,
+								val_convert_rt(carrier.type, carrier.data)
+							);
+						}
+					});
+			}else{
+				for(auto& carrier: output_ptr()->get_references(
+					input_key(), current_id()
+				)){
+					result.emplace_hint(
+						result.end(),
+						carrier.id,
+						ref_convert_rt(carrier.type, carrier.data).get()
+					);
+				}
+			}
 			return result;
 		}
 
@@ -231,6 +243,9 @@ namespace disposer{
 				type_index::type_id_with_cvr< T >(),
 				enabled_map_[hana::type_c< T >]
 			} ... };
+
+
+		bool const last_use_;
 	};
 
 
@@ -285,9 +300,10 @@ namespace disposer{
 		constexpr auto operator()(
 			IOP_List const& iop_list,
 			output_base* output,
+			bool last_use,
 			std::optional< output_info > const& info
 		)const{
-			auto input = type(output);
+			auto input = type(output, last_use);
 			verify_connect_fn(iop_list, static_cast< bool >(info));
 
 			if(info){
