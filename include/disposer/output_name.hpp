@@ -23,13 +23,13 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename TypesMetafunction = decltype(hana::template_< self_t >),
-			typename EnableFunction = enable_all >
+			typename TypesMetaFn = decltype(hana::template_< self_t >),
+			typename EnableFn = enable_all >
 		constexpr auto operator()(
 			Types const& types,
-			TypesMetafunction const& types_metafunction
+			TypesMetaFn const& types_metaFn
 				= hana::template_< self_t >,
-			EnableFunction&& enable_fn = enable_all()
+			EnableFn&& enable_fn = enable_all()
 		)const noexcept;
 	};
 

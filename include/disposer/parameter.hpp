@@ -62,14 +62,14 @@ namespace disposer{
 		/// \brief Parse enabled parameters and store them
 		template <
 			typename IOP_List,
-			typename EnableFunction,
-			typename ParserFunction,
+			typename EnableFn,
+			typename ParserFn,
 			typename DefaultValues,
 			typename Values >
 		parameter(
 			IOP_List const& iop_list,
-			EnableFunction const& enable_fn,
-			ParserFunction const& parser_fn,
+			EnableFn const& enable_fn,
+			ParserFn const& parser_fn,
 			DefaultValues const& default_values,
 			Values const& values
 		):
@@ -151,8 +151,8 @@ namespace disposer{
 	template <
 		typename Name,
 		typename ParameterType,
-		typename EnableFunction,
-		typename ParserFunction,
+		typename EnableFn,
+		typename ParserFn,
 		typename TypeToText >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
@@ -171,10 +171,10 @@ namespace disposer{
 		static constexpr auto types = type::types;
 
 		/// \brief Enable function
-		EnableFunction enabler;
+		EnableFn enabler;
 
 		/// \brief Parameter parser function
-		ParserFunction parser;
+		ParserFn parser;
 
 		/// \brief Optional default values
 		default_value_type< decltype(types) > default_values;
@@ -237,20 +237,20 @@ namespace disposer{
 	template < char ... C >
 	template <
 		typename Types,
-		typename EnableFunction,
-		typename ParserFunction,
+		typename EnableFn,
+		typename ParserFn,
 		typename DefaultValues,
 		typename AsText >
 	constexpr auto parameter_name< C ... >::operator()(
 		Types const& types,
-		EnableFunction&& enable_fn,
-		ParserFunction&& parser_fn,
+		EnableFn&& enable_fn,
+		ParserFn&& parser_fn,
 		DefaultValues&& default_values,
 		AsText&&
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
-		using enable_fn_t = std::remove_reference_t< EnableFunction >;
-		using parser_fn_t = std::remove_reference_t< ParserFunction >;
+		using enable_fn_t = std::remove_reference_t< EnableFn >;
+		using parser_fn_t = std::remove_reference_t< ParserFn >;
 
 		constexpr auto typelist = to_typelist(Types{});
 
@@ -304,8 +304,8 @@ namespace disposer{
 				enable_fn_t, parser_fn_t,
 				std::remove_const_t< decltype(type_to_text) >
 			>{
-				static_cast< EnableFunction&& >(enable_fn),
-				static_cast< ParserFunction&& >(parser_fn),
+				static_cast< EnableFn&& >(enable_fn),
+				static_cast< ParserFn&& >(parser_fn),
 				make_default_value_map(types,
 					static_cast< DefaultValues&& >(default_values)
 				), type_to_text

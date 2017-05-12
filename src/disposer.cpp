@@ -62,13 +62,13 @@ namespace disposer{
 
 	void module_declarant::operator()(
 		std::string const& type_name,
-		module_maker_function&& function
+		module_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "register module type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.maker_list_.insert(
-				std::make_pair(type_name, std::move(function))
+				std::make_pair(type_name, std::move(fn))
 			);
 
 			if(!iter.second){

@@ -26,14 +26,14 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename EnableFunction >
+		typename EnableFn >
 	class module: public module_base{
 	public:
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-		static_assert(std::is_callable_v< EnableFunction(module const&) >);
+		static_assert(std::is_callable_v< EnableFn(module const&) >);
 #else
-		static_assert(std::is_invocable_v< EnableFunction, module const& >);
+		static_assert(std::is_invocable_v< EnableFn, module const& >);
 #endif
 
 
@@ -46,7 +46,7 @@ namespace disposer{
 			Inputs&& inputs,
 			Outputs&& outputs,
 			Parameters&& parameters,
-			EnableFunction const& enable_fn
+			EnableFn const& enable_fn
 		): module_base(
 			module_type, chain, number,
 			generate_input_list(), generate_output_list()),
@@ -155,19 +155,19 @@ namespace disposer{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		using exec_fn_t =
-			std::result_of_t< EnableFunction(module const&) >;
+			std::result_of_t< EnableFn(module const&) >;
 
 		static_assert(std::is_callable_v< exec_fn_t(module&, std::size_t) >);
 #else
 		using exec_fn_t =
-			std::invoke_result_t< EnableFunction, module const& >;
+			std::invoke_result_t< EnableFn, module const& >;
 
 		static_assert(std::is_invocable_v< exec_fn_t, module&, std::size_t >);
 #endif
 
 
 		/// \brief The function object that is called in enable()
-		EnableFunction enable_fn_;
+		EnableFn enable_fn_;
 
 		/// \brief The function object that is called in exec()
 		std::optional< exec_fn_t > exec_fn_;
@@ -176,13 +176,13 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
-		typename EnableFunction >
+		typename EnableFn >
 	struct module_maker{
 		/// \brief Tuple of input/output/parameter-maker objects
 		IOP_MakerList makers;
 
 		/// \brief The function object that is called in enable()
-		EnableFunction enable_fn;
+		EnableFn enable_fn;
 
 
 		auto operator()(make_data const& data)const{
@@ -402,10 +402,10 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
-		typename EnableFunction >
+		typename EnableFn >
 	struct register_fn{
 		/// \brief The module_maker object
-		module_maker< IOP_MakerList, EnableFunction > maker;
+		module_maker< IOP_MakerList, EnableFn > maker;
 
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
@@ -419,17 +419,17 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
-		typename EnableFunction >
+		typename EnableFn >
 	constexpr auto make_register_fn(
 		IOP_MakerList&& list,
-		EnableFunction&& enable_fn
+		EnableFn&& enable_fn
 	){
 		return register_fn<
 				std::remove_reference_t< IOP_MakerList >,
-				std::remove_reference_t< EnableFunction >
+				std::remove_reference_t< EnableFn >
 			>{{
 				static_cast< IOP_MakerList&& >(list),
-				static_cast< EnableFunction&& >(enable_fn)
+				static_cast< EnableFn&& >(enable_fn)
 			}};
 	}
 

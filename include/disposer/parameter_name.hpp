@@ -47,14 +47,14 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename EnableFunction = enable_all,
-			typename ParserFunction = parameter_parser,
+			typename EnableFn = enable_all,
+			typename ParserFn = parameter_parser,
 			typename DefaultValues = no_defaults,
 			typename AsText = hana::map<> >
 		constexpr auto operator()(
 			Types const& types,
-			EnableFunction&& enable_fn = enable_all(),
-			ParserFunction&& parser_fn = parameter_parser(),
+			EnableFn&& enable_fn = enable_all(),
+			ParserFn&& parser_fn = parameter_parser(),
 			DefaultValues&& default_values = no_defaults(),
 			AsText&& to_text = hana::make_map()
 		)const noexcept;

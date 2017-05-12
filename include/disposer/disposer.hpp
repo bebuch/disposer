@@ -31,7 +31,7 @@ namespace disposer{
 		///        module name to the constructing init function
 		void operator()(
 			std::string const& type,
-			module_maker_function&& function);
+			module_maker_fn&& fn);
 
 
 	private:

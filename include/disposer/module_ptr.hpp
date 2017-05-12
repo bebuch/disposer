@@ -26,11 +26,11 @@ namespace disposer{
 	struct make_data;
 
 	/// \brief A init function which constructs a module
-	using module_maker_function = std::function< module_ptr(make_data&) >;
+	using module_maker_fn = std::function< module_ptr(make_data&) >;
 
 	/// \brief Map between module type name and its maker function
 	using module_maker_list =
-		std::unordered_map< std::string, module_maker_function >;
+		std::unordered_map< std::string, module_maker_fn >;
 
 
 }
