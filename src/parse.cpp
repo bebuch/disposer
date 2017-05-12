@@ -162,16 +162,16 @@ namespace disposer::parser{
 	}
 
 
+	template < typename Derived >
 	struct error_base{
 		template < typename Iter, typename Exception, typename Context >
 		x3::error_handler_result on_error(
 			Iter& /*first*/, Iter const& /*last*/,
 			Exception const& x, Context const& /*context*/
 		){
-			throw syntax_error(this->message(), x.where());
+			throw syntax_error(
+				static_cast< Derived const& >(*this).message(), x.where());
 		}
-
-		virtual const char* message()const = 0;
 	};
 
 
@@ -306,54 +306,56 @@ namespace disposer::parser{
 		&x3::expect["chain" >> separator]
 	;
 
-	struct sets_param_specialization_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_param_specialization_tag:
+		error_base< sets_param_specialization_tag >
+	{
+		const char* message()const{
 			return "a parameter specialization '\t\t\ttype = value\n'";
 		}
 	};
 
-	struct sets_param_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_param_tag: error_base< sets_param_tag >{
+		const char* message()const{
 			return "a parameter '\t\tname [= value]\n' with name != "
 				"'parameter_set'";
 		}
 	};
 
-	struct sets_param_prevent_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_param_prevent_tag: error_base< sets_param_prevent_tag >{
+		const char* message()const{
 			return "a parameter, but a parameter name "
 				"('\t\tname [= value]\n') must not be 'parameter_set'";
 		}
 	};
 
-	struct sets_param_list_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_param_list_tag: error_base< sets_param_list_tag >{
+		const char* message()const{
 			return "at least one parameter line '\t\tname [= value]\n' "
 				"with name != 'parameter_set'";
 		}
 	};
 
-	struct sets_set_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_set_tag: error_base< sets_set_tag >{
+		const char* message()const{
 			return "a parameter set line '\tname\n'";
 		}
 	};
 
-	struct sets_set_list_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_set_list_tag: error_base< sets_set_list_tag >{
+		const char* message()const{
 			return "at least one parameter set line '\tname\n'";
 		}
 	};
 
-	struct sets_set_list_checked_tag: error_base{
-		virtual const char* message()const override{
+	struct sets_set_list_checked_tag: error_base< sets_set_list_checked_tag >{
+		const char* message()const{
 			return "a parameter set line '\tname\n' or a parameter definition "
 				"('\t\tname [= value]\n') or a parameter specialization "
 				"'\t\t\ttype = value\n' or keyword line 'chain\n'";
 		}
 	};
 
-	struct sets_config_tag: error_base{
+	struct sets_config_tag: error_base< sets_config_tag >{
 		template < typename Iter, typename Exception, typename Context >
 		x3::error_handler_result on_error(
 			Iter& first, Iter const& last,
@@ -366,7 +368,7 @@ namespace disposer::parser{
 			return error_base::on_error(first, last, x, context);
 		}
 
-		virtual const char* message()const override{
+		const char* message()const{
 			return msg_.c_str();
 		}
 
@@ -540,14 +542,14 @@ namespace disposer::parser{
 	]];
 
 
-	struct params_tag: error_base{
-		virtual const char* message()const override{
+	struct params_tag: error_base< params_tag >{
+		const char* message()const{
 			return "keyword line '\t\t\tparameter\n'";
 		}
 	};
 
-	struct params_checked_tag: error_base{
-		virtual const char* message()const override{
+	struct params_checked_tag: error_base< params_checked_tag >{
+		const char* message()const{
 			return "at least one parameter set reference line "
 				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
 				"keyword and 'name' the name of the referenced parameter set "
@@ -555,104 +557,104 @@ namespace disposer::parser{
 		}
 	};
 
-	struct set_ref_tag: error_base{
-		virtual const char* message()const override{
+	struct set_ref_tag: error_base< set_ref_tag >{
+		const char* message()const{
 			return "a parameter set reference line "
 				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
 				"keyword and 'name' the name of the referenced parameter set";
 		}
 	};
 
-	struct modules_params_tag: error_base{
-		virtual const char* message()const override{
+	struct modules_params_tag: error_base< modules_params_tag >{
+		const char* message()const{
 			return "at least one module line '\tname = module\n'";
 		}
 	};
 
-	struct param_prevent_tag: error_base{
-		virtual const char* message()const override{
+	struct param_prevent_tag: error_base< param_prevent_tag >{
+		const char* message()const{
 			return "another parameter, but a parameter name "
 				"('\t\t\t\tname [= value]\n') must not be 'parameter_set'";
 		}
 	};
 
-	struct param_specialization_tag: error_base{
-		virtual const char* message()const override{
+	struct param_specialization_tag: error_base< param_specialization_tag >{
+		const char* message()const{
 			return "a parameter specialization '\t\t\t\t\ttype = value\n'";
 		}
 	};
 
-	struct param_tag: error_base{
-		virtual const char* message()const override{
+	struct param_tag: error_base< param_tag >{
+		const char* message()const{
 			return "a parameter '\t\t\t\tname [= value]\n' with name != "
 				"'parameter_set'";
 		}
 	};
 
-	struct input_tag: error_base{
-		virtual const char* message()const override{
+	struct input_tag: error_base< input_tag >{
+		const char* message()const{
 			return "input map '\t\t\t\tinput = {< or &}variable'";
 		}
 	};
 
-	struct output_tag: error_base{
-		virtual const char* message()const override{
+	struct output_tag: error_base< output_tag >{
+		const char* message()const{
 			return "output map '\t\t\t\toutput = >variable'";
 		}
 	};
 
-	struct input_params_tag: error_base{
-		virtual const char* message()const override{
+	struct input_params_tag: error_base< input_params_tag >{
+		const char* message()const{
 			return "at least one input map "
 				"'\t\t\t\tinput = {< or &}variable'";
 		}
 	};
 
-	struct output_params_tag: error_base{
-		virtual const char* message()const override{
+	struct output_params_tag: error_base< output_params_tag >{
+		const char* message()const{
 			return "at least one output map "
 				"'\t\t\t\toutput = >variable'";
 		}
 	};
 
-	struct inputs_tag: error_base{
-		virtual const char* message()const override{
+	struct inputs_tag: error_base< inputs_tag >{
+		const char* message()const{
 			return "keyword line '\t\t\t<-\n'";
 		}
 	};
 
-	struct outputs_tag: error_base{
-		virtual const char* message()const override{
+	struct outputs_tag: error_base< outputs_tag >{
+		const char* message()const{
 			return "keyword line '\t\t\t->\n'";
 		}
 	};
 
-	struct module_tag: error_base{
-		virtual const char* message()const override{
+	struct module_tag: error_base< module_tag >{
+		const char* message()const{
 			return "a module '\t\tmodule\n'";
 		}
 	};
 
-	struct chains_params_tag: error_base{
-		virtual const char* message()const override{
+	struct chains_params_tag: error_base< chains_params_tag >{
+		const char* message()const{
 			return "at least one chain line '\tname [= id_generator]\n'";
 		}
 	};
 
-	struct id_generator_tag: error_base{
-		virtual const char* message()const override{
+	struct id_generator_tag: error_base< id_generator_tag >{
+		const char* message()const{
 			return "a chain line with id_generator '\tname = id_generator\n'";
 		}
 	};
 
-	struct chains_tag: error_base{
-		virtual const char* message()const override{
+	struct chains_tag: error_base< chains_tag >{
+		const char* message()const{
 			return "keyword line 'chain\n'";
 		}
 	};
 
-	struct config_tag: error_base{
-		virtual const char* message()const override{
+	struct config_tag: error_base< config_tag >{
+		const char* message()const{
 			return "keyword line 'parameter_set\n' or keyword line "
 				"'chain\n'";
 		}
