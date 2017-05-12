@@ -83,6 +83,27 @@ namespace disposer{
 
 
 	private:
+		/// \brief Enables the module for exec calls
+		virtual void enable()override{
+			exec_fn_.emplace(enable_fn_(static_cast< module const& >(*this)));
+		}
+
+		/// \brief Disables the module for exec calls
+		virtual void disable()noexcept override{
+			exec_fn_.reset();
+		}
+
+
+		/// \brief The actual worker function called one times per trigger
+		virtual void exec()override{
+			if(exec_fn_){
+				(*exec_fn_)(*this, id);
+			}else{
+				throw std::logic_error("module is not enabled");
+			}
+		}
+
+
 		/// \brief std::vector with references to all input's (input_base)
 		input_list generate_input_list(){
 			return hana::unpack(inputs_, [](auto& ... input){

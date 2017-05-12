@@ -153,18 +153,14 @@ namespace disposer{
 
 	protected:
 		/// \brief Enables the module for exec calls
-		///
-		/// By default the function does nothing.
-		virtual void enable(){}
+		virtual void enable() = 0;
 
 		/// \brief Disables the module for exec calls
-		///
-		/// By default the function does nothing.
-		virtual void disable()noexcept{}
+		virtual void disable()noexcept = 0;
 
 
 		/// \brief The actual worker function called one times per trigger
-		virtual void exec(){}
+		virtual void exec() = 0;
 
 
 	private:
