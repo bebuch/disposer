@@ -40,6 +40,14 @@ namespace disposer{
 		}
 	};
 
+	struct verify_all{
+		template < typename IOP_List, typename T >
+		void operator()(
+			IOP_List const& /*iop_list*/,
+			T const& /*value*/
+		)const{}
+	};
+
 	struct parameter_name_tag{};
 
 	struct no_defaults{};
@@ -50,12 +58,14 @@ namespace disposer{
 
 		template <
 			typename Types,
+			typename VerifyFn = verify_all,
 			typename EnableFn = enable_all,
 			typename ParserFn = parameter_parser,
 			typename DefaultValues = no_defaults,
 			typename AsText = hana::map<> >
 		constexpr auto operator()(
 			Types const& types,
+			VerifyFn&& verify_fn = verify_all(),
 			EnableFn&& enable_fn = enable_all(),
 			ParserFn&& parser_fn = parameter_parser(),
 			DefaultValues&& default_values = no_defaults(),

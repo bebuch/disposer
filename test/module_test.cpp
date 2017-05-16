@@ -153,6 +153,7 @@ int main(){
 					disposer::parameter_maker<
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
+						disposer::verify_all,
 						disposer::enable_all,
 						disposer::parameter_parser,
 						decltype(hana::make_map(
@@ -201,6 +202,7 @@ int main(){
 					disposer::parameter_maker<
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
+						disposer::verify_all,
 						disposer::enable_all,
 						disposer::parameter_parser,
 						decltype(hana::make_map(
@@ -264,8 +266,8 @@ int main(){
 				disposer::configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >, ident{}, enable_out),
-					"v"_param(hana::type_c< int >, enable_param, parser,
-						hana::make_tuple(7)),
+					"v"_param(hana::type_c< int >, disposer::verify_all(),
+						enable_param, parser, hana::make_tuple(7)),
 					"w"_in(hana::type_c< int >, ident{}, enable_in_c, enable_in_t)
 				),
 				enable_fn()
@@ -287,6 +289,7 @@ int main(){
 					disposer::parameter_maker<
 						decltype("v"_param),
 						disposer::parameter< decltype("v"_param), int >,
+						disposer::verify_all,
 						decltype(enable_param),
 						decltype(parser),
 						decltype(hana::make_map(

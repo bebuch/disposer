@@ -102,6 +102,7 @@ int main(){
 							return active;
 						}),
 					"v"_param(hana::type_c< int >,
+						disposer::verify_all(),
 						[](auto const& get, auto type){
 							bool active1 = get("v"_in).is_enabled(type);
 							bool active2 = get("v"_out).is_enabled(type);

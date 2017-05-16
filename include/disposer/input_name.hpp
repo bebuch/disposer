@@ -18,23 +18,19 @@ namespace disposer{
 
 	struct verify_connect{
 		template < typename IOP_List >
-		constexpr bool operator()(
+		constexpr void operator()(
 			IOP_List const& /*iop_list*/,
 			bool /*connected*/
-		)const{
-			return true;
-		}
+		)const{}
 	};
 
 	struct verify_types{
 		template < typename IOP_List, typename T >
-		constexpr bool operator()(
+		constexpr void operator()(
 			IOP_List const& /*iop_list*/,
 			hana::basic_type< T > /*type*/,
 			output_info const& /*info*/
-		)const{
-			return true;
-		}
+		)const{}
 	};
 
 
