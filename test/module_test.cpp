@@ -89,7 +89,7 @@ int main(){
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
 						disposer::verify_connect,
-						disposer::verify_all
+						disposer::verify_types
 					>
 				>, enable_fn > >);
 
@@ -191,7 +191,7 @@ int main(){
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
 						disposer::verify_connect,
-						disposer::verify_all
+						disposer::verify_types
 					>,
 					disposer::output_maker<
 						decltype("v"_out),
@@ -277,7 +277,7 @@ int main(){
 						decltype("v"_in),
 						disposer::input< decltype("v"_in), ident, int >,
 						disposer::verify_connect,
-						disposer::verify_all
+						disposer::verify_types
 					>,
 					disposer::output_maker<
 						decltype("v"_out),

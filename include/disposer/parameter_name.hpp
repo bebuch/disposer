@@ -22,8 +22,11 @@ namespace disposer{
 
 	struct parameter_parser{
 		template < typename T >
-		T operator()(std::string_view value, hana::basic_type< T >)const{
-			if constexpr(std::is_same_v< T, std::string >){
+		T operator()(
+			std::string_view value,
+			hana::basic_type< T > type
+		)const{
+			if constexpr(type == hana::type_c< std::string >){
 				return std::string(value);
 			}else{
 				std::istringstream is((std::string(value)));

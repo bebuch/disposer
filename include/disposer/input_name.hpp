@@ -17,17 +17,20 @@ namespace disposer{
 
 
 	struct verify_connect{
-		template < typename Get >
-		constexpr bool operator()(Get const& /*get*/, bool /*connected*/)const{
+		template < typename IOP_List >
+		constexpr bool operator()(
+			IOP_List const& /*iop_list*/,
+			bool /*connected*/
+		)const{
 			return true;
 		}
 	};
 
-	struct verify_all{
-		template < typename Get, typename T >
+	struct verify_types{
+		template < typename IOP_List, typename T >
 		constexpr bool operator()(
-			Get const& /*get*/,
-			hana::basic_type< T >,
+			IOP_List const& /*iop_list*/,
+			hana::basic_type< T > /*type*/,
 			output_info const& /*info*/
 		)const{
 			return true;
@@ -45,13 +48,13 @@ namespace disposer{
 			typename Types,
 			typename TypesMetaFn = decltype(hana::template_< self_t >),
 			typename VerifyConnectFn = verify_connect,
-			typename VerifyTypesFn = verify_all >
+			typename VerifyTypesFn = verify_types >
 		constexpr auto operator()(
 			Types const& types,
 			TypesMetaFn const& types_metaFn
 				= hana::template_< self_t >,
 			VerifyConnectFn&& verify_connect_fn = verify_connect(),
-			VerifyTypesFn&& verify_type_fn = verify_all()
+			VerifyTypesFn&& verify_type_fn = verify_types()
 		)const noexcept;
 	};
 
