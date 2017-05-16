@@ -264,11 +264,11 @@ namespace disposer{
 		using type = OutputType;
 
 		/// \brief Enable function
-		EnableFn enabler;
+		EnableFn enable_fn;
 
 		template < typename IOP_List >
 		constexpr auto operator()(IOP_List const& iop_list)const{
-			return type(iop_list, enabler);
+			return type(iop_list, enable_fn);
 		}
 	};
 
