@@ -160,7 +160,7 @@ namespace disposer{
 
 		/// \brief hana::map from hana::type to hana::string
 		TypeToText to_text;
-		
+
 		template <
 			typename IOP_List,
 			typename Value,

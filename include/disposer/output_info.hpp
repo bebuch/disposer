@@ -13,7 +13,7 @@
 
 #include <boost/hana/type.hpp>
 
-#include <set>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 

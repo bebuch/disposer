@@ -55,7 +55,7 @@ int main(){
 				disposer::output_maker<
 					decltype("v"_out),
 					disposer::output< decltype("v"_out), ident, int >,
-					disposer::enable_all
+					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);
@@ -83,7 +83,7 @@ int main(){
 				disposer::output_maker<
 					decltype("v"_out),
 					disposer::output< decltype("v"_out), ident, int, float >,
-					disposer::enable_all
+					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);
@@ -114,7 +114,7 @@ int main(){
 				disposer::output_maker<
 					decltype("v"_out),
 					disposer::output< decltype("v"_out), ident, int, float >,
-					disposer::enable_all
+					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);

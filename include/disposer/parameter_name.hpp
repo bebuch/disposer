@@ -10,6 +10,7 @@
 #define _disposer__parameter_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
+#include "config_fn.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -19,34 +20,6 @@
 
 namespace disposer{
 
-
-	struct parameter_parser{
-		template < typename T >
-		T operator()(
-			std::string_view value,
-			hana::basic_type< T > type
-		)const{
-			if constexpr(type == hana::type_c< std::string >){
-				return std::string(value);
-			}else{
-				std::istringstream is((std::string(value)));
-				T result;
-				if constexpr(std::is_same_v< T, bool >){
-					is >> std::boolalpha;
-				}
-				is >> result;
-				return result;
-			}
-		}
-	};
-
-	struct verify_all{
-		template < typename IOP_List, typename T >
-		void operator()(
-			IOP_List const& /*iop_list*/,
-			T const& /*value*/
-		)const{}
-	};
 
 	struct parameter_name_tag{};
 
@@ -58,16 +31,16 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename VerifyFn = verify_all,
-			typename EnableFn = enable_all,
-			typename ParserFn = parameter_parser,
+			typename VerifyFn = verify_value_always,
+			typename EnableFn = enable_always,
+			typename ParserFn = stream_parser,
 			typename DefaultValues = no_defaults,
 			typename AsText = hana::map<> >
 		constexpr auto operator()(
 			Types const& types,
-			VerifyFn&& verify_fn = verify_all(),
-			EnableFn&& enable_fn = enable_all(),
-			ParserFn&& parser_fn = parameter_parser(),
+			VerifyFn&& verify_fn = verify_value_always(),
+			EnableFn&& enable_fn = enable_always(),
+			ParserFn&& parser_fn = stream_parser(),
 			DefaultValues&& default_values = no_defaults(),
 			AsText&& to_text = hana::make_map()
 		)const noexcept;

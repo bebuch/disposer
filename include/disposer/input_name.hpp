@@ -10,7 +10,7 @@
 #define _disposer__input_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-#include "output_info.hpp"
+#include "config_fn.hpp"
 
 
 namespace disposer{
@@ -43,14 +43,14 @@ namespace disposer{
 		template <
 			typename Types,
 			typename TypesMetaFn = decltype(hana::template_< self_t >),
-			typename VerifyConnectFn = verify_connect,
-			typename VerifyTypesFn = verify_types >
+			typename VerifyConnectFn = verify_connection_always,
+			typename VerifyTypesFn = verify_type_always >
 		constexpr auto operator()(
 			Types const& types,
 			TypesMetaFn const& types_metaFn
 				= hana::template_< self_t >,
-			VerifyConnectFn&& verify_connect_fn = verify_connect(),
-			VerifyTypesFn&& verify_type_fn = verify_types()
+			VerifyConnectFn&& verify_connect_fn = verify_connection_always(),
+			VerifyTypesFn&& verify_type_fn = verify_type_always()
 		)const noexcept;
 	};
 

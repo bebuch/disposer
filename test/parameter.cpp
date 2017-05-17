@@ -62,9 +62,9 @@ int main(){
 				disposer::parameter_maker<
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int >,
-					disposer::verify_all,
-					disposer::enable_all,
-					disposer::parameter_parser,
+					disposer::verify_value_always,
+					disposer::enable_always,
+					disposer::stream_parser,
 					decltype(hana::make_map(
 						hana::make_pair(hana::type_c< int >, "sint32"_s)
 					))
@@ -98,9 +98,9 @@ int main(){
 				disposer::parameter_maker<
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
-					disposer::verify_all,
-					disposer::enable_all,
-					disposer::parameter_parser,
+					disposer::verify_value_always,
+					disposer::enable_always,
+					disposer::stream_parser,
 					decltype(hana::make_map(
 						hana::make_pair(hana::type_c< int >, "sint32"_s),
 						hana::make_pair(hana::type_c< float >, "float32"_s)
@@ -140,9 +140,9 @@ int main(){
 				disposer::parameter_maker<
 					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
-					disposer::verify_all,
-					disposer::enable_all,
-					disposer::parameter_parser,
+					disposer::verify_value_always,
+					disposer::enable_always,
+					disposer::stream_parser,
 					decltype(hana::make_map(
 						hana::make_pair(hana::type_c< int >, "sint32"_s),
 						hana::make_pair(hana::type_c< float >, "float32"_s)

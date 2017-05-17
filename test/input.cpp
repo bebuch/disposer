@@ -54,8 +54,8 @@ int main(){
 				disposer::input_maker<
 					decltype("v"_in),
 					disposer::input< decltype("v"_in), ident, int >,
-					disposer::verify_connect,
-					disposer::verify_types
+					disposer::verify_connection_always,
+					disposer::verify_type_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);
@@ -74,8 +74,8 @@ int main(){
 				disposer::input_maker<
 					decltype("v"_in),
 					disposer::input< decltype("v"_in), ident, int, float >,
-					disposer::verify_connect,
-					disposer::verify_types
+					disposer::verify_connection_always,
+					disposer::verify_type_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);
@@ -94,8 +94,8 @@ int main(){
 				disposer::input_maker<
 					decltype("v"_in),
 					disposer::input< decltype("v"_in), ident, int, float >,
-					disposer::verify_connect,
-					disposer::verify_types
+					disposer::verify_connection_always,
+					disposer::verify_type_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);

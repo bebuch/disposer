@@ -10,6 +10,7 @@
 #define _disposer__output_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
+#include "config_fn.hpp"
 
 
 namespace disposer{
@@ -24,12 +25,12 @@ namespace disposer{
 		template <
 			typename Types,
 			typename TypesMetaFn = decltype(hana::template_< self_t >),
-			typename EnableFn = enable_all >
+			typename EnableFn = enable_always >
 		constexpr auto operator()(
 			Types const& types,
 			TypesMetaFn const& types_metaFn
 				= hana::template_< self_t >,
-			EnableFn&& enable_fn = enable_all()
+			EnableFn&& enable_fn = enable_always()
 		)const noexcept;
 	};
 

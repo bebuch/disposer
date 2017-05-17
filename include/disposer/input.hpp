@@ -9,6 +9,7 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
+#include "config_fn.hpp"
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
