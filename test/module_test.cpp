@@ -265,10 +265,16 @@ int main(){
 			auto const register_fn = disposer::make_register_fn(
 				disposer::configure(
 					"v"_in(hana::type_c< int >),
-					"v"_out(hana::type_c< int >, ident{}, enable_out),
-					"v"_param(hana::type_c< int >, disposer::verify_value_always(),
-						enable_param, parser, hana::make_tuple(7)),
-					"w"_in(hana::type_c< int >, ident{}, enable_in_c, enable_in_t)
+					"v"_out(hana::type_c< int >, ident{},
+						disposer::enable(enable_out)),
+					"v"_param(hana::type_c< int >,
+						disposer::verify_value(disposer::verify_value_always()),
+						disposer::enable(enable_param),
+						disposer::parser(parser),
+						hana::make_tuple(7)),
+					"w"_in(hana::type_c< int >, ident{},
+						disposer::verify_connection(enable_in_c),
+						disposer::verify_type(enable_in_t))
 				),
 				enable_fn()
 			);

@@ -57,9 +57,9 @@ namespace disposer{
 
 		static_assert(!hana::any_of(types, hana::traits::is_reference),
 			"disposer::parameter types must not be references");
-		
-		
-		using type_value_map_t = 
+
+
+		using type_value_map_t =
 			decltype(hana::make_map(hana::make_pair(hana::type_c< T >,
 				std::declval< std::optional< T const > >()) ... ));
 
@@ -126,7 +126,7 @@ namespace disposer{
 	template <
 		typename Name,
 		typename ParameterType,
-		typename VerifyFn,
+		typename VerifyValueFn,
 		typename EnableFn,
 		typename ParserFn,
 		typename TypeToText >
@@ -147,13 +147,13 @@ namespace disposer{
 		static constexpr auto types = type::types;
 
 		/// \brief Function to verify the parameter value
-		VerifyFn verify_fn;
+		verify_value_fn< VerifyValueFn > verify_value;
 
 		/// \brief Enable function
-		EnableFn enable_fn;
+		enable_fn< EnableFn > enable;
 
 		/// \brief Parameter parser function
-		ParserFn parser_fn;
+		parser_fn< ParserFn > parser;
 
 		/// \brief Optional default values
 		default_value_type< decltype(types) > default_values;
@@ -172,8 +172,8 @@ namespace disposer{
 			DefaultValues const& default_values,
 			hana::basic_type< T > type
 		)const{
-			if(!enable_fn(iop_list, type)) return {};
-			if(value) return parser_fn(*value, type);
+			if(!enable(iop_list, type)) return {};
+			if(value) return parser(*value, type);
 			if(default_values) return (*default_values)[type];
 			return {};
 		}
@@ -189,7 +189,7 @@ namespace disposer{
 						values[type],
 						default_values,
 						type);
-					if(value) verify_fn(iop_list, *value);
+					if(value) verify_value(iop_list, *value);
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map));
 		}
@@ -241,23 +241,20 @@ namespace disposer{
 	template < char ... C >
 	template <
 		typename Types,
-		typename VerifyFn,
+		typename VerifyValueFn,
 		typename EnableFn,
 		typename ParserFn,
 		typename DefaultValues,
 		typename AsText >
 	constexpr auto parameter_name< C ... >::operator()(
 		Types const& types,
-		VerifyFn&& verify_fn,
-		EnableFn&& enable_fn,
-		ParserFn&& parser_fn,
+		verify_value_fn< VerifyValueFn >&& verify_value,
+		enable_fn< EnableFn >&& enable,
+		parser_fn< ParserFn >&& parser,
 		DefaultValues&& default_values,
 		AsText&&
 	)const noexcept{
 		using name_type = parameter_name< C ... >;
-		using verify_fn_t = std::remove_reference_t< VerifyFn >;
-		using enable_fn_t = std::remove_reference_t< EnableFn >;
-		using parser_fn_t = std::remove_reference_t< ParserFn >;
 
 		constexpr auto typelist = to_typelist(Types{});
 
@@ -308,12 +305,12 @@ namespace disposer{
 		return
 			parameter_maker< name_type,
 				typename decltype(type_parameter)::type,
-				verify_fn_t, enable_fn_t, parser_fn_t,
+				VerifyValueFn, EnableFn, ParserFn,
 				std::remove_const_t< decltype(type_to_text) >
 			>{
-				static_cast< VerifyFn&& >(verify_fn),
-				static_cast< EnableFn&& >(enable_fn),
-				static_cast< ParserFn&& >(parser_fn),
+				std::move(verify_value),
+				std::move(enable),
+				std::move(parser),
 				make_default_value_map(types,
 					static_cast< DefaultValues&& >(default_values)
 				), type_to_text

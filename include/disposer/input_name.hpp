@@ -43,14 +43,13 @@ namespace disposer{
 		template <
 			typename Types,
 			typename TypesMetaFn = decltype(hana::template_< self_t >),
-			typename VerifyConnectFn = verify_connection_always,
-			typename VerifyTypesFn = verify_type_always >
+			typename VerifyConnectionFn = verify_connection_always,
+			typename VerifyTypeFn = verify_type_always >
 		constexpr auto operator()(
 			Types const& types,
-			TypesMetaFn const& types_metaFn
-				= hana::template_< self_t >,
-			VerifyConnectFn&& verify_connect_fn = verify_connection_always(),
-			VerifyTypesFn&& verify_type_fn = verify_type_always()
+			TypesMetaFn const& types_meta_fn = hana::template_< self_t >,
+			verify_connection_fn< VerifyConnectionFn >&& verify_connect_fn = {},
+			verify_type_fn< VerifyTypeFn >&& verify_type_fn = {}
 		)const noexcept;
 	};
 

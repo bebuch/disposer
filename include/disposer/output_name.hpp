@@ -28,9 +28,8 @@ namespace disposer{
 			typename EnableFn = enable_always >
 		constexpr auto operator()(
 			Types const& types,
-			TypesMetaFn const& types_metaFn
-				= hana::template_< self_t >,
-			EnableFn&& enable_fn = enable_always()
+			TypesMetaFn const& types_meta_fn = hana::template_< self_t >,
+			enable_fn< EnableFn >&& enable = {}
 		)const noexcept;
 	};
 

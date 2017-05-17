@@ -40,10 +40,13 @@ namespace disposer{
 		static constexpr auto name = Name::value;
 
 
+		static constexpr auto meta_fn = TypesMetaFn{};
+
+
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
 		static constexpr auto types =
-			hana::transform(subtypes, TypesMetaFn{});
+			hana::transform(subtypes, meta_fn);
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
@@ -83,16 +86,9 @@ namespace disposer{
 		>;
 
 
-		template < typename IOP_List, typename EnabledFn >
-		constexpr output(
-			IOP_List const& iop_list,
-			EnabledFn const& enabled_fn
-		)noexcept:
+		constexpr output(enabled_map_type&& enable_map)noexcept:
 			output_base(Name::value.c_str()),
-			enabled_map_(hana::make_map(hana::make_pair(
-				hana::type_c< T >,
-				enabled_fn(iop_list, TypesMetaFn{}(hana::type_c< T >))
-			) ... ))
+			enabled_map_(std::move(enable_map))
 			{}
 
 		/// \brief Outputs are default-movable
@@ -136,7 +132,7 @@ namespace disposer{
 		std::map< type_index, bool > enabled_types()const override{
 			std::map< type_index, bool > result;
 			hana::for_each(enabled_map_, [&result](auto const& x){
-				auto transformed_type = TypesMetaFn{}(hana::first(x));
+				auto transformed_type = meta_fn(hana::first(x));
 				result.emplace(type_index::type_id<
 					typename decltype(transformed_type)::type >(),
 					hana::second(x));
@@ -264,11 +260,15 @@ namespace disposer{
 		using type = OutputType;
 
 		/// \brief Enable function
-		EnableFn enable_fn;
+		enable_fn< EnableFn > enable;
 
 		template < typename IOP_List >
 		constexpr auto operator()(IOP_List const& iop_list)const{
-			return type(iop_list, enable_fn);
+			return type(hana::unpack(hana::transform(type::subtypes,
+				[&](auto subtype){
+					return hana::make_pair(subtype,
+						enable(iop_list, type::meta_fn(subtype)));
+				}), hana::make_map));
 		}
 	};
 
@@ -281,11 +281,10 @@ namespace disposer{
 	constexpr auto output_name< C ... >::operator()(
 		Types const&,
 		TypesMetaFn const&,
-		EnableFn&& enable_fn
+		enable_fn< EnableFn >&& enable
 	)const noexcept{
 		using name_type = output_name< C ... >;
 		using type_fn = std::remove_const_t< TypesMetaFn >;
-		using enable_fn_t = std::remove_reference_t< EnableFn >;
 
 		static_assert(hana::Metafunction< TypesMetaFn >::value,
 			"TypesMetaFn must model boost::hana::MetaFn");
@@ -299,8 +298,8 @@ namespace disposer{
 			hana::unpack(unpack_types, hana::template_< output >);
 
 		return output_maker< name_type,
-			typename decltype(type_output)::type, enable_fn_t >{
-				static_cast< EnableFn&& >(enable_fn)
+			typename decltype(type_output)::type, EnableFn >{
+				std::move(enable)
 			};
 	}
 

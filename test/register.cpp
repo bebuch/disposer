@@ -96,38 +96,40 @@ int main(){
 				disposer::configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >, ident{},
-						[](auto const& get, auto type){
+						disposer::enable([](auto const& get, auto type){
 							bool active = get("v"_in).is_enabled(type);
 							assert(!active);
 							return active;
-						}),
+						})),
 					"v"_param(hana::type_c< int >,
-						disposer::verify_value_always(),
-						[](auto const& get, auto type){
+						disposer::verify_value(disposer::verify_value_always()),
+						disposer::enable([](auto const& get, auto type){
 							bool active1 = get("v"_in).is_enabled(type);
 							bool active2 = get("v"_out).is_enabled(type);
 							assert(!active1 && !active2);
 							return false;
-						},
-						[](std::string_view /*value*/, auto type){
+						}),
+						disposer::parser([](std::string_view, auto type){
 							static_assert(type == hana::type_c< int >);
 							return 5;
-						},
+						}),
 						hana::make_tuple(7)),
 					"w"_in(hana::type_c< int >, ident{},
-						[](auto const&, bool connected){
-							assert(!connected);
-						},
-						[](
-							auto const& get,
-							auto type,
-							disposer::output_info const&
-						){
-							bool active1 = get("v"_in).is_enabled(type);
-							bool active2 = get("v"_out).is_enabled(type);
-							bool active3 = get("v"_param).is_enabled(type);
-							assert(!active1 && !active2 && !active3);
-						})
+						disposer::verify_connection(
+							[](auto const&, bool connected){
+								assert(!connected);
+							}),
+						disposer::verify_type(
+							[](
+								auto const& get,
+								auto type,
+								disposer::output_info const&
+							){
+								bool active1 = get("v"_in).is_enabled(type);
+								bool active2 = get("v"_out).is_enabled(type);
+								bool active3 = get("v"_param).is_enabled(type);
+								assert(!active1 && !active2 && !active3);
+							}))
 				),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);

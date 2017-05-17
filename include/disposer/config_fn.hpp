@@ -34,11 +34,15 @@ namespace disposer{
 	template < typename Fn >
 	class enable_fn{
 	public:
-		constexpr enable_fn(Fn const& fn)
+		constexpr enable_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr enable_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		constexpr enable_fn(Fn&& fn)
+		explicit constexpr enable_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -47,7 +51,7 @@ namespace disposer{
 		constexpr bool operator()(
 			IOP_List const& iop_list,
 			hana::basic_type< T > type
-		)const noexcept(noexcept(fn_(iop_list, type))){
+		)const noexcept(noexcept(std::declval< Fn const >()(iop_list, type))){
 			return fn_(iop_list, type);
 		}
 
@@ -74,11 +78,15 @@ namespace disposer{
 	template < typename Fn >
 	class verify_connection_fn{
 	public:
-		constexpr verify_connection_fn(Fn const& fn)
+		constexpr verify_connection_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr verify_connection_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		constexpr verify_connection_fn(Fn&& fn)
+		explicit constexpr verify_connection_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -87,7 +95,9 @@ namespace disposer{
 		constexpr void operator()(
 			IOP_List const& iop_list,
 			bool connected
-		)const noexcept(noexcept(fn_(iop_list, connected))){
+		)const noexcept(noexcept(
+			std::declval< Fn const >()(iop_list, connected)
+		)){
 			fn_(iop_list, connected);
 		}
 
@@ -115,11 +125,15 @@ namespace disposer{
 	template < typename Fn >
 	class verify_type_fn{
 	public:
-		constexpr verify_type_fn(Fn const& fn)
+		constexpr verify_type_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr verify_type_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		constexpr verify_type_fn(Fn&& fn)
+		explicit constexpr verify_type_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -129,7 +143,9 @@ namespace disposer{
 			IOP_List const& iop_list,
 			hana::basic_type< T > type,
 			output_info const& info
-		)const noexcept(noexcept(fn_(iop_list, type, info))){
+		)const noexcept(noexcept(
+			std::declval< Fn const >()(iop_list, type, info)
+		)){
 			fn_(iop_list, type, info);
 		}
 
@@ -156,11 +172,15 @@ namespace disposer{
 	template < typename Fn >
 	class verify_value_fn{
 	public:
-		constexpr verify_value_fn(Fn const& fn)
+		constexpr verify_value_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr verify_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		constexpr verify_value_fn(Fn&& fn)
+		explicit constexpr verify_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -169,7 +189,7 @@ namespace disposer{
 		constexpr void operator()(
 			IOP_List const& iop_list,
 			T const& value
-		)const noexcept(noexcept(fn_(iop_list, value))){
+		)const noexcept(noexcept(std::declval< Fn const >()(iop_list, value))){
 			fn_(iop_list, value);
 		}
 
@@ -208,20 +228,24 @@ namespace disposer{
 	template < typename Fn >
 	class parser_fn{
 	public:
-		constexpr parser_fn(Fn const& fn)
+		constexpr parser_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr parser_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		constexpr parser_fn(Fn&& fn)
+		explicit constexpr parser_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_List, typename T >
-		constexpr bool operator()(
+		template < typename T >
+		constexpr T operator()(
 			std::string_view value,
 			hana::basic_type< T > type
-		)const noexcept(noexcept(fn_(value, type))){
+		)const noexcept(noexcept(std::declval< Fn const >()(value, type))){
 			return fn_(value, type);
 		}
 

@@ -275,8 +275,8 @@ namespace disposer{
 	template <
 		typename Name,
 		typename InputType,
-		typename VerifyConnectFn,
-		typename VerifyTypesFn >
+		typename VerifyConnectionFn,
+		typename VerifyTypeFn >
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
@@ -291,10 +291,10 @@ namespace disposer{
 		using type = InputType;
 
 		/// \brief Function which verifies the connection with an output
-		VerifyConnectFn verify_connect_fn;
+		verify_connection_fn< VerifyConnectionFn > verify_connection;
 
 		/// \brief Function which verifies the active types
-		VerifyTypesFn verify_type_fn;
+		verify_type_fn< VerifyTypeFn > verify_type;
 
 
 		template < typename IOP_List >
@@ -305,12 +305,12 @@ namespace disposer{
 			std::optional< output_info > const& info
 		)const{
 			auto input = type(output, last_use);
-			verify_connect_fn(iop_list, static_cast< bool >(info));
+			verify_connection(iop_list, static_cast< bool >(info));
 
 			if(info){
-				hana::for_each(input.types,
+				hana::for_each(type::types,
 					[this, &iop_list, &info](auto const& type){
-						verify_type_fn(iop_list, type, *info);
+						verify_type(iop_list, type, *info);
 					});
 			}
 
@@ -323,20 +323,16 @@ namespace disposer{
 	template <
 		typename Types,
 		typename TypesMetaFn,
-		typename VerifyConnectFn,
-		typename VerifyTypesFn >
+		typename VerifyConnectionFn,
+		typename VerifyTypeFn >
 	constexpr auto input_name< C ... >::operator()(
 		Types const&,
 		TypesMetaFn const&,
-		VerifyConnectFn&& verify_connect_fn,
-		VerifyTypesFn&& verify_type_fn
+		verify_connection_fn< VerifyConnectionFn >&& verify_connection,
+		verify_type_fn< VerifyTypeFn >&& verify_type
 	)const noexcept{
 		using name_type = input_name< C ... >;
 		using type_fn = std::remove_const_t< TypesMetaFn >;
-		using verify_connect_fn_t =
-			std::remove_reference_t< VerifyConnectFn >;
-		using verify_type_fn_t =
-			std::remove_reference_t< VerifyTypesFn >;
 
 		static_assert(hana::Metafunction< TypesMetaFn >::value,
 			"TypesMetaFn must model boost::hana::Metafunction");
@@ -350,9 +346,9 @@ namespace disposer{
 			hana::unpack(unpack_types, hana::template_< input >);
 
 		return input_maker< name_type, typename decltype(type_input)::type,
-			verify_connect_fn_t, verify_type_fn_t >{
-				static_cast< VerifyConnectFn&& >(verify_connect_fn),
-				static_cast< VerifyTypesFn&& >(verify_type_fn)
+			VerifyConnectionFn, VerifyTypeFn >{
+				std::move(verify_connection),
+				std::move(verify_type)
 			};
 	}
 
