@@ -34,9 +34,6 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
-	using ident =
-		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
-
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iops);
@@ -53,15 +50,17 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					decltype("v"_in),
-					disposer::input< decltype("v"_in), ident, int >,
-					disposer::verify_connection_always,
-					disposer::verify_type_always
+					disposer::input< decltype("v"_in),
+						disposer::no_transform, int >,
+					disposer::connection_verify_always,
+					disposer::type_verify_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::input< decltype("v"_in), ident, int > >);
+				disposer::input< decltype("v"_in),
+					disposer::no_transform, int > >);
 
 			error_count = check(ct++, object.is_enabled(), false);
 			error_count = check(ct++, object.is_enabled(type_c< int >), false);
@@ -73,15 +72,17 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					decltype("v"_in),
-					disposer::input< decltype("v"_in), ident, int, float >,
-					disposer::verify_connection_always,
-					disposer::verify_type_always
+					disposer::input< decltype("v"_in),
+						disposer::no_transform, int, float >,
+					disposer::connection_verify_always,
+					disposer::type_verify_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::input< decltype("v"_in), ident, int, float > >);
+				disposer::input< decltype("v"_in),
+					disposer::no_transform, int, float > >);
 
 			error_count = check(ct++, object.is_enabled(), false);
 			error_count = check(ct++, object.is_enabled(type_c< int >), false);
@@ -93,15 +94,17 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					decltype("v"_in),
-					disposer::input< decltype("v"_in), ident, int, float >,
-					disposer::verify_connection_always,
-					disposer::verify_type_always
+					disposer::input< decltype("v"_in),
+						disposer::no_transform, int, float >,
+					disposer::connection_verify_always,
+					disposer::type_verify_always
 				> const >);
 
 			auto object = maker(get_object, nullptr, true, info);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::input< decltype("v"_in), ident, int, float > >);
+				disposer::input< decltype("v"_in),
+					disposer::no_transform, int, float > >);
 
 			error_count = check(ct++, object.is_enabled(), false);
 			error_count = check(ct++, object.is_enabled(type_c< int >), false);

@@ -21,6 +21,57 @@
 namespace disposer{
 
 
+	struct no_transform{
+		template < typename T >
+		constexpr auto operator()(hana::basic_type< T > type)const noexcept{
+			return type;
+		}
+	};
+
+	template < template < typename > typename Template >
+	struct template_transform{
+		template < typename T >
+		constexpr auto operator()(hana::basic_type< T >)const noexcept{
+			return hana::type_c< Template< T > >;
+		}
+	};
+
+	template < typename Fn >
+	class type_transform_fn{
+	public:
+		static_assert(std::is_nothrow_default_constructible_v< Fn >);
+
+		template < typename T >
+		struct apply{
+			using type = decltype(type_transform_fn{}(std::declval< T >()));
+		};
+
+		template < typename T >
+		constexpr auto operator()(T const&)const noexcept{
+			using type = std::conditional_t<
+				hana::is_a< hana::type_tag, T >, T, hana::type< T > >;
+
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(std::is_callable_v< Fn(type) >);
+#else
+			static_assert(std::is_nothrow_invocable_v< Fn, type >);
+#endif
+
+			auto result = Fn{}(type{});
+
+			static_assert(hana::is_a< hana::type_tag >(result));
+
+			return result;
+		}
+	};
+
+	template < typename Fn >
+	constexpr auto type_transform(Fn&&)noexcept{
+		return type_transform_fn< std::remove_reference_t< Fn > >();
+	}
+
+
 	struct enable_always{
 		template < typename IOP_List, typename T >
 		constexpr bool operator()(
@@ -56,7 +107,7 @@ namespace disposer{
 		}
 
 	private:
-		Fn const fn_;
+		Fn fn_;
 	};
 
 	template < typename Fn >
@@ -67,7 +118,7 @@ namespace disposer{
 	}
 
 
-	struct verify_connection_always{
+	struct connection_verify_always{
 		template < typename IOP_List >
 		constexpr void operator()(
 			IOP_List const& /* iop_list */,
@@ -76,17 +127,17 @@ namespace disposer{
 	};
 
 	template < typename Fn >
-	class verify_connection_fn{
+	class connection_verify_fn{
 	public:
-		constexpr verify_connection_fn()
+		constexpr connection_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_connection_fn(Fn const& fn)
+		explicit constexpr connection_verify_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_connection_fn(Fn&& fn)
+		explicit constexpr connection_verify_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -102,18 +153,18 @@ namespace disposer{
 		}
 
 	private:
-		Fn const fn_;
+		Fn fn_;
 	};
 
 	template < typename Fn >
-	constexpr auto verify_connection(Fn&& fn)
+	constexpr auto connection_verify(Fn&& fn)
 		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return verify_connection_fn< std::remove_reference_t< Fn > >(
+		return connection_verify_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
 	}
 
 
-	struct verify_type_always{
+	struct type_verify_always{
 		template < typename IOP_List, typename T >
 		constexpr void operator()(
 			IOP_List const& /* iop_list */,
@@ -123,17 +174,17 @@ namespace disposer{
 	};
 
 	template < typename Fn >
-	class verify_type_fn{
+	class type_verify_fn{
 	public:
-		constexpr verify_type_fn()
+		constexpr type_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_type_fn(Fn const& fn)
+		explicit constexpr type_verify_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_type_fn(Fn&& fn)
+		explicit constexpr type_verify_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -150,18 +201,18 @@ namespace disposer{
 		}
 
 	private:
-		Fn const fn_;
+		Fn fn_;
 	};
 
 	template < typename Fn >
-	constexpr auto verify_type(Fn&& fn)
+	constexpr auto type_verify(Fn&& fn)
 		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return verify_type_fn< std::remove_reference_t< Fn > >(
+		return type_verify_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
 	}
 
 
-	struct verify_value_always{
+	struct value_verify_always{
 		template < typename IOP_List, typename T >
 		constexpr void operator()(
 			IOP_List const& /* iop_list */,
@@ -170,17 +221,17 @@ namespace disposer{
 	};
 
 	template < typename Fn >
-	class verify_value_fn{
+	class value_verify_fn{
 	public:
-		constexpr verify_value_fn()
+		constexpr value_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_value_fn(Fn const& fn)
+		explicit constexpr value_verify_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_value_fn(Fn&& fn)
+		explicit constexpr value_verify_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -194,13 +245,13 @@ namespace disposer{
 		}
 
 	private:
-		Fn const fn_;
+		Fn fn_;
 	};
 
 	template < typename Fn >
-	constexpr auto verify_value(Fn&& fn)
+	constexpr auto value_verify(Fn&& fn)
 		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return verify_value_fn< std::remove_reference_t< Fn > >(
+		return value_verify_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
 	}
 
@@ -250,7 +301,7 @@ namespace disposer{
 		}
 
 	private:
-		Fn const fn_;
+		Fn fn_;
 	};
 
 	template < typename Fn >
@@ -259,10 +310,6 @@ namespace disposer{
 		return parser_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
 	}
-
-
-	template < typename T >
-	using self_t = T;
 
 
 	/// \brief Create a hana::tuple of hana::type's with a given hana::type or
@@ -277,6 +324,18 @@ namespace disposer{
 			return hana::to_tuple(Types{});
 		}
 	}
+
+
+}
+
+
+namespace boost::hana{
+
+
+    template < typename Fn >
+    struct Metafunction< disposer::type_transform_fn< Fn > >{
+        static constexpr bool value = true;
+    };
 
 
 }

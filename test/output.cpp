@@ -37,9 +37,6 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
-	using ident =
-		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
-
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iops);
@@ -54,14 +51,16 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					decltype("v"_out),
-					disposer::output< decltype("v"_out), ident, int >,
+					disposer::output< decltype("v"_out),
+						disposer::no_transform, int >,
 					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out), ident, int > >);
+				disposer::output< decltype("v"_out),
+					disposer::no_transform, int > >);
 
 			object.put(0);
 
@@ -82,14 +81,16 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					decltype("v"_out),
-					disposer::output< decltype("v"_out), ident, int, float >,
+					disposer::output< decltype("v"_out),
+						disposer::no_transform, int, float >,
 					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out), ident, int, float > >);
+				disposer::output< decltype("v"_out),
+					disposer::no_transform, int, float > >);
 
 			object.put(3);
 			object.put(3.f);
@@ -113,14 +114,16 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					decltype("v"_out),
-					disposer::output< decltype("v"_out), ident, int, float >,
+					disposer::output< decltype("v"_out),
+						disposer::no_transform, int, float >,
 					disposer::enable_always
 				> const >);
 
 			auto object = maker(get_object);
 
 			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out), ident, int, float > >);
+				disposer::output< decltype("v"_out),
+					disposer::no_transform, int, float > >);
 
 			object.put(3);
 			object.put(3.f);

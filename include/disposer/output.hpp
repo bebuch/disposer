@@ -24,11 +24,10 @@
 namespace disposer{
 
 
-	template < typename Name, typename TypesMetaFn, typename ... T >
+	template < typename Name, typename TypeTransformFn, typename ... T >
 	class output: public output_base{
 	public:
 		static_assert(hana::is_a< output_name_tag, Name >);
-		static_assert(hana::Metafunction< TypesMetaFn >::value);
 
 
 		using hana_tag = output_tag;
@@ -40,13 +39,14 @@ namespace disposer{
 		static constexpr auto name = Name::value;
 
 
-		static constexpr auto meta_fn = TypesMetaFn{};
+		static constexpr auto type_transform =
+			type_transform_fn< TypeTransformFn >{};
 
 
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
 		static constexpr auto types =
-			hana::transform(subtypes, meta_fn);
+			hana::transform(subtypes, type_transform);
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
@@ -132,7 +132,7 @@ namespace disposer{
 		std::map< type_index, bool > enabled_types()const override{
 			std::map< type_index, bool > result;
 			hana::for_each(enabled_map_, [&result](auto const& x){
-				auto transformed_type = meta_fn(hana::first(x));
+				auto transformed_type = type_transform(hana::first(x));
 				result.emplace(type_index::type_id<
 					typename decltype(transformed_type)::type >(),
 					hana::second(x));
@@ -267,7 +267,7 @@ namespace disposer{
 			return type(hana::unpack(hana::transform(type::subtypes,
 				[&](auto subtype){
 					return hana::make_pair(subtype,
-						enable(iop_list, type::meta_fn(subtype)));
+						enable(iop_list, type::type_transform(subtype)));
 				}), hana::make_map));
 		}
 	};
@@ -276,23 +276,19 @@ namespace disposer{
 	template < char ... C >
 	template <
 		typename Types,
-		typename TypesMetaFn,
+		typename TypeTransformFn,
 		typename EnableFn >
 	constexpr auto output_name< C ... >::operator()(
 		Types const&,
-		TypesMetaFn const&,
+		type_transform_fn< TypeTransformFn >&&,
 		enable_fn< EnableFn >&& enable
-	)const noexcept{
+	)const{
 		using name_type = output_name< C ... >;
-		using type_fn = std::remove_const_t< TypesMetaFn >;
-
-		static_assert(hana::Metafunction< TypesMetaFn >::value,
-			"TypesMetaFn must model boost::hana::MetaFn");
 
 		constexpr auto typelist = to_typelist(Types{});
 
 		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< name_type, type_fn >, typelist);
+			hana::concat(hana::tuple_t< name_type, TypeTransformFn >, typelist);
 
 		constexpr auto type_output =
 			hana::unpack(unpack_types, hana::template_< output >);

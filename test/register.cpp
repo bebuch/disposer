@@ -30,9 +30,6 @@ void check(IO& io, Type const& type, bool expected){
 
 
 int main(){
-	using ident =
-		decltype(hana::typeid_(hana::template_< disposer::self_t >))::type;
-
 	std::size_t error_count = 0;
 
 	try{
@@ -95,14 +92,15 @@ int main(){
 			auto register_fn = disposer::make_register_fn(
 				disposer::configure(
 					"v"_in(hana::type_c< int >),
-					"v"_out(hana::type_c< int >, ident{},
+					"v"_out(hana::type_c< int >,
+						disposer::type_transform(disposer::no_transform{}),
 						disposer::enable([](auto const& get, auto type){
 							bool active = get("v"_in).is_enabled(type);
 							assert(!active);
 							return active;
 						})),
 					"v"_param(hana::type_c< int >,
-						disposer::verify_value(disposer::verify_value_always()),
+						disposer::value_verify(disposer::value_verify_always()),
 						disposer::enable([](auto const& get, auto type){
 							bool active1 = get("v"_in).is_enabled(type);
 							bool active2 = get("v"_out).is_enabled(type);
@@ -114,12 +112,13 @@ int main(){
 							return 5;
 						}),
 						hana::make_tuple(7)),
-					"w"_in(hana::type_c< int >, ident{},
-						disposer::verify_connection(
+					"w"_in(hana::type_c< int >,
+						disposer::type_transform(disposer::no_transform{}),
+						disposer::connection_verify(
 							[](auto const&, bool connected){
 								assert(!connected);
 							}),
-						disposer::verify_type(
+						disposer::type_verify(
 							[](
 								auto const& get,
 								auto type,

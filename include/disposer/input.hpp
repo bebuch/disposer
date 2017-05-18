@@ -25,7 +25,7 @@
 namespace disposer{
 
 
-	template < typename Name, typename TypesMetaFn, typename ... T >
+	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input;
 
 	/// \brief Class input_key access key
@@ -34,16 +34,15 @@ namespace disposer{
 		/// \brief Constructor
 		constexpr input_key()noexcept = default;
 
-		template < typename Name, typename TypesMetaFn, typename ... T >
+		template < typename Name, typename TypeTransformFn, typename ... T >
 		friend class input;
 	};
 
 
-	template < typename Name, typename TypesMetaFn, typename ... T >
+	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input: public input_base{
 	public:
 		static_assert(hana::is_a< input_name_tag, Name >);
-		static_assert(hana::Metafunction< TypesMetaFn >::value);
 
 
 		using hana_tag = input_tag;
@@ -55,10 +54,12 @@ namespace disposer{
 		static constexpr auto name = Name::value;
 
 
+		static constexpr auto type_transform =
+			type_transform_fn< TypeTransformFn >{};
+
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
-		static constexpr auto types =
-			hana::transform(subtypes, TypesMetaFn{});
+		static constexpr auto types = hana::transform(subtypes, type_transform);
 
 		static constexpr std::size_t type_count = sizeof...(T);
 
@@ -250,23 +251,23 @@ namespace disposer{
 	};
 
 
-	template < typename Name, typename TypesMetaFn, typename ... T >
+	template < typename Name, typename TypeTransformFn, typename ... T >
 	std::unordered_map< type_index,
-		typename input< Name, TypesMetaFn, T ... >::ref_convert_fn > const
-		input< Name, TypesMetaFn, T ... >::ref_map_ = {
+		typename input< Name, TypeTransformFn, T ... >::ref_convert_fn > const
+		input< Name, TypeTransformFn, T ... >::ref_map_ = {
 			{
 				type_index::type_id_with_cvr< T >(),
-				&input< Name, TypesMetaFn, T ... >::ref_convert< T >
+				&input< Name, TypeTransformFn, T ... >::ref_convert< T >
 			} ...
 		};
 
-	template < typename Name, typename TypesMetaFn, typename ... T >
+	template < typename Name, typename TypeTransformFn, typename ... T >
 	std::unordered_map< type_index,
-		typename input< Name, TypesMetaFn, T ... >::val_convert_fn > const
-		input< Name, TypesMetaFn, T ... >::val_map_ = {
+		typename input< Name, TypeTransformFn, T ... >::val_convert_fn > const
+		input< Name, TypeTransformFn, T ... >::val_map_ = {
 			{
 				type_index::type_id_with_cvr< T >(),
-				&input< Name, TypesMetaFn, T ... >::val_convert< T >
+				&input< Name, TypeTransformFn, T ... >::val_convert< T >
 			} ...
 		};
 
@@ -275,8 +276,8 @@ namespace disposer{
 	template <
 		typename Name,
 		typename InputType,
-		typename VerifyConnectionFn,
-		typename VerifyTypeFn >
+		typename ConnectionVerifyFn,
+		typename TypeVerifyFn >
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
@@ -291,10 +292,10 @@ namespace disposer{
 		using type = InputType;
 
 		/// \brief Function which verifies the connection with an output
-		verify_connection_fn< VerifyConnectionFn > verify_connection;
+		connection_verify_fn< ConnectionVerifyFn > connection_verify;
 
 		/// \brief Function which verifies the active types
-		verify_type_fn< VerifyTypeFn > verify_type;
+		type_verify_fn< TypeVerifyFn > type_verify;
 
 
 		template < typename IOP_List >
@@ -305,12 +306,12 @@ namespace disposer{
 			std::optional< output_info > const& info
 		)const{
 			auto input = type(output, last_use);
-			verify_connection(iop_list, static_cast< bool >(info));
+			connection_verify(iop_list, static_cast< bool >(info));
 
 			if(info){
 				hana::for_each(type::types,
 					[this, &iop_list, &info](auto const& type){
-						verify_type(iop_list, type, *info);
+						type_verify(iop_list, type, *info);
 					});
 			}
 
@@ -322,33 +323,29 @@ namespace disposer{
 	template < char ... C >
 	template <
 		typename Types,
-		typename TypesMetaFn,
-		typename VerifyConnectionFn,
-		typename VerifyTypeFn >
+		typename TypeTransformFn,
+		typename ConnectionVerifyFn,
+		typename TypeVerifyFn >
 	constexpr auto input_name< C ... >::operator()(
 		Types const&,
-		TypesMetaFn const&,
-		verify_connection_fn< VerifyConnectionFn >&& verify_connection,
-		verify_type_fn< VerifyTypeFn >&& verify_type
-	)const noexcept{
+		type_transform_fn< TypeTransformFn >&&,
+		connection_verify_fn< ConnectionVerifyFn >&& connection_verify,
+		type_verify_fn< TypeVerifyFn >&& type_verify
+	)const{
 		using name_type = input_name< C ... >;
-		using type_fn = std::remove_const_t< TypesMetaFn >;
-
-		static_assert(hana::Metafunction< TypesMetaFn >::value,
-			"TypesMetaFn must model boost::hana::Metafunction");
 
 		constexpr auto typelist = to_typelist(Types{});
 
 		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< name_type, type_fn >, typelist);
+			hana::concat(hana::tuple_t< name_type, TypeTransformFn >, typelist);
 
 		constexpr auto type_input =
 			hana::unpack(unpack_types, hana::template_< input >);
 
 		return input_maker< name_type, typename decltype(type_input)::type,
-			VerifyConnectionFn, VerifyTypeFn >{
-				std::move(verify_connection),
-				std::move(verify_type)
+			ConnectionVerifyFn, TypeVerifyFn >{
+				std::move(connection_verify),
+				std::move(type_verify)
 			};
 	}
 
