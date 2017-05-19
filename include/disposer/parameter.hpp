@@ -251,22 +251,14 @@ namespace disposer{
 		value_verify_fn< ValueVerifyFn >&& value_verify,
 		enable_fn< EnableFn >&& enable,
 		parser_fn< ParserFn >&& parser,
-		DefaultValues&& default_values,
-		AsText&&
+		default_values_tuple< DefaultValues >&& default_values,
+		type_as_text_map< AsText >&&
 	)const{
 		using name_type = parameter_name< C ... >;
 
 		constexpr auto typelist = to_typelist(Types{});
 
-		static_assert(hana::is_a< hana::map_tag, AsText >,
-			"AsText must be a hana::map of hana::type's and hana::string's");
 		constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
-		static_assert(
-			hana::all_of(keys, hana::is_a< hana::type_tag >),
-			"AsText must be a hana::map with hana::type's as keys");
-		static_assert(hana::all_of(hana::values(AsText{}),
-				hana::is_a< hana::string_tag >),
-			"AsText must be a hana::map with hana::string's as values");
 		static_assert(hana::is_subset(keys, typelist),
 			"AsText must contain only types which are also in the parameter's "
 			"type list");
@@ -311,9 +303,8 @@ namespace disposer{
 				std::move(value_verify),
 				std::move(enable),
 				std::move(parser),
-				make_default_value_map(types,
-					static_cast< DefaultValues&& >(default_values)
-				), type_to_text
+				make_default_value_map(types, std::move(default_values.values)),
+				type_to_text
 			};
 	}
 

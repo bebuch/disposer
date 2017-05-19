@@ -140,6 +140,7 @@ namespace disposer{
 			return result;
 		}
 
+
 	private:
 		virtual std::vector< reference_carrier >
 		get_references(std::size_t id)override{
@@ -228,7 +229,6 @@ namespace disposer{
 
 			if(next_id_ < id + 1) next_id_ = id + 1;
 		}
-
 
 
 		std::mutex mutex_;

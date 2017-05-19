@@ -111,7 +111,7 @@ int main(){
 							static_assert(type == hana::type_c< int >);
 							return 5;
 						}),
-						hana::make_tuple(7)),
+						disposer::default_values(7)),
 					"w"_in(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
 						disposer::connection_verify(

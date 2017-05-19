@@ -41,8 +41,8 @@ namespace disposer{
 			value_verify_fn< ValueVerifyFn >&& value_verify = {},
 			enable_fn< EnableFn >&& enable = {},
 			parser_fn< ParserFn >&& parser = {},
-			DefaultValues&& default_values = no_defaults(),
-			AsText&& to_text = hana::make_map()
+			default_values_tuple< DefaultValues >&& default_values = {},
+			type_as_text_map< AsText >&& to_text = type_as_text()
 		)const;
 	};
 

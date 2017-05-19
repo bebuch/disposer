@@ -274,7 +274,7 @@ int main(){
 						disposer::value_verify(disposer::value_verify_always()),
 						disposer::enable(enable_param),
 						disposer::parser(parser),
-						hana::make_tuple(7)),
+						disposer::default_values(7)),
 					"w"_in(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
 						disposer::connection_verify(enable_in_c),

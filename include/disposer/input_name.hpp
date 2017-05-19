@@ -16,24 +16,6 @@
 namespace disposer{
 
 
-	struct verify_connect{
-		template < typename IOP_List >
-		constexpr void operator()(
-			IOP_List const& /*iop_list*/,
-			bool /*connected*/
-		)const{}
-	};
-
-	struct type_verifys{
-		template < typename IOP_List, typename T >
-		constexpr void operator()(
-			IOP_List const& /*iop_list*/,
-			hana::basic_type< T > /*type*/,
-			output_info const& /*info*/
-		)const{}
-	};
-
-
 	struct input_name_tag{};
 
 	template < char ... C >
@@ -47,8 +29,8 @@ namespace disposer{
 			typename TypeVerifyFn = type_verify_always >
 		constexpr auto operator()(
 			Types const& types,
-			type_transform_fn< TypeTransformFn >&& types_meta = {},
-			connection_verify_fn< ConnectionVerifyFn >&& verify_connect = {},
+			type_transform_fn< TypeTransformFn >&& type_transform = {},
+			connection_verify_fn< ConnectionVerifyFn >&& connection_verify = {},
 			type_verify_fn< TypeVerifyFn >&& type_verify = {}
 		)const;
 	};

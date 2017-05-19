@@ -13,7 +13,9 @@
 
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/all_of.hpp>
+#include <boost/hana/string.hpp>
 #include <boost/hana/tuple.hpp>
+#include <boost/hana/map.hpp>
 
 #include "output_info.hpp"
 
@@ -323,6 +325,38 @@ namespace disposer{
 			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
 			return hana::to_tuple(Types{});
 		}
+	}
+
+
+	template < typename DefaultValuesTuple >
+	struct default_values_tuple{
+		DefaultValuesTuple values;
+	};
+
+	template < typename ... Value >
+	constexpr auto default_values(Value&& ... value)noexcept{
+		return default_values_tuple<
+			decltype(hana::make_tuple(static_cast< Value&& >(value) ...)) >{
+				hana::make_tuple(static_cast< Value&& >(value) ...)
+			};
+	}
+
+
+	template < typename TypeAsTextMap >
+	struct type_as_text_map{};
+
+	template < typename ... Pair >
+	constexpr auto type_as_text(Pair&& ... pair)noexcept{
+		static_assert((true && ... && hana::is_a< hana::pair_tag, Pair >),
+			"all parameters must be hana::pair's");
+		static_assert((true && ... && hana::is_a< hana::type_tag,
+				decltype(hana::first(std::declval< Pair >())) >),
+			"keys of all hana::pair's must be a hana::type");
+		static_assert((true && ... && hana::is_a< hana::string_tag,
+				decltype(hana::second(std::declval< Pair >())) >),
+			"values of all hana::pair's must be a hana::string");
+		return type_as_text_map<
+			decltype(hana::make_map(static_cast< Pair&& >(pair) ...)) >{};
 	}
 
 
