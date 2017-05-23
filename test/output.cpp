@@ -28,7 +28,7 @@ int check(std::size_t i, T const& test, T const& ref){
 namespace hana = boost::hana;
 
 using namespace hana::literals;
-using namespace disposer::interface::module;
+using namespace disposer::literals;
 
 constexpr auto types = hana::tuple_t< int, float >;
 constexpr auto types_set = hana::to_set(types);

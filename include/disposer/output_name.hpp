@@ -48,7 +48,7 @@ namespace disposer{
 
 
 #ifdef BOOST_HANA_CONFIG_ENABLE_STRING_UDL
-namespace disposer::interface::module{
+namespace disposer::literals{
 
 
 	template < typename CharT, CharT ... c >

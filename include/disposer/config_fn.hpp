@@ -78,6 +78,10 @@ namespace disposer{
 		return type_transform_fn< std::remove_reference_t< Fn > >();
 	}
 
+	template < template < typename > typename Template >
+	constexpr auto template_transform_c
+		= type_transform(template_transform< Template >{});
+
 
 	struct enable_always{
 		template < typename IOP_List, typename T >
@@ -126,6 +130,13 @@ namespace disposer{
 		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
 		return enable_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
+	}
+
+	template < typename IOP >
+	constexpr auto enable_by(IOP const& ref){
+		return [ref](auto const& iop, auto type){
+			return iop(ref).is_enabled(type);
+		};
 	}
 
 
@@ -177,6 +188,10 @@ namespace disposer{
 		return connection_verify_fn< std::remove_reference_t< Fn > >(
 			static_cast< Fn&& >(fn));
 	}
+
+	constexpr auto required = connection_verify([](auto const&, bool connected){
+			if(!connected) throw std::logic_error("input is required");
+		});
 
 
 	struct type_verify_always{

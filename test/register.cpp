@@ -7,7 +7,7 @@
 namespace hana = boost::hana;
 
 using namespace hana::literals;
-using namespace disposer::interface::module;
+using namespace disposer::literals;
 
 void check_impl(std::string_view name, bool enabled, bool expected){
 	if(enabled == expected){
