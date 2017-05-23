@@ -46,11 +46,11 @@ namespace disposer{
 	public:
 		using hana_tag = type_transform_fn_tag;
 
-		static_assert(std::is_nothrow_default_constructible_v< Fn >);
 
 		template < typename T >
 		struct apply{
-			using type = decltype(type_transform_fn{}(std::declval< T >()));
+			using type = decltype(std::declval< type_transform_fn >()
+				(std::declval< T >()));
 		};
 
 		template < typename T >
@@ -60,16 +60,16 @@ namespace disposer{
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-			static_assert(std::is_callable_v< Fn(type) >);
+			static_assert(std::is_nothrow_callable_v< Fn(type) >);
 #else
 			static_assert(std::is_nothrow_invocable_v< Fn, type >);
 #endif
 
-			auto result = Fn{}(type{});
+			using result = decltype(std::declval< Fn >()(type{}));
 
-			static_assert(hana::is_a< hana::type_tag >(result));
+			static_assert(hana::is_a< hana::type_tag, result >());
 
-			return result;
+			return result{};
 		}
 	};
 
@@ -132,11 +132,17 @@ namespace disposer{
 			static_cast< Fn&& >(fn));
 	}
 
-	template < typename IOP >
-	constexpr auto enable_by(IOP const& ref){
-		return [ref](auto const& iop, auto type){
-			return iop(ref).is_enabled(type);
-		};
+	template < typename IOP_Name >
+	struct enable_by_t{
+		template < typename IOP_List, typename Type >
+		constexpr auto operator()(IOP_List const& iop, Type type)const{
+			return iop(IOP_Name{}).is_enabled(type);
+		}
+	};
+
+	template < typename IOP_Name >
+	constexpr auto enable_by(IOP_Name const&){
+		return enable(enable_by_t< IOP_Name >{});
 	}
 
 
