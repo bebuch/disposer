@@ -24,12 +24,12 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename TypeTransformFn = no_transform,
-			typename EnableFn = enable_always >
+			typename Arg2 = no_argument,
+			typename Arg3 = no_argument >
 		constexpr auto operator()(
 			Types const& types,
-			type_transform_fn< TypeTransformFn >&& type_transform = {},
-			enable_fn< EnableFn >&& enable = {}
+			Arg2&& arg2 = {},
+			Arg3&& arg3 = {}
 		)const;
 	};
 

@@ -24,14 +24,14 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename TypeTransformFn = no_transform,
-			typename ConnectionVerifyFn = connection_verify_always,
-			typename TypeVerifyFn = type_verify_always >
+			typename Arg2 = no_argument,
+			typename Arg3 = no_argument,
+			typename Arg4 = no_argument >
 		constexpr auto operator()(
 			Types const& types,
-			type_transform_fn< TypeTransformFn >&& type_transform = {},
-			connection_verify_fn< ConnectionVerifyFn >&& connection_verify = {},
-			type_verify_fn< TypeVerifyFn >&& type_verify = {}
+			Arg2&& arg2 = {},
+			Arg3&& arg3 = {},
+			Arg4&& arg4 = {}
 		)const;
 	};
 

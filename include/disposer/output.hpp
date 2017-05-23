@@ -273,30 +273,75 @@ namespace disposer{
 	};
 
 
-	template < char ... C >
 	template <
+		typename Name,
 		typename Types,
 		typename TypeTransformFn,
 		typename EnableFn >
-	constexpr auto output_name< C ... >::operator()(
+	constexpr auto create_output_maker(
+		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
 		enable_fn< EnableFn >&& enable
-	)const{
-		using name_type = output_name< C ... >;
-
+	){
 		constexpr auto typelist = to_typelist(Types{});
 
 		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< name_type, TypeTransformFn >, typelist);
+			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
 
 		constexpr auto type_output =
 			hana::unpack(unpack_types, hana::template_< output >);
 
-		return output_maker< name_type,
+		return output_maker< Name,
 			typename decltype(type_output)::type, EnableFn >{
 				std::move(enable)
 			};
+	}
+
+
+	template < char ... C >
+	template <
+		typename Types,
+		typename Arg2,
+		typename Arg3 >
+	constexpr auto output_name< C ... >::operator()(
+		Types const& types,
+		Arg2&& arg2,
+		Arg3&& arg3
+	)const{
+		constexpr auto valid_argument = [](auto const& arg){
+				return hana::is_a< type_transform_fn_tag >(arg)
+					|| hana::is_a< enable_fn_tag >(arg)
+					|| hana::is_a< no_argument_tag >(arg);
+			};
+
+		auto const arg2_valid = valid_argument(arg2);
+		static_assert(arg2_valid, "argument 2 is invalid");
+		auto const arg3_valid = valid_argument(arg3);
+		static_assert(arg3_valid, "argument 3 is invalid");
+
+		auto args = hana::make_tuple(
+			static_cast< Arg2&& >(arg2),
+			static_cast< Arg3&& >(arg3)
+		);
+
+		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(tt, "more than one type_transform_fn");
+		auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(ef, "more than one enable_fn");
+
+		return create_output_maker(
+			(*this),
+			types,
+			get_or_default(std::move(args),
+				hana::is_a< type_transform_fn_tag >,
+				type_transform_fn< no_transform >{}),
+			get_or_default(std::move(args),
+				hana::is_a< enable_fn_tag >,
+				enable_fn< enable_always >{})
+		);
 	}
 
 

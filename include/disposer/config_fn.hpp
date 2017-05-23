@@ -38,9 +38,14 @@ namespace disposer{
 		}
 	};
 
+
+	struct type_transform_fn_tag;
+
 	template < typename Fn >
 	class type_transform_fn{
 	public:
+		using hana_tag = type_transform_fn_tag;
+
 		static_assert(std::is_nothrow_default_constructible_v< Fn >);
 
 		template < typename T >
@@ -84,9 +89,13 @@ namespace disposer{
 		}
 	};
 
+	struct enable_fn_tag;
+
 	template < typename Fn >
 	class enable_fn{
 	public:
+		using hana_tag = enable_fn_tag;
+
 		constexpr enable_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
@@ -128,9 +137,13 @@ namespace disposer{
 		)const noexcept{}
 	};
 
+	struct connection_verify_fn_tag;
+
 	template < typename Fn >
 	class connection_verify_fn{
 	public:
+		using hana_tag = connection_verify_fn_tag;
+
 		constexpr connection_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
@@ -175,9 +188,13 @@ namespace disposer{
 		)const noexcept{}
 	};
 
+	struct type_verify_fn_tag;
+
 	template < typename Fn >
 	class type_verify_fn{
 	public:
+		using hana_tag = type_verify_fn_tag;
+
 		constexpr type_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
@@ -222,9 +239,13 @@ namespace disposer{
 		)const noexcept{}
 	};
 
+	struct value_verify_fn_tag;
+
 	template < typename Fn >
 	class value_verify_fn{
 	public:
+		using hana_tag = value_verify_fn_tag;
+
 		constexpr value_verify_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
@@ -278,9 +299,13 @@ namespace disposer{
 		}
 	};
 
+	struct parser_fn_tag;
+
 	template < typename Fn >
 	class parser_fn{
 	public:
+		using hana_tag = parser_fn_tag;
+
 		constexpr parser_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
@@ -328,8 +353,12 @@ namespace disposer{
 	}
 
 
+	struct default_values_tuple_tag;
+
 	template < typename DefaultValuesTuple >
 	struct default_values_tuple{
+		using hana_tag = default_values_tuple_tag;
+
 		DefaultValuesTuple values;
 	};
 
@@ -342,8 +371,12 @@ namespace disposer{
 	}
 
 
+	struct type_as_text_map_tag;
+
 	template < typename TypeAsTextMap >
-	struct type_as_text_map{};
+	struct type_as_text_map{
+		using hana_tag = type_as_text_map_tag;
+	};
 
 	template < typename ... Pair >
 	constexpr auto type_as_text(Pair&& ... pair)noexcept{
@@ -357,6 +390,30 @@ namespace disposer{
 			"values of all hana::pair's must be a hana::string");
 		return type_as_text_map<
 			decltype(hana::make_map(static_cast< Pair&& >(pair) ...)) >{};
+	}
+
+
+	struct no_argument_tag;
+
+	struct no_argument{
+		using hana_tag = no_argument_tag;
+	};
+
+
+	template < typename Tuple, typename Predicate, typename Default >
+	constexpr auto get_or_default(
+		Tuple&& tuple,
+		Predicate&& predicate,
+		Default&& default_value
+	){
+		auto result = hana::find_if(
+			static_cast< Tuple&& >(tuple), static_cast< Predicate >(predicate));
+		auto found = result != hana::nothing;
+		if constexpr(found){
+			return *result;
+		}else{
+			return static_cast< Default&& >(default_value);
+		}
 	}
 
 

@@ -31,18 +31,18 @@ namespace disposer{
 
 		template <
 			typename Types,
-			typename ValueVerifyFn = value_verify_always,
-			typename EnableFn = enable_always,
-			typename ParserFn = stream_parser,
-			typename DefaultValues = no_defaults,
-			typename AsText = hana::map<> >
+			typename Arg2 = no_argument,
+			typename Arg3 = no_argument,
+			typename Arg4 = no_argument,
+			typename Arg5 = no_argument,
+			typename Arg6 = no_argument >
 		constexpr auto operator()(
 			Types const& types,
-			value_verify_fn< ValueVerifyFn >&& value_verify = {},
-			enable_fn< EnableFn >&& enable = {},
-			parser_fn< ParserFn >&& parser = {},
-			default_values_tuple< DefaultValues >&& default_values = {},
-			type_as_text_map< AsText >&& to_text = type_as_text()
+			Arg2&& arg2 = {},
+			Arg3&& arg3 = {},
+			Arg4&& arg4 = {},
+			Arg5&& arg5 = {},
+			Arg6&& arg6 = {}
 		)const;
 	};
 

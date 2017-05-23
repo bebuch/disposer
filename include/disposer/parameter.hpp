@@ -238,24 +238,23 @@ namespace disposer{
 	}
 
 
-	template < char ... C >
 	template <
+		typename Name,
 		typename Types,
 		typename ValueVerifyFn,
 		typename EnableFn,
 		typename ParserFn,
 		typename DefaultValues,
 		typename AsText >
-	constexpr auto parameter_name< C ... >::operator()(
+	constexpr auto create_parameter_maker(
+		Name const&,
 		Types const& types,
 		value_verify_fn< ValueVerifyFn >&& value_verify,
 		enable_fn< EnableFn >&& enable,
 		parser_fn< ParserFn >&& parser,
 		default_values_tuple< DefaultValues >&& default_values,
 		type_as_text_map< AsText >&&
-	)const{
-		using name_type = parameter_name< C ... >;
-
+	){
 		constexpr auto typelist = to_typelist(Types{});
 
 		constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
@@ -272,7 +271,7 @@ namespace disposer{
 			"parameters AsText-list");
 
 		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< name_type >, typelist);
+			hana::concat(hana::tuple_t< Name >, typelist);
 
 		constexpr auto type_parameter =
 			hana::unpack(unpack_types, hana::template_< parameter >);
@@ -295,7 +294,7 @@ namespace disposer{
 			"representation, check the parameters AsText-list");
 
 		return
-			parameter_maker< name_type,
+			parameter_maker< Name,
 				typename decltype(type_parameter)::type,
 				ValueVerifyFn, EnableFn, ParserFn,
 				std::remove_const_t< decltype(type_to_text) >
@@ -307,6 +306,89 @@ namespace disposer{
 				type_to_text
 			};
 	}
+
+
+	template < char ... C >
+	template <
+		typename Types,
+		typename Arg2,
+		typename Arg3,
+		typename Arg4,
+		typename Arg5,
+		typename Arg6 >
+	constexpr auto parameter_name< C ... >::operator()(
+		Types const& types,
+		Arg2&& arg2,
+		Arg3&& arg3,
+		Arg4&& arg4,
+		Arg5&& arg5,
+		Arg6&& arg6
+	)const{
+		constexpr auto valid_argument = [](auto const& arg){
+				return hana::is_a< value_verify_fn_tag >(arg)
+					|| hana::is_a< enable_fn_tag >(arg)
+					|| hana::is_a< parser_fn_tag >(arg)
+					|| hana::is_a< default_values_tuple_tag >(arg)
+					|| hana::is_a< type_as_text_map_tag >(arg)
+					|| hana::is_a< no_argument_tag >(arg);
+			};
+
+		auto const arg2_valid = valid_argument(arg2);
+		static_assert(arg2_valid, "argument 2 is invalid");
+		auto const arg3_valid = valid_argument(arg3);
+		static_assert(arg3_valid, "argument 3 is invalid");
+		auto const arg4_valid = valid_argument(arg4);
+		static_assert(arg4_valid, "argument 4 is invalid");
+		auto const arg5_valid = valid_argument(arg5);
+		static_assert(arg5_valid, "argument 5 is invalid");
+		auto const arg6_valid = valid_argument(arg6);
+		static_assert(arg6_valid, "argument 6 is invalid");
+
+		auto args = hana::make_tuple(
+			static_cast< Arg2&& >(arg2),
+			static_cast< Arg3&& >(arg3),
+			static_cast< Arg4&& >(arg4),
+			static_cast< Arg5&& >(arg5),
+			static_cast< Arg6&& >(arg6)
+		);
+
+		auto vv = hana::count_if(args, hana::is_a< value_verify_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(vv, "more than one value_verify_fn");
+		auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(ef, "more than one enable_fn");
+		auto pf = hana::count_if(args, hana::is_a< parser_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(pf, "more than one parser_fn");
+		auto ct = hana::count_if(args, hana::is_a< default_values_tuple_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(ct, "more than one default_values_tuple");
+		auto tt = hana::count_if(args, hana::is_a< type_as_text_map_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(tt, "more than one type_as_text_map");
+
+		return create_parameter_maker(
+			(*this),
+			types,
+			get_or_default(std::move(args),
+				hana::is_a< value_verify_fn_tag >,
+				value_verify_fn< value_verify_always >{}),
+			get_or_default(std::move(args),
+				hana::is_a< enable_fn_tag >,
+				enable_fn< enable_always >{}),
+			get_or_default(std::move(args),
+				hana::is_a< parser_fn_tag >,
+				parser_fn< stream_parser >{}),
+			get_or_default(std::move(args),
+				hana::is_a< default_values_tuple_tag >,
+				default_values_tuple< no_defaults >{}),
+			get_or_default(std::move(args),
+				hana::is_a< type_as_text_map_tag >,
+				type_as_text())
+		);
+	}
+
 
 
 }
