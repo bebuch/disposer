@@ -133,16 +133,30 @@ namespace disposer{
 	}
 
 	template < typename IOP_Name >
-	struct enable_by_t{
+	struct enable_by_transformed_types_of_t{
 		template < typename IOP_List, typename Type >
 		constexpr auto operator()(IOP_List const& iop, Type type)const{
-			return iop(IOP_Name{}).is_enabled(type);
+			auto const& other = iop(IOP_Name{});
+			return other.is_enabled(other.type_transform(type));
 		}
 	};
 
 	template < typename IOP_Name >
-	constexpr auto enable_by(IOP_Name const&){
-		return enable(enable_by_t< IOP_Name >{});
+	constexpr auto enable_by_transformed_types_of(IOP_Name const&){
+		return enable(enable_by_transformed_types_of_t< IOP_Name >{});
+	}
+
+	template < typename IOP_Name >
+	struct enable_by_types_of_t{
+		template < typename IOP_List, typename Type >
+		constexpr auto operator()(IOP_List const& iop, Type type)const{
+			return iop(IOP_Name{}).is_subtype_enabled(type);
+		}
+	};
+
+	template < typename IOP_Name >
+	constexpr auto enable_by_types_of(IOP_Name const&){
+		return enable(enable_by_types_of_t< IOP_Name >{});
 	}
 
 

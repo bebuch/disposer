@@ -77,6 +77,8 @@ namespace disposer{
 		/// \brief true if type is enabled, otherwise false
 		template < typename Type >
 		bool is_enabled(Type const& type)const{
+			auto const is_type_valid = hana::contains(type_value_map_, type);
+			static_assert(is_type_valid, "type in not an input type");
 			return static_cast< bool >(type_value_map_[type]);
 		}
 

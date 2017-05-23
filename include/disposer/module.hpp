@@ -70,13 +70,16 @@ namespace disposer{
 				"parameter_name");
 
 			if constexpr(hana::is_a< input_name_tag, io_t >){
-				static_assert(have_input(io_t::value));
+				static_assert(have_input(io_t::value),
+					"input doesn't exist");
 				return inputs_[io_t::value];
 			}else if constexpr(hana::is_a< output_name_tag, io_t >){
-				static_assert(have_output(io_t::value));
+				static_assert(have_output(io_t::value),
+					"output doesn't exist");
 				return outputs_[io_t::value];
 			}else{
-				static_assert(have_parameter(io_t::value));
+				static_assert(have_parameter(io_t::value),
+					"parameter doesn't exist");
 				return parameters_[io_t::value];
 			}
 		}

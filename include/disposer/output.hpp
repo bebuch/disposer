@@ -52,7 +52,7 @@ namespace disposer{
 
 
 		using enabled_map_type = decltype(hana::make_map(
-			hana::make_pair(hana::type_c< T >, false) ...));
+			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
 
 
 		static_assert(hana::length(subtypes) ==
@@ -102,7 +102,7 @@ namespace disposer{
 		template < typename V >
 		void put(V&& value){
 			static_assert(
-				hana::contains(types, hana::type_c< std::decay_t< V > >),
+				hana::contains(types, hana::type_c< V >),
 				"type V in put< V > is not an output type"
 			);
 
@@ -124,7 +124,15 @@ namespace disposer{
 		template < typename U >
 		constexpr bool
 		is_enabled(hana::basic_type< U > const& type)const noexcept{
+			auto const is_type_valid = hana::contains(enabled_map_, type);
+			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
+		}
+
+		template < typename U >
+		constexpr bool
+		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+			return is_enabled(type_transform(type));
 		}
 
 
@@ -132,7 +140,7 @@ namespace disposer{
 		std::map< type_index, bool > enabled_types()const override{
 			std::map< type_index, bool > result;
 			hana::for_each(enabled_map_, [&result](auto const& x){
-				auto transformed_type = type_transform(hana::first(x));
+				auto transformed_type = hana::first(x);
 				result.emplace(type_index::type_id<
 					typename decltype(transformed_type)::type >(),
 					hana::second(x));
@@ -266,8 +274,8 @@ namespace disposer{
 		constexpr auto operator()(IOP_List const& iop_list)const{
 			return type(hana::unpack(hana::transform(type::subtypes,
 				[&](auto subtype){
-					return hana::make_pair(subtype,
-						enable(iop_list, type::type_transform(subtype)));
+					return hana::make_pair(type::type_transform(subtype),
+						enable(iop_list, subtype));
 				}), hana::make_map));
 		}
 	};

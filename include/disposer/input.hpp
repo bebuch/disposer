@@ -65,7 +65,7 @@ namespace disposer{
 
 
 		using enabled_map_type = decltype(hana::make_map(
-			hana::make_pair(hana::type_c< T >, false) ...));
+			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
 
 
 		static_assert(hana::length(subtypes) ==
@@ -170,7 +170,15 @@ namespace disposer{
 		template < typename U >
 		constexpr bool
 		is_enabled(hana::basic_type< U > const& type)const noexcept{
+			auto const is_type_valid = hana::contains(enabled_map_, type);
+			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
+		}
+
+		template < typename U >
+		constexpr bool
+		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+			return is_enabled(type_transform(type));
 		}
 
 
@@ -213,16 +221,6 @@ namespace disposer{
 		}
 
 
-		virtual std::vector< type_index > type_list()const override{
-			std::vector< type_index > result;
-			result.reserve(type_count);
-			hana::for_each(enabled_map_, [&result](auto const& pair){
-				using type = typename decltype(+hana::first(pair))::type;
-				result.push_back(type_index::type_id_with_cvr< type >());
-			});
-			return result;
-		}
-
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		)noexcept override{
@@ -243,7 +241,7 @@ namespace disposer{
 		std::unordered_map< type_index, std::reference_wrapper< bool > > const
 			rt_enabled_map_ = { {
 				type_index::type_id_with_cvr< T >(),
-				enabled_map_[hana::type_c< T >]
+				enabled_map_[type_transform(hana::type_c< T >)]
 			} ... };
 
 

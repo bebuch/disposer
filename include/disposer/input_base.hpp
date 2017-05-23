@@ -61,10 +61,6 @@ namespace disposer{
 		virtual ~input_base() = default;
 
 
-		/// \brief Get a list of all input data types
-		virtual std::vector< type_index > type_list()const = 0;
-
-
 		/// \brief Enable the given types
 		bool enable_types(
 			creator_key&&,
