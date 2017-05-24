@@ -25,41 +25,39 @@ namespace disposer{
 	template <
 		typename Inputs,
 		typename Outputs,
-		typename Parameters,
-		typename EnableFn >
-	class module: public module_base{
+		typename Parameters >
+	class module_config{
 	public:
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		static_assert(std::is_callable_v< EnableFn(module const&) >);
-#else
-		static_assert(std::is_invocable_v< EnableFn, module const& >);
-#endif
-
-
-
 		/// \brief Constructor
-		module(
-			std::string const& module_type,
-			std::string const& chain,
-			std::size_t number,
+		module_config(
 			Inputs&& inputs,
 			Outputs&& outputs,
-			Parameters&& parameters,
-			EnableFn const& enable_fn
-		): module_base(
-			module_type, chain, number,
-			generate_input_list(), generate_output_list()),
+			Parameters&& parameters
+		):
 			inputs_(std::move(inputs)),
 			outputs_(std::move(outputs)),
-			parameters_(std::move(parameters)),
-			enable_fn_(enable_fn){}
+			parameters_(std::move(parameters)) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&&)noexcept{
+		decltype(auto) operator()(ConfigList&& list)noexcept{
+			return get(*this, static_cast< ConfigList&& >(list));
+		}
+
+		/// \brief Get reference to an input-, output- or parameter-object via
+		///        its corresponding compile time name
+		template < typename ConfigList >
+		decltype(auto) operator()(ConfigList&& list)const noexcept{
+			return get(*this, static_cast< ConfigList&& >(list));
+		}
+
+
+	private:
+
+		template < typename Config, typename ConfigList >
+		static decltype(auto) get(Config& config, ConfigList&&)noexcept{
 			using io_t =
 				std::remove_cv_t< std::remove_reference_t< ConfigList > >;
 			static_assert(
@@ -72,53 +70,16 @@ namespace disposer{
 			if constexpr(hana::is_a< input_name_tag, io_t >){
 				static_assert(have_input(io_t::value),
 					"input doesn't exist");
-				return inputs_[io_t::value];
+				return config.inputs_[io_t::value];
 			}else if constexpr(hana::is_a< output_name_tag, io_t >){
 				static_assert(have_output(io_t::value),
 					"output doesn't exist");
-				return outputs_[io_t::value];
+				return config.outputs_[io_t::value];
 			}else{
 				static_assert(have_parameter(io_t::value),
 					"parameter doesn't exist");
-				return parameters_[io_t::value];
+				return config.parameters_[io_t::value];
 			}
-		}
-
-
-	private:
-		/// \brief Enables the module for exec calls
-		virtual void enable()override{
-			exec_fn_.emplace(enable_fn_(static_cast< module const& >(*this)));
-		}
-
-		/// \brief Disables the module for exec calls
-		virtual void disable()noexcept override{
-			exec_fn_.reset();
-		}
-
-
-		/// \brief The actual worker function called one times per trigger
-		virtual void exec()override{
-			if(exec_fn_){
-				(*exec_fn_)(*this, id);
-			}else{
-				throw std::logic_error("module is not enabled");
-			}
-		}
-
-
-		/// \brief std::vector with references to all input's (input_base)
-		input_list generate_input_list(){
-			return hana::unpack(inputs_, [](auto& ... input){
-				return input_list{ hana::second(input) ... };
-			});
-		}
-
-		/// \brief std::vector with references to all output's (output_base)
-		output_list generate_output_list(){
-			return hana::unpack(outputs_, [](auto& ... output){
-				return output_list{ hana::second(output) ... };
-			});
 		}
 
 
@@ -154,18 +115,163 @@ namespace disposer{
 		Parameters parameters_;
 
 
+		/// \brief std::vector with references to all input's (input_base)
+		friend auto generate_input_list(module_config& config){
+			return hana::unpack(config.inputs_, [](auto& ... input){
+				return std::vector< std::reference_wrapper< input_base > >{
+					std::ref(static_cast< input_base& >(hana::second(input)))
+					... };
+			});
+		}
+
+		/// \brief std::vector with references to all output's (output_base)
+		friend auto generate_output_list(module_config& config){
+			return hana::unpack(config.outputs_, [](auto& ... output){
+				return std::vector< std::reference_wrapper< output_base > >{
+					std::ref(static_cast< output_base& >(hana::second(output)))
+					... };
+			});
+		}
+	};
+
+
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
+	auto make_module_config(
+		Inputs&& inputs,
+		Outputs&& outputs,
+		Parameters&& parameters
+	){
+		return module_config<
+				std::remove_reference_t< Inputs >,
+				std::remove_reference_t< Outputs >,
+				std::remove_reference_t< Parameters >
+			>(
+				static_cast< Inputs&& >(inputs),
+				static_cast< Outputs&& >(outputs),
+				static_cast< Parameters&& >(parameters)
+			);
+	}
+
+
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
+	class module_accessory{
+	public:
+		module_accessory(
+			module_base& module,
+			module_config< Inputs, Outputs, Parameters >& config
+		)
+			: module_(module)
+			, config_(config) {}
+
+		/// \brief Get reference to an input-, output- or parameter-object via
+		///        its corresponding compile time name
+		template < typename ConfigList >
+		decltype(auto) operator()(ConfigList&& list)noexcept{
+			return config_(static_cast< ConfigList&& >(list));
+		}
+
+		/// \brief Get reference to an input-, output- or parameter-object via
+		///        its corresponding compile time name
+		template < typename ConfigList >
+		decltype(auto) operator()(ConfigList&& list)const noexcept{
+			return static_cast<
+					module_config< Inputs, Outputs, Parameters > const&
+				>(config_)(static_cast< ConfigList&& >(list));
+		}
+
+	private:
+		module_base& module_;
+		module_config< Inputs, Outputs, Parameters >& config_;
+	};
+
+
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters,
+		typename EnableFn >
+	class module: public module_base{
+	public:
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(std::is_callable_v< EnableFn
+				(module_config< Inputs, Outputs, Parameters > const&) >);
+#else
+			static_assert(std::is_invocable_v< EnableFn,
+				module_config< Inputs, Outputs, Parameters > const& >);
+#endif
+
+
+		/// \brief Type for exec_fn
+		using accessory_type = module_accessory< Inputs, Outputs, Parameters >;
+
+
+		/// \brief Constructor
+		module(
+			std::string const& module_type,
+			std::string const& chain,
+			std::size_t number,
+			module_config< Inputs, Outputs, Parameters >&& config,
+			EnableFn const& enable_fn
+		)
+			: module_base(
+				module_type, chain, number,
+				// yes, these two functions can be called prior initialzation
+				generate_input_list(config_),
+				generate_output_list(config_)
+			)
+			, config_(std::move(config))
+			, enable_fn_(enable_fn)
+			, accessory_(*this, config_) {}
+
+
+	private:
+		/// \brief Enables the module for exec calls
+		virtual void enable()override{
+			exec_fn_.emplace(enable_fn_(static_cast< module_config
+				< Inputs, Outputs, Parameters > const& >(config_)));
+		}
+
+		/// \brief Disables the module for exec calls
+		virtual void disable()noexcept override{
+			exec_fn_.reset();
+		}
+
+
+		/// \brief The actual worker function called one times per trigger
+		virtual void exec()override{
+			if(exec_fn_){
+				(*exec_fn_)(accessory_, id);
+			}else{
+				throw std::logic_error("module is not enabled");
+			}
+		}
+
+
+		/// \brief Inputs, Outputs and Parameters
+		module_config< Inputs, Outputs, Parameters > config_;
+
+
 		/// \brief Type of the exec-function
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-		using exec_fn_t =
-			std::result_of_t< EnableFn(module const&) >;
+		using exec_fn_t = std::result_of_t<
+			EnableFn(module_config< Inputs, Outputs, Parameters > const&) >;
 
-		static_assert(std::is_callable_v< exec_fn_t(module&, std::size_t) >);
+		static_assert(std::is_callable_v<
+			exec_fn_t(accessory_type&, std::size_t) >);
 #else
-		using exec_fn_t =
-			std::invoke_result_t< EnableFn, module const& >;
+		using exec_fn_t = std::invoke_result_t<
+			EnableFn, module_config< Inputs, Outputs, Parameters > const& >;
 
-		static_assert(std::is_invocable_v< exec_fn_t, module&, std::size_t >);
+		static_assert(std::is_invocable_v<
+			exec_fn_t, accessory_type&, std::size_t >);
 #endif
 
 
@@ -174,7 +280,33 @@ namespace disposer{
 
 		/// \brief The function object that is called in exec()
 		std::optional< exec_fn_t > exec_fn_;
+
+		/// \brief Module access object for exec_fn_
+		accessory_type accessory_;
 	};
+
+
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters,
+		typename EnableFn >
+	auto make_module_ptr(
+		std::string const& type_name,
+		std::string const& chain,
+		std::size_t number,
+		module_config< Inputs, Outputs, Parameters >&& config,
+		EnableFn&& enable_fn
+	){
+		return std::make_unique< module<
+				Inputs, Outputs, Parameters,
+				std::remove_const_t< std::remove_reference_t< EnableFn > >
+			> >(
+				type_name, chain, number,
+				std::move(config),
+				static_cast< EnableFn&& >(enable_fn)
+			);
+	}
 
 
 	template <
@@ -376,20 +508,14 @@ namespace disposer{
 				std::move(iop_list), hana::is_a< parameter_tag >));
 
 			// Create the module
-			auto module_ptr = std::make_unique< module<
-					decltype(inputs),
-					decltype(outputs),
-					decltype(parameters),
-					decltype(enable_fn)
-				> >(
+			return make_module_ptr(
 					data.type_name, data.chain, data.number,
-					std::move(inputs),
-					std::move(outputs),
-					std::move(parameters),
-					enable_fn
+					make_module_config(
+						std::move(inputs),
+						std::move(outputs),
+						std::move(parameters)
+					), enable_fn
 				);
-
-			return module_ptr;
 		}
 	};
 

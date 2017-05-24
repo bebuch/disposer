@@ -49,7 +49,28 @@ int main(){
 				disposer::configure(
 					"v"_in(hana::type_c< int >)
 				),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				[](auto const& config){
+					auto valid_type =
+						hana::type_c< decltype(config("v"_in)) >
+						== hana::type_c< disposer::input< decltype("v"_in),
+							disposer::no_transform, int > const& >;
+					static_assert(valid_type);
+
+					return [](auto& module, std::size_t){
+						auto valid_type =
+							hana::type_c< decltype(module("v"_in)) >
+							== hana::type_c< disposer::input< decltype("v"_in),
+								disposer::no_transform, int >& >;
+						static_assert(valid_type);
+
+						auto const& const_module = module;
+						auto valid_const_type =
+							hana::type_c< decltype(const_module("v"_in)) >
+							== hana::type_c< disposer::input< decltype("v"_in),
+								disposer::no_transform, int > const& >;
+						static_assert(valid_const_type);
+					};
+				}
 			);
 			register_fn("m2", declarant);
 		}
