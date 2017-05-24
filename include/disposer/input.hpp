@@ -94,18 +94,19 @@ namespace disposer{
 		using values_type = std::conditional_t<
 			type_count == 1,
 			typename decltype(+types[hana::int_c< 0 >])::type,
-			decltype(hana::unpack(types, hana::template_< std::variant >))
+			typename decltype(hana::unpack(
+				types, hana::template_< std::variant >))::type
 		>;
 
 		using references_type = std::conditional_t<
 			type_count == 1,
 			std::reference_wrapper<
 				typename decltype(+types[hana::int_c< 0 >])::type const >,
-			decltype(hana::unpack(
+			typename decltype(hana::unpack(
 				hana::transform(
 					hana::transform(types, hana::traits::add_const),
 					hana::template_< std::reference_wrapper >),
-				hana::template_< std::variant >))
+				hana::template_< std::variant >))::type
 		>;
 
 
@@ -144,7 +145,8 @@ namespace disposer{
 							result.emplace_hint(
 								result.end(),
 								carrier.id,
-								val_convert_rt(carrier.type, carrier.data)
+								val_convert_rt(
+									carrier.type, std::move(carrier.data))
 							);
 						}
 					});
@@ -152,11 +154,23 @@ namespace disposer{
 				for(auto& carrier: output_ptr()->get_references(
 					input_key(), current_id()
 				)){
-					result.emplace_hint(
-						result.end(),
-						carrier.id,
-						ref_convert_rt(carrier.type, carrier.data).get()
-					);
+					if constexpr(type_count == 1){
+						result.emplace_hint(
+							result.end(),
+							carrier.id,
+							ref_convert_rt(carrier.type, carrier.data).get()
+						);
+					}else{
+						result.emplace_hint(
+							result.end(),
+							carrier.id,
+							std::visit([](auto const& ref)->values_type{
+									return ref.get();
+								},
+								ref_convert_rt(carrier.type, carrier.data)
+							)
+						);
+					}
 				}
 			}
 			return result;
@@ -216,8 +230,7 @@ namespace disposer{
 		){
 			auto iter = val_map_.find(type);
 			assert(iter != val_map_.end());
-			return (iter->second)(data);
-
+			return (iter->second)(std::move(data));
 		}
 
 
@@ -254,8 +267,12 @@ namespace disposer{
 		typename input< Name, TypeTransformFn, T ... >::ref_convert_fn > const
 		input< Name, TypeTransformFn, T ... >::ref_map_ = {
 			{
-				type_index::type_id_with_cvr< T >(),
-				&input< Name, TypeTransformFn, T ... >::ref_convert< T >
+				type_index::type_id_with_cvr<
+					typename type_transform_fn< TypeTransformFn >
+						::template apply< T >::type >(),
+				&input< Name, TypeTransformFn, T ... >::ref_convert<
+					typename type_transform_fn< TypeTransformFn >
+						::template apply< T >::type >
 			} ...
 		};
 
@@ -264,8 +281,12 @@ namespace disposer{
 		typename input< Name, TypeTransformFn, T ... >::val_convert_fn > const
 		input< Name, TypeTransformFn, T ... >::val_map_ = {
 			{
-				type_index::type_id_with_cvr< T >(),
-				&input< Name, TypeTransformFn, T ... >::val_convert< T >
+				type_index::type_id_with_cvr<
+					typename type_transform_fn< TypeTransformFn >::
+						template apply< T >::type >(),
+				&input< Name, TypeTransformFn, T ... >::val_convert<
+					typename type_transform_fn< TypeTransformFn >::
+						template apply< T >::type >
 			} ...
 		};
 

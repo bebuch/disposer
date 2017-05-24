@@ -49,8 +49,8 @@ namespace disposer{
 
 		template < typename T >
 		struct apply{
-			using type = decltype(std::declval< type_transform_fn >()
-				(std::declval< T >()));
+			using type = typename decltype(std::declval< type_transform_fn >()
+				(std::declval< T >()))::type;
 		};
 
 		template < typename T >
