@@ -100,7 +100,7 @@ namespace disposer{
 		using references_type = std::conditional_t<
 			type_count == 1,
 			std::reference_wrapper<
-				typename decltype(+types[hana::int_c< 0 >])::type >,
+				typename decltype(+types[hana::int_c< 0 >])::type const >,
 			decltype(hana::unpack(
 				hana::transform(
 					hana::transform(types, hana::traits::add_const),

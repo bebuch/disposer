@@ -69,6 +69,17 @@ int main(){
 							== hana::type_c< disposer::input< decltype("v"_in),
 								disposer::no_transform, int > const& >;
 						static_assert(valid_const_type);
+
+						auto valid_value_type =  hana::type_c<
+							decltype(module("v"_in).get_values()) > ==
+							hana::type_c< std::multimap< std::size_t, int > >;
+						static_assert(valid_value_type );
+
+						auto valid_ref_type =  hana::type_c<
+							decltype(module("v"_in).get_references()) > ==
+							hana::type_c< std::multimap< std::size_t,
+								std::reference_wrapper< int const> > >;
+						static_assert(valid_ref_type);
 					};
 				}
 			);
