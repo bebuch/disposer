@@ -10,8 +10,6 @@
 #include <disposer/module_base.hpp>
 #include <disposer/create_chain_modules.hpp>
 
-#include <logsys/stdlogb.hpp>
-
 #include <numeric>
 
 

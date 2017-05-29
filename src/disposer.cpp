@@ -13,8 +13,6 @@
 #include <disposer/make_data.hpp>
 #include <disposer/module_base.hpp>
 
-#include <logsys/stdlogb.hpp>
-
 
 namespace disposer{
 

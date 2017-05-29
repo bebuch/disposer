@@ -18,9 +18,6 @@
 #include <string>
 #include <map>
 
-#include <logsys/stdlogb.hpp>
-#include <logsys/log.hpp>
-
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::specialized_parameter,

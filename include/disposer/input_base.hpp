@@ -19,7 +19,6 @@ namespace disposer{
 
 
 	struct module_base_key;
-
 	struct creator_key;
 
 	class output_base;
