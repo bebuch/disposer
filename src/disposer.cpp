@@ -13,6 +13,8 @@
 #include <disposer/make_data.hpp>
 #include <disposer/module_base.hpp>
 
+#include <logsys/stdlogb.hpp>
+
 
 namespace disposer{
 
@@ -26,7 +28,6 @@ namespace disposer{
 		){
 			std::unordered_map< std::string, chain > chains;
 			std::unordered_map< std::string, id_generator > id_generators;
-
 
 			for(auto& config_chain: config){
 				logsys::log([&config_chain](logsys::stdlogb& os){

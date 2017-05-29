@@ -11,6 +11,7 @@
 
 #include "config_fn.hpp"
 #include "input_base.hpp"
+
 #include "input_name.hpp"
 #include "output_base.hpp"
 #include "iop_list.hpp"
@@ -61,8 +62,11 @@ namespace disposer{
 
 		static constexpr auto types = hana::transform(subtypes, type_transform);
 
-		static constexpr std::size_t type_count = sizeof...(T);
 
+	template < typename T, typename ... U >
+	class input: public input_base{
+	public:
+		static constexpr auto value_types = hana::tuple_t< T, U ... >;
 
 		using enabled_map_type = decltype(hana::make_map(
 			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
@@ -90,6 +94,12 @@ namespace disposer{
 		static_assert(!hana::any_of(types, hana::traits::is_reference),
 			"disposer::input types must not be references");
 
+		static_assert(
+			!hana::fold(hana::transform(
+				value_types, hana::traits::is_reference
+			), false, std::logical_or<>()),
+			"disposer::input types are not allowed to be references"
+		);
 
 		using values_type = std::conditional_t<
 			type_count == 1,
@@ -176,7 +186,6 @@ namespace disposer{
 			return result;
 		}
 
-
 		constexpr bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
@@ -194,7 +203,6 @@ namespace disposer{
 		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
 			return is_enabled(type_transform(type));
 		}
-
 
 	private:
 		using ref_convert_fn = references_type(*)(any_type const& data);
@@ -257,7 +265,6 @@ namespace disposer{
 				enabled_map_[type_transform(hana::type_c< T >)]
 			} ... };
 
-
 		bool const last_use_;
 	};
 
@@ -290,6 +297,14 @@ namespace disposer{
 			} ...
 		};
 
+	template < typename T, typename ... U >
+	std::map<
+		type_index,
+		void(input< T, U ... >::*)(std::size_t, any_type const&, bool)
+	> const input< T, U ... >::type_map_ = {
+			{ type_id_with_cvr< T >(), &input< T, U ... >::add< T > },
+			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
+		};
 
 	/// \brief Provid types for constructing an input
 	template <

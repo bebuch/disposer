@@ -42,14 +42,16 @@ namespace disposer{
 		static constexpr auto type_transform =
 			type_transform_fn< TypeTransformFn >{};
 
-
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
 		static constexpr auto types =
 			hana::transform(subtypes, type_transform);
 
-		static constexpr std::size_t type_count = sizeof...(T);
 
+		template < typename T, typename ... U >
+		class output: public output_base{
+		public:
+			static constexpr auto value_types = hana::tuple_t< T, U ... >;
 
 		using enabled_map_type = decltype(hana::make_map(
 			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
@@ -238,8 +240,11 @@ namespace disposer{
 			if(next_id_ < id + 1) next_id_ = id + 1;
 		}
 
+      
+	} }
 
-		std::mutex mutex_;
+
+    std::mutex mutex_;
 
 		std::size_t next_id_{0};
 
@@ -278,6 +283,11 @@ namespace disposer{
 						enable(iop_list, subtype));
 				}), hana::make_map));
 		}
+	};
+
+	template < typename T, typename ... U >
+	struct output< type_list< T, U ... > >: output< T, U ... >{
+		using output< T, U ... >::output;
 	};
 
 
@@ -351,6 +361,30 @@ namespace disposer{
 				enable_fn< enable_always >{})
 		);
 	}
+
+	template < template< typename, typename ... > class Container, typename T >
+	struct container_output< Container, T >:
+		detail::output::container_output< Container, T >
+	{
+		using detail::output::container_output< Container, T >::container_output;
+
+		template < typename W >
+		auto put(W&& value){
+			detail::output::container_output< Container, T >::
+				template put< Container< T > >(static_cast< W&& >(value));
+		}
+	};
+
+	template <
+		template< typename, typename ... > class Container,
+		typename ... T
+	>
+	struct container_output< Container, type_list< T ... > >:
+		container_output< Container, T ... >
+	{
+		using container_output< Container, T ... >::container_output;
+	};
+
 
 
 }

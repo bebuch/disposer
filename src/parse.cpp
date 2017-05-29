@@ -11,13 +11,15 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
+
 #include <fstream>
 #include <string>
 #include <map>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
-
 
 
 BOOST_FUSION_ADAPT_STRUCT(
