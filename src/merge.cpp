@@ -18,67 +18,76 @@ namespace disposer{
 
 
 	types::merge::config merge(types::parse::config&& config){
+		using boost::adaptors::reverse;
+
 		std::map< std::string, types::parse::parameter_set& > parameter_sets;
 		for(auto& set: config.sets) parameter_sets.emplace(set.name, set);
 
 		types::merge::config result;
 
-		for(auto& module: config.modules){
-			auto pair = result.modules.emplace(
-				std::move(module.name),
-				types::merge::module{std::move(module.type_name), {}}
-			);
-
-			// successfully inserted
-			assert(pair.second);
-
-			auto& result_module = pair.first->second;
-
-			// add all parameters from module
-			for(auto& parameter: boost::adaptors::reverse(module.parameters)){
-				result_module.parameters.emplace(
-					std::move(parameter.key),
-					std::move(parameter.value)
-				);
-			}
-
-			// add all parameters from the last to the first parameter set
-			// (skip already existing ones)
-			for(auto& set: boost::adaptors::reverse(module.parameter_sets)){
-				auto iter = parameter_sets.find(set);
-
-				// set was found
-				assert(iter != parameter_sets.end());
-
-				for(auto& parameter: iter->second.parameters){
-					// parameter set parameters can not be moved
-					// (multiple use!)
-					result_module.parameters.emplace(
-						parameter.key,
-						parameter.value
-					);
-				}
-			}
-		}
-
 		for(auto& chain: config.chains){
-			auto group = chain.group.value_or("default");
-			result.chains.emplace_back(types::merge::chain{
+			result.emplace_back(types::merge::chain{
 				std::move(chain.name),
-				std::move(chain.id_generator).value_or(group),
-				group, {}
+				chain.id_generator.value_or("default"),
+				{}
 			});
 
-			auto& result_chain = result.chains.back();
+			auto& result_chain = result.back();
 
 			for(auto& module: chain.modules){
-				auto iter = result.modules.find(module.name);
+				std::map< std::string, parameter_data > parameters;
 
-				// module was found
-				assert(iter != result.modules.end());
+				// add all parameters from module
+				for(auto& parameter: reverse(module.parameters.parameters)){
+					std::map< std::string, std::string > specialized_values;
+					for(auto& specialization: parameter.specialized_values){
+						specialized_values.emplace(
+							std::move(specialization.type),
+							std::move(specialization.value)
+						);
+					}
 
-				result_chain.modules.emplace_back(types::merge::chain_module{
-					*iter, std::move(module.inputs), std::move(module.outputs)
+					parameters.emplace(
+						std::move(parameter.key), parameter_data{
+							std::move(parameter.generic_value),
+							std::move(specialized_values)
+						}
+					);
+				}
+
+				// add all parameters from the last to the first parameter set
+				// (skip already existing ones)
+				for(auto& set: reverse(module.parameters.parameter_sets)){
+					auto iter = parameter_sets.find(set);
+
+					// set was found
+					assert(iter != parameter_sets.end());
+
+					for(auto& parameter: iter->second.parameters){
+						// parameter set parameters can not be moved
+						// (multiple use!)
+						std::map< std::string, std::string > specialized_values;
+						for(auto& specialization: parameter.specialized_values){
+							specialized_values.emplace(
+								specialization.type,
+								specialization.value
+							);
+						}
+
+						parameters.emplace(
+							parameter.key, parameter_data{
+								parameter.generic_value,
+								std::move(specialized_values)
+							}
+						);
+					}
+				}
+
+				result_chain.modules.emplace_back(types::merge::module{
+					std::move(module.type_name),
+					std::move(parameters),
+					std::move(module.inputs),
+					std::move(module.outputs)
 				});
 			}
 		}

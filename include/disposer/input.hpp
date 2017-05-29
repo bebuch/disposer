@@ -9,20 +9,58 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
-#include "container_lists.hpp"
+#include "config_fn.hpp"
 #include "input_base.hpp"
-#include "input_data.hpp"
-#include "are_types_distinct.hpp"
+
+#include "input_name.hpp"
+#include "output_base.hpp"
+#include "iop_list.hpp"
+
+#include <io_tools/make_string.hpp>
 
 #include <variant>
-#include <set>
-#include <map>
+#include <optional>
+#include <unordered_map>
 
 
 namespace disposer{
 
 
-	using boost::typeindex::type_id_with_cvr;
+	template < typename Name, typename TypeTransformFn, typename ... T >
+	class input;
+
+	/// \brief Class input_key access key
+	struct input_key{
+	private:
+		/// \brief Constructor
+		constexpr input_key()noexcept = default;
+
+		template < typename Name, typename TypeTransformFn, typename ... T >
+		friend class input;
+	};
+
+
+	template < typename Name, typename TypeTransformFn, typename ... T >
+	class input: public input_base{
+	public:
+		static_assert(hana::is_a< input_name_tag, Name >);
+
+
+		using hana_tag = input_tag;
+
+
+		using name_type = Name;
+
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
+
+		static constexpr auto type_transform =
+			type_transform_fn< TypeTransformFn >{};
+
+		static constexpr auto subtypes = hana::tuple_t< T ... >;
+
+		static constexpr auto types = hana::transform(subtypes, type_transform);
 
 
 	template < typename T, typename ... U >
@@ -30,18 +68,31 @@ namespace disposer{
 	public:
 		static constexpr auto value_types = hana::tuple_t< T, U ... >;
 
-		using value_type = std::conditional_t<
-			sizeof...(U) == 0,
-			input_data< T >,
-			std::variant< input_data< T >, input_data< U > ... >
-		>;
+		using enabled_map_type = decltype(hana::make_map(
+			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
 
-		static_assert(
-			!hana::fold(hana::transform(
-				value_types, hana::traits::is_const
-			), false, std::logical_or<>()),
-			"disposer::input types are not allowed to be const"
-		);
+
+		static_assert(hana::length(subtypes) ==
+			hana::length(hana::to_set(subtypes)),
+			"disposer::input needs all subtypes T to be distinct");
+
+		static_assert(hana::length(types) == hana::length(hana::to_set(types)),
+			"disposer::input needs all types T to be distinct");
+
+		static_assert(type_count != 0,
+			"disposer::input needs at least on type");
+
+		static_assert(!hana::any_of(subtypes, hana::traits::is_const),
+			"disposer::input subtypes must not be const");
+
+		static_assert(!hana::any_of(subtypes, hana::traits::is_reference),
+			"disposer::input subtypes must not be references");
+
+		static_assert(!hana::any_of(types, hana::traits::is_const),
+			"disposer::input types must not be const");
+
+		static_assert(!hana::any_of(types, hana::traits::is_reference),
+			"disposer::input types must not be references");
 
 		static_assert(
 			!hana::fold(hana::transform(
@@ -50,136 +101,201 @@ namespace disposer{
 			"disposer::input types are not allowed to be references"
 		);
 
-		static_assert(
-			are_types_distinct_v< T, U ... >,
-			"disposer::input must have distict types"
-		);
+		using values_type = std::conditional_t<
+			type_count == 1,
+			typename decltype(+types[hana::int_c< 0 >])::type,
+			typename decltype(hana::unpack(
+				types, hana::template_< std::variant >))::type
+		>;
+
+		using references_type = std::conditional_t<
+			type_count == 1,
+			std::reference_wrapper<
+				typename decltype(+types[hana::int_c< 0 >])::type const >,
+			typename decltype(hana::unpack(
+				hana::transform(
+					hana::transform(types, hana::traits::add_const),
+					hana::template_< std::reference_wrapper >),
+				hana::template_< std::variant >))::type
+		>;
 
 
-		using input_base::input_base;
+		constexpr input(output_base* output, bool last_use)noexcept:
+			input_base(Name::value.c_str(), output), last_use_(last_use) {}
 
 
-		std::multimap< std::size_t, value_type > get(){
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-
-			std::multimap< std::size_t, value_type > result(
-				std::make_move_iterator(from), std::make_move_iterator(to)
-			);
-			data_.erase(from, to);
-
-			return result;
-		}
-
-		std::vector< type_index > enabled_types()const{
-			std::vector< type_index > result;
-			result.reserve(1 + sizeof...(U));
-			for(auto& type: enabled_map_){
-				if(type.second) result.push_back(type.first);
+		std::multimap< std::size_t, references_type > get_references(){
+			if(!output_ptr()){
+				throw std::logic_error("input is not linked to an output");
 			}
-			return result;
-		}
 
-
-		template < typename TransformFunction >
-		std::vector< type_index > enabled_types_transformed(
-// 			hana::basic_type< Out >(*fn)(hana::basic_type< In >)
-			TransformFunction fn
-		)const{
-			std::map< type_index, type_index > transform_map = {
-				{ type_id_with_cvr< T >(), type_id_with_cvr
-					< typename decltype(fn(hana::type_c< T >))::type >() },
-				{ type_id_with_cvr< U >(), type_id_with_cvr
-					< typename decltype(fn(hana::type_c< U >))::type >() } ...
-			};
-
-			std::vector< type_index > result;
-			result.reserve(1 + sizeof...(U));
-			for(auto& type: enabled_map_){
-				if(!type.second) continue;
-				result.push_back(transform_map.at(type.first));
-			}
-			return result;
-		}
-
-
-	private:
-		virtual void add(
-			std::size_t id,
-			any_type const& value,
-			type_index const& type,
-			bool last_use
-		)override{
-			auto iter = type_map_.find(type);
-			if(iter == type_map_.end()){
-				throw std::logic_error(
-					"unknown add type '" + type.pretty_name() +
-					"' in input + '" + name + "'"
+			std::multimap< std::size_t, references_type > result;
+			for(auto& carrier: output_ptr()->get_references(
+				input_key(), current_id()
+			)){
+				result.emplace_hint(
+					result.end(),
+					carrier.id,
+					ref_convert_rt(carrier.type, carrier.data)
 				);
 			}
-
-			// Call add< type >(id, value, last_use)
-			(this->*(iter->second))(id, value, last_use);
+			return result;
 		}
 
+		std::multimap< std::size_t, values_type > get_values(){
+			if(!output_ptr()){
+				throw std::logic_error("input is not linked to an output");
+			}
 
-		virtual void cleanup(std::size_t id)noexcept override{
-			std::lock_guard< std::mutex > lock(mutex_);
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-			data_.erase(from, to);
-		}
-
-		virtual std::vector< type_index > types()const override{
-			std::vector< type_index > result;
-			result.reserve(enabled_map_.size());
-			for(auto& pair: enabled_map_){
-				result.push_back(pair.first);
+			std::multimap< std::size_t, values_type > result;
+			if(last_use_){
+				output_ptr()->transfer_values(input_key(), current_id(),
+					[&result](std::vector< value_carrier >&& list){
+						for(auto& carrier: list){
+							result.emplace_hint(
+								result.end(),
+								carrier.id,
+								val_convert_rt(
+									carrier.type, std::move(carrier.data))
+							);
+						}
+					});
+			}else{
+				for(auto& carrier: output_ptr()->get_references(
+					input_key(), current_id()
+				)){
+					if constexpr(type_count == 1){
+						result.emplace_hint(
+							result.end(),
+							carrier.id,
+							ref_convert_rt(carrier.type, carrier.data).get()
+						);
+					}else{
+						result.emplace_hint(
+							result.end(),
+							carrier.id,
+							std::visit([](auto const& ref)->values_type{
+									return ref.get();
+								},
+								ref_convert_rt(carrier.type, carrier.data)
+							)
+						);
+					}
+				}
 			}
 			return result;
 		}
+
+		constexpr bool is_enabled()const noexcept{
+			return hana::any(hana::values(enabled_map_));
+		}
+
+		template < typename U >
+		constexpr bool
+		is_enabled(hana::basic_type< U > const& type)const noexcept{
+			auto const is_type_valid = hana::contains(enabled_map_, type);
+			static_assert(is_type_valid, "type in not an input type");
+			return enabled_map_[type];
+		}
+
+		template < typename U >
+		constexpr bool
+		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+			return is_enabled(type_transform(type));
+		}
+
+	private:
+		using ref_convert_fn = references_type(*)(any_type const& data);
+		using val_convert_fn = values_type(*)(any_type&& data);
+
+
+		static std::unordered_map< type_index, ref_convert_fn > const ref_map_;
+		static std::unordered_map< type_index, val_convert_fn > const val_map_;
+
+
+		template < typename U >
+		static references_type ref_convert(any_type const& data)noexcept{
+			return std::cref(reinterpret_cast< U const& >(data));
+		}
+
+		template < typename U >
+		static values_type val_convert(any_type&& data){
+			return reinterpret_cast< U&& >(data);
+		}
+
+		static references_type ref_convert_rt(
+			type_index const& type,
+			any_type const& data
+		)noexcept{
+			auto iter = ref_map_.find(type);
+			assert(iter != ref_map_.end());
+			return (iter->second)(data);
+		}
+
+		static values_type val_convert_rt(
+			type_index const& type,
+			any_type&& data
+		){
+			auto iter = val_map_.find(type);
+			assert(iter != val_map_.end());
+			return (iter->second)(std::move(data));
+		}
+
 
 		virtual bool enable_types(
 			std::vector< type_index > const& types
 		)noexcept override{
-			for(auto& type: types){
-				auto iter = enabled_map_.find(type);
+			for(auto const& type: types){
+				auto iter = rt_enabled_map_.find(type);
 
-				if(iter == enabled_map_.end()) return false;
+				if(iter == rt_enabled_map_.end()) return false;
 
-				iter->second = true;
+				iter->second.get() = true;
 			}
 
 			return true;
 		}
 
 
-		template < typename V >
-		void add(std::size_t id, any_type const& value, bool last_use){
-			auto data = reinterpret_cast< output_data_ptr< V > const& >(value);
+		enabled_map_type enabled_map_;
 
-			std::lock_guard< std::mutex > lock(mutex_);
-			data_.emplace(id, input_data< V >(data, last_use));
-		}
+		std::unordered_map< type_index, std::reference_wrapper< bool > > const
+			rt_enabled_map_ = { {
+				type_index::type_id_with_cvr< T >(),
+				enabled_map_[type_transform(hana::type_c< T >)]
+			} ... };
 
-
-		static std::map<
-			type_index, void(input::*)(std::size_t, any_type const&, bool)
-		> const type_map_;
-
-		std::map< type_index, bool > enabled_map_ = {
-			{ type_id_with_cvr< T >(), false },
-			{ type_id_with_cvr< U >(), false } ...
-		};
-
-		std::mutex mutex_;
-
-		std::multimap< std::size_t, value_type > data_;
+		bool const last_use_;
 	};
 
-	template < typename T, typename ... U >
-	class input< type_list< T, U ... > >: public input< T, U ... >{};
+
+	template < typename Name, typename TypeTransformFn, typename ... T >
+	std::unordered_map< type_index,
+		typename input< Name, TypeTransformFn, T ... >::ref_convert_fn > const
+		input< Name, TypeTransformFn, T ... >::ref_map_ = {
+			{
+				type_index::type_id_with_cvr<
+					typename type_transform_fn< TypeTransformFn >
+						::template apply< T >::type >(),
+				&input< Name, TypeTransformFn, T ... >::ref_convert<
+					typename type_transform_fn< TypeTransformFn >
+						::template apply< T >::type >
+			} ...
+		};
+
+	template < typename Name, typename TypeTransformFn, typename ... T >
+	std::unordered_map< type_index,
+		typename input< Name, TypeTransformFn, T ... >::val_convert_fn > const
+		input< Name, TypeTransformFn, T ... >::val_map_ = {
+			{
+				type_index::type_id_with_cvr<
+					typename type_transform_fn< TypeTransformFn >::
+						template apply< T >::type >(),
+				&input< Name, TypeTransformFn, T ... >::val_convert<
+					typename type_transform_fn< TypeTransformFn >::
+						template apply< T >::type >
+			} ...
+		};
 
 	template < typename T, typename ... U >
 	std::map<
@@ -190,22 +306,139 @@ namespace disposer{
 			{ type_id_with_cvr< U >(), &input< T, U ... >::add< U > } ...
 		};
 
+	/// \brief Provid types for constructing an input
 	template <
-		template< typename, typename ... > class Container, typename ... T
-	> struct container_input:
-		input< Container< T > ... >
-	{
-		using input< Container< T > ... >::input;
+		typename Name,
+		typename InputType,
+		typename ConnectionVerifyFn,
+		typename TypeVerifyFn >
+	struct input_maker{
+		/// \brief Tag for boost::hana
+		using hana_tag = input_maker_tag;
+
+		/// \brief Input name as compile time string
+		using name_type = Name;
+
+		/// \brief Name as hana::string
+		static constexpr auto name = Name::value;
+
+		/// \brief Type of a disposer::input
+		using type = InputType;
+
+		/// \brief Function which verifies the connection with an output
+		connection_verify_fn< ConnectionVerifyFn > connection_verify;
+
+		/// \brief Function which verifies the active types
+		type_verify_fn< TypeVerifyFn > type_verify;
+
+
+		template < typename IOP_List >
+		constexpr auto operator()(
+			IOP_List const& iop_list,
+			output_base* output,
+			bool last_use,
+			std::optional< output_info > const& info
+		)const{
+			auto input = type(output, last_use);
+			connection_verify(iop_list, static_cast< bool >(info));
+
+			if(info){
+				hana::for_each(type::types,
+					[this, &iop_list, &info](auto const& type){
+						type_verify(iop_list, type, *info);
+					});
+			}
+
+			return input;
+		}
 	};
 
-	template <
-		template< typename, typename ... > class Container, typename ... T
-	> struct container_input< Container, type_list< T ... > >:
-		container_input< Container, T ... >
-	{
-		using container_input< Container, T ... >::container_input;
-	};
 
+	template <
+		typename Name,
+		typename Types,
+		typename TypeTransformFn,
+		typename ConnectionVerifyFn,
+		typename TypeVerifyFn >
+	constexpr auto create_input_maker(
+		Name const&,
+		Types const&,
+		type_transform_fn< TypeTransformFn >&&,
+		connection_verify_fn< ConnectionVerifyFn >&& connection_verify,
+		type_verify_fn< TypeVerifyFn >&& type_verify
+	){
+		constexpr auto typelist = to_typelist(Types{});
+
+		constexpr auto unpack_types =
+			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
+
+		constexpr auto type_input =
+			hana::unpack(unpack_types, hana::template_< input >);
+
+		return input_maker< Name, typename decltype(type_input)::type,
+			ConnectionVerifyFn, TypeVerifyFn >{
+				std::move(connection_verify),
+				std::move(type_verify)
+			};
+	}
+
+
+	template < char ... C >
+	template <
+		typename Types,
+		typename Arg2,
+		typename Arg3,
+		typename Arg4 >
+	constexpr auto input_name< C ... >::operator()(
+		Types const& types,
+		Arg2&& arg2,
+		Arg3&& arg3,
+		Arg4&& arg4
+	)const{
+		constexpr auto valid_argument = [](auto const& arg){
+				return hana::is_a< type_transform_fn_tag >(arg)
+					|| hana::is_a< connection_verify_fn_tag >(arg)
+					|| hana::is_a< type_verify_fn_tag >(arg)
+					|| hana::is_a< no_argument_tag >(arg);
+			};
+
+		auto const arg2_valid = valid_argument(arg2);
+		static_assert(arg2_valid, "argument 2 is invalid");
+		auto const arg3_valid = valid_argument(arg3);
+		static_assert(arg3_valid, "argument 3 is invalid");
+		auto const arg4_valid = valid_argument(arg4);
+		static_assert(arg4_valid, "argument 4 is invalid");
+
+		auto args = hana::make_tuple(
+			static_cast< Arg2&& >(arg2),
+			static_cast< Arg3&& >(arg3),
+			static_cast< Arg4&& >(arg4)
+		);
+
+		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(tt, "more than one type_transform_fn");
+		auto cv = hana::count_if(args, hana::is_a< connection_verify_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(cv, "more than one connection_verify_fn");
+		auto tv = hana::count_if(args, hana::is_a< type_verify_fn_tag >)
+			<= hana::size_c< 1 >;
+		static_assert(tv, "more than one type_verify_fn");
+
+		return create_input_maker(
+			(*this),
+			types,
+			get_or_default(std::move(args),
+				hana::is_a< type_transform_fn_tag >,
+				type_transform_fn< no_transform >{}),
+			get_or_default(std::move(args),
+				hana::is_a< connection_verify_fn_tag >,
+				connection_verify_fn< connection_verify_always >{}),
+			get_or_default(std::move(args),
+				hana::is_a< type_verify_fn_tag >,
+				type_verify_fn< type_verify_always >{})
+		);
+	}
 
 }
 

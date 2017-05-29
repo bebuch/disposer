@@ -17,12 +17,24 @@
 namespace disposer{
 
 
-	namespace types{ namespace parse{
+	enum class in_transfer{
+		copy,
+		move
+	};
 
+
+	namespace types::parse{
+
+
+		struct specialized_parameter{
+			std::string type;
+			std::string value;
+		};
 
 		struct parameter{
 			std::string key;
-			std::string value;
+			std::optional< std::string > generic_value;
+			std::vector< specialized_parameter > specialized_values;
 		};
 
 		struct parameter_set{
@@ -32,33 +44,33 @@ namespace disposer{
 
 		using parameter_sets = std::vector< parameter_set >;
 
-
-		struct module{
+		struct in{
 			std::string name;
-			std::string type_name;
-			std::vector< std::string > parameter_sets;
-			std::vector< parameter > parameters;
+			in_transfer transfer;
+			std::string variable;
 		};
 
-		using modules = std::vector< module >;
-
-
-		struct io{
+		struct out{
 			std::string name;
 			std::string variable;
 		};
 
-		struct chain_module{
-			std::string name;
-			std::vector< io > inputs;
-			std::vector< io > outputs;
+		struct module_parameters{
+			std::vector< std::string > parameter_sets;
+			std::vector< parameter > parameters;
+		};
+
+		struct module{
+			std::string type_name;
+			module_parameters parameters;
+			std::vector< in > inputs;
+			std::vector< out > outputs;
 		};
 
 		struct chain{
 			std::string name;
-			std::optional< std::string > group;
 			std::optional< std::string > id_generator;
-			std::vector< chain_module > modules;
+			std::vector< module > modules;
 		};
 
 		using chains = std::vector< chain >;
@@ -66,12 +78,11 @@ namespace disposer{
 
 		struct config{
 			parse::parameter_sets sets;
-			parse::modules modules;
 			parse::chains chains;
 		};
 
 
-	} }
+	}
 
 
 	types::parse::config parse(std::istream& is);

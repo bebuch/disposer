@@ -18,14 +18,21 @@
 namespace disposer{
 
 
+	/// \brief Class disposer access key
+	struct chain_key{
+	private:
+		/// \brief Constructor
+		constexpr chain_key()noexcept = default;
+		friend class chain;
+	};
+
+
 	chain::chain(
 		module_maker_list const& maker_list,
 		types::merge::chain const& config_chain,
-		id_generator& generate_id,
-		std::string const& group
+		id_generator& generate_id
 	):
 		name(config_chain.name),
-		group(group),
 		modules_(create_chain_modules(maker_list, config_chain)),
 		id_increase_(std::accumulate(
 			modules_.cbegin(),
@@ -126,16 +133,18 @@ namespace disposer{
 
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
-		logsys::log([this](logsys::stdlogb& os){
+		logsys::log(
+			[this](logsys::stdlogb& os){
 				os << "chain '" << name << "' enable";
-			}, [this]{
+			},
+			[this]{
 				std::size_t i = 0;
 				try{
 					// enable all modules
 					for(; i < modules_.size(); ++i){
 						logsys::log([this, i](logsys::stdlogb& os){
 								os << "chain '" << name << "' module '"
-									<< modules_[i]->name << "' enable";
+									<< modules_[i]->number << "' enable";
 							}, [this, i]{
 								modules_[i]->enable(chain_key());
 							});
@@ -145,9 +154,9 @@ namespace disposer{
 					for(std::size_t j = 0; j < i; ++j){
 						logsys::log([this, i, j](logsys::stdlogb& os){
 								os << "chain '" << name << "' module '"
-									<< modules_[j]->name
+									<< modules_[j]->number
 									<< "' disable because of exception while "
-									<< "enable module '" << modules_[i]->name
+									<< "enable module '" << modules_[i]->number
 									<< "'";
 							}, [this, j]{
 								modules_[j]->disable(chain_key());
@@ -169,14 +178,16 @@ namespace disposer{
 
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
-		logsys::log([this](logsys::stdlogb& os){
+		logsys::log(
+			[this](logsys::stdlogb& os){
 				os << "chain '" << name << "' disable";
-			}, [this]{
+			},
+			[this]{
 				// disable all modules
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					logsys::log([this, i](logsys::stdlogb& os){
 							os << "chain '" << name << "' module '"
-								<< modules_[i]->name << "' disable";
+								<< modules_[i]->number << "' disable";
 						}, [this, i]{
 							modules_[i]->disable(chain_key());
 						});
@@ -200,7 +211,7 @@ namespace disposer{
 		logsys::log([this, i, action_name](logsys::stdlogb& os){
 			os << "id(" << modules_[i]->id << "." << i << ") " << action_name
 				<< " chain '" << modules_[i]->chain << "' module '"
-				<< modules_[i]->name << "'";
+				<< modules_[i]->number << "'";
 		}, [this, i, &action]{ action(*this, i); });
 
 		// make module ready

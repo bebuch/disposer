@@ -12,15 +12,25 @@
 namespace disposer{
 
 
+	/// \brief Class module_base access key
+	struct module_base_key{
+	private:
+		/// \brief Constructor
+		constexpr module_base_key()noexcept = default;
+		friend class module_base;
+	};
+
+
 	module_base::module_base(
-		make_data const& data,
+		std::string const& type_name,
+		std::string const& chain,
+		std::size_t number,
 		input_list&& inputs,
 		output_list&& outputs
 	):
-		type_name(data.type_name),
-		chain(data.chain),
-		name(data.name),
-		number(data.number),
+		type_name(type_name),
+		chain(chain),
+		number(number),
 		id_increase(1),
 		id(id_),
 		id_(0),
@@ -28,21 +38,14 @@ namespace disposer{
 		outputs_(std::move(outputs))
 		{}
 
-	module_base::module_base(
-		make_data const& data,
-		output_list&& outputs,
-		input_list&& inputs
-	):
-		module_base(data, std::move(inputs), std::move(outputs)){}
 
-
-	void module_base::cleanup(chain_key, std::size_t id)noexcept{
-		for(auto& input: inputs_){
-			input.get().cleanup(module_base_key(), id);
+	void module_base::cleanup(chain_key&&, std::size_t id)noexcept{
+		for(auto& output: outputs_){
+			output.get().cleanup(module_base_key(), id);
 		}
 	}
 
-	void module_base::set_id(chain_key, std::size_t id){
+	void module_base::set_id(chain_key&&, std::size_t id){
 		id_ = id;
 		for(auto& input: inputs_){
 			input.get().set_id(module_base_key(), id);
@@ -51,6 +54,16 @@ namespace disposer{
 			output.get().set_id(module_base_key(), id);
 		}
 	}
+
+	std::map< std::string, output_base* >
+	module_base::get_outputs(creator_key&&)const{
+		std::map< std::string, output_base* > map;
+		for(auto output: outputs_){
+			map.emplace(output.get().name, &output.get());
+		}
+		return map;
+	}
+
 
 
 }

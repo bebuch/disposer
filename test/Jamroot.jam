@@ -65,3 +65,35 @@ exe parse_check
 	parse_check.cpp
 	/disposer//disposer
 	;
+
+exe output
+	:
+	output.cpp
+	/disposer//disposer
+	;
+
+exe input
+	:
+	input.cpp
+	/disposer//disposer
+	;
+
+exe parameter
+	:
+	parameter.cpp
+	/disposer//disposer
+	;
+
+exe module_test
+	:
+	module_test.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe register
+	:
+	register.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;

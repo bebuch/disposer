@@ -28,23 +28,13 @@ namespace disposer{
 		){
 			std::unordered_map< std::string, chain > chains;
 			std::unordered_map< std::string, id_generator > id_generators;
-			std::unordered_map<
-				std::string, std::vector< std::reference_wrapper< chain > >
-			> groups;
 
-			for(auto& config_chain: config.chains){
+			for(auto& config_chain: config){
 				logsys::log([&config_chain](logsys::stdlogb& os){
 					os << "create chain '" << config_chain.name << "'";
 				}, [&](){
-					// add the new group if not exist and get pointer
-					auto group_iter = groups.emplace(
-						std::piecewise_construct,
-						std::make_tuple(config_chain.group),
-						std::make_tuple()
-					).first;
-
 					// emplace the new process chain
-					auto chain_iter = chains.emplace(
+					chains.emplace(
 						std::piecewise_construct,
 						std::forward_as_tuple(
 							config_chain.name
@@ -52,20 +42,15 @@ namespace disposer{
 						std::forward_as_tuple(
 							maker_list,
 							config_chain,
-							id_generators[config_chain.id_generator],
-							group_iter->first
+							id_generators[config_chain.id_generator]
 						)
-					).first;
-
-					// add chain to group
-					group_iter->second.push_back(chain_iter->second);
+					);
 				});
 			}
 
 			return std::make_tuple(
 				std::move(chains),
-				std::move(id_generators),
-				std::move(groups)
+				std::move(id_generators)
 			);
 		}
 
@@ -78,18 +63,18 @@ namespace disposer{
 
 	void module_declarant::operator()(
 		std::string const& type_name,
-		module_maker_function&& function
+		module_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "register module type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.maker_list_.insert(
-				std::make_pair(type_name, std::move(function))
+				std::make_pair(type_name, std::move(fn))
 			);
 
 			if(!iter.second){
 				throw std::logic_error(
-					"Module type name '" + type_name + "' is double registered!"
+					"module type name '" + type_name + "' is double registered!"
 				);
 			}
 		});
@@ -118,7 +103,7 @@ namespace disposer{
 
 		logsys::log([](logsys::stdlogb& os){ os << "create chains"; },
 			[this, &merged_config](){
-				std::tie(chains_, id_generators_, groups_) =
+				std::tie(chains_, id_generators_) =
 					create_chains(maker_list_, std::move(merged_config));
 			});
 	}
@@ -136,24 +121,6 @@ namespace disposer{
 	std::unordered_set< std::string > disposer::chains()const{
 		std::unordered_set< std::string > result;
 		for(auto& chain: chains_) result.emplace(chain.first);
-		return result;
-	}
-
-	std::vector< std::string > disposer::chains(
-		std::string const& group
-	)const{
-		auto iter = groups_.find(group);
-		if(iter == groups_.end()) return {};
-
-		std::vector< std::string > result;
-		result.reserve(iter->second.size());
-		for(auto& chain: iter->second) result.emplace_back(chain.get().name);
-		return result;
-	}
-
-	std::unordered_set< std::string > disposer::groups()const{
-		std::unordered_set< std::string > result;
-		for(auto& group: groups_) result.emplace(group.first);
 		return result;
 	}
 

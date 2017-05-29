@@ -13,6 +13,9 @@
 #include "id_generator.hpp"
 #include "merge.hpp"
 
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
+
 #include <mutex>
 #include <string>
 #include <vector>
@@ -34,14 +37,12 @@ namespace disposer{
 		///
 		/// \param config_chain configuration data from config file
 		/// \param generate_id Reference to a id_generator
-		/// \param group A reference to the group name
 		///
 		/// The id increase for the id_generator is calculated over all modules.
 		chain(
 			module_maker_list const& maker_list,
 			types::merge::chain const& config_chain,
-			id_generator& generate_id,
-			std::string const& group
+			id_generator& generate_id
 		);
 
 
@@ -90,9 +91,6 @@ namespace disposer{
 
 		/// \brief Name of the chain
 		std::string const name;
-
-		/// \brief Reference to the group name
-		std::string const& group;
 
 
 	private:

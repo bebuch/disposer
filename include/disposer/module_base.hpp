@@ -22,13 +22,7 @@
 namespace disposer{
 
 
-	/// \brief Class disposer access key
-	struct chain_key{
-	private:
-		/// \brief Constructor
-		constexpr chain_key()noexcept = default;
-		friend class chain;
-	};
+	struct chain_key;
 
 
 	/// \brief Exception class for modules that need input variables
@@ -53,18 +47,13 @@ namespace disposer{
 			std::vector< std::reference_wrapper< output_base > >;
 
 
-		/// \brief Constructor with optional outputs
+		/// \brief Constructor
 		module_base(
-			make_data const& data,
+			std::string const& type_name,
+			std::string const& chain,
+			std::size_t number,
 			input_list&& inputs,
-			output_list&& outputs = {}
-		);
-
-		/// \brief Constructor with optional inputs
-		module_base(
-			make_data const& data,
-			output_list&& outputs,
-			input_list&& inputs = {}
+			output_list&& outputs
 		);
 
 		/// \brief Modules are not copyable
@@ -107,36 +96,29 @@ namespace disposer{
 
 
 		/// \brief Set for next exec ID
-		void set_id(chain_key, std::size_t id);
+		void set_id(chain_key&&, std::size_t id);
 
 
 		/// \brief Call the actual worker function exec()
-		void exec(chain_key){ exec(); }
+		void exec(chain_key&&){ exec(); }
 
 
 		/// \brief Call the actual enable() function
-		void enable(chain_key){ enable(); }
+		void enable(chain_key&&){ enable(); }
 
 		/// \brief Call the actual disable() function
-		void disable(chain_key)noexcept{ disable(); }
-
-
-		/// \brief Call input_ready()
-		void input_ready(creator_key){ input_ready(); }
+		void disable(chain_key&&)noexcept{ disable(); }
 
 
 		/// \brief Called for a modules wich failed by exception and all
 		///        following modules in the chain instead of exec()
 		///
 		/// Removes all input data whichs ID is less or equal to the actual ID.
-		void cleanup(chain_key, std::size_t id)noexcept;
+		void cleanup(chain_key&&, std::size_t id)noexcept;
 
 
-		/// \brief Access to internal inputs_
-		input_list& inputs(creator_key){ return inputs_; }
-
-		/// \brief Access to internal outputs_
-		output_list& outputs(creator_key){ return outputs_; }
+		/// \brief Map from output names to addresses
+		std::map< std::string, output_base* > get_outputs(creator_key&&)const;
 
 
 		/// \brief Name of the module type given via class module_declarant
@@ -145,12 +127,9 @@ namespace disposer{
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
 
-		/// \brief Name of the module in config file section 'module'
-		std::string const name;
-
 		/// \brief Position of the module in the process chain
 		///
-		/// The first module has number 0, the second 1 and so on.
+		/// The first module has number 1.
 		std::size_t const number;
 
 
@@ -173,27 +152,15 @@ namespace disposer{
 
 
 	protected:
-		/// \brief The actual worker function called one times per trigger
-		virtual void exec() = 0;
-
-
 		/// \brief Enables the module for exec calls
-		///
-		/// By default the function does nothing.
-		virtual void enable(){}
+		virtual void enable() = 0;
 
 		/// \brief Disables the module for exec calls
-		///
-		/// By default the function does nothing.
-		virtual void disable()noexcept{}
+		virtual void disable()noexcept = 0;
 
 
-
-
-		/// \brief Called while module creation after the inputs are set
-		///
-		/// You should enable your outputs in this function.
-		virtual void input_ready(){}
+		/// \brief The actual worker function called one times per trigger
+		virtual void exec() = 0;
 
 
 	private:
@@ -214,7 +181,7 @@ namespace disposer{
 			using log_t = logsys::detail::extract_log_t< Log >;
 			return [&](log_t& os){
 				os << "id(" << id << "." << number << ") exec chain '"
-					<< chain << "' module '" << name << "': ";
+					<< chain << "': ";
 				log(os);
 			};
 		}

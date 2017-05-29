@@ -28,6 +28,15 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	template < typename T >
+	std::ostream& operator<<(std::ostream& os, std::optional< T > const& v){
+		os << '{';
+		if(v) std::operator<<(os, *v);
+		os << '}';
+
+		return os;
+	}
+
+	template < typename T >
 	std::ostream& operator<<(std::ostream& os, std::vector< T > const& v){
 		os << '{';
 		auto iter = v.cbegin();
@@ -38,36 +47,56 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 
+	std::ostream& operator<<(std::ostream& os, specialized_parameter const& v){
+		return os << "{" << v.type << "," << v.value << "}";
+	}
+
 	std::ostream& operator<<(std::ostream& os, parameter const& v){
-		return os << "{" << v.key << "," << v.value << "}";
+		return os << "{" << v.key << "," << v.generic_value << ","
+			<< v.specialized_values << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, parameter_set const& v){
 		return os << "{" << v.name << "," << v.parameters << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, module const& v){
-		return os << "{" << v.name << "," << v.type_name << ","
-			<< v.parameter_sets << "," << v.parameters << "}";
+	std::ostream& operator<<(std::ostream& os, in const& v){
+		os << "{" << v.name << ",";
+		switch(v.transfer){
+			case disposer::in_transfer::copy: os << '&'; break;
+			case disposer::in_transfer::move: os << '<'; break;
+		}
+		return os << "," << v.variable << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, io const& v){
+	std::ostream& operator<<(std::ostream& os, out const& v){
 		return os << "{" << v.name << "," << v.variable << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, chain_module const& v){
-		return os << "{" << v.name << "," << v.inputs << ","
-			<< v.outputs << "}";
+	std::ostream& operator<<(std::ostream& os, module_parameters const& v){
+		return os << "{" << v.parameter_sets << "," << v.parameters << "}";
+	}
+
+	std::ostream& operator<<(std::ostream& os, module const& v){
+		return os << "{" << v.type_name << "," << v.parameters << ","
+			<< v.inputs << "," << v.outputs << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, chain const& v){
-		return os << "{" << v.name << "," << *v.group << ","
+		return os << "{" << v.name << ","
 			<< *v.id_generator << "," << v.modules << "}";
 	}
 
 	std::ostream& operator<<(std::ostream& os, config const& v){
-		return os << "{" << v.sets << "," << v.modules << ","
-			<< v.chains << "}";
+		return os << "{" << v.sets << "," << v.chains << "}";
+	}
+
+	bool operator==(
+		specialized_parameter const& l,
+		specialized_parameter const& r
+	){
+		return l.type == r.type
+			&& l.value == r.value;
 	}
 
 	bool operator==(
@@ -75,7 +104,8 @@ namespace disposer{ namespace types{ namespace parse{
 		parameter const& r
 	){
 		return l.key == r.key
-			&& l.value == r.value;
+			&& l.generic_value == r.generic_value
+			&& l.specialized_values == r.specialized_values;
 	}
 
 	bool operator==(
@@ -87,28 +117,36 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
-		module const& l,
-		module const& r
+		in const& l,
+		in const& r
 	){
 		return l.name == r.name
-			&& l.type_name == r.type_name
-			&& l.parameter_sets == r.parameter_sets
-			&& l.parameters == r.parameters;
+			&& l.transfer == r.transfer
+			&& l.variable == r.variable;
 	}
 
 	bool operator==(
-		io const& l,
-		io const& r
+		out const& l,
+		out const& r
 	){
 		return l.name == r.name
 			&& l.variable == r.variable;
 	}
 
 	bool operator==(
-		chain_module const& l,
-		chain_module const& r
+		module_parameters const& l,
+		module_parameters const& r
 	){
-		return l.name == r.name
+		return l.parameter_sets == r.parameter_sets
+			&& l.parameters == r.parameters;
+	}
+
+	bool operator==(
+		module const& l,
+		module const& r
+	){
+		return l.type_name == r.type_name
+			&& l.parameters == r.parameters
 			&& l.inputs == r.inputs
 			&& l.outputs == r.outputs;
 	}
@@ -118,7 +156,6 @@ namespace disposer{ namespace types{ namespace parse{
 		chain const& r
 	){
 		return l.name == r.name
-			&& l.group == r.group
 			&& l.id_generator == r.id_generator
 			&& l.modules == r.modules;
 	}
@@ -128,7 +165,6 @@ namespace disposer{ namespace types{ namespace parse{
 		config const& r
 	){
 		return l.sets == r.sets
-			&& l.modules == r.modules
 			&& l.chains == r.chains;
 	}
 
@@ -164,15 +200,20 @@ std::vector< std::pair< std::string, config > > tests{
 R"file(parameter_set
 	ps1
 		param1 = v1
-module
-	mod1 = dmod1
-		parameter_set = ps1
-		param2 = v2
+			uint8 = 4
+		param2
+			uint16 = 2
 chain
 	chain1
-		mod1
+		dmod1
+			parameter
+				parameter_set = ps1
+				param3 = v3
+					uint8 = 4
+				param4
+					uint16 = 2
 			->
-				out = x1
+				out = >x1
 )file"
 	,
 		config{
@@ -180,18 +221,8 @@ chain
 				{
 					"ps1",
 					{
-						{"param1", "v1"}
-					}
-				}
-			},
-			{
-				{
-					"mod1",
-					"dmod1",
-					{
-						{"ps1"}
-					}, {
-						{"param2", "v2"}
+						{"param1", {"v1"}, {{"uint8", "4"}}},
+						{"param2", {}, {{"uint16", "2"}}}
 					}
 				}
 			},
@@ -199,10 +230,17 @@ chain
 				{
 					"chain1",
 					{},
-					{},
 					{
 						{
-							"mod1",
+							"dmod1",
+							{
+								{
+									{"ps1"}
+								}, {
+									{"param3", {"v3"}, {{"uint8", "4"}}},
+									{"param4", {}, {{"uint16", "2"}}}
+								}
+							},
 							{},
 							{
 								{"out", "x1"}
