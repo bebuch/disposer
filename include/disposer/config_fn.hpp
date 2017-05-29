@@ -114,10 +114,33 @@ namespace disposer{
 
 
 		template < typename IOP_List, typename T >
+		static constexpr bool calc_noexcept()noexcept{
+#if __clang__
+			static_assert(
+				std::is_callable_v< Fn const(IOP_List const&,
+					hana::basic_type< T >), bool >,
+				"Wrong function signature, expected: "
+				"bool f(auto const& iop, hana::basic_type< T > type)"
+			);
+#else
+			static_assert(
+				std::is_invocable_r_v< bool, Fn const, IOP_List const&,
+					hana::basic_type< T > >,
+				"Wrong function signature, expected: "
+				"bool f(auto const& iop, hana::basic_type< T > type)"
+			);
+#endif
+			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_List const >(),
+				std::declval< hana::basic_type< T > const >()
+			));
+		}
+
+		template < typename IOP_List, typename T >
 		constexpr bool operator()(
 			IOP_List const& iop_list,
 			hana::basic_type< T > type
-		)const noexcept(noexcept(std::declval< Fn const >()(iop_list, type))){
+		)const noexcept(calc_noexcept< IOP_List, T >()){
 			return fn_(iop_list, type);
 		}
 
@@ -189,12 +212,32 @@ namespace disposer{
 
 
 		template < typename IOP_List >
+		static constexpr bool calc_noexcept()noexcept{
+#if __clang__
+			static_assert(
+				std::is_callable_v< Fn const(IOP_List const&, bool) >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, bool connected)"
+			);
+#else
+			static_assert(
+				std::is_invocable_v< Fn const, IOP_List const&, bool >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, bool connected)"
+			);
+#endif
+			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_List const >(),
+				std::declval< bool >()
+			));
+		}
+
+
+		template < typename IOP_List >
 		constexpr void operator()(
 			IOP_List const& iop_list,
 			bool connected
-		)const noexcept(noexcept(
-			std::declval< Fn const >()(iop_list, connected)
-		)){
+		)const noexcept(calc_noexcept< IOP_List >()){
 			fn_(iop_list, connected);
 		}
 
@@ -244,13 +287,37 @@ namespace disposer{
 
 
 		template < typename IOP_List, typename T >
+		static constexpr bool calc_noexcept()noexcept{
+#if __clang__
+			static_assert(
+				std::is_callable_v< Fn const(IOP_List const&,
+					hana::basic_type< T >, output_info const&) >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, hana::basic_type< T > type, "
+				"output_info const& info)"
+			);
+#else
+			static_assert(
+				std::is_invocable_v< Fn const, IOP_List const&,
+					hana::basic_type< T >, output_info const& >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, hana::basic_type< T > type, "
+				"output_info const& info)"
+			);
+#endif
+			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_List const >(),
+				std::declval< hana::basic_type< T > const >(),
+				std::declval< output_info const& >()
+			));
+		}
+
+		template < typename IOP_List, typename T >
 		constexpr void operator()(
 			IOP_List const& iop_list,
 			hana::basic_type< T > type,
 			output_info const& info
-		)const noexcept(noexcept(
-			std::declval< Fn const >()(iop_list, type, info)
-		)){
+		)const noexcept(calc_noexcept< IOP_List, T >()){
 			fn_(iop_list, type, info);
 		}
 
@@ -295,10 +362,31 @@ namespace disposer{
 
 
 		template < typename IOP_List, typename T >
+		static constexpr bool calc_noexcept()noexcept{
+#if __clang__
+			static_assert(
+				std::is_callable_v< Fn const(IOP_List const&, T const&) >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, auto const& value)"
+			);
+#else
+			static_assert(
+				std::is_invocable_v< Fn const, IOP_List const&, T const& >,
+				"Wrong function signature, expected: "
+				"void f(auto const& iop, auto const& value)"
+			);
+#endif
+			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_List const >(),
+				std::declval< T const >()
+			));
+		}
+
+		template < typename IOP_List, typename T >
 		constexpr void operator()(
 			IOP_List const& iop_list,
 			T const& value
-		)const noexcept(noexcept(std::declval< Fn const >()(iop_list, value))){
+		)const noexcept(calc_noexcept< IOP_List, T >()){
 			fn_(iop_list, value);
 		}
 
@@ -355,10 +443,33 @@ namespace disposer{
 
 
 		template < typename T >
+		static constexpr bool calc_noexcept()noexcept{
+#if __clang__
+			static_assert(
+				std::is_callable_v< Fn const(std::string_view,
+					hana::basic_type< T >), T >,
+				"Wrong function signature, expected: "
+				"T f(std::string_view value, hana::basic_type< T > type)"
+			);
+#else
+			static_assert(
+				std::is_invocable_r_v< T, Fn const, std::string_view,
+					hana::basic_type< T > >,
+				"Wrong function signature, expected: "
+				"T f(std::string_view value, hana::basic_type< T > type)"
+			);
+#endif
+			return noexcept(std::declval< Fn const >()(
+				std::declval< std::string_view >(),
+				std::declval< hana::basic_type< T > >()
+			));
+		}
+
+		template < typename T >
 		constexpr T operator()(
 			std::string_view value,
 			hana::basic_type< T > type
-		)const noexcept(noexcept(std::declval< Fn const >()(value, type))){
+		)const noexcept(calc_noexcept< T >()){
 			return fn_(value, type);
 		}
 
