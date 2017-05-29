@@ -84,15 +84,15 @@ namespace disposer{
 
 
 		/// \brief Access the value if parameter has only one type
-		decltype(auto) operator()()const{
+		decltype(auto) get()const{
 			static_assert(type_count == 1,
-				"you must call with a type: parameter(hana::type_c< Type >)");
-			return (*this)(types[hana::int_c< 0 >]);
+				"you must call with a type: get(hana::type_c< Type >)");
+			return get(types[hana::int_c< 0 >]);
 		}
 
 		/// \brief Access parameter of given type
 		template < typename Type >
-		decltype(auto) operator()(Type const& type)const{
+		decltype(auto) get(Type const& type)const{
 			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
 					"accessed parameter '", name.c_str(),
