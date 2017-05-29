@@ -403,9 +403,10 @@ namespace disposer{
 
 
 	struct stream_parser{
-		template < typename T >
+		template < typename IOP_List, typename T >
 		T operator()(
-			std::string_view  value ,
+			IOP_List const& /*iop_list*/,
+			std::string_view value,
 			hana::basic_type< T > type
 		)const{
 			if constexpr(type == hana::type_c< std::string >){
@@ -442,35 +443,39 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename T >
+		template < typename IOP_List, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(std::string_view,
-					hana::basic_type< T >), T >,
+				std::is_callable_v< Fn const(IOP_List const&,
+					std::string_view, hana::basic_type< T >), T >,
 				"Wrong function signature, expected: "
-				"T f(std::string_view value, hana::basic_type< T > type)"
+				"T f(auto const& iop, std::string_view value, "
+				"hana::basic_type< T > type)"
 			);
 #else
 			static_assert(
-				std::is_invocable_r_v< T, Fn const, std::string_view,
-					hana::basic_type< T > >,
+				std::is_invocable_r_v< T, Fn const, IOP_List const&,
+					std::string_view, hana::basic_type< T > >,
 				"Wrong function signature, expected: "
-				"T f(std::string_view value, hana::basic_type< T > type)"
+				"T f(auto const& iop, std::string_view value, "
+				"hana::basic_type< T > type)"
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_List const >(),
 				std::declval< std::string_view >(),
 				std::declval< hana::basic_type< T > >()
 			));
 		}
 
-		template < typename T >
+		template < typename IOP_List, typename T >
 		constexpr T operator()(
+			IOP_List const& iop_list,
 			std::string_view value,
 			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< T >()){
-			return fn_(value, type);
+		)const noexcept(calc_noexcept< IOP_List, T >()){
+			return fn_(iop_list, value, type);
 		}
 
 	private:

@@ -139,7 +139,9 @@ int main(){
 							assert(!active1 && !active2);
 							return false;
 						}),
-						disposer::parser([](std::string_view, auto type){
+						disposer::parser([](
+							auto const& /*iop*/, std::string_view, auto type
+						){
 							static_assert(type == hana::type_c< int >);
 							return 5;
 						}),

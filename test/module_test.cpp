@@ -251,10 +251,11 @@ int main(){
 				return false;
 			};
 
-			constexpr auto parser = [](std::string_view /*value*/, auto type){
-				static_assert(type == hana::type_c< int >);
-				return 5;
-			};
+			constexpr auto parser =
+				[](auto const& /*iop*/, std::string_view /*value*/, auto type){
+					static_assert(type == hana::type_c< int >);
+					return 5;
+				};
 
 			constexpr auto enable_in_t =
 				[](auto const& get, auto type, disposer::output_info const&){
