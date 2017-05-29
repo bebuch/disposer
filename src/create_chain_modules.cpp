@@ -2,8 +2,6 @@
 #include <disposer/module_base.hpp>
 #include <disposer/make_data.hpp>
 
-#include <logsys/stdlogb.hpp>
-
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <cassert>
