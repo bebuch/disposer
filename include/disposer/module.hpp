@@ -440,13 +440,14 @@ namespace disposer{
 						bool all_specialized = true;
 
 						auto get_value =
-							[&data, &all_specialized, found, name, iter]
+							[&data, &all_specialized, &maker, found, name, iter]
 							(auto type) -> std::optional< std::string_view >
 						{
 							if(!found) return {};
 
 							auto const specialization = iter->second
-								.specialized_values.find(as_text[type].c_str());
+								.specialized_values.find(
+									maker.to_text[type].c_str());
 							auto const end =
 								iter->second.specialized_values.end();
 							if(specialization == end){
