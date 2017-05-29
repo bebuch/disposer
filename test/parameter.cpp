@@ -81,12 +81,12 @@ int main(){
 			);
 
 			error_count = check(ct++,
-				object(),
+				object.get(),
 				5
 			);
 
 			error_count = check(ct++,
-				object(hana::type_c< int >),
+				object.get(hana::type_c< int >),
 				5
 			);
 		}
@@ -123,12 +123,12 @@ int main(){
 			);
 
 			error_count = check(ct++,
-				object(hana::type_c< int >),
+				object.get(hana::type_c< int >),
 				5
 			);
 
 			error_count = check(ct++,
-				object(hana::type_c< float >),
+				object.get(hana::type_c< float >),
 				5.f
 			);
 		}
@@ -165,12 +165,12 @@ int main(){
 			);
 
 			error_count = check(ct++,
-				object(hana::type_c< int >),
+				object.get(hana::type_c< int >),
 				5
 			);
 
 			error_count = check(ct++,
-				object(hana::type_c< float >),
+				object.get(hana::type_c< float >),
 				5.f
 			);
 		}
