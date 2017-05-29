@@ -12,6 +12,7 @@
 #include <boost/hana.hpp>
 
 #include <cstdint>
+#include <string>
 
 
 namespace disposer{
@@ -39,7 +40,9 @@ namespace disposer{
 		hana::make_pair(hana::type_c< std::uint64_t >,
 			BOOST_HANA_STRING("uint64")),
 		hana::make_pair(hana::type_c< float >,  BOOST_HANA_STRING("float32")),
-		hana::make_pair(hana::type_c< double >, BOOST_HANA_STRING("float64"))
+		hana::make_pair(hana::type_c< double >, BOOST_HANA_STRING("float64")),
+		hana::make_pair(hana::type_c< std::string >,
+			BOOST_HANA_STRING("string"))
 	);
 
 
