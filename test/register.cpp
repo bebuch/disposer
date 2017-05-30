@@ -39,7 +39,12 @@ int main(){
 		{
 			auto register_fn = disposer::make_register_fn(
 				disposer::configure(),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				[](auto const& module){
+					module.log([](logsys::stdlogb&){});
+					return [](auto& module, std::size_t){
+						module.log([](logsys::stdlogb&){});
+					};
+				}
 			);
 			register_fn("m1", declarant);
 		}

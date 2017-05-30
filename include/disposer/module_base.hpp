@@ -14,8 +14,6 @@
 #include "output_base.hpp"
 #include "input_base.hpp"
 
-#include <logsys/log.hpp>
-
 #include <functional>
 
 
@@ -23,16 +21,6 @@ namespace disposer{
 
 
 	struct chain_key;
-
-
-	/// \brief Exception class for modules that need input variables
-	struct module_not_as_start: std::logic_error{
-		module_not_as_start(make_data const& data):
-			std::logic_error(
-				"module type '" + data.type_name +
-				"' can not be used as start of chain '" + data.chain + "'"
-			){}
-	};
 
 
 	/// \brief Base class for all disposer modules
@@ -72,27 +60,6 @@ namespace disposer{
 
 		/// \brief Standard virtual destructor
 		virtual ~module_base() = default;
-
-
-		/// \brief Add a line to the log
-		template < typename Log >
-		void log(Log&& f)const{
-			logsys::log(module_log(f));
-		}
-
-		/// \brief Add a line to the log with linked code block
-		template < typename Log, typename Body >
-		decltype(auto) log(Log&& f, Body&& body)const{
-			return logsys::log(module_log(f), static_cast< Body&& >(body));
-		}
-
-		/// \brief Add a line to the log with linked code block and catch all
-		///        exceptions
-		template < typename Log, typename Body >
-		decltype(auto) exception_catching_log(Log&& f, Body&& body)const{
-			return logsys::exception_catching_log(
-				module_log(f), static_cast< Body&& >(body));
-		}
 
 
 		/// \brief Set for next exec ID
@@ -173,18 +140,6 @@ namespace disposer{
 
 		/// \brief List of outputs
 		output_list outputs_;
-
-
-		/// \brief Helper for log message functions
-		template < typename Log >
-		auto module_log(Log& log)const{
-			using log_t = logsys::detail::extract_log_t< Log >;
-			return [&](log_t& os){
-				os << "id(" << id << "." << number << ") exec chain '"
-					<< chain << "': ";
-				log(os);
-			};
-		}
 	};
 
 

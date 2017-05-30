@@ -6,7 +6,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-/// \file disposer/module.hpp Include this file in your module file
 #ifndef _disposer__module__hpp_INCLUDED_
 #define _disposer__module__hpp_INCLUDED_
 
@@ -15,6 +14,7 @@
 #include "output.hpp"
 #include "parameter.hpp"
 #include "module_base.hpp"
+#include "add_log.hpp"
 
 #include <type_traits>
 
@@ -55,7 +55,6 @@ namespace disposer{
 
 
 	private:
-
 		template < typename Config, typename ConfigList >
 		static decltype(auto) get(Config& config, ConfigList&&)noexcept{
 			using io_t =
@@ -145,9 +144,9 @@ namespace disposer{
 		Parameters&& parameters
 	){
 		return module_config<
-				std::remove_reference_t< Inputs >,
-				std::remove_reference_t< Outputs >,
-				std::remove_reference_t< Parameters >
+				std::remove_const_t< std::remove_reference_t< Inputs > >,
+				std::remove_const_t< std::remove_reference_t< Outputs > >,
+				std::remove_const_t< std::remove_reference_t< Parameters > >
 			>(
 				static_cast< Inputs&& >(inputs),
 				static_cast< Outputs&& >(outputs),
@@ -160,34 +159,60 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters >
-	class module_accessory{
+	class module_accessory
+		: public module_config< Inputs, Outputs, Parameters >
+		, public add_log< module_accessory< Inputs, Outputs, Parameters > >
+	{
 	public:
 		module_accessory(
 			module_base& module,
-			module_config< Inputs, Outputs, Parameters >& config
+			Inputs&& inputs,
+			Outputs&& outputs,
+			Parameters&& parameters
 		)
-			: module_(module)
-			, config_(config) {}
+			: module_config< Inputs, Outputs, Parameters >(
+					std::move(inputs),
+					std::move(outputs),
+					std::move(parameters)
+				)
+			, module_(module) {}
 
-		/// \brief Get reference to an input-, output- or parameter-object via
-		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)noexcept{
-			return config_(static_cast< ConfigList&& >(list));
+
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			os << "module(" << module_.number
+				<< ") exec chain '" << module_.chain << "': ";
 		}
 
-		/// \brief Get reference to an input-, output- or parameter-object via
-		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)const noexcept{
-			return static_cast<
-					module_config< Inputs, Outputs, Parameters > const&
-				>(config_)(static_cast< ConfigList&& >(list));
-		}
 
-	private:
+	protected:
 		module_base& module_;
-		module_config< Inputs, Outputs, Parameters >& config_;
+	};
+
+
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
+	class module_exec_accessory
+		: public module_accessory< Inputs, Outputs, Parameters >
+		, public add_log< module_exec_accessory< Inputs, Outputs, Parameters > >
+	{
+	private:
+		using log_class =
+			add_log< module_exec_accessory< Inputs, Outputs, Parameters > >;
+
+	public:
+		using module_accessory< Inputs, Outputs, Parameters >::module_accessory;
+
+		using log_class::log;
+		using log_class::exception_catching_log;
+
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			os << "id(" << this->module_.id << "." << this->module_.number
+				<< ") exec chain '" << this->module_.chain << "': ";
+		}
 	};
 
 
@@ -198,18 +223,23 @@ namespace disposer{
 		typename EnableFn >
 	class module: public module_base{
 	public:
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-			static_assert(std::is_callable_v< EnableFn
-				(module_config< Inputs, Outputs, Parameters > const&) >);
-#else
-			static_assert(std::is_invocable_v< EnableFn,
-				module_config< Inputs, Outputs, Parameters > const& >);
-#endif
-
+		/// \brief Type for exec_fn
+		using accessory_type =
+			module_accessory< Inputs, Outputs, Parameters >;
 
 		/// \brief Type for exec_fn
-		using accessory_type = module_accessory< Inputs, Outputs, Parameters >;
+		using exec_accessory_type =
+			module_exec_accessory< Inputs, Outputs, Parameters >;
+
+
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(std::is_callable_v<
+				EnableFn(accessory_type const&) >);
+#else
+			static_assert(std::is_invocable_v<
+				EnableFn, accessory_type const& >);
+#endif
 
 
 		/// \brief Constructor
@@ -217,25 +247,30 @@ namespace disposer{
 			std::string const& module_type,
 			std::string const& chain,
 			std::size_t number,
-			module_config< Inputs, Outputs, Parameters >&& config,
+			Inputs&& inputs,
+			Outputs&& outputs,
+			Parameters&& parameters,
 			EnableFn const& enable_fn
 		)
 			: module_base(
-				module_type, chain, number,
-				// yes, these two functions can be called prior initialzation
-				generate_input_list(config_),
-				generate_output_list(config_)
-			)
-			, config_(std::move(config))
+					module_type, chain, number,
+					// these two functions can be called prior initialzation
+					generate_input_list(accessory_),
+					generate_output_list(accessory_)
+				)
 			, enable_fn_(enable_fn)
-			, accessory_(*this, config_) {}
+			, accessory_(*this,
+					std::move(inputs),
+					std::move(outputs),
+					std::move(parameters)
+				) {}
 
 
 	private:
 		/// \brief Enables the module for exec calls
 		virtual void enable()override{
-			exec_fn_.emplace(enable_fn_(static_cast< module_config
-				< Inputs, Outputs, Parameters > const& >(config_)));
+			exec_fn_.emplace(enable_fn_(
+				static_cast< accessory_type const& >(accessory_)));
 		}
 
 		/// \brief Disables the module for exec calls
@@ -254,24 +289,20 @@ namespace disposer{
 		}
 
 
-		/// \brief Inputs, Outputs and Parameters
-		module_config< Inputs, Outputs, Parameters > config_;
-
-
 		/// \brief Type of the exec-function
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		using exec_fn_t = std::result_of_t<
-			EnableFn(module_config< Inputs, Outputs, Parameters > const&) >;
+			EnableFn(accessory_type const&) >;
 
 		static_assert(std::is_callable_v<
-			exec_fn_t(accessory_type&, std::size_t) >);
+			exec_fn_t(exec_accessory_type&, std::size_t) >);
 #else
 		using exec_fn_t = std::invoke_result_t<
-			EnableFn, module_config< Inputs, Outputs, Parameters > const& >;
+			EnableFn, accessory_type const& >;
 
 		static_assert(std::is_invocable_v<
-			exec_fn_t, accessory_type&, std::size_t >);
+			exec_fn_t, exec_accessory_type&, std::size_t >);
 #endif
 
 
@@ -282,7 +313,7 @@ namespace disposer{
 		std::optional< exec_fn_t > exec_fn_;
 
 		/// \brief Module access object for exec_fn_
-		accessory_type accessory_;
+		exec_accessory_type accessory_;
 	};
 
 
@@ -295,15 +326,21 @@ namespace disposer{
 		std::string const& type_name,
 		std::string const& chain,
 		std::size_t number,
-		module_config< Inputs, Outputs, Parameters >&& config,
+		Inputs&& inputs,
+		Outputs&& outputs,
+		Parameters&& parameters,
 		EnableFn&& enable_fn
 	){
 		return std::make_unique< module<
-				Inputs, Outputs, Parameters,
+				std::remove_const_t< std::remove_reference_t< Inputs > >,
+				std::remove_const_t< std::remove_reference_t< Outputs > >,
+				std::remove_const_t< std::remove_reference_t< Parameters > >,
 				std::remove_const_t< std::remove_reference_t< EnableFn > >
 			> >(
 				type_name, chain, number,
-				std::move(config),
+				static_cast< Inputs&& >(inputs),
+				static_cast< Outputs&& >(outputs),
+				static_cast< Parameters&& >(parameters),
 				static_cast< EnableFn&& >(enable_fn)
 			);
 	}
@@ -511,11 +548,10 @@ namespace disposer{
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
-					make_module_config(
-						std::move(inputs),
-						std::move(outputs),
-						std::move(parameters)
-					), enable_fn
+					std::move(inputs),
+					std::move(outputs),
+					std::move(parameters),
+					enable_fn
 				);
 		}
 	};
