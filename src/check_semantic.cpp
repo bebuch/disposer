@@ -48,7 +48,7 @@ namespace disposer{
 			for(auto& module: chain.modules){
 				auto location = [&chain, &module, module_number]{
 					return "in chain '" + chain.name + "' module "
-						+ std::to_string(module_number) + " (Type '"
+						+ std::to_string(module_number) + " (type '"
 						+ module.type_name + "': ";
 				};
 
@@ -112,15 +112,6 @@ namespace disposer{
 				}
 
 				std::set< std::string > outputs;
-				for(auto& output: module.outputs){
-					if(!outputs.insert(output.name).second){
-						throw std::logic_error(
-							location() + "duplicate output '" + output.name
-							+ "'"
-						);
-					}
-				}
-
 				for(auto& output: module.outputs){
 					if(!outputs.insert(output.name).second){
 						throw std::logic_error(

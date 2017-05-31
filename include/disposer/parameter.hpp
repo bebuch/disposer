@@ -169,6 +169,7 @@ namespace disposer{
 			typename DefaultValues,
 			typename T >
 		std::optional< T const > make_value(
+			std::string const& name,
 			IOP_List const& iop_list,
 			Value const& value,
 			DefaultValues const& default_values,
@@ -177,7 +178,7 @@ namespace disposer{
 			if(!enable(iop_list, type)) return {};
 			if(value) return parser(iop_list, *value, type);
 			if(default_values) return (*default_values)[type];
-			return {};
+			throw std::logic_error("parameter '" + name + "' is required");
 		}
 
 		template < typename IOP_List, typename Values >
@@ -187,6 +188,7 @@ namespace disposer{
 		)const{
 			return type(hana::unpack(hana::transform(types, [&](auto type){
 					auto value = make_value(
+						name.c_str(),
 						iop_list,
 						values[type],
 						default_values,
@@ -295,7 +297,10 @@ namespace disposer{
 			"At least two of the parameter types have the same text "
 			"representation, check the parameters AsText-list");
 
-		return
+		auto default_values_map =
+			make_default_value_map(types, std::move(default_values.values));
+
+		auto maker =
 			parameter_maker< Name,
 				typename decltype(type_parameter)::type,
 				ValueVerifyFn, EnableFn, ParserFn,
@@ -304,9 +309,11 @@ namespace disposer{
 				std::move(value_verify),
 				std::move(enable),
 				std::move(parser),
-				make_default_value_map(types, std::move(default_values.values)),
+				std::move(default_values_map),
 				type_to_text
 			};
+
+		return maker;
 	}
 
 
