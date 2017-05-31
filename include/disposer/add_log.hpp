@@ -48,7 +48,7 @@ namespace disposer{
 		/// \brief Add a line to the log with linked code block
 		template < typename Log, typename Body >
 		decltype(auto) log(Log&& f, Body&& body)const{
-			return logsys::log(module_log(f), static_cast< Body&& >(body));
+			return logsys::log(impl(f), static_cast< Body&& >(body));
 		}
 
 		/// \brief Add a line to the log with linked code block and catch all
@@ -56,7 +56,7 @@ namespace disposer{
 		template < typename Log, typename Body >
 		decltype(auto) exception_catching_log(Log&& f, Body&& body)const{
 			return logsys::exception_catching_log(
-				module_log(f), static_cast< Body&& >(body));
+				impl(f), static_cast< Body&& >(body));
 		}
 
 	protected:
