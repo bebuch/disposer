@@ -216,6 +216,18 @@ namespace disposer{
 	};
 
 
+	template < typename Accessory >
+	struct to_exec_accessory;
+
+	template < typename Inputs, typename Outputs, typename Parameters >
+	struct to_exec_accessory< module_accessory< Inputs, Outputs, Parameters > >{
+		using type = module_exec_accessory< Inputs, Outputs, Parameters >;
+	};
+
+	template < typename Accessory >
+	using to_exec_accessory_t = typename to_exec_accessory< Accessory >::type;
+
+
 	template <
 		typename Inputs,
 		typename Outputs,
