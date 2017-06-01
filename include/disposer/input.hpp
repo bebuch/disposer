@@ -38,6 +38,27 @@ namespace disposer{
 		friend class input;
 	};
 
+	template <
+		typename Name,
+		typename InputType,
+		typename ConnectionVerifyFn,
+		typename TypeVerifyFn >
+	struct input_maker;
+
+	/// \brief Class input_key access key
+	struct input_maker_key{
+	private:
+		/// \brief Constructor
+		constexpr input_maker_key()noexcept = default;
+
+		template <
+			typename Name,
+			typename InputType,
+			typename ConnectionVerifyFn,
+			typename TypeVerifyFn >
+		friend struct input_maker;
+	};
+
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input: public input_base{
@@ -110,8 +131,22 @@ namespace disposer{
 		>;
 
 
-		constexpr input(output_base* output, bool last_use)noexcept:
-			input_base(Name::value.c_str(), output), last_use_(last_use) {}
+		constexpr input(
+			output_base* output,
+			bool last_use,
+			std::optional< output_info > const& info
+		)noexcept
+			: input_base(Name::value.c_str(), output)
+			, enabled_map_(
+				hana::make_map(hana::make_pair(
+					type_transform(hana::type_c< T >),
+					[](std::optional< output_info > const& info, auto type){
+						if(!info) return false;
+						return info->is_enabled(type_transform(type));
+					}(info, hana::type_c< T >)
+				) ...)
+			)
+			, last_use_(last_use) {}
 
 
 		std::multimap< std::size_t, references_type > get_references(){
@@ -234,28 +269,7 @@ namespace disposer{
 		}
 
 
-		virtual bool enable_types(
-			std::vector< type_index > const& types
-		)noexcept override{
-			for(auto const& type: types){
-				auto iter = rt_enabled_map_.find(type);
-
-				if(iter == rt_enabled_map_.end()) return false;
-
-				iter->second.get() = true;
-			}
-
-			return true;
-		}
-
-
 		enabled_map_type enabled_map_;
-
-		std::unordered_map< type_index, std::reference_wrapper< bool > > const
-			rt_enabled_map_ = { {
-				type_index::type_id_with_cvr< T >(),
-				enabled_map_[type_transform(hana::type_c< T >)]
-			} ... };
 
 		bool const last_use_;
 	};
@@ -323,7 +337,14 @@ namespace disposer{
 			bool last_use,
 			std::optional< output_info > const& info
 		)const{
-			auto input = type(output, last_use);
+			if(info){
+				constexpr auto key = input_maker_key();
+				hana::unpack(type::types, [&info, key](auto ... type){
+					info->verify_nothing_enabled_except(key, type ...);
+				});
+			}
+
+			auto input = type(output, last_use, info);
 			connection_verify(iop_list, static_cast< bool >(info));
 
 			if(info){

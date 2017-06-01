@@ -61,13 +61,6 @@ namespace disposer{
 		virtual ~input_base() = default;
 
 
-		/// \brief Enable the given types
-		bool enable_types(
-			creator_key&&,
-			std::vector< type_index > const& types
-		)noexcept{ return enable_types(types); }
-
-
 		/// \brief Set the new id for the next exec or cleanup
 		void set_id(module_base_key&&, std::size_t id)noexcept{ id_ = id; }
 
@@ -77,12 +70,6 @@ namespace disposer{
 
 
 	protected:
-		/// \brief Enable the given types
-		virtual bool enable_types(
-			std::vector< type_index > const& types
-		) noexcept = 0;
-
-
 		/// \brief Get the current ID
 		std::size_t current_id()noexcept{ return id_; }
 
