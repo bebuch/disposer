@@ -48,10 +48,22 @@ namespace disposer{
 	};
 
 
-	template < typename LogFn, typename Tuple >
-	struct iop_list: add_log< iop_list< LogFn, Tuple > >{
+	struct iop_log{
+		std::string_view const location;
+		std::string_view const maker_type_name;
+		std::string_view const maker_name;
+
+		void operator()(logsys::stdlogb& os)const{
+			os << location << " " << maker_type_name << "(" << maker_name
+				<< ") ";
+		}
+	};
+
+
+	template < typename Tuple >
+	struct iop_list: add_log< iop_list< Tuple > >{
 	public:
-		constexpr iop_list(LogFn const& log_fn, Tuple const& tuple)noexcept
+		constexpr iop_list(iop_log const& log_fn, Tuple const& tuple)noexcept
 			: log_fn_(log_fn)
 			, tuple_(hana::transform(tuple, as_reference_list{})) {}
 
@@ -100,18 +112,18 @@ namespace disposer{
 		}
 
 	private:
-		LogFn const& log_fn_;
+		iop_log const& log_fn_;
 
 		decltype(hana::transform(std::declval< Tuple >(), as_reference_list{}))
 			tuple_;
 	};
 
-	template < typename LogFn, typename Tuple >
+	template < typename Tuple >
 	constexpr auto make_iop_list(
-		LogFn const& log_fn,
+		iop_log const& log_fn,
 		Tuple const& tuple
 	)noexcept{
-		return iop_list< LogFn, Tuple >(log_fn, tuple);
+		return iop_list< Tuple >(log_fn, tuple);
 	}
 
 

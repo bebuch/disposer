@@ -389,10 +389,11 @@ namespace disposer{
 					input_name_list.erase(name.c_str());
 				});
 
+			auto const location = data.location();
 			for(auto const& in: input_name_list){
-				logsys::log([&data, &in](logsys::stdlogb& os){
-					os << data.location() << "ERROR: input '"
-						<< in << "' doesn't exist";
+				logsys::log([&location, &in](logsys::stdlogb& os){
+					os << location << "input("
+						<< in << ") doesn't exist (ERROR)";
 				});
 			}
 
@@ -410,9 +411,9 @@ namespace disposer{
 				});
 
 			for(auto const& out: output_name_list){
-				logsys::log([&data, &out](logsys::stdlogb& os){
-					os << data.location() << "ERROR: output '"
-						<< out << "' doesn't exist";
+				logsys::log([&location, &out](logsys::stdlogb& os){
+					os << location << "output("
+						<< out << ") doesn't exist (ERROR)";
 				});
 			}
 
@@ -433,33 +434,31 @@ namespace disposer{
 				});
 
 			for(auto const& param: parameter_name_list){
-				logsys::log([&data, &param](logsys::stdlogb& os){
-					os << data.location() << "parameter '"
-						<< param << "' doesn't exist (WARNING)";
+				logsys::log([&location, &param](logsys::stdlogb& os){
+					os << location << "parameter("
+						<< param << ") doesn't exist (WARNING)";
 				});
 			}
 
 
 			if(!input_name_list.empty() || !output_name_list.empty()){
-				throw std::logic_error(data.location() + "some inputs or "
+				throw std::logic_error(location + "some inputs or "
 					"outputs don't exist, see previos log messages for more "
 					"details");
 			}
 
+			std::string const basic_location = data.basic_location();
+
 			// create inputs, outputs and parameter in the order of there
 			// definition in the module
 			auto iop_list = hana::fold_left(makers, hana::make_tuple(),
-				[&data](auto&& get, auto&& maker){
+				[&data, &location, &basic_location](auto&& get, auto&& maker){
 					auto is_input =
 						hana::is_a< input_maker_tag >(maker);
 					auto is_output =
 						hana::is_a< output_maker_tag >(maker);
 					auto is_parameter =
 						hana::is_a< parameter_maker_tag >(maker);
-
-					auto stdlogfn = [&data](logsys::stdlogb& os){
-						os << data.basic_location();
-					};
 
 					static_assert(is_input || is_output || is_parameter,
 						"maker is not an iop (this is a bug in disposer!)");
@@ -479,24 +478,16 @@ namespace disposer{
 								output->enabled_types())
 							: std::optional< output_info >();
 
-						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
-							stdlogfn(os);
-							os << " input(" << maker.name.c_str() << "): ";
-						};
-
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(log_fn, get),
+							maker(make_iop_list(iop_log{basic_location,
+								"input", maker.name.c_str()}, get),
 								output, last_use, info));
 					}else if constexpr(is_output){
-						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
-							stdlogfn(os);
-							os << " output(" << maker.name.c_str() << "): ";
-						};
-
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(log_fn, get)));
+							maker(make_iop_list(iop_log{basic_location,
+								"output", maker.name.c_str()}, get)));
 					}else{
 						auto const name = maker.name.c_str();
 						auto const iter = data.parameters.find(name);
@@ -505,7 +496,8 @@ namespace disposer{
 						bool all_specialized = true;
 
 						auto get_value =
-							[&data, &all_specialized, &maker, found, name, iter]
+							[&location, &all_specialized, &maker, found, name,
+								iter]
 							(auto type) -> std::optional< std::string_view >
 						{
 							if(!found) return {};
@@ -519,7 +511,7 @@ namespace disposer{
 								all_specialized = false;
 								if(!iter->second.generic_value){
 									throw std::logic_error(
-										data.location() + "parameter("
+										location + "parameter("
 										+ std::string(name) + ") has neither a "
 										"generic value but a specialization "
 										"for type '" + specialization->first
@@ -542,22 +534,18 @@ namespace disposer{
 						if(found && all_specialized
 							&& iter->second.generic_value
 						){
-							logsys::log([&data, name](logsys::stdlogb& os){
-								os << data.location() << "parameter("
+							logsys::log([&location, name](logsys::stdlogb& os){
+								os << location << "parameter("
 									<< name << ") has specialized values for "
 									"all its types, the also given generic "
 									"value will never be used (WARNING)";
 							});
 						}
 
-						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
-							stdlogfn(os);
-							os << " parameter(" << maker.name.c_str() << "): ";
-						};
-
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(log_fn, get),
+							maker(make_iop_list(iop_log{basic_location,
+								"parameter", maker.name.c_str()}, get),
 								std::move(params)));
 					}
 				}
@@ -603,22 +591,22 @@ namespace disposer{
 		return hana::make_tuple(static_cast< IOP_Makers&& >(list) ...);
 	}
 
+	struct unit_test_key;
 
 	template <
 		typename IOP_MakerList,
 		typename EnableFn >
 	class register_fn{
 	public:
-		register_fn(module_maker< IOP_MakerList, EnableFn >&& maker)
-			: maker_(std::move(maker))
-		{
-			called_flag_.clear();
-		}
+		constexpr register_fn(module_maker< IOP_MakerList, EnableFn >&& maker)
+			: called_flag_(false)
+			, maker_(std::move(maker))
+			{}
 
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
 		void operator()(std::string const& module_type, module_declarant& add){
-			if(!called_flag_.test_and_set()){
+			if(!called_flag_.exchange(true)){
 				add(module_type,
 					[maker{std::move(maker_)}](make_data const& data){
 						return maker(data);
@@ -633,11 +621,12 @@ namespace disposer{
 
 	private:
 		/// \brief Operator must only called once!
-		std::atomic_flag called_flag_;
+		std::atomic< bool > called_flag_;
 
 		/// \brief The module_maker object
 		module_maker< IOP_MakerList, EnableFn > maker_;
 
+		friend struct unit_test_key;
 	};
 
 

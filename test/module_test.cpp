@@ -43,8 +43,22 @@ struct enable_fn{
 	}
 };
 
+struct disposer::unit_test_key{
+	template < typename Register >
+	constexpr auto copy(Register const& reg)const{
+		return (reg.maker_);
+	}
+
+	template < typename Register >
+	constexpr decltype(auto) ref(Register const& reg)const{
+		return (reg.maker_);
+	}
+};
+
 int main(){
 	using namespace hana::literals;
+
+	static constexpr auto key = disposer::unit_test_key{};
 
 	std::size_t error_count = 0;
 
@@ -55,11 +69,11 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -78,7 +92,7 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
@@ -89,7 +103,7 @@ int main(){
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -112,7 +126,7 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::output_maker<
 						decltype("v"_out),
@@ -122,7 +136,7 @@ int main(){
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -146,7 +160,7 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::parameter_maker<
 						decltype("v"_param),
@@ -160,7 +174,7 @@ int main(){
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -184,7 +198,7 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
@@ -211,7 +225,7 @@ int main(){
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -284,7 +298,7 @@ int main(){
 				enable_fn()
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						decltype("v"_in),
@@ -318,7 +332,7 @@ int main(){
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<

@@ -37,9 +37,10 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
+	static constexpr disposer::iop_log iop_log{"pre", "output", "v"};
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
-		disposer::iop_list< hana::tuple<> >(iops);
+		disposer::iop_list< hana::tuple<> >(iop_log, iops);
 
 	std::size_t ct = 0;
 	std::size_t error_count = 0;

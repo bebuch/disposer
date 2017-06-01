@@ -70,18 +70,21 @@ exe output
 	:
 	output.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe input
 	:
 	input.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe parameter
 	:
 	parameter.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe module_test
