@@ -43,8 +43,8 @@ namespace disposer{
 				if(var.second) continue;
 
 				logsys::log([&var, &chain](logsys::stdlogb& os){
-					os << "In chain(" << chain.name << "): variable '"
-						<< var.first << "' is not used";
+					os << "chain(" << chain.name << ") variable '"
+						<< var.first << "' is not used (WARNING)";
 				});
 			}
 		}
@@ -53,7 +53,7 @@ namespace disposer{
 			if(set.second) continue;
 
 			logsys::log([&set](logsys::stdlogb& os){
-				os << "parameter_set '" + set.first + "' is not used";
+				os << "parameter_set(" + set.first + ") is not used (WARNING)";
 			});
 		}
 	}

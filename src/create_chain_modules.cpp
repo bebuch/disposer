@@ -76,8 +76,9 @@ namespace disposer{
 		for(std::size_t i = 0; i < config_chain.modules.size(); ++i){
 			auto& config_module = config_chain.modules[i];
 
-			logsys::log([&config_module](logsys::stdlogb& os){
-				os << "create module(" << config_module.type_name << ")";
+			logsys::log([&config_chain, &config_module, i](logsys::stdlogb& os){
+				os << "chain(" << config_chain.name << ") module("
+					<< i << ':' << config_module.type_name << ") create";
 			}, [&](){
 				// create input list
 				input_list config_inputs;

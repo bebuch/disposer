@@ -138,6 +138,7 @@ namespace disposer{
 			));
 		}
 
+		/// \brief Operator for outputs
 		template < typename IOP_List, typename T >
 		constexpr bool operator()(
 			IOP_List const& iop_list,
@@ -145,12 +146,34 @@ namespace disposer{
 		)const noexcept(calc_noexcept< IOP_List, T >()){
 			bool enable = false;
 			iop_list.log([&enable](logsys::stdlogb& os){
-					os << "enable = ";
 					if(enable){
-						os << "true";
+						os << "enable";
 					}else{
-						os << "false";
+						os << "disable";
 					}
+					os << " ["
+						<< type_index::type_id< T >().pretty_name() << ']';
+				},
+				[&]{ enable = fn_(iop_list, type); });
+			return enable;
+		}
+
+		/// \brief Operator for parameters
+		template < typename IOP_List, typename T >
+		constexpr bool operator()(
+			IOP_List const& iop_list,
+			hana::basic_type< T > type,
+			std::string_view name
+		)const noexcept(calc_noexcept< IOP_List, T >()){
+			bool enable = false;
+			iop_list.log([&enable, name](logsys::stdlogb& os){
+					if(enable){
+						os << "enable";
+					}else{
+						os << "disable";
+					}
+					os << ' ' << name << " ["
+						<< type_index::type_id< T >().pretty_name() << ']';
 				},
 				[&]{ enable = fn_(iop_list, type); });
 			return enable;
@@ -251,7 +274,7 @@ namespace disposer{
 			bool connected
 		)const noexcept(calc_noexcept< IOP_List >()){
 			iop_list.log([connected](logsys::stdlogb& os){
-					os << "connection_verify with connected = ";
+					os << "verify connection with connected = ";
 					if(connected){
 						os << "true";
 					}else{
@@ -338,7 +361,11 @@ namespace disposer{
 			hana::basic_type< T > type,
 			output_info const& info
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			iop_list.log([](logsys::stdlogb& os){ os << "type_verify"; },
+			iop_list.log(
+				[](logsys::stdlogb& os){
+					os << "verify type ["
+						<< type_index::type_id< T >().pretty_name() << ']';
+				},
 				[&]{ fn_(iop_list, type, info); });
 		}
 
@@ -408,7 +435,11 @@ namespace disposer{
 			IOP_List const& iop_list,
 			T const& value
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			iop_list.log([](logsys::stdlogb& os){ os << "value_verify"; },
+			iop_list.log(
+				[](logsys::stdlogb& os){
+					os << "verify value of type ["
+						<< type_index::type_id< T >().pretty_name() << ']';
+				},
 				[&]{ fn_(iop_list, value); });
 		}
 
@@ -498,7 +529,10 @@ namespace disposer{
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_List, T >()){
 			return iop_list.log(
-				[](logsys::stdlogb& os){ os << "parser"; },
+				[](logsys::stdlogb& os){
+					os << "parse value ["
+						<< type_index::type_id< T >().pretty_name() << ']';
+				},
 				[&]{ return fn_(iop_list, value, type); });
 		}
 

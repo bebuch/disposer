@@ -173,9 +173,10 @@ namespace disposer{
 			IOP_List const& iop_list,
 			Value const& value,
 			DefaultValues const& default_values,
-			hana::basic_type< T > type
+			hana::basic_type< T > type,
+			std::string_view type_as_text
 		)const{
-			if(!enable(iop_list, type)) return {};
+			if(!enable(iop_list, type, type_as_text)) return {};
 			if(value) return parser(iop_list, *value, type);
 			if(default_values) return (*default_values)[type];
 			throw std::logic_error("parameter '" + name + "' is required");
@@ -192,7 +193,8 @@ namespace disposer{
 						iop_list,
 						values[type],
 						default_values,
-						type);
+						type,
+						to_text[type].c_str());
 					if(value) value_verify(iop_list, *value);
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map));

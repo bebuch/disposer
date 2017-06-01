@@ -434,8 +434,8 @@ namespace disposer{
 
 			for(auto const& param: parameter_name_list){
 				logsys::log([&data, &param](logsys::stdlogb& os){
-					os << data.location() << "Warning: parameter '"
-						<< param << "' doesn't exist";
+					os << data.location() << "parameter '"
+						<< param << "' doesn't exist (WARNING)";
 				});
 			}
 
@@ -543,10 +543,10 @@ namespace disposer{
 							&& iter->second.generic_value
 						){
 							logsys::log([&data, name](logsys::stdlogb& os){
-								os << data.location() << "Warning: parameter("
-									<< name << ") has specialized "
-									"values for all its types, the also given "
-									"generic value will never be used";
+								os << data.location() << "parameter("
+									<< name << ") has specialized values for "
+									"all its types, the also given generic "
+									"value will never be used (WARNING)";
 							});
 						}
 

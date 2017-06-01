@@ -29,7 +29,7 @@ namespace disposer{
 
 			for(auto& config_chain: config){
 				logsys::log([&config_chain](logsys::stdlogb& os){
-					os << "create chain(" << config_chain.name << ")";
+					os << "chain(" << config_chain.name << ") create";
 				}, [&](){
 					// emplace the new process chain
 					chains.emplace(
