@@ -43,7 +43,7 @@ namespace disposer{
 				if(var.second) continue;
 
 				logsys::log([&var, &chain](logsys::stdlogb& os){
-					os << "In chain '" << chain.name << "': variable '"
+					os << "In chain(" << chain.name << "): variable '"
 						<< var.first << "' is not used";
 				});
 			}

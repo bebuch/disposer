@@ -47,9 +47,9 @@ namespace disposer{
 			std::size_t module_number = 1;
 			for(auto& module: chain.modules){
 				auto location = [&chain, &module, module_number]{
-					return "in chain '" + chain.name + "' module "
-						+ std::to_string(module_number) + " (type '"
-						+ module.type_name + "': ";
+					return "in chain(" + chain.name + ") module("
+						+ std::to_string(module_number) + ":"
+						+ module.type_name + "): ";
 				};
 
 				std::set< std::string > sets;

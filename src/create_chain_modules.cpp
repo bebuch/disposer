@@ -77,7 +77,7 @@ namespace disposer{
 			auto& config_module = config_chain.modules[i];
 
 			logsys::log([&config_module](logsys::stdlogb& os){
-				os << "create module '" << config_module.type_name << "'";
+				os << "create module(" << config_module.type_name << ")";
 			}, [&](){
 				// create input list
 				input_list config_inputs;

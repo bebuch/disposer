@@ -17,6 +17,7 @@
 #include "add_log.hpp"
 
 #include <type_traits>
+#include <atomic>
 
 
 namespace disposer{
@@ -180,8 +181,8 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "module(" << module_.number
-				<< ") exec chain '" << module_.chain << "': ";
+			os << "chain(" << module_.chain << ") module(" << module_.number
+				<< ":" << module_.type_name << ") exec: ";
 		}
 
 
@@ -210,8 +211,9 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "id(" << this->module_.id << "." << this->module_.number
-				<< ") exec chain '" << this->module_.chain << "': ";
+			os << "id(" << this->module_.id << ") chain("
+				<< this->module_.chain << ") module(" << this->module_.number
+				<< ":" << this->module_.type_name << ") exec: ";
 		}
 	};
 
@@ -585,17 +587,37 @@ namespace disposer{
 	template <
 		typename IOP_MakerList,
 		typename EnableFn >
-	struct register_fn{
-		/// \brief The module_maker object
-		module_maker< IOP_MakerList, EnableFn > maker;
+	class register_fn{
+	public:
+		register_fn(module_maker< IOP_MakerList, EnableFn >&& maker)
+			: maker_(std::move(maker))
+		{
+			called_flag_.clear();
+		}
 
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
 		void operator()(std::string const& module_type, module_declarant& add){
-			add(module_type, [this](make_data const& data){
-				return maker(data);
-			});
+			if(!called_flag_.test_and_set()){
+				add(module_type,
+					[maker{std::move(maker_)}](make_data const& data){
+						return maker(data);
+					});
+			}else{
+				throw std::runtime_error("called register function '"
+					+ module_type + "' more than once");
+			}
+
 		}
+
+
+	private:
+		/// \brief Operator must only called once!
+		std::atomic_flag called_flag_;
+
+		/// \brief The module_maker object
+		module_maker< IOP_MakerList, EnableFn > maker_;
+
 	};
 
 

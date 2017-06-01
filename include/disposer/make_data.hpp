@@ -56,8 +56,8 @@ namespace disposer{
 
 		/// \brief Header for log messages
 		std::string location()const{
-			return "chain '" + chain + "' module number "
-				+ std::to_string(number) + " (type '" + type_name + "'): ";
+			return "chain(" + chain + ") module("
+				+ std::to_string(number) + ":" + type_name + "): ";
 		}
 	};
 

@@ -29,7 +29,7 @@ namespace disposer{
 
 			for(auto& config_chain: config){
 				logsys::log([&config_chain](logsys::stdlogb& os){
-					os << "create chain '" << config_chain.name << "'";
+					os << "create chain(" << config_chain.name << ")";
 				}, [&](){
 					// emplace the new process chain
 					chains.emplace(
@@ -109,9 +109,7 @@ namespace disposer{
 	chain& disposer::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);
 		if(iter == chains_.end()){
-			throw std::logic_error(
-				"chain '" + chain + "' does not exist"
-			);
+			throw std::logic_error("chain(" + chain + ") does not exist");
 		}
 		return iter->second;
 	}

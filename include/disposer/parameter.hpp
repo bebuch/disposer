@@ -297,11 +297,7 @@ namespace disposer{
 			"At least two of the parameter types have the same text "
 			"representation, check the parameters AsText-list");
 
-		auto default_values_map =
-			make_default_value_map(types, std::move(default_values.values));
-
-		auto maker =
-			parameter_maker< Name,
+		return parameter_maker< Name,
 				typename decltype(type_parameter)::type,
 				ValueVerifyFn, EnableFn, ParserFn,
 				std::remove_const_t< decltype(type_to_text) >
@@ -309,11 +305,9 @@ namespace disposer{
 				std::move(value_verify),
 				std::move(enable),
 				std::move(parser),
-				std::move(default_values_map),
+				make_default_value_map(types, std::move(default_values.values)),
 				type_to_text
 			};
-
-		return maker;
 	}
 
 
