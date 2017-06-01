@@ -17,6 +17,8 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/map.hpp>
 
+#include <logsys/stdlogb.hpp>
+
 #include "output_info.hpp"
 
 
@@ -141,7 +143,17 @@ namespace disposer{
 			IOP_List const& iop_list,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			return fn_(iop_list, type);
+			bool enable = false;
+			iop_list.log([&enable](logsys::stdlogb& os){
+					os << "enable = ";
+					if(enable){
+						os << "true";
+					}else{
+						os << "false";
+					}
+				},
+				[&]{ enable = fn_(iop_list, type); });
+			return enable;
 		}
 
 	private:
@@ -238,7 +250,15 @@ namespace disposer{
 			IOP_List const& iop_list,
 			bool connected
 		)const noexcept(calc_noexcept< IOP_List >()){
-			fn_(iop_list, connected);
+			iop_list.log([connected](logsys::stdlogb& os){
+					os << "connection_verify with connected = ";
+					if(connected){
+						os << "true";
+					}else{
+						os << "false";
+					}
+				},
+				[&]{ fn_(iop_list, connected); });
 		}
 
 	private:
@@ -318,7 +338,8 @@ namespace disposer{
 			hana::basic_type< T > type,
 			output_info const& info
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			fn_(iop_list, type, info);
+			iop_list.log([](logsys::stdlogb& os){ os << "type_verify"; },
+				[&]{ fn_(iop_list, type, info); });
 		}
 
 	private:
@@ -387,7 +408,8 @@ namespace disposer{
 			IOP_List const& iop_list,
 			T const& value
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			fn_(iop_list, value);
+			iop_list.log([](logsys::stdlogb& os){ os << "value_verify"; },
+				[&]{ fn_(iop_list, value); });
 		}
 
 	private:
@@ -475,7 +497,9 @@ namespace disposer{
 			std::string_view value,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_List, T >()){
-			return fn_(iop_list, value, type);
+			return iop_list.log(
+				[](logsys::stdlogb& os){ os << "parser"; },
+				[&]{ return fn_(iop_list, value, type); });
 		}
 
 	private:

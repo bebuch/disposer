@@ -54,10 +54,15 @@ namespace disposer{
 		/// \brief Parameters from the config file
 		parameter_list const parameters;
 
+		/// \brief Header for convolved log messages
+		std::string basic_location()const{
+			return "chain(" + chain + ") module("
+				+ std::to_string(number) + ":" + type_name + ")";
+		}
+
 		/// \brief Header for log messages
 		std::string location()const{
-			return "chain(" + chain + ") module("
-				+ std::to_string(number) + ":" + type_name + "): ";
+			return basic_location() + ": ";
 		}
 	};
 

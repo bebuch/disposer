@@ -446,7 +446,6 @@ namespace disposer{
 					"details");
 			}
 
-
 			// create inputs, outputs and parameter in the order of there
 			// definition in the module
 			auto iop_list = hana::fold_left(makers, hana::make_tuple(),
@@ -457,6 +456,10 @@ namespace disposer{
 						hana::is_a< output_maker_tag >(maker);
 					auto is_parameter =
 						hana::is_a< parameter_maker_tag >(maker);
+
+					auto stdlogfn = [&data](logsys::stdlogb& os){
+						os << data.basic_location();
+					};
 
 					static_assert(is_input || is_output || is_parameter,
 						"maker is not an iop (this is a bug in disposer!)");
@@ -476,13 +479,24 @@ namespace disposer{
 								output->enabled_types())
 							: std::optional< output_info >();
 
+						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
+							stdlogfn(os);
+							os << " input(" << maker.name.c_str() << "): ";
+						};
+
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(get), output, last_use, info));
+							maker(make_iop_list(log_fn, get),
+								output, last_use, info));
 					}else if constexpr(is_output){
+						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
+							stdlogfn(os);
+							os << " output(" << maker.name.c_str() << "): ";
+						};
+
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(get)));
+							maker(make_iop_list(log_fn, get)));
 					}else{
 						auto const name = maker.name.c_str();
 						auto const iter = data.parameters.find(name);
@@ -505,8 +519,8 @@ namespace disposer{
 								all_specialized = false;
 								if(!iter->second.generic_value){
 									throw std::logic_error(
-										data.location() + "parameter '"
-										+ std::string(name) + "' has neither a "
+										data.location() + "parameter("
+										+ std::string(name) + ") has neither a "
 										"generic value but a specialization "
 										"for type '" + specialization->first
 										+ "'"
@@ -529,16 +543,22 @@ namespace disposer{
 							&& iter->second.generic_value
 						){
 							logsys::log([&data, name](logsys::stdlogb& os){
-								os << data.location() << "Warning: parameter '"
-									<< name << "' has specialized "
+								os << data.location() << "Warning: parameter("
+									<< name << ") has specialized "
 									"values for all its types, the also given "
 									"generic value will never be used";
 							});
 						}
 
+						auto log_fn = [&stdlogfn, &maker](logsys::stdlogb& os){
+							stdlogfn(os);
+							os << " parameter(" << maker.name.c_str() << "): ";
+						};
+
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(get), std::move(params)));
+							maker(make_iop_list(log_fn, get),
+								std::move(params)));
 					}
 				}
 			);

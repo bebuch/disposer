@@ -9,6 +9,7 @@
 #ifndef _disposer__iop_list__hpp_INCLUDED_
 #define _disposer__iop_list__hpp_INCLUDED_
 
+#include "add_log.hpp"
 #include "input_name.hpp"
 #include "output_name.hpp"
 #include "parameter_name.hpp"
@@ -47,17 +48,18 @@ namespace disposer{
 	};
 
 
-	template < typename Tuple >
-	struct iop_list{
+	template < typename LogFn, typename Tuple >
+	struct iop_list: add_log< iop_list< LogFn, Tuple > >{
 	public:
-		constexpr iop_list(Tuple const& tuple)noexcept:
-			tuple(hana::transform(tuple, as_reference_list{})) {}
+		constexpr iop_list(LogFn const& log_fn, Tuple const& tuple)noexcept
+			: log_fn_(log_fn)
+			, tuple_(hana::transform(tuple, as_reference_list{})) {}
 
 		template < char ... C >
 		constexpr auto const& operator()(
 			input_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple, [name](auto const& maker){
+			auto result = hana::find_if(tuple_, [name](auto const& maker){
 				return hana::is_a< input_tag >(maker.get())
 					&& maker.get().name == name.value;
 			});
@@ -70,7 +72,7 @@ namespace disposer{
 		constexpr auto const& operator()(
 			output_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple, [name](auto const& maker){
+			auto result = hana::find_if(tuple_, [name](auto const& maker){
 				return hana::is_a< output_tag >(maker.get())
 					&& maker.get().name == name.value;
 			});
@@ -83,7 +85,7 @@ namespace disposer{
 		constexpr auto const& operator()(
 			parameter_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple, [name](auto const& maker){
+			auto result = hana::find_if(tuple_, [name](auto const& maker){
 				return hana::is_a< parameter_tag >(maker.get())
 					&& maker.get().name == name.value;
 			});
@@ -92,14 +94,24 @@ namespace disposer{
 			return result.value().get();
 		}
 
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			log_fn_(os);
+		}
+
 	private:
+		LogFn const& log_fn_;
+
 		decltype(hana::transform(std::declval< Tuple >(), as_reference_list{}))
-			tuple;
+			tuple_;
 	};
 
-	template < typename Tuple >
-	constexpr auto make_iop_list(Tuple const& tuple)noexcept{
-		return iop_list< Tuple >(tuple);
+	template < typename LogFn, typename Tuple >
+	constexpr auto make_iop_list(
+		LogFn const& log_fn,
+		Tuple const& tuple
+	)noexcept{
+		return iop_list< LogFn, Tuple >(log_fn, tuple);
 	}
 
 
