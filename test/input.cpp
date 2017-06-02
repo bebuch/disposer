@@ -50,7 +50,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
-					decltype("v"_in),
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int >,
 					disposer::connection_verify_always,
@@ -72,7 +71,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
-					decltype("v"_in),
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int, float >,
 					disposer::connection_verify_always,
@@ -94,7 +92,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
-					decltype("v"_in),
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int, float >,
 					disposer::connection_verify_always,

@@ -39,7 +39,6 @@ namespace disposer{
 	};
 
 	template <
-		typename Name,
 		typename InputType,
 		typename ConnectionVerifyFn,
 		typename TypeVerifyFn >
@@ -52,7 +51,6 @@ namespace disposer{
 		constexpr input_maker_key()noexcept = default;
 
 		template <
-			typename Name,
 			typename InputType,
 			typename ConnectionVerifyFn,
 			typename TypeVerifyFn >
@@ -306,7 +304,6 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an input
 	template <
-		typename Name,
 		typename InputType,
 		typename ConnectionVerifyFn,
 		typename TypeVerifyFn >
@@ -315,10 +312,10 @@ namespace disposer{
 		using hana_tag = input_maker_tag;
 
 		/// \brief Input name as compile time string
-		using name_type = Name;
+		using name_type = typename InputType::name_type;
 
 		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		static constexpr auto name = name_type::value;
 
 		/// \brief Type of a disposer::input
 		using type = InputType;
@@ -380,7 +377,7 @@ namespace disposer{
 		constexpr auto type_input =
 			hana::unpack(unpack_types, hana::template_< input >);
 
-		return input_maker< Name, typename decltype(type_input)::type,
+		return input_maker< typename decltype(type_input)::type,
 			ConnectionVerifyFn, TypeVerifyFn >{
 				std::move(connection_verify),
 				std::move(type_verify)

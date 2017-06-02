@@ -126,7 +126,6 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an parameter
 	template <
-		typename Name,
 		typename ParameterType,
 		typename ValueVerifyFn,
 		typename EnableFn,
@@ -137,10 +136,10 @@ namespace disposer{
 		using hana_tag = parameter_maker_tag;
 
 		/// \brief Parameter name as compile time string
-		using name_type = Name;
+		using name_type = typename ParameterType::name_type;
 
 		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		static constexpr auto name = name_type::value;
 
 		/// \brief Type of a disposer::parameter
 		using type = ParameterType;
@@ -299,7 +298,7 @@ namespace disposer{
 			"At least two of the parameter types have the same text "
 			"representation, check the parameters AsText-list");
 
-		return parameter_maker< Name,
+		return parameter_maker<
 				typename decltype(type_parameter)::type,
 				ValueVerifyFn, EnableFn, ParserFn,
 				std::remove_const_t< decltype(type_to_text) >

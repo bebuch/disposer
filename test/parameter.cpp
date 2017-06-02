@@ -61,7 +61,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
-					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int >,
 					disposer::value_verify_always,
 					disposer::enable_always,
@@ -97,7 +96,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
-					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
 					disposer::value_verify_always,
 					disposer::enable_always,
@@ -139,7 +137,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
-					decltype("v"_param),
 					disposer::parameter< decltype("v"_param), int, float >,
 					disposer::value_verify_always,
 					disposer::enable_always,

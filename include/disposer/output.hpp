@@ -250,7 +250,6 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an output
 	template <
-		typename Name,
 		typename OutputType,
 		typename EnableFn >
 	struct output_maker{
@@ -258,10 +257,10 @@ namespace disposer{
 		using hana_tag = output_maker_tag;
 
 		/// \brief Output name as compile time string
-		using name_type = Name;
+		using name_type = typename OutputType::name_type;
 
 		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		static constexpr auto name = name_type::value;
 
 		/// \brief Type of a disposer::output
 		using type = OutputType;
@@ -299,7 +298,7 @@ namespace disposer{
 		constexpr auto type_output =
 			hana::unpack(unpack_types, hana::template_< output >);
 
-		return output_maker< Name,
+		return output_maker<
 			typename decltype(type_output)::type, EnableFn >{
 				std::move(enable)
 			};

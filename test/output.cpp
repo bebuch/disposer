@@ -51,7 +51,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
-					decltype("v"_out),
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int >,
 					disposer::enable_always
@@ -81,7 +80,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
-					decltype("v"_out),
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int, float >,
 					disposer::enable_always
@@ -114,7 +112,6 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
-					decltype("v"_out),
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int, float >,
 					disposer::enable_always
