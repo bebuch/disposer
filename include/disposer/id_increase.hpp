@@ -75,7 +75,7 @@ namespace disposer{
 			std::size_t expand = 0;
 			std::size_t reduce = 0;
 			iop_list.log([&expand, &reduce](logsys::stdlogb& os){
-					os << "id increase with expand = " << expand
+					os << "with expand = " << expand
 						<< " and reduce = " << reduce;
 				},
 				[&]{
