@@ -13,6 +13,7 @@
 #include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
+#include "id_increase.hpp"
 
 #include <functional>
 
@@ -40,6 +41,7 @@ namespace disposer{
 			std::string const& type_name,
 			std::string const& chain,
 			std::size_t number,
+			id_increase_t id_increase,
 			input_list&& inputs,
 			output_list&& outputs
 		);
@@ -112,7 +114,7 @@ namespace disposer{
 		///
 		/// When your module is triggered with the ID 8, you can put outputs
 		/// with the ID's 8, 9, 10 and 11.
-		std::size_t const id_increase;
+		id_increase_t const id_increase;
 
 		/// Read only reference to the ID while exec() does run
 		std::size_t const& id;

@@ -66,12 +66,13 @@ int main(){
 		{
 			auto const register_fn = disposer::make_register_fn(
 				disposer::configure(),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
 			static_assert(std::is_same_v< decltype(key.copy(register_fn)),
 				disposer::module_maker< hana::tuple<
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 
@@ -89,6 +90,7 @@ int main(){
 				disposer::configure(
 					"v"_in(hana::type_c< int >)
 				),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
@@ -101,7 +103,7 @@ int main(){
 						disposer::connection_verify_always,
 						disposer::type_verify_always
 					>
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 
@@ -123,6 +125,7 @@ int main(){
 				disposer::configure(
 					"v"_out(hana::type_c< int >)
 				),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
@@ -134,7 +137,7 @@ int main(){
 							disposer::no_transform, int >,
 						disposer::enable_always
 					>
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 
@@ -157,6 +160,7 @@ int main(){
 				disposer::configure(
 					"v"_param(hana::type_c< int >)
 				),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
@@ -172,7 +176,7 @@ int main(){
 							hana::make_pair(hana::type_c< int >, "sint32"_s)
 						))
 					>
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 
@@ -195,6 +199,7 @@ int main(){
 					"v"_out(hana::type_c< int >),
 					"v"_param(hana::type_c< int >)
 				),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
@@ -223,7 +228,7 @@ int main(){
 							hana::make_pair(hana::type_c< int >, "sint32"_s)
 						))
 					>
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 
@@ -295,6 +300,7 @@ int main(){
 						disposer::connection_verify(enable_in_c),
 						disposer::type_verify(enable_in_t))
 				),
+				disposer::normal_id_increase(),
 				enable_fn()
 			);
 
@@ -330,7 +336,7 @@ int main(){
 						decltype(enable_in_c),
 						decltype(enable_in_t)
 					>
-				>, enable_fn > >);
+				>, disposer::normal_id_increase, enable_fn > >);
 
 			auto object = key.ref(register_fn)(disposer::make_data{});
 

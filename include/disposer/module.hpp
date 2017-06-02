@@ -261,13 +261,14 @@ namespace disposer{
 			std::string const& module_type,
 			std::string const& chain,
 			std::size_t number,
+			id_increase_t id_increase,
 			Inputs&& inputs,
 			Outputs&& outputs,
 			Parameters&& parameters,
 			EnableFn const& enable_fn
 		)
 			: module_base(
-					module_type, chain, number,
+					module_type, chain, number, id_increase,
 					// these two functions can be called prior initialzation
 					generate_input_list(accessory_),
 					generate_output_list(accessory_)
@@ -340,6 +341,7 @@ namespace disposer{
 		std::string const& type_name,
 		std::string const& chain,
 		std::size_t number,
+		id_increase_t id_increase,
 		Inputs&& inputs,
 		Outputs&& outputs,
 		Parameters&& parameters,
@@ -351,7 +353,7 @@ namespace disposer{
 				std::remove_const_t< std::remove_reference_t< Parameters > >,
 				std::remove_const_t< std::remove_reference_t< EnableFn > >
 			> >(
-				type_name, chain, number,
+				type_name, chain, number, id_increase,
 				static_cast< Inputs&& >(inputs),
 				static_cast< Outputs&& >(outputs),
 				static_cast< Parameters&& >(parameters),
@@ -362,10 +364,14 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
+		typename IdIncreaseFn,
 		typename EnableFn >
 	struct module_maker{
 		/// \brief Tuple of input/output/parameter-maker objects
 		IOP_MakerList makers;
+
+		/// \brief Must return a std::size_t > 0
+		id_increase_fn< IdIncreaseFn > id_increase_fn;
 
 		/// \brief The function object that is called in enable()
 		EnableFn enable_fn;
@@ -551,6 +557,10 @@ namespace disposer{
 				}
 			);
 
+			auto const id_increase = id_increase_fn(
+				make_iop_list(iop_log{basic_location,
+					"id increase", ""}, iop_list));
+
 			// A helper function
 			auto as_map = [](auto&& xs){
 				return hana::to_map(hana::transform(
@@ -570,6 +580,7 @@ namespace disposer{
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
+					id_increase,
 					std::move(inputs),
 					std::move(outputs),
 					std::move(parameters),
@@ -595,12 +606,25 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
+		typename IdIncreaseFn,
 		typename EnableFn >
 	class register_fn{
 	public:
-		constexpr register_fn(module_maker< IOP_MakerList, EnableFn >&& maker)
+		template <
+			typename IOP_MakerListParam,
+			typename IdIncreaseFnParam,
+			typename EnableFnParam >
+		constexpr register_fn(
+			IOP_MakerListParam&& list,
+			IdIncreaseFnParam&& id_increase,
+			EnableFnParam&& enable_fn
+		)
 			: called_flag_(false)
-			, maker_(std::move(maker))
+			, maker_{
+				static_cast< IOP_MakerListParam&& >(list),
+				static_cast< IdIncreaseFnParam&& >(id_increase),
+				static_cast< EnableFnParam&& >(enable_fn)
+			}
 			{}
 
 		/// \brief Call this function to register the module with the given type
@@ -624,7 +648,7 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The module_maker object
-		module_maker< IOP_MakerList, EnableFn > maker_;
+		module_maker< IOP_MakerList, IdIncreaseFn, EnableFn > maker_;
 
 		friend struct unit_test_key;
 	};
@@ -632,18 +656,22 @@ namespace disposer{
 
 	template <
 		typename IOP_MakerList,
+		typename IdIncreaseFn,
 		typename EnableFn >
 	constexpr auto make_register_fn(
 		IOP_MakerList&& list,
+		IdIncreaseFn&& id_increase,
 		EnableFn&& enable_fn
 	){
 		return register_fn<
 				std::remove_reference_t< IOP_MakerList >,
+				std::remove_reference_t< IdIncreaseFn >,
 				std::remove_reference_t< EnableFn >
-			>{{
+			>(
 				static_cast< IOP_MakerList&& >(list),
+				static_cast< IdIncreaseFn&& >(id_increase),
 				static_cast< EnableFn&& >(enable_fn)
-			}};
+			);
 	}
 
 

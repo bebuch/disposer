@@ -37,7 +37,9 @@ namespace disposer{
 			modules_.cend(),
 			std::size_t(1),
 			[](std::size_t increase, module_ptr const& module){
-				return increase * module->id_increase;
+				// TODO: optimize by using reduce
+				increase *= module->id_increase.expand;
+				return increase;
 			}
 		)),
 		generate_id_(generate_id),
