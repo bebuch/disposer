@@ -134,7 +134,7 @@ namespace disposer{
 			bool last_use,
 			std::optional< output_info > const& info
 		)noexcept
-			: input_base(Name::value.c_str(), output)
+			: input_base(output, last_use)
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),
@@ -143,8 +143,7 @@ namespace disposer{
 						return info->is_enabled(type_transform(type));
 					}(info, hana::type_c< T >)
 				) ...)
-			)
-			, last_use_(last_use) {}
+			) {}
 
 
 		std::multimap< std::size_t, references_type > get_references(){
@@ -171,7 +170,7 @@ namespace disposer{
 			}
 
 			std::multimap< std::size_t, values_type > result;
-			if(last_use_){
+			if(last_use()){
 				output_ptr()->transfer_values(input_key(), current_id(),
 					[&result](std::vector< value_carrier >&& list){
 						for(auto& carrier: list){
@@ -268,8 +267,6 @@ namespace disposer{
 
 
 		enabled_map_type enabled_map_;
-
-		bool const last_use_;
 	};
 
 

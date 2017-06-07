@@ -86,13 +86,11 @@ namespace disposer{
 
 
 		constexpr output(enabled_map_type&& enable_map)noexcept:
-			output_base(Name::value.c_str()),
 			enabled_map_(std::move(enable_map))
 			{}
 
 		/// \brief Outputs are default-movable
 		constexpr output(output&& other):
-			output_base(std::move(other)),
 			next_id_(other.next_id_),
 			enabled_map_(std::move(other.enabled_map_)),
 			data_(std::move(other.data_)){}
@@ -132,6 +130,11 @@ namespace disposer{
 		constexpr bool
 		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
 			return is_enabled(type_transform(type));
+		}
+
+
+		virtual std::string_view get_name()const noexcept override{
+			return std::string_view(name.c_str());
 		}
 
 

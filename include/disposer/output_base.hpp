@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 #include <stdexcept>
+#include <string_view>
 
 
 namespace disposer{
@@ -78,7 +79,7 @@ namespace disposer{
 			std::function< void(std::vector< value_carrier >&&) >;
 
 		/// \brief Constructor
-		constexpr output_base(std::string_view name)noexcept: name(name), id_(0) {}
+		constexpr output_base()noexcept: id_(0) {}
 
 		/// \brief Outputs are not copyable
 		output_base(output_base const&) = default;
@@ -123,8 +124,7 @@ namespace disposer{
 		}
 
 
-		/// \brief Name of the output in the config file
-		std::string_view const name;
+		virtual std::string_view get_name()const noexcept = 0;
 
 
 	protected:

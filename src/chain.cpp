@@ -105,8 +105,9 @@ namespace disposer{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(chain_key(), id);
-					process_module(i, run, [](chain& c, std::size_t i){
+					process_module(i, run, [id](chain& c, std::size_t i){
 						c.modules_[i]->exec(chain_key());
+						c.modules_[i]->cleanup(chain_key(), id);
 					}, "exec");
 				}
 			}catch(...){
@@ -203,7 +204,7 @@ namespace disposer{
 		std::size_t const i,
 		std::size_t const run,
 		F const& action,
-		char const* const action_name
+		std::string_view action_name
 	){
 		// lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(module_mutexes_[i]);

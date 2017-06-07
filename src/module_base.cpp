@@ -41,8 +41,8 @@ namespace disposer{
 
 
 	void module_base::cleanup(chain_key&&, std::size_t id)noexcept{
-		for(auto& output: outputs_){
-			output.get().cleanup(module_base_key(), id);
+		for(auto& input: inputs_){
+			input.get().cleanup(module_base_key(), id);
 		}
 	}
 
@@ -60,7 +60,7 @@ namespace disposer{
 	module_base::get_outputs(creator_key&&)const{
 		std::map< std::string, output_base* > map;
 		for(auto output: outputs_){
-			map.emplace(output.get().name, &output.get());
+			map.emplace(output.get().get_name(), &output.get());
 		}
 		return map;
 	}

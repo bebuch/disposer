@@ -100,7 +100,7 @@ namespace disposer{
 			std::size_t const i,
 			std::size_t const run,
 			F const& action,
-			char const* const action_name
+			std::string_view action_name
 		);
 
 
