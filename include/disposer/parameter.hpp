@@ -23,6 +23,50 @@
 namespace disposer{
 
 
+	namespace impl{
+
+
+		template < typename T >
+		struct is_optional: std::false_type{};
+
+		template < typename T >
+		struct is_optional< std::optional< T > >: std::true_type{};
+
+		template < typename T >
+		constexpr bool is_optional_v = is_optional< T >::value;
+
+
+		struct hana_is_optional_t{
+			template < typename T >
+			constexpr auto operator()(hana::basic_type< T >)const noexcept{
+				if constexpr(is_optional_v< T >){
+					return hana::true_c;
+				}else{
+					return hana::false_c;
+				}
+			}
+		};
+
+		constexpr auto hana_is_optional = hana_is_optional_t{};
+
+
+		struct hana_remove_optional_t{
+			template < typename T >
+			constexpr auto operator()(hana::basic_type< T >)const noexcept{
+				if constexpr(is_optional_v< T >){
+					return hana::type_c< typename T::value_type >;
+				}else{
+					return hana::type_c< T >;
+				}
+			}
+		};
+
+		constexpr auto hana_remove_optional = hana_remove_optional_t{};
+
+
+	}
+
+
 	template < typename Name, typename ... T >
 	class parameter{
 	public:
@@ -214,7 +258,16 @@ namespace disposer{
 			hana::type_c< DefaultValues > == hana::type_c< no_defaults >
 		){
 			(void)default_values; // silence clang ...
-			return default_value_type< decltype(typelist) >();
+			if constexpr(hana::all_of(typelist, impl::hana_is_optional)){
+				return std::make_optional(hana::unpack(typelist,
+					[](auto ... types){
+						return hana::make_map(
+							hana::make_pair(types,
+								typename decltype(types)::type()) ...);
+					}));
+			}else{
+				return default_value_type< decltype(typelist) >();
+			}
 		}else{
 			static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
 				"DefaultValues must be a hana::tuple with a value for "
@@ -268,7 +321,8 @@ namespace disposer{
 			"type list");
 		static_assert(hana::all_of(typelist, [keys](auto type){
 				return hana::or_(
-					hana::contains(keys, type), hana::contains(as_text, type)
+					hana::contains(keys, impl::hana_remove_optional(type)),
+					hana::contains(as_text, impl::hana_remove_optional(type))
 				);
 			}),
 			"At least one of the parameter's types has neither a hana::string "
@@ -286,9 +340,11 @@ namespace disposer{
 			[](auto type){
 				constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
 				if constexpr(hana::contains(keys, type)){
-					return hana::make_pair(type, AsText{}[type]);
+					return hana::make_pair(type,
+						AsText{}[impl::hana_remove_optional(type)]);
 				}else{
-					return hana::make_pair(type, as_text[type]);
+					return hana::make_pair(type,
+						as_text[impl::hana_remove_optional(type)]);
 				}
 			}), hana::make_map);
 

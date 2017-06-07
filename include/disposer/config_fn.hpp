@@ -19,6 +19,8 @@
 
 #include <logsys/stdlogb.hpp>
 
+#include <optional>
+
 #include "output_info.hpp"
 
 
@@ -473,6 +475,15 @@ namespace disposer{
 				is >> result;
 				return result;
 			}
+		}
+
+		template < typename IOP_List, typename T >
+		std::optional< T > operator()(
+			IOP_List const& iop_list,
+			std::string_view value,
+			hana::basic_type< std::optional< T > >
+		)const{
+			return (*this)(iop_list, value, hana::type_c< T >);
 		}
 	};
 
