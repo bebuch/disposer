@@ -227,7 +227,7 @@ namespace disposer{
 		virtual void cleanup(std::size_t id)noexcept override{
 			std::lock_guard< std::mutex > lock(mutex_);
 
-			assert(id >= next_id_);
+			assert(id <= next_id_);
 
 			remove_until(id);
 		}
