@@ -105,9 +105,9 @@ namespace disposer{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(chain_key(), id);
-					process_module(i, run, [id](chain& c, std::size_t i){
-						c.modules_[i]->exec(chain_key());
-						c.modules_[i]->cleanup(chain_key(), id);
+					process_module(i, run, [this, id](std::size_t i){
+						modules_[i]->exec(chain_key());
+						modules_[i]->cleanup(chain_key(), id);
 					}, "exec");
 				}
 			}catch(...){
@@ -116,8 +116,8 @@ namespace disposer{
 					// exec was successful
 					if(ready_run_[i] >= run + 1) continue;
 
-					process_module(i, run, [id](chain& c, std::size_t i){
-						c.modules_[i]->cleanup(chain_key(), id);
+					process_module(i, run, [this, id](std::size_t i){
+						modules_[i]->cleanup(chain_key(), id);
 					}, "cleanup");
 				}
 
@@ -216,7 +216,7 @@ namespace disposer{
 				<< "chain(" << modules_[i]->chain << ") module("
 				<< modules_[i]->number << ":" << modules_[i]->type_name
 				<< ") " << action_name;
-		}, [this, i, &action]{ action(*this, i); });
+		}, [i, &action]{ action(i); });
 
 		// make module ready
 		ready_run_[i] = run + 1;
