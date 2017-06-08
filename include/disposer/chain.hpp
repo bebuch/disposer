@@ -146,6 +146,23 @@ namespace disposer{
 		std::condition_variable enable_cv_;
 	};
 
+	class chain_enable_guard{
+	public:
+		chain_enable_guard(chain& c)
+			: chain_(c)
+		{
+			chain_.enable();
+		}
+
+		~chain_enable_guard(){
+			chain_.disable();
+		}
+
+
+	private:
+		chain& chain_;
+	};
+
 
 }
 
