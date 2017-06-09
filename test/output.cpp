@@ -29,6 +29,7 @@ namespace hana = boost::hana;
 
 using namespace hana::literals;
 using namespace disposer::literals;
+using namespace std::literals::string_view_literals;
 
 constexpr auto types = hana::tuple_t< int, float >;
 constexpr auto types_set = hana::to_set(types);
@@ -37,7 +38,7 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
-	static constexpr disposer::iop_log iop_log{"pre", "output", "v"};
+	static constexpr disposer::iop_log iop_log{"pre"sv, "output"sv, "v"sv};
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iop_log, iops);

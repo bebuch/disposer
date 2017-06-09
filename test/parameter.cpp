@@ -38,7 +38,7 @@ int main(){
 	using namespace hana::literals;
 	using hana::type_c;
 
-	static constexpr disposer::iop_log iop_log{"pre", "parameter", "v"};
+	static constexpr disposer::iop_log iop_log{"pre"sv, "parameter"sv, "v"sv};
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto get_object =
 		disposer::iop_list< hana::tuple<> >(iop_log, iops);
