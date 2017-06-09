@@ -91,7 +91,6 @@ namespace disposer{
 
 		/// \brief Outputs are default-movable
 		constexpr output(output&& other):
-			next_id_(other.next_id_),
 			enabled_map_(std::move(other.enabled_map_)),
 			data_(std::move(other.data_)){}
 
@@ -156,9 +155,7 @@ namespace disposer{
 		get_references(std::size_t id)override{
 			std::lock_guard< std::mutex > lock(mutex_);
 
-			assert(id <= next_id_);
-
-			auto from = data_.lower_bound(next_id_);
+			auto from = data_.begin();
 			auto const to = data_.upper_bound(id);
 
 			std::vector< reference_carrier > result;
@@ -182,8 +179,6 @@ namespace disposer{
 				}
 			}
 
-			next_id_ = id + 1;
-
 			return result;
 		}
 
@@ -193,9 +188,7 @@ namespace disposer{
 		)override{
 			std::lock_guard< std::mutex > lock(mutex_);
 
-			assert(id <= next_id_);
-
-			auto from = data_.lower_bound(next_id_);
+			auto from = data_.begin();
 			auto const to = data_.upper_bound(id);
 
 			std::vector< value_carrier > result;
@@ -220,30 +213,15 @@ namespace disposer{
 			}
 
 			fn(std::move(result));
-
-			remove_until(id);
 		}
 
 		virtual void cleanup(std::size_t id)noexcept override{
 			std::lock_guard< std::mutex > lock(mutex_);
-
-			assert(id <= next_id_);
-
-			remove_until(id);
-		}
-
-		void remove_until(std::size_t id)noexcept{
-			auto from = data_.begin();
-			auto to = data_.upper_bound(id);
-			data_.erase(from, to);
-
-			if(next_id_ < id + 1) next_id_ = id + 1;
+			data_.erase(data_.begin(), data_.upper_bound(id));
 		}
 
 
 		std::mutex mutex_;
-
-		std::size_t next_id_{0};
 
 		enabled_map_type enabled_map_;
 

@@ -55,7 +55,7 @@ namespace disposer{ namespace{
 
 	module_ptr create_module(
 		module_maker_list const& maker_list,
-		make_data&& data
+		make_data const& data
 	){
 		auto iter = maker_list.find(data.type_name);
 
@@ -103,8 +103,8 @@ namespace disposer{
 						config_input.transfer == in_transfer::move;
 					auto const output_ptr =
 						&variables.at(config_input.variable).output;
-					config_inputs.emplace(config_input.name,
-						std::make_tuple(output_ptr, last_use));
+					config_inputs.try_emplace(
+						config_input.name, output_ptr, last_use);
 					if(last_use) variables.erase(config_input.variable);
 				}
 

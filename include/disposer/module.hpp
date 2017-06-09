@@ -476,8 +476,8 @@ namespace disposer{
 							: std::get< 0 >(iter->second);
 
 						auto last_use = output
-							? true
-							: std::get< 1 >(iter->second);
+							? std::get< 1 >(iter->second)
+							: true;
 
 						auto info = output
 							? std::optional< output_info >(
