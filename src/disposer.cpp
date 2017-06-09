@@ -92,7 +92,7 @@ namespace disposer{
 			[&config](){ check_semantic(config); });
 
 		logsys::log([](logsys::stdlogb& os){
-			os << "look for unused stuff and warn about it";
+				os << "look for unused stuff and warn about it";
 			}, [&config](){ unused_warnings(config); });
 
 		auto merged_config = logsys::log(
