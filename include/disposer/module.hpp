@@ -371,7 +371,7 @@ namespace disposer{
 		IOP_MakerList makers;
 
 		/// \brief Must return a std::size_t > 0
-		id_increase_fn< IdIncreaseFn > id_increase_fn;
+		id_increase_fn< IdIncreaseFn > id_increase;
 
 		/// \brief The function object that is called in enable()
 		EnableFn enable_fn;
@@ -557,7 +557,7 @@ namespace disposer{
 				}
 			);
 
-			auto const id_increase = id_increase_fn(
+			auto const id_increase_value = id_increase(
 				make_iop_list(iop_log{basic_location,
 					"id increase", ""}, iop_list));
 
@@ -580,7 +580,7 @@ namespace disposer{
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
-					id_increase,
+					id_increase_value,
 					std::move(inputs),
 					std::move(outputs),
 					std::move(parameters),

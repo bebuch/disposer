@@ -124,6 +124,7 @@ namespace disposer{
 		}
 
 
+		/// \brief Returns the output name
 		virtual std::string_view get_name()const noexcept = 0;
 
 

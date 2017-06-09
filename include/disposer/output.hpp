@@ -132,6 +132,7 @@ namespace disposer{
 		}
 
 
+		/// \brief Returns the output name
 		virtual std::string_view get_name()const noexcept override{
 			return std::string_view(name.c_str());
 		}
