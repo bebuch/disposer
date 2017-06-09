@@ -156,7 +156,7 @@ namespace disposer{
 		get_references(std::size_t id)override{
 			std::lock_guard< std::mutex > lock(mutex_);
 
-			assert(id >= next_id_);
+			assert(id <= next_id_);
 
 			auto from = data_.lower_bound(next_id_);
 			auto const to = data_.upper_bound(id);
@@ -193,7 +193,7 @@ namespace disposer{
 		)override{
 			std::lock_guard< std::mutex > lock(mutex_);
 
-			assert(id >= next_id_);
+			assert(id <= next_id_);
 
 			auto from = data_.lower_bound(next_id_);
 			auto const to = data_.upper_bound(id);
