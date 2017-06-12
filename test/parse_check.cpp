@@ -217,6 +217,13 @@ R"file(parameter_set
 			uint8 = 4
 		param2
 			uint16 = 2
+component
+	component_name = component_type
+		parameter_set = ps1
+		param3 = v3
+			uint8 = 4
+		param4
+			uint16 = 2
 chain
 	chain1
 		dmod1
@@ -240,7 +247,20 @@ chain
 					}
 				}
 			},
-			{},
+			{
+				{
+					"component_name",
+					"component_type",
+					{
+						{
+							{"ps1"}
+						}, {
+							{"param3", {"v3"}, {{"uint8", "4"}}},
+							{"param4", {}, {{"uint16", "2"}}}
+						}
+					}
+				}
+			},
 			{
 				{
 					"chain1",

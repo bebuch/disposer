@@ -126,6 +126,143 @@ R"file(parameter_set
 	,
 	// 009
 	{
+R"file(component)file"
+	,
+"Syntax error at line 1, pos 0: 'component', expected keyword line "
+"'parameter_set\n' or keyword line 'component\n' or keyword line 'chain\n'"
+	}
+	,
+	// 010
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+component)file"
+	,
+"Syntax error at line 6, pos 0: 'component', expected a parameter set line "
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
+"specialization '\t\t\ttype = value\n' or keyword line 'component\n' or "
+"keyword line 'chain\n'"
+	}
+	,
+	// 011
+	{
+R"file(parameter_set
+	name1
+		test=a
+	name2
+		test=b
+component
+)file"
+	,
+"Syntax error at line 7, pos 0: '', expected at least one component line "
+"'\tname = component\n'"
+	}
+	,
+	// 003
+	{
+R"file(component
+)file"
+	,
+"Syntax error at line 2, pos 0: '', expected at least one component "
+"line '\tname = component\n'"
+	}
+	,
+	// 004
+	{
+R"file(component
+	name1
+	name2
+)file"
+	,
+"Syntax error at line 2, pos 6: '\tname1\n', expected a component line "
+"'\tname = component\n'"
+	}
+	,
+	// 004
+	{
+R"file(component
+	name1 = type1
+	name2
+)file"
+	,
+"Syntax error at line 3, pos 0: '\tname2\n', expected at least one parameter "
+"set reference line '\t\t\tparameter_set = name\n', where 'parameter_set' is "
+"a keyword and 'name' the name of the referenced parameter set or one "
+"parameter '\t\t\tname [= value]\n'"
+	}
+	,
+	// 005
+	{
+R"file(component
+	name1 = type1
+		param1 = x
+		parameter_set = a
+)file"
+	,
+"Syntax error at line 4, pos 2: '\t\tparameter_set = a\n', expected another "
+"parameter, but a parameter name ('\t\tname [= value]\n') must not be "
+"'parameter_set'"
+	}
+	,
+	// 006
+	{
+R"file(component
+	name1 = type1
+		param1
+			type
+)file"
+	,
+"Syntax error at line 4, pos 7: '\t\t\ttype\n', expected a parameter "
+"specialization '\t\t\ttype = value\n'"
+	}
+	,
+	// 007
+	{
+R"file(component
+	name1 = type1
+		test=a
+	name2 = type1
+)file"
+	,
+"Syntax error at line 5, pos 0: '', expected at least one parameter set "
+"reference line '\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+"keyword and 'name' the name of the referenced parameter set or one parameter "
+"'\t\t\tname [= value]\n'"
+	}
+	,
+	// 008
+	{
+R"file(component
+	name1 = type1
+		test=a
+	name2 = type1
+		test=b
+)file"
+	,
+"Syntax error at line 6, pos 0: '', expected a parameter set line "
+"'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
+"specialization '\t\t\ttype = value\n' or keyword line 'component\n' or "
+"keyword line 'chain\n'"
+	}
+	,
+	// 016
+	{
+R"file(component
+	module1 = type
+		parameter_set =
+)file"
+	,
+"Syntax error at line 3, pos 17: '\t\tparameter_set =\n', expected a "
+"parameter set reference line '\t\t\tparameter_set = name\n', where "
+"'parameter_set' is a keyword and 'name' the name of the referenced "
+"parameter set"
+	}
+	,
+	// 009
+	{
 R"file(chain)file"
 	,
 "Syntax error at line 1, pos 0: 'chain', expected keyword line "
@@ -178,6 +315,16 @@ R"file(chain
 	,
 "Syntax error at line 2, pos 9: '\tchain1 =\n', expected a chain line with "
 "id_generator '\tname = id_generator\n'"
+	}
+	,
+	// 014
+	{
+R"file(chain
+	chain1
+		abc$)file"
+	,
+"Syntax error at line 3, pos 6: '\t\tabc$', expected a module line "
+"'\t\tmodule\n'"
 	}
 	,
 	// 014

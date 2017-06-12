@@ -74,6 +74,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::component,
+	name,
 	type_name,
 	parameters
 )
@@ -581,12 +582,12 @@ namespace disposer::parser{
 	;
 
 	auto const component_set_ref_def =
-		("\t\t\t\tparameter_set" >> *space >> '=')
+		("\t\tparameter_set" >> *space >> '=')
 		> *space > value > separator
 	;
 
 	auto const component_param_specialization_def =
-		"\t\t\t\t\t" > keyword > *space > '=' > *space > value > separator
+		"\t\t\t" > keyword > *space > '=' > *space > value > separator
 	;
 
 	auto const component_param_prevent_def =
@@ -594,13 +595,13 @@ namespace disposer::parser{
 	;
 
 	auto const component_param_def =
-		("\t\t\t\t" >> component_param_prevent >> keyword)
+		("\t\t" >> component_param_prevent >> keyword)
 		> -(*space >> ('=' > *space > value))
 		> separator > *component_param_specialization
 	;
 
 	auto const component_def =
-		("\t" > keyword > separator) >>
+		("\t" > keyword > *space > '=' > *space > value > separator) >>
 		component_params_checked
 	;
 
@@ -665,7 +666,9 @@ namespace disposer::parser{
 		}
 	};
 
-	struct module_param_specialization_tag: error_base< module_param_specialization_tag >{
+	struct module_param_specialization_tag
+		: error_base< module_param_specialization_tag >
+	{
 		const char* message()const{
 			return "a parameter specialization '\t\t\t\t\ttype = value\n'";
 		}
@@ -718,7 +721,7 @@ namespace disposer::parser{
 
 	struct module_tag: error_base< module_tag >{
 		const char* message()const{
-			return "a module '\t\tmodule\n'";
+			return "a module line '\t\tmodule\n'";
 		}
 	};
 
@@ -739,6 +742,91 @@ namespace disposer::parser{
 			return "keyword line 'chain\n'";
 		}
 	};
+
+	struct component_params_checked_tag
+		: error_base< component_params_checked_tag >
+	{
+		const char* message()const{
+			return "at least one parameter set reference line "
+				"'\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+				"keyword and 'name' the name of the referenced parameter set "
+				"or one parameter '\t\t\tname [= value]\n'";
+		}
+	};
+
+	struct component_set_ref_tag: error_base< component_set_ref_tag >{
+		const char* message()const{
+			return "a parameter set reference line "
+				"'\t\t\tparameter_set = name\n', where 'parameter_set' is a "
+				"keyword and 'name' the name of the referenced parameter set";
+		}
+	};
+
+	struct component_param_prevent_tag
+		: error_base< component_param_prevent_tag >
+	{
+		const char* message()const{
+			return "another parameter, but a parameter name "
+				"('\t\tname [= value]\n') must not be 'parameter_set'";
+		}
+	};
+
+	struct component_param_specialization_tag
+		: error_base< component_param_specialization_tag >
+	{
+		const char* message()const{
+			return "a parameter specialization '\t\t\ttype = value\n'";
+		}
+	};
+
+	struct component_tag: error_base< component_tag >{
+		const char* message()const{
+			return "a component line '\tname = component\n'";
+		}
+	};
+
+	struct component_param_tag: error_base< component_param_tag >{
+		const char* message()const{
+			return "a parameter '\t\tname [= value]\n' with name != "
+				"'parameter_set'";
+		}
+	};
+
+	struct component_list_tag: error_base< component_list_tag >{
+		const char* message()const{
+			return "at least one component line '\tname = component\n'";
+		}
+	};
+
+	struct component_list_checked_tag: error_base< component_list_checked_tag >{
+		const char* message()const{
+			return "a parameter set line '\tname\n' or a parameter definition "
+				"('\t\tname [= value]\n') or a parameter specialization "
+				"'\t\t\ttype = value\n' or keyword line 'component\n' or "
+				"keyword line 'chain\n'";
+		}
+	};
+
+	struct components_tag: error_base< components_tag >{
+		template < typename Iter, typename Exception, typename Context >
+		x3::error_handler_result on_error(
+			Iter& first, Iter const& last,
+			Exception const& x, Context const& context
+		){
+			msg_ = "keyword line 'component\n'";
+			if(x.which() != "separator"){
+				msg_ += " or keyword line 'chain\n'";
+			}
+			return error_base::on_error(first, last, x, context);
+		}
+
+		const char* message()const{
+			return msg_.c_str();
+		}
+
+		std::string msg_;
+	};
+
 
 	struct config_tag: error_base< config_tag >{
 		const char* message()const{

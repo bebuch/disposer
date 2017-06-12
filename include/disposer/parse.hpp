@@ -76,6 +76,7 @@ namespace disposer{
 		using chains = std::vector< chain >;
 
 		struct component{
+			std::string name;
 			std::string type_name;
 			parse::parameters parameters;
 		};
