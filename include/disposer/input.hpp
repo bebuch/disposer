@@ -90,6 +90,7 @@ namespace disposer{
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
+		/// \brief hana::map from hana::type to bool
 		using enabled_map_type = decltype(hana::make_map(
 			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
 
@@ -338,7 +339,7 @@ namespace disposer{
 		};
 
 
-	/// \brief Provid types for constructing an input
+	/// \brief Provids types for constructing an input
 	template <
 		typename InputType,
 		typename ConnectionVerifyFn,

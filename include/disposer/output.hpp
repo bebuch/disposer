@@ -56,6 +56,7 @@ namespace disposer{
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
+		/// \brief hana::map from hana::type to bool
 		using enabled_map_type = decltype(hana::make_map(
 			hana::make_pair(type_transform(hana::type_c< T >), false) ...));
 
@@ -83,6 +84,8 @@ namespace disposer{
 			"disposer::output types must not be references");
 
 
+		/// \brief If there is only one type than the type, otherwise
+		///        a std::variant of all types
 		using value_type = std::conditional_t<
 			type_count == 1,
 			typename decltype(+types[hana::int_c< 0 >])::type,
@@ -91,6 +94,7 @@ namespace disposer{
 		>;
 
 
+		/// \brief Constructor
 		constexpr output(enabled_map_type&& enable_map)noexcept:
 			enabled_map_(std::move(enable_map))
 			{}
@@ -101,6 +105,7 @@ namespace disposer{
 			data_(std::move(other.data_)){}
 
 
+		/// \brief Add given data with the current id to \ref data_
 		template < typename V >
 		void put(V&& value){
 			static_assert(
@@ -119,10 +124,12 @@ namespace disposer{
 			data_.emplace(current_id(), static_cast< V&& >(value));
 		}
 
+		/// \brief true if any type is enabled
 		constexpr bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
+		/// \brief true if type is enabled
 		template < typename U >
 		constexpr bool
 		is_enabled(hana::basic_type< U > const& type)const noexcept{
@@ -131,6 +138,7 @@ namespace disposer{
 			return enabled_map_[type];
 		}
 
+		/// \brief true if subtype is enabled
 		template < typename U >
 		constexpr bool
 		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
@@ -145,6 +153,7 @@ namespace disposer{
 
 
 	protected:
+		/// \brief Get a map from runtime types to bool
 		std::map< type_index, bool > enabled_types()const override{
 			std::map< type_index, bool > result;
 			hana::for_each(enabled_map_, [&result](auto const& x){
@@ -158,6 +167,7 @@ namespace disposer{
 
 
 	private:
+		/// \brief Get references of all data until the given id
 		virtual std::vector< reference_carrier >
 		get_references(std::size_t id)override{
 			std::lock_guard< std::mutex > lock(mutex_);
@@ -189,6 +199,9 @@ namespace disposer{
 			return result;
 		}
 
+		/// \brief Call fn with a vector of all data until the given id
+		///
+		/// The data is moved into the vector!
 		virtual void transfer_values(
 			std::size_t id,
 			TransferFn const& fn
@@ -222,16 +235,20 @@ namespace disposer{
 			fn(std::move(result));
 		}
 
+		/// \brief Remove all data until the given id
 		virtual void cleanup(std::size_t id)noexcept override{
 			std::lock_guard< std::mutex > lock(mutex_);
 			data_.erase(data_.begin(), data_.upper_bound(id));
 		}
 
 
+		/// \brief Protect \ref data_
 		std::mutex mutex_;
 
+		/// \brief hana::map from type to bool, bool is true if type is enabled
 		enabled_map_type enabled_map_;
 
+		/// \brief Map from id to data
 		std::multimap< std::size_t, value_type > data_;
 	};
 
@@ -256,6 +273,7 @@ namespace disposer{
 		/// \brief Enable function
 		enable_fn< EnableFn > enable;
 
+		/// \brief Create an output object
 		template < typename IOP_List >
 		constexpr auto operator()(IOP_List const& iop_list)const{
 			return type(hana::unpack(hana::transform(type::subtypes,
@@ -267,6 +285,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Helper function for \ref output_name::operator()
 	template <
 		typename Name,
 		typename Types,

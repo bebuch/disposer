@@ -26,6 +26,7 @@ namespace disposer{
 
 	struct input_maker_key;
 
+	/// \brief Provides information which output types are enabled
 	class output_info{
 	public:
 		/// \brief Constructor

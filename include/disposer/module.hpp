@@ -23,6 +23,7 @@
 namespace disposer{
 
 
+	/// \brief Accessory of a \ref module without log
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -56,6 +57,7 @@ namespace disposer{
 
 
 	private:
+		/// \brief Implementation for \ref operator()
 		template < typename Config, typename ConfigList >
 		static decltype(auto) get(Config& config, ConfigList&&)noexcept{
 			using io_t =
@@ -135,6 +137,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Maker of \ref module_config
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -156,6 +159,7 @@ namespace disposer{
 	}
 
 
+	/// \brief Accessory of a module during enable/disable calls
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -165,6 +169,7 @@ namespace disposer{
 		, public add_log< module_accessory< Inputs, Outputs, Parameters > >
 	{
 	public:
+		/// \brief Constructor
 		module_accessory(
 			module_base& module,
 			Inputs&& inputs,
@@ -182,7 +187,7 @@ namespace disposer{
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
 			os << "chain(" << module_.chain << ") module(" << module_.number
-				<< ":" << module_.type_name << ") exec: ";
+				<< ":" << module_.type_name << "): ";
 		}
 
 
@@ -191,6 +196,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Accessory of a module during exec calls
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -218,18 +224,22 @@ namespace disposer{
 	};
 
 
+	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
 	template < typename Accessory >
 	struct to_exec_accessory;
 
+	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
 	template < typename Inputs, typename Outputs, typename Parameters >
 	struct to_exec_accessory< module_accessory< Inputs, Outputs, Parameters > >{
 		using type = module_exec_accessory< Inputs, Outputs, Parameters >;
 	};
 
+	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
 	template < typename Accessory >
 	using to_exec_accessory_t = typename to_exec_accessory< Accessory >::type;
 
 
+	/// \brief The actual module type
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -332,6 +342,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Maker function for \ref module in a std::unique_ptr
 	template <
 		typename Inputs,
 		typename Outputs,
@@ -362,6 +373,7 @@ namespace disposer{
 	}
 
 
+	/// \brief Provids types for constructing an module
 	template <
 		typename IOP_MakerList,
 		typename IdIncreaseFn,
@@ -377,6 +389,7 @@ namespace disposer{
 		EnableFn enable_fn;
 
 
+		/// \brief Create an module object
 		auto operator()(make_data const& data)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
@@ -590,6 +603,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Wraps all given IOP configurations into a hana::tuple
 	template < typename ... IOP_Makers >
 	constexpr auto configure(IOP_Makers&& ... list){
 		static_assert(hana::and_(hana::true_c, hana::or_(
@@ -604,12 +618,14 @@ namespace disposer{
 
 	struct unit_test_key;
 
+	/// \brief Registers a module configuration in the \ref disposer
 	template <
 		typename IOP_MakerList,
 		typename IdIncreaseFn,
 		typename EnableFn >
 	class register_fn{
 	public:
+		/// \brief Constructor
 		template <
 			typename IOP_MakerListParam,
 			typename IdIncreaseFnParam,
@@ -654,6 +670,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Maker function for \ref register_fn
 	template <
 		typename IOP_MakerList,
 		typename IdIncreaseFn,

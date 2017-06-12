@@ -40,6 +40,7 @@ namespace disposer{
 	struct parameter_tag{};
 
 
+	/// \brief std::cref as callable object
 	struct as_reference_list{
 		template < typename T >
 		constexpr auto operator()(T const& iop)const noexcept{
@@ -48,6 +49,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Log Implementation for \ref iop_ref
 	struct iop_log{
 		std::string_view const location;
 		std::string_view const maker_type_name;
@@ -60,9 +62,11 @@ namespace disposer{
 	};
 
 
+	/// \brief Accessory object for all former IOP-object
 	template < typename IOP_Tuple >
 	struct iop_list: add_log< iop_list< IOP_Tuple > >{
 	public:
+		/// \brief Constructor
 		constexpr iop_list(
 			iop_log const& log_fn,
 			IOP_Tuple const& iop_tuple
@@ -70,6 +74,7 @@ namespace disposer{
 			: log_fn_(log_fn)
 			, iop_tuple_(hana::transform(iop_tuple, as_reference_list{})) {}
 
+		/// \brief Get input by compile time name
 		template < char ... C >
 		constexpr auto const& operator()(
 			input_name< C ... > const& name
@@ -83,6 +88,7 @@ namespace disposer{
 			return result.value().get();
 		}
 
+		/// \brief Get output by compile time name
 		template < char ... C >
 		constexpr auto const& operator()(
 			output_name< C ... > const& name
@@ -96,6 +102,7 @@ namespace disposer{
 			return result.value().get();
 		}
 
+		/// \brief Get parameter by compile time name
 		template < char ... C >
 		constexpr auto const& operator()(
 			parameter_name< C ... > const& name
@@ -115,12 +122,18 @@ namespace disposer{
 		}
 
 	private:
+		/// \brief Reference to an iop_log object
 		iop_log const& log_fn_;
 
+		/// \brief hana::tuple of std::reference_wrapper's of all previos iop's
+		///
+		/// The conversion to std::reference_wrapper is necessary because of
+		/// hana::optional which can not holf a raw reference.
 		decltype(hana::transform(std::declval< IOP_Tuple >(),
 			as_reference_list{})) iop_tuple_;
 	};
 
+	/// \brief Maker function for \ref iop_list
 	template < typename IOP_Tuple >
 	constexpr auto make_iop_list(
 		iop_log const& log_fn,
