@@ -52,7 +52,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
-	disposer::types::parse::module_parameters,
+	disposer::types::parse::parameters,
 	parameter_sets,
 	parameters
 )
@@ -70,6 +70,12 @@ BOOST_FUSION_ADAPT_STRUCT(
 	name,
 	id_generator,
 	modules
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+	disposer::types::parse::component,
+	type_name,
+	parameters
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -375,29 +381,29 @@ namespace disposer::parser{
 	};
 
 
-	struct params_tag;
-	x3::rule< params_tag, type::module_parameters > const
-		params("params");
+	struct module_params_tag;
+	x3::rule< module_params_tag, type::parameters > const
+		module_params("module_params");
 
-	struct params_checked_tag;
-	x3::rule< params_checked_tag, type::module_parameters > const
-		params_checked("params_checked");
+	struct module_params_checked_tag;
+	x3::rule< module_params_checked_tag, type::parameters > const
+		module_params_checked("module_params_checked");
 
 	struct set_ref_tag;
 	x3::rule< set_ref_tag, std::string > const
 		set_ref("set_ref");
 
-	struct param_specialization_tag;
-	x3::rule< param_specialization_tag, type::specialized_parameter > const
-		param_specialization("param_specialization");
+	struct module_param_specialization_tag;
+	x3::rule< module_param_specialization_tag, type::specialized_parameter > const
+		module_param_specialization("module_param_specialization");
 
-	struct param_prevent_tag;
-	x3::rule< param_prevent_tag > const
-		param_prevent("param_prevent");
+	struct module_param_prevent_tag;
+	x3::rule< module_param_prevent_tag > const
+		module_param_prevent("module_param_prevent");
 
-	struct param_tag;
-	x3::rule< param_tag, type::parameter > const
-		param("param");
+	struct module_param_tag;
+	x3::rule< module_param_tag, type::parameter > const
+		module_param("module_param");
 
 	struct input_tag;
 	x3::rule< input_tag, type::in > const input("input");
@@ -444,24 +450,32 @@ namespace disposer::parser{
 	x3::rule< chains_tag, type::chains > const
 		chains("chains");
 
+// 	struct component_tag;
+// 	x3::rule< component_tag, type::component > const
+// 		component("component");
+//
+// 	struct components_tag;
+// 	x3::rule< components_tag, type::components > const
+// 		components("components");
+
 
 	auto const set_ref_def =
 		("\t\t\t\tparameter_set" >> *space >> '=')
 		> *space > value > separator
 	;
 
-	auto const param_prevent_def =
+	auto const module_param_prevent_def =
 		x3::expect[!("parameter_set" >> *space >> '=')]
 	;
 
-	auto const param_specialization_def =
+	auto const module_param_specialization_def =
 		"\t\t\t\t\t" > keyword > *space > '=' > *space > value > separator
 	;
 
-	auto const param_def =
-		("\t\t\t\t" >> param_prevent >> keyword)
+	auto const module_param_def =
+		("\t\t\t\t" >> module_param_prevent >> keyword)
 		> -(*space >> ('=' > *space > value))
-		> separator > *param_specialization
+		> separator > *module_param_specialization
 	;
 
 	auto const input_def =
@@ -482,13 +496,13 @@ namespace disposer::parser{
 		x3::expect[+output]
 	;
 
-	auto const params_def =
-		"\t\t\tparameter" > separator > params_checked
+	auto const module_params_def =
+		"\t\t\tparameter" > separator > module_params_checked
 	;
 
-	auto const params_checked_def =
-		&x3::expect[set_ref | param] >>
-		(*set_ref >> *param)
+	auto const module_params_checked_def =
+		&x3::expect[set_ref | module_param] >>
+		(*set_ref >> *module_param)
 	;
 
 	auto const inputs_def =
@@ -503,7 +517,7 @@ namespace disposer::parser{
 
 	auto const module_def =
 		("\t\t" > keyword > separator) >>
-		-params >>
+		-module_params >>
 		-inputs >>
 		-outputs
 	;
@@ -530,6 +544,11 @@ namespace disposer::parser{
 		chains_params
 	;
 
+// 	auto const component_def =
+// 		("\t" > keyword > separator) >>
+// 		-module_params
+// 	;
+
 
 	struct config_tag;
 	x3::rule< config_tag, type::config >
@@ -541,13 +560,13 @@ namespace disposer::parser{
 	]];
 
 
-	struct params_tag: error_base< params_tag >{
+	struct module_params_tag: error_base< module_params_tag >{
 		const char* message()const{
 			return "keyword line '\t\t\tparameter\n'";
 		}
 	};
 
-	struct params_checked_tag: error_base< params_checked_tag >{
+	struct module_params_checked_tag: error_base< module_params_checked_tag >{
 		const char* message()const{
 			return "at least one parameter set reference line "
 				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
@@ -570,20 +589,20 @@ namespace disposer::parser{
 		}
 	};
 
-	struct param_prevent_tag: error_base< param_prevent_tag >{
+	struct module_param_prevent_tag: error_base< module_param_prevent_tag >{
 		const char* message()const{
 			return "another parameter, but a parameter name "
 				"('\t\t\t\tname [= value]\n') must not be 'parameter_set'";
 		}
 	};
 
-	struct param_specialization_tag: error_base< param_specialization_tag >{
+	struct module_param_specialization_tag: error_base< module_param_specialization_tag >{
 		const char* message()const{
 			return "a parameter specialization '\t\t\t\t\ttype = value\n'";
 		}
 	};
 
-	struct param_tag: error_base< param_tag >{
+	struct module_param_tag: error_base< module_param_tag >{
 		const char* message()const{
 			return "a parameter '\t\t\t\tname [= value]\n' with name != "
 				"'parameter_set'";
@@ -676,11 +695,11 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(sets_set_list)
 	BOOST_SPIRIT_DEFINE(sets_set_list_checked)
 	BOOST_SPIRIT_DEFINE(sets_config)
-	BOOST_SPIRIT_DEFINE(param_specialization)
-	BOOST_SPIRIT_DEFINE(param)
-	BOOST_SPIRIT_DEFINE(param_prevent)
-	BOOST_SPIRIT_DEFINE(params)
-	BOOST_SPIRIT_DEFINE(params_checked)
+	BOOST_SPIRIT_DEFINE(module_param_specialization)
+	BOOST_SPIRIT_DEFINE(module_param)
+	BOOST_SPIRIT_DEFINE(module_param_prevent)
+	BOOST_SPIRIT_DEFINE(module_params)
+	BOOST_SPIRIT_DEFINE(module_params_checked)
 	BOOST_SPIRIT_DEFINE(set_ref)
 	BOOST_SPIRIT_DEFINE(input)
 	BOOST_SPIRIT_DEFINE(output)

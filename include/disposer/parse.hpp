@@ -55,14 +55,14 @@ namespace disposer{
 			std::string variable;
 		};
 
-		struct module_parameters{
+		struct parameters{
 			std::vector< std::string > parameter_sets;
 			std::vector< parameter > parameters;
 		};
 
 		struct module{
 			std::string type_name;
-			module_parameters parameters;
+			parse::parameters parameters;
 			std::vector< in > inputs;
 			std::vector< out > outputs;
 		};
@@ -75,9 +75,16 @@ namespace disposer{
 
 		using chains = std::vector< chain >;
 
+		struct component{
+			std::string type_name;
+			parse::parameters parameters;
+		};
+
+		using components = std::vector< component >;
 
 		struct config{
 			parse::parameter_sets sets;
+			parse::components components;
 			parse::chains chains;
 		};
 

@@ -73,7 +73,7 @@ namespace disposer{ namespace types{ namespace parse{
 		return os << "{" << v.name << "," << v.variable << "}";
 	}
 
-	std::ostream& operator<<(std::ostream& os, module_parameters const& v){
+	std::ostream& operator<<(std::ostream& os, parameters const& v){
 		return os << "{" << v.parameter_sets << "," << v.parameters << "}";
 	}
 
@@ -87,8 +87,13 @@ namespace disposer{ namespace types{ namespace parse{
 			<< *v.id_generator << "," << v.modules << "}";
 	}
 
+	std::ostream& operator<<(std::ostream& os, component const& v){
+		return os << "{" << v.type_name << "," << v.parameters << "}";
+	}
+
 	std::ostream& operator<<(std::ostream& os, config const& v){
-		return os << "{" << v.sets << "," << v.chains << "}";
+		return os << "{" << v.sets << "," << v.components
+			<< "," << v.chains << "}";
 	}
 
 	bool operator==(
@@ -134,8 +139,8 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
-		module_parameters const& l,
-		module_parameters const& r
+		parameters const& l,
+		parameters const& r
 	){
 		return l.parameter_sets == r.parameter_sets
 			&& l.parameters == r.parameters;
@@ -161,10 +166,19 @@ namespace disposer{ namespace types{ namespace parse{
 	}
 
 	bool operator==(
+		component const& l,
+		component const& r
+	){
+		return l.type_name == r.type_name
+			&& l.parameters == r.parameters;
+	}
+
+	bool operator==(
 		config const& l,
 		config const& r
 	){
 		return l.sets == r.sets
+			&& l.components == r.components
 			&& l.chains == r.chains;
 	}
 
@@ -226,6 +240,7 @@ chain
 					}
 				}
 			},
+			{},
 			{
 				{
 					"chain1",
