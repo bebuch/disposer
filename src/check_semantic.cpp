@@ -34,6 +34,56 @@ namespace disposer{
 			}
 		}
 
+		std::set< std::string > components;
+		for(auto& component: config.components){
+			if(!components.insert(component.name).second){
+				throw std::logic_error(
+					"in component list: duplicate name '" + component.name + "'"
+				);
+			}
+
+			auto location = [&component]{
+				return "in component(" + component.name + ") of type("
+					+ component.type_name + "): ";
+			};
+
+			std::set< std::string > sets;
+			for(auto& set: component.parameters.parameter_sets){
+				if(parameter_sets.find(set) == parameter_sets.end()){
+					throw std::logic_error(
+						location() + "unknown parameter_set '" + set + "'"
+					);
+				}
+
+				if(!sets.insert(set).second){
+					throw std::logic_error(
+						location() + "duplicate use of parameter_set '"
+						+ set + "'"
+					);
+				}
+			}
+
+			std::set< std::string > keys;
+			for(auto& param: component.parameters.parameters){
+				if(!keys.insert(param.key).second){
+					throw std::logic_error(
+						location() + "duplicate key '" + param.key + "'"
+					);
+				}
+
+				std::set< std::string > types;
+				for(auto& specialization: param.specialized_values){
+					if(!keys.insert(specialization.type).second){
+						throw std::logic_error(
+							location() + "duplicate parameter "
+							"specialization type '" + specialization.type
+							+ "' for parameter '" + param.key + "'"
+						);
+					}
+				}
+			}
+		}
+
 		std::set< std::string > chains;
 		for(auto& chain: config.chains){
 			if(!chains.insert(chain.name).second){
