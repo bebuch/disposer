@@ -58,28 +58,35 @@ namespace disposer{
 	};
 
 
+	/// \brief The actual input type
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input: public input_base{
 	public:
 		static_assert(hana::is_a< input_name_tag, Name >);
 
 
+		/// \brief Hana tag to identify inputs
 		using hana_tag = input_tag;
 
 
+		/// \brief Compile time name of the input
 		using name_type = Name;
 
 		/// \brief Name as hana::string
 		static constexpr auto name = Name::value;
 
 
+		/// \brief Meta function to transfrom subtypes to the actual types
 		static constexpr auto type_transform =
 			type_transform_fn< TypeTransformFn >{};
 
+		/// \brief Subtypes (before type_transform) as hana::tuple
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
+		/// \brief Types (after type_transform) as hana::tuple
 		static constexpr auto types = hana::transform(subtypes, type_transform);
 
+		/// \brief Count of parameter types
 		static constexpr std::size_t type_count = sizeof...(T);
 
 
@@ -110,6 +117,8 @@ namespace disposer{
 			"disposer::input types must not be references");
 
 
+		/// \brief If there is only one type than the type, otherwise
+		///        a std::variant of all types
 		using values_type = std::conditional_t<
 			type_count == 1,
 			typename decltype(+types[hana::int_c< 0 >])::type,
@@ -117,6 +126,9 @@ namespace disposer{
 				types, hana::template_< std::variant >))::type
 		>;
 
+		/// \brief If there is only one type than a std::reference_wrapper of
+		///        the type, otherwise a std::variant of
+		///        std::reference_wrapper's of all types
 		using references_type = std::conditional_t<
 			type_count == 1,
 			std::reference_wrapper<
@@ -129,6 +141,7 @@ namespace disposer{
 		>;
 
 
+		/// \brief Constructor
 		constexpr input(
 			output_base* output,
 			bool last_use,
@@ -146,6 +159,8 @@ namespace disposer{
 			) {}
 
 
+		/// \brief Get all data until the current id without transferring
+		///        ownership
 		std::multimap< std::size_t, references_type > get_references(){
 			if(!output_ptr()){
 				throw std::logic_error("input is not linked to an output");
@@ -164,6 +179,8 @@ namespace disposer{
 			return result;
 		}
 
+		/// \brief Get all data until the current id with transferring
+		///        ownership
 		std::multimap< std::size_t, values_type > get_values(){
 			if(!output_ptr()){
 				throw std::logic_error("input is not linked to an output");
@@ -209,10 +226,12 @@ namespace disposer{
 		}
 
 
+		/// \brief true if any type is enabled
 		constexpr bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
+		/// \brief true if type is enabled
 		template < typename U >
 		constexpr bool
 		is_enabled(hana::basic_type< U > const& type)const noexcept{
@@ -221,6 +240,7 @@ namespace disposer{
 			return enabled_map_[type];
 		}
 
+		/// \brief true if subtype is enabled
 		template < typename U >
 		constexpr bool
 		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
@@ -229,24 +249,40 @@ namespace disposer{
 
 
 	private:
+		/// \brief Pointer to function to convert \ref any_type to
+		///        \ref references_type
 		using ref_convert_fn = references_type(*)(any_type const& data);
+
+		/// \brief Pointer to function to convert \ref any_type to
+		///        \ref values_type
 		using val_convert_fn = values_type(*)(any_type&& data);
 
 
+		/// \brief Map from runtime_type to conversion function
+		///        (\ref any_type to \ref references_type)
 		static std::unordered_map< type_index, ref_convert_fn > const ref_map_;
+
+		/// \brief Map from runtime_type to conversion function
+		///        (\ref any_type to \ref values_type)
 		static std::unordered_map< type_index, val_convert_fn > const val_map_;
 
 
+		/// \brief Conversion function from \ref any_type to
+		///        \ref references_type
 		template < typename U >
 		static references_type ref_convert(any_type const& data)noexcept{
 			return std::cref(reinterpret_cast< U const& >(data));
 		}
 
+		/// \brief Conversion function from \ref any_type to \ref values_type
 		template < typename U >
 		static values_type val_convert(any_type&& data){
 			return reinterpret_cast< U&& >(data);
 		}
 
+
+		/// \brief Conversion function from runtime type to
+		///        \ref references_type
 		static references_type ref_convert_rt(
 			type_index const& type,
 			any_type const& data
@@ -256,6 +292,8 @@ namespace disposer{
 			return (iter->second)(data);
 		}
 
+		/// \brief Conversion function from runtime type to
+		///        \ref values_type
 		static values_type val_convert_rt(
 			type_index const& type,
 			any_type&& data
@@ -266,6 +304,7 @@ namespace disposer{
 		}
 
 
+		/// \brief hana::map from type to bool, bool is true if type is enabled
 		enabled_map_type enabled_map_;
 	};
 
@@ -324,6 +363,7 @@ namespace disposer{
 		type_verify_fn< TypeVerifyFn > type_verify;
 
 
+		/// \brief Create an input object
 		template < typename IOP_List >
 		constexpr auto operator()(
 			IOP_List const& iop_list,
@@ -353,6 +393,7 @@ namespace disposer{
 	};
 
 
+	/// \brief Helper function for \ref input_name::operator()
 	template <
 		typename Name,
 		typename Types,

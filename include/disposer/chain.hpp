@@ -146,20 +146,25 @@ namespace disposer{
 		std::condition_variable enable_cv_;
 	};
 
+
+	/// \brief A resource guard for chain enable/disable
 	class chain_enable_guard{
 	public:
+		/// \brief Calls enable on the chain object
 		chain_enable_guard(chain& c)
 			: chain_(c)
 		{
 			chain_.enable();
 		}
 
+		/// \brief Calls disable on the chain object
 		~chain_enable_guard(){
 			chain_.disable();
 		}
 
 
 	private:
+		/// \brief The chain object
 		chain& chain_;
 	};
 

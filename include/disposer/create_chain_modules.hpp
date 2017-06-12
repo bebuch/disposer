@@ -16,6 +16,7 @@
 namespace disposer{
 
 
+	/// \brief Creating a chain as given by the config
 	std::vector< module_ptr > create_chain_modules(
 		module_maker_list const& maker_list,
 		types::merge::chain const& config_chain

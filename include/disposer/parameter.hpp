@@ -73,6 +73,7 @@ namespace disposer{
 		static_assert(hana::is_a< parameter_name_tag, Name >);
 
 
+		/// \brief Hana tag to identify parameters
 		using hana_tag = parameter_tag;
 
 
@@ -83,7 +84,7 @@ namespace disposer{
 		static constexpr auto name = Name::value;
 
 
-		/// \brief Types of the parameter
+		/// \brief Types as hana::tuple
 		static constexpr auto types = hana::tuple_t< T ... >;
 
 		/// \brief Count of parameter types
@@ -244,6 +245,8 @@ namespace disposer{
 		}
 	};
 
+
+	struct no_defaults{};
 
 	template <
 		typename Types,

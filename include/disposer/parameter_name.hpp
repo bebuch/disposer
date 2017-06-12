@@ -21,14 +21,15 @@
 namespace disposer{
 
 
+	/// \brief Hana Tag for \ref parameter_name
 	struct parameter_name_tag{};
-
-	struct no_defaults{};
 
 	template < char ... C >
 	struct parameter_name: ct_name< C ... >{
+		/// \brief Hana tag to identify parameter names
 		using hana_tag = parameter_name_tag;
 
+		/// \brief Creates a \ref parameter_maker object
 		template <
 			typename Types,
 			typename Arg2 = no_argument,
@@ -46,10 +47,12 @@ namespace disposer{
 		)const;
 	};
 
+	/// \brief Make a \ref parameter_name object
 	template < char ... C >
 	parameter_name< C ... > parameter_name_c{};
 
 
+	/// \brief Make a \ref parameter_name object by a hana::string object
 	template < char ... C > constexpr parameter_name< C ... >
 	to_parameter_name(hana::string< C ... >)noexcept{ return {}; }
 
@@ -64,6 +67,7 @@ namespace disposer{
 namespace disposer::literals{
 
 
+	/// \brief Make a \ref parameter_name object via a user defined literal
 	template < typename CharT, CharT ... c >
 	constexpr auto operator"" _param(){
 		static_assert(std::is_same_v< CharT, char >);

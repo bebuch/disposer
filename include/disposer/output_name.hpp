@@ -16,12 +16,16 @@
 namespace disposer{
 
 
+	/// \brief Hana Tag for \ref output_name
 	struct output_name_tag{};
 
+	/// \brief A compile time string type for outputs
 	template < char ... C >
 	struct output_name: ct_name< C ... >{
+		/// \brief Hana tag to identify output names
 		using hana_tag = output_name_tag;
 
+		/// \brief Creates a \ref output_maker object
 		template <
 			typename Types,
 			typename Arg2 = no_argument,
@@ -33,10 +37,12 @@ namespace disposer{
 		)const;
 	};
 
+	/// \brief Make a \ref output_name object
 	template < char ... C >
 	output_name< C ... > output_name_c{};
 
 
+	/// \brief Make a \ref output_name object by a hana::string object
 	template < char ... C > constexpr output_name< C ... >
 	to_output_name(hana::string< C ... >)noexcept{ return {}; }
 
@@ -51,6 +57,7 @@ namespace disposer{
 namespace disposer::literals{
 
 
+	/// \brief Make a \ref output_name object via a user defined literal
 	template < typename CharT, CharT ... c >
 	constexpr auto operator"" _out(){
 		static_assert(std::is_same_v< CharT, char >);

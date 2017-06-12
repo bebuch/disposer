@@ -17,11 +17,16 @@
 namespace disposer{
 
 
+	/// \brief Information about the ID increase of a module
 	struct id_increase_t{
+		/// \brief How much ID's does the module fire after getting data
 		std::size_t const expand;
+
+		/// \brief How much ID's does the module consume before firing
 		std::size_t const reduce;
 	};
 
+	/// \brief Default class for a module which fires one times per ID
 	struct normal_id_increase{
 		template < typename IOP_List >
 		constexpr id_increase_t operator()(
@@ -31,22 +36,24 @@ namespace disposer{
 		}
 	};
 
-	struct id_increase_fn_tag;
-
+	/// \brief Wrapper around a id_increase function
+	///
+	/// Needed for logging the results of the function.
 	template < typename Fn >
 	class id_increase_fn{
 	public:
-		using hana_tag = id_increase_fn_tag;
-
+		/// \brief Copy in the increase function
 		constexpr id_increase_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
+		/// \brief Move in the increase function
 		constexpr id_increase_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
 
+		/// \brief Calculate the noexcept of the increase function
 		template < typename IOP_List >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
@@ -68,6 +75,7 @@ namespace disposer{
 			));
 		}
 
+		/// \brief Call the increase function and log the result
 		template < typename IOP_List >
 		constexpr id_increase_t operator()(
 			IOP_List const& iop_list
@@ -91,9 +99,11 @@ namespace disposer{
 		}
 
 	private:
+		/// \brief The increase function
 		Fn fn_;
 	};
 
+	/// \brief Maker function for \ref id_increase_fn
 	template < typename Fn >
 	constexpr auto id_increase(Fn&& fn)
 		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){

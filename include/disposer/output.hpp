@@ -30,23 +30,29 @@ namespace disposer{
 		static_assert(hana::is_a< output_name_tag, Name >);
 
 
+		/// \brief Hana tag to identify outputs
 		using hana_tag = output_tag;
 
 
+		/// \brief Compile time name of the output
 		using name_type = Name;
 
 		/// \brief Name as hana::string
 		static constexpr auto name = Name::value;
 
 
+		/// \brief Meta function to transfrom subtypes to the actual types
 		static constexpr auto type_transform =
 			type_transform_fn< TypeTransformFn >{};
 
+		/// \brief Subtypes (before type_transform) as hana::tuple
 		static constexpr auto subtypes = hana::tuple_t< T ... >;
 
+		/// \brief Types (after type_transform) as hana::tuple
 		static constexpr auto types =
 			hana::transform(subtypes, type_transform);
 
+		/// \brief Count of parameter types
 		static constexpr std::size_t type_count = sizeof...(T);
 
 

@@ -16,12 +16,16 @@
 namespace disposer{
 
 
+	/// \brief Hana Tag for \ref input_name
 	struct input_name_tag{};
 
+	/// \brief A compile time string type for inputs
 	template < char ... C >
 	struct input_name: ct_name< C ... >{
+		/// \brief Hana tag to identify input names
 		using hana_tag = input_name_tag;
 
+		/// \brief Creates a \ref input_maker object
 		template <
 			typename Types,
 			typename Arg2 = no_argument,
@@ -35,10 +39,12 @@ namespace disposer{
 		)const;
 	};
 
+	/// \brief Make a \ref input_name object
 	template < char ... C >
 	input_name< C ... > input_name_c{};
 
 
+	/// \brief Make a \ref input_name object by a hana::string object
 	template < char ... C > constexpr input_name< C ... >
 	to_input_name(hana::string< C ... >)noexcept{ return {}; }
 
@@ -53,6 +59,7 @@ namespace disposer{
 namespace disposer::literals{
 
 
+	/// \brief Make a \ref input_name object via a user defined literal
 	template < typename CharT, CharT ... c >
 	constexpr auto operator"" _in(){
 		static_assert(std::is_same_v< CharT, char >);

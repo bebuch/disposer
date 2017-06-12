@@ -20,30 +20,30 @@
 namespace disposer{
 
 
-	/// \brief Tag for input_maker
+	/// \brief Hana Tag for input_maker
 	struct input_maker_tag{};
 
-	/// \brief Tag for output_maker
+	/// \brief Hana Tag for output_maker
 	struct output_maker_tag{};
 
-	/// \brief Tag for parameter_maker
+	/// \brief Hana Tag for parameter_maker
 	struct parameter_maker_tag{};
 
 
-	/// \brief Tag for input
+	/// \brief Hana Tag for input
 	struct input_tag{};
 
-	/// \brief Tag for output
+	/// \brief Hana Tag for output
 	struct output_tag{};
 
-	/// \brief Tag for parameter
+	/// \brief Hana Tag for parameter
 	struct parameter_tag{};
 
 
 	struct as_reference_list{
 		template < typename T >
-		constexpr auto operator()(T const& maker)const noexcept{
-			return std::cref(maker);
+		constexpr auto operator()(T const& iop)const noexcept{
+			return std::cref(iop);
 		}
 	};
 
@@ -60,20 +60,23 @@ namespace disposer{
 	};
 
 
-	template < typename Tuple >
-	struct iop_list: add_log< iop_list< Tuple > >{
+	template < typename IOP_Tuple >
+	struct iop_list: add_log< iop_list< IOP_Tuple > >{
 	public:
-		constexpr iop_list(iop_log const& log_fn, Tuple const& tuple)noexcept
+		constexpr iop_list(
+			iop_log const& log_fn,
+			IOP_Tuple const& iop_tuple
+		)noexcept
 			: log_fn_(log_fn)
-			, tuple_(hana::transform(tuple, as_reference_list{})) {}
+			, iop_tuple_(hana::transform(iop_tuple, as_reference_list{})) {}
 
 		template < char ... C >
 		constexpr auto const& operator()(
 			input_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple_, [name](auto const& maker){
-				return hana::is_a< input_tag >(maker.get())
-					&& maker.get().name == name.value;
+			auto result = hana::find_if(iop_tuple_, [name](auto const& input){
+				return hana::is_a< input_tag >(input.get())
+					&& input.get().name == name.value;
 			});
 			static_assert(result != hana::nothing,
 				"requested input doesn't exist (yet)");
@@ -84,9 +87,9 @@ namespace disposer{
 		constexpr auto const& operator()(
 			output_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple_, [name](auto const& maker){
-				return hana::is_a< output_tag >(maker.get())
-					&& maker.get().name == name.value;
+			auto result = hana::find_if(iop_tuple_, [name](auto const& output){
+				return hana::is_a< output_tag >(output.get())
+					&& output.get().name == name.value;
 			});
 			static_assert(result != hana::nothing,
 				"requested output doesn't exist (yet)");
@@ -97,9 +100,9 @@ namespace disposer{
 		constexpr auto const& operator()(
 			parameter_name< C ... > const& name
 		)const noexcept{
-			auto result = hana::find_if(tuple_, [name](auto const& maker){
-				return hana::is_a< parameter_tag >(maker.get())
-					&& maker.get().name == name.value;
+			auto result = hana::find_if(iop_tuple_, [name](auto const& param){
+				return hana::is_a< parameter_tag >(param.get())
+					&& param.get().name == name.value;
 			});
 			static_assert(result != hana::nothing,
 				"requested parameter doesn't exist (yet)");
@@ -114,16 +117,16 @@ namespace disposer{
 	private:
 		iop_log const& log_fn_;
 
-		decltype(hana::transform(std::declval< Tuple >(), as_reference_list{}))
-			tuple_;
+		decltype(hana::transform(std::declval< IOP_Tuple >(),
+			as_reference_list{})) iop_tuple_;
 	};
 
-	template < typename Tuple >
+	template < typename IOP_Tuple >
 	constexpr auto make_iop_list(
 		iop_log const& log_fn,
-		Tuple const& tuple
+		IOP_Tuple const& iop_tuple
 	)noexcept{
-		return iop_list< Tuple >(log_fn, tuple);
+		return iop_list< IOP_Tuple >(log_fn, iop_tuple);
 	}
 
 
