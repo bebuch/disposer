@@ -34,7 +34,7 @@ std::vector< std::pair< std::string, std::string > > tests{
 R"file(xparameter_set)file"
 	,
 "Syntax error at line 1, pos 0: 'xparameter_set', expected keyword line "
-"'parameter_set\n' or keyword line 'chain\n'"
+"'parameter_set\n' or keyword line 'component\n' or keyword line 'chain\n'"
 	}
 	,
 	// 001
@@ -120,7 +120,8 @@ R"file(parameter_set
 	,
 "Syntax error at line 6, pos 0: '', expected a parameter set line "
 "'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
-"specialization '\t\t\ttype = value\n' or keyword line 'chain\n'"
+"specialization '\t\t\ttype = value\n' or keyword line 'component\n' or "
+"keyword line 'chain\n'"
 	}
 	,
 	// 009
@@ -128,7 +129,7 @@ R"file(parameter_set
 R"file(chain)file"
 	,
 "Syntax error at line 1, pos 0: 'chain', expected keyword line "
-"'parameter_set\n' or keyword line 'chain\n'"
+"'parameter_set\n' or keyword line 'component\n' or keyword line 'chain\n'"
 	}
 	,
 	// 010
@@ -140,9 +141,10 @@ R"file(parameter_set
 		test=b
 chain)file"
 	,
-"Syntax error at line 6, pos 5: 'chain', expected a parameter set line "
+"Syntax error at line 6, pos 0: 'chain', expected a parameter set line "
 "'\tname\n' or a parameter definition ('\t\tname [= value]\n') or a parameter "
-"specialization '\t\t\ttype = value\n' or keyword line 'chain\n'"
+"specialization '\t\t\ttype = value\n' or keyword line 'component\n' or "
+"keyword line 'chain\n'"
 	}
 	,
 	// 011
