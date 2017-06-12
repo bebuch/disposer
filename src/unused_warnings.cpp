@@ -19,22 +19,28 @@ namespace disposer{
 
 	void unused_warnings(types::parse::config const& config){
 		std::map< std::string, bool > parameter_sets;
-		for(auto& set: config.sets){
+		for(auto const& set: config.sets){
 			parameter_sets.emplace(set.name, false);
+		}
+
+		for(auto const& component: config.components){
+			for(auto const& set: component.parameters.parameter_sets){
+				parameter_sets[set] = true;
+			}
 		}
 
 		for(auto& chain: config.chains){
 			std::map< std::string, bool > variables;
-			for(auto& module: chain.modules){
-				for(auto& set: module.parameters.parameter_sets){
+			for(auto const& module: chain.modules){
+				for(auto const& set: module.parameters.parameter_sets){
 					parameter_sets[set] = true;
 				}
 
-				for(auto& input: module.inputs){
+				for(auto const& input: module.inputs){
 					variables[input.variable] = true;
 				}
 
-				for(auto& output: module.outputs){
+				for(auto const& output: module.outputs){
 					variables.emplace(output.variable, false);
 				}
 			}
