@@ -61,7 +61,8 @@ namespace disposer{ namespace{
 
 		if(iter == maker_list.end()){
 			throw std::logic_error(
-				data.location() + "type '" + data.type_name + "' is unknown!"
+				data.location() + "module type(" + data.type_name
+				+ ") is unknown!"
 			);
 		}
 

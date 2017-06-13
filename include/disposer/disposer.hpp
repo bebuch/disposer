@@ -90,6 +90,10 @@ namespace disposer{
 		disposer();
 
 
+		/// \brief Standard Destructor
+		~disposer();
+
+
 		/// \brief Not copyable
 		disposer(disposer const&) = delete;
 
@@ -124,14 +128,21 @@ namespace disposer{
 
 
 	private:
-		/// \brief List of id_generators (map from name to object)
-		std::unordered_map< std::string, id_generator > id_generators_;
+		/// \brief List of components (map from component type name to maker
+		///        function)
+		component_maker_list component_maker_list_;
+
+		/// \brief List of all components (map from name to object)
+		std::unordered_map< std::string, component_ptr > components_;
 
 		/// \brief List of modules (map from module type name to maker function)
-		module_maker_list maker_list_;
+		module_maker_list module_maker_list_;
 
-		/// \brief List of alle chains (map from name to object)
+		/// \brief List of all chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
+
+		/// \brief List of id_generators (map from name to object)
+		std::unordered_map< std::string, id_generator > id_generators_;
 
 		/// \brief The declarant object to register new component types
 		::disposer::component_declarant component_declarant_;

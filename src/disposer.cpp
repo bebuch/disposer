@@ -11,10 +11,60 @@
 #include <disposer/unused_warnings.hpp>
 #include <disposer/merge.hpp>
 #include <disposer/module_base.hpp>
+#include <disposer/component_base.hpp>
+#include <disposer/component_make_data.hpp>
 
 
 namespace disposer{ namespace{
 
+
+	component_ptr create_component(
+		component_maker_list const& maker_list,
+		component_make_data const& data
+	){
+		auto iter = maker_list.find(data.type_name);
+
+		if(iter == maker_list.end()){
+			throw std::logic_error(
+				data.location() + "component type(" + data.type_name
+				+ ") is unknown!"
+			);
+		}
+
+		try{
+			return iter->second(data);
+		}catch(std::exception const& error){
+			throw std::runtime_error(
+				data.location() + error.what()
+			);
+		}
+	}
+
+	auto create_components(
+		component_maker_list const& maker_list,
+		types::merge::components_config&& config
+	){
+		std::unordered_map< std::string, component_ptr > components;
+
+		for(auto& config_component: config){
+			logsys::log([&config_component](logsys::stdlogb& os){
+				os << "component(" << config_component.name << ":"
+					<< config_component.type_name << ") create";
+			}, [&]{
+				// emplace the new process chain
+				components.emplace(
+					config_component.name,
+					create_component(maker_list, {
+							config_component.name,
+							config_component.type_name,
+							config_component.parameters
+						})
+				);
+			});
+		}
+
+		return components;
+	}
 
 	auto create_chains(
 		module_maker_list const& maker_list,
@@ -26,7 +76,7 @@ namespace disposer{ namespace{
 		for(auto& config_chain: config){
 			logsys::log([&config_chain](logsys::stdlogb& os){
 				os << "chain(" << config_chain.name << ") create";
-			}, [&](){
+			}, [&]{
 				// emplace the new process chain
 				chains.emplace(
 					std::piecewise_construct,
@@ -55,9 +105,31 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	disposer::disposer():
-		component_declarant_(*this),
-		module_declarant_(*this) {}
+	disposer::disposer()
+		: component_declarant_(*this)
+		, module_declarant_(*this) {}
+
+	disposer::~disposer() = default;
+
+	void component_declarant::operator()(
+		std::string const& type_name,
+		component_maker_fn&& fn
+	){
+		logsys::log([&type_name](logsys::stdlogb& os){
+			os << "register component type name '" << type_name << "'";
+		}, [&]{
+			auto iter = disposer_.component_maker_list_.insert(
+				std::make_pair(type_name, std::move(fn))
+			);
+
+			if(!iter.second){
+				throw std::logic_error(
+					"component type name '" + type_name
+					+ "' is double registered!"
+				);
+			}
+		});
+	}
 
 	void module_declarant::operator()(
 		std::string const& type_name,
@@ -66,7 +138,7 @@ namespace disposer{
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "register module type name '" << type_name << "'";
 		}, [&]{
-			auto iter = disposer_.maker_list_.insert(
+			auto iter = disposer_.module_maker_list_.insert(
 				std::make_pair(type_name, std::move(fn))
 			);
 
@@ -103,10 +175,16 @@ namespace disposer{
 			[](logsys::stdlogb& os){ os << "merge"; },
 			[&config](){ return merge(std::move(config)); });
 
+		logsys::log([](logsys::stdlogb& os){ os << "create components"; },
+			[this, &merged_config](){
+				components_ = create_components(
+					component_maker_list_, std::move(merged_config.components));
+			});
+
 		logsys::log([](logsys::stdlogb& os){ os << "create chains"; },
 			[this, &merged_config](){
-				std::tie(chains_, id_generators_) =
-					create_chains(maker_list_, std::move(merged_config.chains));
+				std::tie(chains_, id_generators_) = create_chains(
+					module_maker_list_, std::move(merged_config.chains));
 			});
 	}
 
