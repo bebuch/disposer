@@ -9,6 +9,7 @@
 #ifndef _disposer__disposer__hpp_INCLUDED_
 #define _disposer__disposer__hpp_INCLUDED_
 
+#include "component_ptr.hpp"
 #include "chain.hpp"
 
 #include <unordered_map>
@@ -52,6 +53,36 @@ namespace disposer{
 	};
 
 
+	/// \brief Functor to register a new component by a name and an init
+	///        function
+	class component_declarant{
+	public:
+		/// \brief Register a new component in the disposer by mapping the
+		///        component name to the constructing init function
+		void operator()(
+			std::string const& type,
+			component_maker_fn&& fn);
+
+
+	private:
+		/// \brief Only constructible by the disposer class
+		component_declarant(disposer& disposer): disposer_(disposer) {}
+
+
+		/// \brief Not copyable
+		component_declarant(component_declarant const&) = delete;
+
+		/// \brief Not movable
+		component_declarant(component_declarant&&) = delete;
+
+
+		/// \brief Reference to the disposer class
+		disposer& disposer_;
+
+	friend class disposer;
+	};
+
+
 	/// \brief Main class of the disposer software
 	class disposer{
 	public:
@@ -73,8 +104,11 @@ namespace disposer{
 		disposer& operator=(disposer&&) = delete;
 
 
+		/// \brief Get a reference to the component_declarant object
+		::disposer::component_declarant& component_declarant();
+
 		/// \brief Get a reference to the module_declarant object
-		module_declarant& declarant();
+		::disposer::module_declarant& module_declarant();
 
 
 		/// \brief Load and parse the config file
@@ -99,10 +133,14 @@ namespace disposer{
 		/// \brief List of alle chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
 
-		/// \brief The declarant object to register new module types
-		module_declarant declarant_;
+		/// \brief The declarant object to register new component types
+		::disposer::component_declarant component_declarant_;
 
-	friend class module_declarant;
+		/// \brief The declarant object to register new module types
+		::disposer::module_declarant module_declarant_;
+
+	friend class ::disposer::module_declarant;
+	friend class ::disposer::component_declarant;
 	};
 
 

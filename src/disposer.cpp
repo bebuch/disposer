@@ -56,7 +56,8 @@ namespace disposer{
 
 
 	disposer::disposer():
-		declarant_(*this) {}
+		component_declarant_(*this),
+		module_declarant_(*this) {}
 
 	void module_declarant::operator()(
 		std::string const& type_name,
@@ -78,8 +79,12 @@ namespace disposer{
 	}
 
 
-	module_declarant& disposer::declarant(){
-		return declarant_;
+	component_declarant& disposer::component_declarant(){
+		return component_declarant_;
+	}
+
+	module_declarant& disposer::module_declarant(){
+		return module_declarant_;
 	}
 
 	void disposer::load(std::string const& filename){

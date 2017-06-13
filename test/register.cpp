@@ -34,7 +34,7 @@ int main(){
 
 	try{
 		disposer::disposer program;
-		auto& declarant = program.declarant();
+		auto& declarant = program.module_declarant();
 
 		{
 			auto module_register_fn = disposer::make_module_register_fn(
