@@ -66,6 +66,16 @@ namespace disposer{
 	};
 
 
+	/// \brief Converts a IOP hana::tuple into a hana::map
+	constexpr auto as_iop_map = [](auto&& xs){
+		return hana::to_map(hana::transform(
+			static_cast< decltype(xs)&& >(xs),
+			[](auto&& x){
+				return hana::make_pair(x.name, static_cast< decltype(x)&& >(x));
+			}));
+	};
+
+
 	/// \brief Accessory object for all former IOP-object
 	template < typename IOP_Tuple >
 	struct iop_list: add_log< iop_list< IOP_Tuple > >{

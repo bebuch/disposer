@@ -463,29 +463,16 @@ namespace disposer{
 				make_iop_list(iop_log{basic_location,
 					"id increase", {}}, iop_list));
 
-			// A helper function
-			auto as_map = [](auto&& xs){
-				return hana::to_map(hana::transform(
-					static_cast< decltype(xs)&& >(xs),
-					[](auto&& x){
-						return hana::make_pair(x.name, std::move(x));
-					}));
-			};
-
-			auto inputs = as_map(hana::filter(
-				std::move(iop_list), hana::is_a< input_tag >));
-			auto outputs = as_map(hana::filter(
-				std::move(iop_list), hana::is_a< output_tag >));
-			auto parameters = as_map(hana::filter(
-				std::move(iop_list), hana::is_a< parameter_tag >));
-
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
 					id_increase_value,
-					std::move(inputs),
-					std::move(outputs),
-					std::move(parameters),
+					as_iop_map(hana::filter(
+						std::move(iop_list), hana::is_a< input_tag >)),
+					as_iop_map(hana::filter(
+						std::move(iop_list), hana::is_a< output_tag >)),
+					as_iop_map(hana::filter(
+						std::move(iop_list), hana::is_a< parameter_tag >)),
 					enable_fn
 				);
 		}
