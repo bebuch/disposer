@@ -12,7 +12,6 @@
 #include "merge.hpp"
 
 #include <set>
-#include <map>
 
 
 namespace disposer{
@@ -27,9 +26,6 @@ namespace disposer{
 
 	/// \brief Output name lists
 	using output_list = std::set< std::string >;
-
-	/// \brief List of parameter name value pairs
-	using parameter_list = std::map< std::string, parameter_data >;
 
 
 	/// \brief Dataset for disposer to construct and initialize a module

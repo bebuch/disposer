@@ -33,7 +33,7 @@ namespace disposer{ namespace{
 	){
 		using boost::adaptors::reverse;
 
-		parameter_map parameters;
+		parameter_list parameters;
 
 		// add all parameters from module
 		for(auto& parameter: reverse(params.parameters)){
