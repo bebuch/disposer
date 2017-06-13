@@ -91,7 +91,7 @@ namespace disposer{ namespace{
 	){
 		types::merge::components_config result;
 		for(auto& component: components){
-			result.emplace_back(types::merge::component{
+			result.push_back({
 				std::move(component.name),
 				std::move(component.type_name),
 				merge_parameters(sets, std::move(component.parameters))

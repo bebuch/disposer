@@ -14,10 +14,7 @@
 #include <disposer/module_base.hpp>
 
 
-namespace disposer{
-
-
-	namespace{
+namespace disposer{ namespace{
 
 
 		auto create_chains(
@@ -53,7 +50,10 @@ namespace disposer{
 		}
 
 
-	}
+}}
+
+
+namespace disposer{
 
 
 	disposer::disposer():
