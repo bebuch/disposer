@@ -53,11 +53,15 @@ namespace disposer{
 	struct iop_log{
 		std::string_view const location;
 		std::string_view const maker_type_name;
-		std::string_view const maker_name;
+		std::optional< std::string_view > const maker_name;
 
 		void operator()(logsys::stdlogb& os)const{
-			os << location << " " << maker_type_name << "(" << maker_name
-				<< ") ";
+			os << location << " " << maker_type_name;
+			if(maker_name){
+				os << "(" << *maker_name << ") ";
+			}else{
+				os << ": ";
+			}
 		}
 	};
 

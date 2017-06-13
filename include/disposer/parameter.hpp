@@ -452,6 +452,64 @@ namespace disposer{
 		);
 	}
 
+	template < typename LocationFn, typename Maker >
+	auto make_parameter(
+		LocationFn const& location,
+		Maker const& maker,
+		parameter_list const& params
+	){
+		auto const name = maker.name.c_str();
+		auto const iter = params.find(name);
+		auto const found = iter != params.end();
+
+		bool all_specialized = true;
+
+		auto get_value =
+			[&location, &all_specialized, &maker, found, name, iter](auto type)
+			-> std::optional< std::string_view >
+		{
+			if(!found) return {};
+
+			auto const specialization = iter->second
+				.specialized_values.find(
+					maker.to_text[type].c_str());
+			auto const end =
+				iter->second.specialized_values.end();
+			if(specialization == end){
+				all_specialized = false;
+				if(!iter->second.generic_value){
+					throw std::logic_error(
+						location + "parameter("
+						+ std::string(name) + ") has neither a "
+						"generic value but a specialization "
+						"for type '" + specialization->first
+						+ "'"
+					);
+				}else{
+					return {*iter->second.generic_value};
+				}
+			}else{
+				return {specialization->second};
+			}
+		};
+
+		auto result = hana::to_map(hana::transform(
+			maker.types,
+			[&get_value](auto&& type){
+				return hana::make_pair(type, get_value(type));
+			}));
+
+		if(found && all_specialized && iter->second.generic_value){
+			logsys::log([&location, name](logsys::stdlogb& os){
+				os << location << "parameter("
+					<< name << ") has specialized values for "
+					"all its types, the also given generic "
+					"value will never be used (WARNING)";
+			});
+		}
+
+		return result;
+	}
 
 
 }

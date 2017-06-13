@@ -248,7 +248,7 @@ namespace disposer{
 		typename EnableFn >
 	class module: public module_base{
 	public:
-		/// \brief Type for exec_fn
+		/// \brief Type for enable_fn
 		using accessory_type =
 			module_accessory< Inputs, Outputs, Parameters >;
 
@@ -259,11 +259,11 @@ namespace disposer{
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-			static_assert(std::is_callable_v<
-				EnableFn(accessory_type const&) >);
+		static_assert(std::is_callable_v<
+			EnableFn(accessory_type const&) >);
 #else
-			static_assert(std::is_invocable_v<
-				EnableFn, accessory_type const& >);
+		static_assert(std::is_invocable_v<
+			EnableFn, accessory_type const& >);
 #endif
 
 
@@ -284,12 +284,12 @@ namespace disposer{
 					generate_input_list(accessory_),
 					generate_output_list(accessory_)
 				)
-			, enable_fn_(enable_fn)
 			, accessory_(*this,
 					std::move(inputs),
 					std::move(outputs),
 					std::move(parameters)
-				) {}
+				)
+			, enable_fn_(enable_fn) {}
 
 
 	private:
@@ -332,14 +332,14 @@ namespace disposer{
 #endif
 
 
+		/// \brief Module access object for exec_fn_
+		exec_accessory_type accessory_;
+
 		/// \brief The function object that is called in enable()
 		EnableFn enable_fn_;
 
 		/// \brief The function object that is called in exec()
 		std::optional< exec_fn_t > exec_fn_;
-
-		/// \brief Module access object for exec_fn_
-		exec_accessory_type accessory_;
 	};
 
 
@@ -501,79 +501,27 @@ namespace disposer{
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"input", maker.name.c_str()}, get),
+								"input", {maker.name.c_str()}}, get),
 								output, last_use, info));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"output", maker.name.c_str()}, get)));
+								"output", {maker.name.c_str()}}, get)));
 					}else{
-						auto const name = maker.name.c_str();
-						auto const iter = data.parameters.find(name);
-						auto const found = iter != data.parameters.end();
-
-						bool all_specialized = true;
-
-						auto get_value =
-							[&location, &all_specialized, &maker, found, name,
-								iter]
-							(auto type) -> std::optional< std::string_view >
-						{
-							if(!found) return {};
-
-							auto const specialization = iter->second
-								.specialized_values.find(
-									maker.to_text[type].c_str());
-							auto const end =
-								iter->second.specialized_values.end();
-							if(specialization == end){
-								all_specialized = false;
-								if(!iter->second.generic_value){
-									throw std::logic_error(
-										location + "parameter("
-										+ std::string(name) + ") has neither a "
-										"generic value but a specialization "
-										"for type '" + specialization->first
-										+ "'"
-									);
-								}else{
-									return {*iter->second.generic_value};
-								}
-							}else{
-								return {specialization->second};
-							}
-						};
-
-						auto params = hana::to_map(hana::transform(
-							maker.types,
-							[&get_value](auto&& type){
-								return hana::make_pair(type, get_value(type));
-							}));
-
-						if(found && all_specialized
-							&& iter->second.generic_value
-						){
-							logsys::log([&location, name](logsys::stdlogb& os){
-								os << location << "parameter("
-									<< name << ") has specialized values for "
-									"all its types, the also given generic "
-									"value will never be used (WARNING)";
-							});
-						}
-
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"parameter", maker.name.c_str()}, get),
-								std::move(params)));
+								"parameter", {maker.name.c_str()}}, get),
+								make_parameter(location, maker,
+									data.parameters)));
 					}
 				}
 			);
 
 			auto const id_increase_value = id_increase(
 				make_iop_list(iop_log{basic_location,
-					"id increase", ""}, iop_list));
+					"id increase", {}}, iop_list));
 
 			// A helper function
 			auto as_map = [](auto&& xs){
