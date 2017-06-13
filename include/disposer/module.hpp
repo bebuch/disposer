@@ -36,10 +36,10 @@ namespace disposer{
 			Inputs&& inputs,
 			Outputs&& outputs,
 			Parameters&& parameters
-		):
-			inputs_(std::move(inputs)),
-			outputs_(std::move(outputs)),
-			parameters_(std::move(parameters)) {}
+		)
+			: inputs_(std::move(inputs))
+			, outputs_(std::move(outputs))
+			, parameters_(std::move(parameters)) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
