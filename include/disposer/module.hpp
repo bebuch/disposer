@@ -15,6 +15,7 @@
 #include "parameter.hpp"
 #include "module_base.hpp"
 #include "add_log.hpp"
+#include "module_make_data.hpp"
 
 #include <type_traits>
 #include <atomic>
@@ -390,7 +391,7 @@ namespace disposer{
 
 
 		/// \brief Create an module object
-		auto operator()(make_data const& data)const{
+		auto operator()(module_make_data const& data)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
 			auto input_names = hana::transform(
@@ -648,7 +649,7 @@ namespace disposer{
 		void operator()(std::string const& module_type, module_declarant& add){
 			if(!called_flag_.exchange(true)){
 				add(module_type,
-					[maker{std::move(maker_)}](make_data const& data){
+					[maker{std::move(maker_)}](module_make_data const& data){
 						return maker(data);
 					});
 			}else{

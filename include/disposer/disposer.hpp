@@ -20,7 +20,6 @@
 namespace disposer{
 
 
-	struct make_data;
 	class disposer;
 
 

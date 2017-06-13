@@ -10,7 +10,6 @@
 #define _disposer__module_base__hpp_INCLUDED_
 
 #include "disposer.hpp"
-#include "make_data.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 #include "id_increase.hpp"

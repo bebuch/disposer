@@ -1,6 +1,6 @@
 #include <disposer/create_chain_modules.hpp>
 #include <disposer/module_base.hpp>
-#include <disposer/make_data.hpp>
+#include <disposer/module_make_data.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -55,7 +55,7 @@ namespace disposer{ namespace{
 
 	module_ptr create_module(
 		module_maker_list const& maker_list,
-		make_data const& data
+		module_make_data const& data
 	){
 		auto iter = maker_list.find(data.type_name);
 

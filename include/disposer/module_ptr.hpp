@@ -23,10 +23,10 @@ namespace disposer{
 	using module_ptr = std::unique_ptr< module_base >;
 
 
-	struct make_data;
+	struct module_make_data;
 
 	/// \brief A init function which constructs a module
-	using module_maker_fn = std::function< module_ptr(make_data const&) >;
+	using module_maker_fn = std::function< module_ptr(module_make_data const&) >;
 
 	/// \brief Map between module type name and its maker function
 	using module_maker_list =

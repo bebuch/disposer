@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__make_data__hpp_INCLUDED_
-#define _disposer__make_data__hpp_INCLUDED_
+#ifndef _disposer__module_make_data__hpp_INCLUDED_
+#define _disposer__module_make_data__hpp_INCLUDED_
 
 #include "merge.hpp"
 
@@ -33,7 +33,7 @@ namespace disposer{
 
 
 	/// \brief Dataset for disposer to construct and initialize a module
-	struct make_data{
+	struct module_make_data{
 		/// \brief Name of the module type given via class module_declarant
 		std::string const type_name;
 

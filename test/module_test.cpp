@@ -74,7 +74,7 @@ int main(){
 				disposer::module_maker< hana::tuple<
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -104,7 +104,7 @@ int main(){
 					>
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -137,7 +137,7 @@ int main(){
 					>
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -175,7 +175,7 @@ int main(){
 					>
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -224,7 +224,7 @@ int main(){
 					>
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
@@ -328,7 +328,7 @@ int main(){
 					>
 				>, disposer::normal_id_increase, enable_fn > >);
 
-			auto object = key.ref(register_fn)(disposer::make_data{});
+			auto object = key.ref(register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
