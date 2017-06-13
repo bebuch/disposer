@@ -17,75 +17,96 @@
 namespace disposer{
 
 
-	types::merge::config merge(types::parse::config&& config){
-		using boost::adaptors::reverse;
+	namespace{
 
-		std::map< std::string, types::parse::parameter_set& > parameter_sets;
-		for(auto& set: config.sets) parameter_sets.emplace(set.name, set);
 
-		types::merge::config result;
+		using param_sets_map =
+			std::map< std::string, types::parse::parameter_set const& >;
+
+		auto map_name_to_set(types::parse::parameter_sets const& sets){
+			param_sets_map parameter_sets;
+			for(auto const& set: sets) parameter_sets.emplace(set.name, set);
+			return parameter_sets;
+		}
+
+
+		auto merge_parameters(
+			param_sets_map const& sets,
+			types::parse::parameters&& params
+		){
+			using boost::adaptors::reverse;
+
+			parameter_map parameters;
+
+			// add all parameters from module
+			for(auto& parameter: reverse(params.parameters)){
+				std::map< std::string, std::string > specialized_values;
+				for(auto& specialization: parameter.specialized_values){
+					specialized_values.emplace(
+						std::move(specialization.type),
+						std::move(specialization.value)
+					);
+				}
+
+				parameters.emplace(
+					std::move(parameter.key), parameter_data{
+						std::move(parameter.generic_value),
+						std::move(specialized_values)
+					}
+				);
+			}
+
+			// add all parameters from the last to the first parameter set
+			// (skip already existing ones)
+			for(auto& set: reverse(params.parameter_sets)){
+				auto iter = sets.find(set);
+
+				// set was found
+				assert(iter != sets.end());
+
+				for(auto& parameter: iter->second.parameters){
+					// parameter set parameters can not be moved
+					// (multiple use!)
+					std::map< std::string, std::string > specialized_values;
+					for(auto& specialization: parameter.specialized_values){
+						specialized_values.emplace(
+							specialization.type,
+							specialization.value
+						);
+					}
+
+					parameters.emplace(
+						parameter.key, parameter_data{
+							parameter.generic_value,
+							std::move(specialized_values)
+						}
+					);
+				}
+			}
+
+			return parameters;
+		}
+
+
+	}
+
+
+	types::merge::chains_config merge(types::parse::config&& config){
+		auto sets = map_name_to_set(config.sets);
+
+		types::merge::chains_config result;
 
 		for(auto& chain: config.chains){
-			result.emplace_back(types::merge::chain{
+			auto& result_chain = result.emplace_back(types::merge::chain{
 				std::move(chain.name),
 				chain.id_generator.value_or("default"),
 				{}
 			});
 
-			auto& result_chain = result.back();
-
 			for(auto& module: chain.modules){
-				std::map< std::string, parameter_data > parameters;
-
-				// add all parameters from module
-				for(auto& parameter: reverse(module.parameters.parameters)){
-					std::map< std::string, std::string > specialized_values;
-					for(auto& specialization: parameter.specialized_values){
-						specialized_values.emplace(
-							std::move(specialization.type),
-							std::move(specialization.value)
-						);
-					}
-
-					parameters.emplace(
-						std::move(parameter.key), parameter_data{
-							std::move(parameter.generic_value),
-							std::move(specialized_values)
-						}
-					);
-				}
-
-				// add all parameters from the last to the first parameter set
-				// (skip already existing ones)
-				for(auto& set: reverse(module.parameters.parameter_sets)){
-					auto iter = parameter_sets.find(set);
-
-					// set was found
-					assert(iter != parameter_sets.end());
-
-					for(auto& parameter: iter->second.parameters){
-						// parameter set parameters can not be moved
-						// (multiple use!)
-						std::map< std::string, std::string > specialized_values;
-						for(auto& specialization: parameter.specialized_values){
-							specialized_values.emplace(
-								specialization.type,
-								specialization.value
-							);
-						}
-
-						parameters.emplace(
-							parameter.key, parameter_data{
-								parameter.generic_value,
-								std::move(specialized_values)
-							}
-						);
-					}
-				}
-
 				result_chain.modules.emplace_back(types::merge::module{
 					std::move(module.type_name),
-					std::move(parameters),
+					merge_parameters(sets, std::move(module.parameters)),
 					std::move(module.inputs),
 					std::move(module.outputs)
 				});

@@ -22,7 +22,7 @@ namespace disposer{
 
 		auto create_chains(
 			module_maker_list const& maker_list,
-			types::merge::config&& config
+			types::merge::chains_config&& config
 		){
 			std::unordered_map< std::string, chain > chains;
 			std::unordered_map< std::string, id_generator > id_generators;

@@ -44,6 +44,19 @@ namespace disposer{
 
 		using parameter_sets = std::vector< parameter_set >;
 
+		struct parameters{
+			std::vector< std::string > parameter_sets;
+			std::vector< parameter > parameters;
+		};
+
+		struct component{
+			std::string name;
+			std::string type_name;
+			parse::parameters parameters;
+		};
+
+		using components = std::vector< component >;
+
 		struct in{
 			std::string name;
 			in_transfer transfer;
@@ -53,11 +66,6 @@ namespace disposer{
 		struct out{
 			std::string name;
 			std::string variable;
-		};
-
-		struct parameters{
-			std::vector< std::string > parameter_sets;
-			std::vector< parameter > parameters;
 		};
 
 		struct module{
@@ -74,14 +82,6 @@ namespace disposer{
 		};
 
 		using chains = std::vector< chain >;
-
-		struct component{
-			std::string name;
-			std::string type_name;
-			parse::parameters parameters;
-		};
-
-		using components = std::vector< component >;
 
 		struct config{
 			parse::parameter_sets sets;

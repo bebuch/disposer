@@ -22,8 +22,19 @@ namespace disposer{
 		std::map< std::string, std::string > specialized_values;
 	};
 
+	using parameter_map = std::map< std::string, parameter_data >;
+
 
 	namespace types::merge{
+
+
+		struct component{
+			std::string name;
+			std::string type_name;
+			parameter_map parameters;
+		};
+
+		using components_config = std::vector< component >;
 
 
 		using in = parse::in;
@@ -31,7 +42,7 @@ namespace disposer{
 
 		struct module{
 			std::string type_name;
-			std::map< std::string, parameter_data > parameters;
+			parameter_map parameters;
 			std::vector< in > inputs;
 			std::vector< out > outputs;
 		};
@@ -42,13 +53,18 @@ namespace disposer{
 			std::vector< module > modules;
 		};
 
-		using config = std::vector< chain >;
+		using chains_config = std::vector< chain >;
+
+		struct config{
+			components_config components;
+			chains_config chains;
+		};
 
 
 	}
 
 
-	types::merge::config merge(types::parse::config&& config);
+	types::merge::chains_config merge(types::parse::config&& config);
 
 
 }
