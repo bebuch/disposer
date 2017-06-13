@@ -37,8 +37,8 @@ int main(){
 		auto& declarant = program.declarant();
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(),
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(),
 				disposer::normal_id_increase(),
 				[](auto const& module){
 					module.log([](logsys::stdlogb&){});
@@ -47,12 +47,12 @@ int main(){
 					};
 				}
 			);
-			register_fn("m1", declarant);
+			module_register_fn("m1", declarant);
 		}
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(
 					"v"_in(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
@@ -90,36 +90,36 @@ int main(){
 					};
 				}
 			);
-			register_fn("m2", declarant);
+			module_register_fn("m2", declarant);
 		}
 
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(
 					"v"_out(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			register_fn("m3", declarant);
+			module_register_fn("m3", declarant);
 		}
 
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(
 					"v"_param(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			register_fn("m4", declarant);
+			module_register_fn("m4", declarant);
 		}
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >),
 					"v"_param(hana::type_c< int >)
@@ -127,12 +127,12 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			register_fn("m5", declarant);
+			module_register_fn("m5", declarant);
 		}
 
 		{
-			auto register_fn = disposer::make_register_fn(
-				disposer::configure(
+			auto module_register_fn = disposer::make_module_register_fn(
+				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
@@ -177,7 +177,7 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			register_fn("m6", declarant);
+			module_register_fn("m6", declarant);
 		}
 
 		if(error_count == 0){

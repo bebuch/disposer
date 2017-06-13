@@ -481,13 +481,13 @@ namespace disposer{
 
 	/// \brief Wraps all given IOP configurations into a hana::tuple
 	template < typename ... IOP_Makers >
-	constexpr auto configure(IOP_Makers&& ... list){
+	constexpr auto module_configure(IOP_Makers&& ... list){
 		static_assert(hana::and_(hana::true_c, hana::or_(
 			hana::is_a< input_maker_tag, IOP_Makers >(),
 			hana::is_a< output_maker_tag, IOP_Makers >(),
 			hana::is_a< parameter_maker_tag, IOP_Makers >()) ...),
-			"at least one of the configure arguments is not a disposer input, "
-			"output or parameter maker");
+			"at least one of the module configure arguments is not a disposer "
+			"input, output or parameter maker");
 
 		return hana::make_tuple(static_cast< IOP_Makers&& >(list) ...);
 	}
@@ -499,14 +499,14 @@ namespace disposer{
 		typename IOP_MakerList,
 		typename IdIncreaseFn,
 		typename EnableFn >
-	class register_fn{
+	class module_register_fn{
 	public:
 		/// \brief Constructor
 		template <
 			typename IOP_MakerListParam,
 			typename IdIncreaseFnParam,
 			typename EnableFnParam >
-		constexpr register_fn(
+		constexpr module_register_fn(
 			IOP_MakerListParam&& list,
 			IdIncreaseFnParam&& id_increase,
 			EnableFnParam&& enable_fn
@@ -528,7 +528,7 @@ namespace disposer{
 						return maker(data);
 					});
 			}else{
-				throw std::runtime_error("called register function '"
+				throw std::runtime_error("called module register function '"
 					+ module_type + "' more than once");
 			}
 
@@ -546,17 +546,17 @@ namespace disposer{
 	};
 
 
-	/// \brief Maker function for \ref register_fn
+	/// \brief Maker function for \ref module_register_fn
 	template <
 		typename IOP_MakerList,
 		typename IdIncreaseFn,
 		typename EnableFn >
-	constexpr auto make_register_fn(
+	constexpr auto make_module_register_fn(
 		IOP_MakerList&& list,
 		IdIncreaseFn&& id_increase,
 		EnableFn&& enable_fn
 	){
-		return register_fn<
+		return module_register_fn<
 				std::remove_reference_t< IOP_MakerList >,
 				std::remove_reference_t< IdIncreaseFn >,
 				std::remove_reference_t< EnableFn >
