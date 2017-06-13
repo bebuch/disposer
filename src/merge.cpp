@@ -14,89 +14,83 @@
 #include <cassert>
 
 
-namespace disposer{
+namespace disposer{ namespace{
 
 
-	namespace{
+	using param_sets_map =
+		std::map< std::string, types::parse::parameter_set const& >;
+
+	auto map_name_to_set(types::parse::parameter_sets const& sets){
+		param_sets_map parameter_sets;
+		for(auto const& set: sets) parameter_sets.emplace(set.name, set);
+		return parameter_sets;
+	}
 
 
-		using param_sets_map =
-			std::map< std::string, types::parse::parameter_set const& >;
+	auto merge_parameters(
+		param_sets_map const& sets,
+		types::parse::parameters&& params
+	){
+		using boost::adaptors::reverse;
 
-		auto map_name_to_set(types::parse::parameter_sets const& sets){
-			param_sets_map parameter_sets;
-			for(auto const& set: sets) parameter_sets.emplace(set.name, set);
-			return parameter_sets;
+		parameter_map parameters;
+
+		// add all parameters from module
+		for(auto& parameter: reverse(params.parameters)){
+			std::map< std::string, std::string > specialized_values;
+			for(auto& specialization: parameter.specialized_values){
+				specialized_values.emplace(
+					std::move(specialization.type),
+					std::move(specialization.value)
+				);
+			}
+
+			parameters.emplace(
+				std::move(parameter.key), parameter_data{
+					std::move(parameter.generic_value),
+					std::move(specialized_values)
+				}
+			);
 		}
 
+		// add all parameters from the last to the first parameter set
+		// (skip already existing ones)
+		for(auto& set: reverse(params.parameter_sets)){
+			auto iter = sets.find(set);
 
-		auto merge_parameters(
-			param_sets_map const& sets,
-			types::parse::parameters&& params
-		){
-			using boost::adaptors::reverse;
+			// set was found
+			assert(iter != sets.end());
 
-			parameter_map parameters;
-
-			// add all parameters from module
-			for(auto& parameter: reverse(params.parameters)){
+			for(auto& parameter: iter->second.parameters){
+				// parameter set parameters can not be moved
+				// (multiple use!)
 				std::map< std::string, std::string > specialized_values;
 				for(auto& specialization: parameter.specialized_values){
 					specialized_values.emplace(
-						std::move(specialization.type),
-						std::move(specialization.value)
+						specialization.type,
+						specialization.value
 					);
 				}
 
 				parameters.emplace(
-					std::move(parameter.key), parameter_data{
-						std::move(parameter.generic_value),
+					parameter.key, parameter_data{
+						parameter.generic_value,
 						std::move(specialized_values)
 					}
 				);
 			}
-
-			// add all parameters from the last to the first parameter set
-			// (skip already existing ones)
-			for(auto& set: reverse(params.parameter_sets)){
-				auto iter = sets.find(set);
-
-				// set was found
-				assert(iter != sets.end());
-
-				for(auto& parameter: iter->second.parameters){
-					// parameter set parameters can not be moved
-					// (multiple use!)
-					std::map< std::string, std::string > specialized_values;
-					for(auto& specialization: parameter.specialized_values){
-						specialized_values.emplace(
-							specialization.type,
-							specialization.value
-						);
-					}
-
-					parameters.emplace(
-						parameter.key, parameter_data{
-							parameter.generic_value,
-							std::move(specialized_values)
-						}
-					);
-				}
-			}
-
-			return parameters;
 		}
 
-
+		return parameters;
 	}
 
 
-	types::merge::chains_config merge(types::parse::config&& config){
-		auto sets = map_name_to_set(config.sets);
-
+	auto merge_chains(
+		param_sets_map const& sets,
+		types::parse::chains&& chains
+	){
 		types::merge::chains_config result;
-
-		for(auto& chain: config.chains){
+		for(auto& chain: chains){
 			auto& result_chain = result.emplace_back(types::merge::chain{
 				std::move(chain.name),
 				chain.id_generator.value_or("default"),
@@ -112,8 +106,19 @@ namespace disposer{
 				});
 			}
 		}
-
 		return result;
+	}
+
+
+}}
+
+
+namespace disposer{
+
+
+	types::merge::chains_config merge(types::parse::config&& config){
+		auto sets = map_name_to_set(config.sets);
+		return merge_chains(sets, std::move(config.chains));
 	}
 
 

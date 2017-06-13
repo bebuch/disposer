@@ -11,63 +11,63 @@
 #include <set>
 
 
-namespace disposer{
+namespace disposer{ namespace{
 
 
-	namespace{
-
-
-		template < typename LocationFn >
-		void check_params(
-			LocationFn const& location_fn,
-			std::vector< types::parse::parameter > const& params
-		){
-			std::set< std::string > keys;
-			for(auto& param: params){
-				if(!keys.insert(param.key).second){
-					throw std::logic_error(
-						location_fn() + "duplicate key '" + param.key + "'"
-					);
-				}
-
-				std::set< std::string > types;
-				for(auto& specialization: param.specialized_values){
-					if(!keys.insert(specialization.type).second){
-						throw std::logic_error(
-							location_fn() + "duplicate parameter "
-							"specialization type '" + specialization.type
-							+ "' for parameter '" + param.key + "'"
-						);
-					}
-				}
+	template < typename LocationFn >
+	void check_params(
+		LocationFn const& location_fn,
+		std::vector< types::parse::parameter > const& params
+	){
+		std::set< std::string > keys;
+		for(auto& param: params){
+			if(!keys.insert(param.key).second){
+				throw std::logic_error(
+					location_fn() + "duplicate key '" + param.key + "'"
+				);
 			}
-		}
 
-		template < typename LocationFn >
-		void check_param_sets(
-			LocationFn const& location_fn,
-			std::set< std::string > const& known_sets,
-			std::vector< std::string > const& param_sets
-		){
-			std::set< std::string > sets;
-			for(auto& set: param_sets){
-				if(known_sets.find(set) == known_sets.end()){
+			std::set< std::string > types;
+			for(auto& specialization: param.specialized_values){
+				if(!keys.insert(specialization.type).second){
 					throw std::logic_error(
-						location_fn() + "unknown parameter_set '" + set + "'"
-					);
-				}
-
-				if(!sets.insert(set).second){
-					throw std::logic_error(
-						location_fn() + "duplicate use of parameter_set '"
-						+ set + "'"
+						location_fn() + "duplicate parameter "
+						"specialization type '" + specialization.type
+						+ "' for parameter '" + param.key + "'"
 					);
 				}
 			}
 		}
-
-
 	}
+
+	template < typename LocationFn >
+	void check_param_sets(
+		LocationFn const& location_fn,
+		std::set< std::string > const& known_sets,
+		std::vector< std::string > const& param_sets
+	){
+		std::set< std::string > sets;
+		for(auto& set: param_sets){
+			if(known_sets.find(set) == known_sets.end()){
+				throw std::logic_error(
+					location_fn() + "unknown parameter_set '" + set + "'"
+				);
+			}
+
+			if(!sets.insert(set).second){
+				throw std::logic_error(
+					location_fn() + "duplicate use of parameter_set '"
+					+ set + "'"
+				);
+			}
+		}
+	}
+
+
+}}
+
+
+namespace disposer{
 
 
 	void check_semantic(types::parse::config const& config){
