@@ -17,37 +17,37 @@
 namespace disposer{ namespace{
 
 
-		auto create_chains(
-			module_maker_list const& maker_list,
-			types::merge::chains_config&& config
-		){
-			std::unordered_map< std::string, chain > chains;
-			std::unordered_map< std::string, id_generator > id_generators;
+	auto create_chains(
+		module_maker_list const& maker_list,
+		types::merge::chains_config&& config
+	){
+		std::unordered_map< std::string, chain > chains;
+		std::unordered_map< std::string, id_generator > id_generators;
 
-			for(auto& config_chain: config){
-				logsys::log([&config_chain](logsys::stdlogb& os){
-					os << "chain(" << config_chain.name << ") create";
-				}, [&](){
-					// emplace the new process chain
-					chains.emplace(
-						std::piecewise_construct,
-						std::forward_as_tuple(
-							config_chain.name
-						),
-						std::forward_as_tuple(
-							maker_list,
-							config_chain,
-							id_generators[config_chain.id_generator]
-						)
-					);
-				});
-			}
-
-			return std::make_tuple(
-				std::move(chains),
-				std::move(id_generators)
-			);
+		for(auto& config_chain: config){
+			logsys::log([&config_chain](logsys::stdlogb& os){
+				os << "chain(" << config_chain.name << ") create";
+			}, [&](){
+				// emplace the new process chain
+				chains.emplace(
+					std::piecewise_construct,
+					std::forward_as_tuple(
+						config_chain.name
+					),
+					std::forward_as_tuple(
+						maker_list,
+						config_chain,
+						id_generators[config_chain.id_generator]
+					)
+				);
+			});
 		}
+
+		return std::make_tuple(
+			std::move(chains),
+			std::move(id_generators)
+		);
+	}
 
 
 }}
