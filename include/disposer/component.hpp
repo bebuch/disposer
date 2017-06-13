@@ -11,6 +11,7 @@
 
 #include "parameter.hpp"
 #include "component_base.hpp"
+#include "component_make_data.hpp"
 #include "add_log.hpp"
 
 #include <type_traits>
@@ -96,7 +97,7 @@ namespace disposer{
 			component_base& component,
 			Parameters&& parameters
 		)
-			: component_config< Inputs, Outputs, Parameters >(
+			: component_config< Parameters >(
 					std::move(parameters)
 				)
 			, component_(component) {}
@@ -138,6 +139,9 @@ namespace disposer{
 		using component_t = std::invoke_result_t<
 			ComponentFn, accessory_type const& >;
 #endif
+
+		static_assert(!std::is_same_v< component_t, void >,
+			"ComponentFn must return an object");
 
 
 		/// \brief Constructor
@@ -199,7 +203,7 @@ namespace disposer{
 			// Check config file data for undefined parameters and warn about
 			// them
 			auto const location = data.location();
-			check_parameter(location, makers, data.parameters);
+			check_parameters(location, makers, data.parameters);
 
 			std::string const basic_location = data.basic_location();
 
@@ -236,7 +240,7 @@ namespace disposer{
 
 	/// \brief Wraps all given P configurations into a hana::tuple
 	template < typename ... P_MakerList >
-	constexpr auto configure_component(P_MakerList&& ... list){
+	constexpr auto component_configure(P_MakerList&& ... list){
 		static_assert(hana::and_(hana::true_c,
 			hana::is_a< parameter_maker_tag, P_MakerList >() ...),
 			"at least one of the configure arguments is not a disposer "

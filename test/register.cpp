@@ -1,3 +1,4 @@
+#include <disposer/component.hpp>
 #include <disposer/module.hpp>
 
 #include <iostream>
@@ -34,7 +35,32 @@ int main(){
 
 	try{
 		disposer::disposer program;
-		auto& declarant = program.module_declarant();
+		auto& cdeclarant = program.component_declarant();
+		auto& mdeclarant = program.module_declarant();
+
+		{
+			auto component_register_fn = disposer::make_component_register_fn(
+				disposer::component_configure(),
+				[](auto const& component){
+					component.log([](logsys::stdlogb&){});
+					return 0;
+				}
+			);
+			component_register_fn("c1", cdeclarant);
+		}
+
+		{
+			auto component_register_fn = disposer::make_component_register_fn(
+				disposer::component_configure(
+					"v"_param(hana::type_c< int >)
+				),
+				[](auto const& component){
+					component.log([](logsys::stdlogb&){});
+					return 0;
+				}
+			);
+			component_register_fn("c1", cdeclarant);
+		}
 
 		{
 			auto module_register_fn = disposer::make_module_register_fn(
@@ -47,7 +73,7 @@ int main(){
 					};
 				}
 			);
-			module_register_fn("m1", declarant);
+			module_register_fn("m1", mdeclarant);
 		}
 
 		{
@@ -90,7 +116,7 @@ int main(){
 					};
 				}
 			);
-			module_register_fn("m2", declarant);
+			module_register_fn("m2", mdeclarant);
 		}
 
 
@@ -102,7 +128,7 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			module_register_fn("m3", declarant);
+			module_register_fn("m3", mdeclarant);
 		}
 
 
@@ -114,7 +140,7 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			module_register_fn("m4", declarant);
+			module_register_fn("m4", mdeclarant);
 		}
 
 		{
@@ -127,7 +153,7 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			module_register_fn("m5", declarant);
+			module_register_fn("m5", mdeclarant);
 		}
 
 		{
@@ -177,7 +203,7 @@ int main(){
 				disposer::normal_id_increase(),
 				[](auto const&){ return [](auto&, std::size_t){}; }
 			);
-			module_register_fn("m6", declarant);
+			module_register_fn("m6", mdeclarant);
 		}
 
 		if(error_count == 0){
