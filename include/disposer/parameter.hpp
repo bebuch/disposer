@@ -452,6 +452,35 @@ namespace disposer{
 		);
 	}
 
+	template < typename LocationFn, typename Makers >
+	auto check_parameters(
+		LocationFn const& location,
+		Makers const& makers,
+		parameter_list const& params
+	){
+		auto parameters_names = hana::transform(
+			hana::filter(makers, hana::is_a< parameter_maker_tag >),
+			[](auto const& parameters_maker){
+				return parameters_maker.name;
+			});
+
+		std::set< std::string > parameter_name_list;
+		std::transform(params.begin(), params.end(),
+			std::inserter(parameter_name_list, parameter_name_list.end()),
+			[](auto const& pair){ return pair.first; });
+		hana::for_each(parameters_names,
+			[&parameter_name_list](auto const& name){
+				parameter_name_list.erase(name.c_str());
+			});
+
+		for(auto const& param: parameter_name_list){
+			logsys::log([&location, &param](logsys::stdlogb& os){
+				os << location << "parameter("
+					<< param << ") doesn't exist (WARNING)";
+			});
+		}
+	}
+
 	template < typename LocationFn, typename Maker >
 	auto make_parameter(
 		LocationFn const& location,

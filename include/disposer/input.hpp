@@ -14,6 +14,7 @@
 #include "input_name.hpp"
 #include "output_base.hpp"
 #include "iop_list.hpp"
+#include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -480,6 +481,38 @@ namespace disposer{
 				type_verify_fn< type_verify_always >{})
 		);
 	}
+
+
+	template < typename LocationFn, typename Makers >
+	auto invalid_inputs(
+		LocationFn const& location,
+		Makers const& makers,
+		input_list const& inputs
+	){
+		auto input_names = hana::transform(
+			hana::filter(makers, hana::is_a< input_maker_tag >),
+			[](auto const& input_maker){
+				return input_maker.name;
+			});
+
+		std::set< std::string > input_name_list;
+		std::transform(inputs.begin(), inputs.end(),
+			std::inserter(input_name_list, input_name_list.end()),
+			[](auto const& pair){ return pair.first; });
+		hana::for_each(input_names,
+			[&input_name_list](auto const& name){
+				input_name_list.erase(name.c_str());
+			});
+
+		for(auto const& in: input_name_list){
+			logsys::log([&location, &in](logsys::stdlogb& os){
+				os << location << "input("
+					<< in << ") doesn't exist (ERROR)";
+			});
+		}
+		return input_name_list;
+	}
+
 
 }
 

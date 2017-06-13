@@ -13,6 +13,7 @@
 #include "type_index.hpp"
 #include "output_name.hpp"
 #include "iop_list.hpp"
+#include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -355,6 +356,34 @@ namespace disposer{
 				hana::is_a< enable_fn_tag >,
 				enable_fn< enable_always >{})
 		);
+	}
+
+
+	template < typename LocationFn, typename Makers >
+	auto invalid_outputs(
+		LocationFn const& location,
+		Makers const& makers,
+		output_list const& outputs
+	){
+		auto output_names = hana::transform(
+			hana::filter(makers, hana::is_a< output_maker_tag >),
+			[](auto const& output_maker){
+				return output_maker.name;
+			});
+
+		auto output_name_list = outputs;
+		hana::for_each(output_names,
+			[&output_name_list](auto const& name){
+				output_name_list.erase(name.c_str());
+			});
+
+		for(auto const& out: output_name_list){
+			logsys::log([&location, &out](logsys::stdlogb& os){
+				os << location << "output("
+					<< out << ") doesn't exist (ERROR)";
+			});
+		}
+		return output_name_list;
 	}
 
 

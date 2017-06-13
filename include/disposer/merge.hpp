@@ -12,9 +12,21 @@
 #include "parse.hpp"
 
 #include <map>
+#include <set>
+#include <tuple>
 
 
 namespace disposer{
+
+
+	class output_base;
+
+	/// \brief Map from input names to output pointers
+	using input_list =
+		std::map< std::string, std::tuple< output_base*, bool > >;
+
+	/// \brief Output name lists
+	using output_list = std::set< std::string >;
 
 
 	struct parameter_data{
@@ -23,6 +35,7 @@ namespace disposer{
 	};
 
 	using parameter_list = std::map< std::string, parameter_data >;
+
 
 
 	namespace types::merge{

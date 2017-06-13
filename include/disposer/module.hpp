@@ -394,77 +394,17 @@ namespace disposer{
 		auto operator()(module_make_data const& data)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
-			auto input_names = hana::transform(
-				hana::filter(makers, hana::is_a< input_maker_tag >),
-				[](auto const& input_maker){
-					return input_maker.name;
-				});
-
-			std::set< std::string > input_name_list;
-			std::transform(data.inputs.begin(), data.inputs.end(),
-				std::inserter(input_name_list, input_name_list.end()),
-				[](auto const& pair){ return pair.first; });
-			hana::for_each(input_names,
-				[&input_name_list](auto const& name){
-					input_name_list.erase(name.c_str());
-				});
-
 			auto const location = data.location();
-			for(auto const& in: input_name_list){
-				logsys::log([&location, &in](logsys::stdlogb& os){
-					os << location << "input("
-						<< in << ") doesn't exist (ERROR)";
-				});
-			}
+			{
+				auto inputs = invalid_inputs(location, makers, data.inputs);
+				auto outputs = invalid_outputs(location, makers, data.outputs);
+				check_parameters(location, makers, data.parameters);
 
-
-			auto output_names = hana::transform(
-				hana::filter(makers, hana::is_a< output_maker_tag >),
-				[](auto const& output_maker){
-					return output_maker.name;
-				});
-
-			std::set< std::string > output_name_list = data.outputs;
-			hana::for_each(output_names,
-				[&output_name_list](auto const& name){
-					output_name_list.erase(name.c_str());
-				});
-
-			for(auto const& out: output_name_list){
-				logsys::log([&location, &out](logsys::stdlogb& os){
-					os << location << "output("
-						<< out << ") doesn't exist (ERROR)";
-				});
-			}
-
-
-			auto parameters_names = hana::transform(
-				hana::filter(makers, hana::is_a< parameter_maker_tag >),
-				[](auto const& parameters_maker){
-					return parameters_maker.name;
-				});
-
-			std::set< std::string > parameter_name_list;
-			std::transform(data.parameters.begin(), data.parameters.end(),
-				std::inserter(parameter_name_list, parameter_name_list.end()),
-				[](auto const& pair){ return pair.first; });
-			hana::for_each(parameters_names,
-				[&parameter_name_list](auto const& name){
-					parameter_name_list.erase(name.c_str());
-				});
-
-			for(auto const& param: parameter_name_list){
-				logsys::log([&location, &param](logsys::stdlogb& os){
-					os << location << "parameter("
-						<< param << ") doesn't exist (WARNING)";
-				});
-			}
-
-
-			if(!input_name_list.empty() || !output_name_list.empty()){
-				throw std::logic_error(location + "some inputs or "
-					"outputs don't exist, see previos log messages for more "
-					"details");
+				if(!inputs.empty() || !outputs.empty()){
+					throw std::logic_error(location + "some inputs or "
+						"outputs don't exist, see previos log messages for "
+						"more details");
+				}
 			}
 
 			std::string const basic_location = data.basic_location();
