@@ -102,7 +102,7 @@ namespace disposer{
 		logsys::log([](logsys::stdlogb& os){ os << "create chains"; },
 			[this, &merged_config](){
 				std::tie(chains_, id_generators_) =
-					create_chains(maker_list_, std::move(merged_config));
+					create_chains(maker_list_, std::move(merged_config.chains));
 			});
 	}
 

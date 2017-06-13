@@ -85,6 +85,21 @@ namespace disposer{ namespace{
 	}
 
 
+	auto merge_components(
+		param_sets_map const& sets,
+		types::parse::components&& components
+	){
+		types::merge::components_config result;
+		for(auto& component: components){
+			result.emplace_back(types::merge::component{
+				std::move(component.name),
+				std::move(component.type_name),
+				merge_parameters(sets, std::move(component.parameters))
+			});
+		}
+		return result;
+	}
+
 	auto merge_chains(
 		param_sets_map const& sets,
 		types::parse::chains&& chains
@@ -116,9 +131,12 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	types::merge::chains_config merge(types::parse::config&& config){
+	types::merge::config merge(types::parse::config&& config){
 		auto sets = map_name_to_set(config.sets);
-		return merge_chains(sets, std::move(config.chains));
+		return {
+			merge_components(sets, std::move(config.components)),
+			merge_chains(sets, std::move(config.chains))
+		};
 	}
 
 

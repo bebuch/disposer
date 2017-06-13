@@ -64,7 +64,7 @@ namespace disposer{
 	}
 
 
-	types::merge::chains_config merge(types::parse::config&& config);
+	types::merge::config merge(types::parse::config&& config);
 
 
 }
