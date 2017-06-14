@@ -135,16 +135,16 @@ namespace disposer{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		static_assert(std::is_callable_v<
-			ComponentFn(accessory_type const&) >);
+			ComponentFn(accessory_type&) >);
 
 		using component_t = std::result_of_t<
-			ComponentFn(accessory_type const&) >;
+			ComponentFn(accessory_type&) >;
 #else
 		static_assert(std::is_invocable_v<
-			ComponentFn, accessory_type const& >);
+			ComponentFn, accessory_type& >);
 
 		using component_t = std::invoke_result_t<
-			ComponentFn, accessory_type const& >;
+			ComponentFn, accessory_type& >;
 #endif
 
 		static_assert(!std::is_same_v< component_t, void >,
