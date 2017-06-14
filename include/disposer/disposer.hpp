@@ -63,10 +63,14 @@ namespace disposer{
 			std::string const& type,
 			component_maker_fn&& fn);
 
+		/// \brief Get a reference to the disposer object
+		::disposer::disposer& disposer(){ return disposer_; }
+
 
 	private:
 		/// \brief Only constructible by the disposer class
-		component_declarant(disposer& disposer): disposer_(disposer) {}
+		component_declarant(::disposer::disposer& disposer)
+			: disposer_(disposer) {}
 
 
 		/// \brief Not copyable
@@ -77,9 +81,9 @@ namespace disposer{
 
 
 		/// \brief Reference to the disposer class
-		disposer& disposer_;
+		::disposer::disposer& disposer_;
 
-	friend class disposer;
+	friend class ::disposer::disposer;
 	};
 
 
