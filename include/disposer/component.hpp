@@ -95,11 +95,13 @@ namespace disposer{
 		/// \brief Constructor
 		component_accessory(
 			component_base& component,
+			::disposer::disposer& disposer,
 			Parameters&& parameters
 		)
 			: component_config< Parameters >(
 					std::move(parameters)
 				)
+			, disposer_(disposer)
 			, component_(component) {}
 
 
@@ -109,8 +111,13 @@ namespace disposer{
 				<< component_.type_name << "): ";
 		}
 
+		/// \brief Get a reference to the disposer object
+		::disposer::disposer& disposer(){ return disposer_; }
+
 
 	protected:
+		::disposer::disposer& disposer_;
+
 		component_base& component_;
 	};
 
@@ -148,11 +155,12 @@ namespace disposer{
 		component(
 			std::string const& name,
 			std::string const& type_name,
+			disposer& disposer,
 			Parameters&& parameters,
 			ComponentFn const& component_fn
 		)
 			: component_base(name, type_name)
-			, accessory_(*this, std::move(parameters))
+			, accessory_(*this, disposer, std::move(parameters))
 			, component_(component_fn(accessory_)) {}
 
 
@@ -172,6 +180,7 @@ namespace disposer{
 	auto make_component_ptr(
 		std::string const& name,
 		std::string const& type_name,
+		disposer& disposer,
 		Parameters&& parameters,
 		ComponentFn&& component_fn
 	){
@@ -180,6 +189,7 @@ namespace disposer{
 				std::remove_const_t< std::remove_reference_t< ComponentFn > >
 			> >(
 				name, type_name,
+				disposer,
 				static_cast< Parameters&& >(parameters),
 				static_cast< ComponentFn&& >(component_fn)
 			);
@@ -199,7 +209,10 @@ namespace disposer{
 
 
 		/// \brief Create an component object
-		auto operator()(component_make_data const& data)const{
+		auto operator()(
+			component_make_data const& data,
+			disposer& disposer
+		)const{
 			// Check config file data for undefined parameters and warn about
 			// them
 			auto const location = data.location();
@@ -230,6 +243,7 @@ namespace disposer{
 			// Create the component
 			return make_component_ptr(
 					data.name, data.type_name,
+					disposer,
 					as_iop_map(hana::filter(
 						std::move(p_list), hana::is_a< parameter_tag >)),
 					component_fn
@@ -272,13 +286,17 @@ namespace disposer{
 			}
 			{}
 
-		/// \brief Call this function to register the component with the given type
-		///        name via the given component_declarant
-		void operator()(std::string const& component_type, component_declarant& add){
+		/// \brief Call this function to register the component with the given
+		///        type name via the given component_declarant
+		void operator()(
+			std::string const& component_type,
+			component_declarant& add
+		){
 			if(!called_flag_.exchange(true)){
 				add(component_type,
-					[maker{std::move(maker_)}](component_make_data const& data){
-						return maker(data);
+					[maker{std::move(maker_)}, &add]
+					(component_make_data const& data){
+						return maker(data, add.disposer());
 					});
 			}else{
 				throw std::runtime_error("called register function '"
