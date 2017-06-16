@@ -105,11 +105,19 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
+	struct disposer_key{};
+
+
 	disposer::disposer()
 		: component_declarant_(*this)
 		, module_declarant_(*this) {}
 
-	disposer::~disposer() = default;
+	disposer::~disposer(){
+		for(auto& [name, component]: components_){
+			(void)name;
+			component->shutdown(disposer_key());
+		}
+	}
 
 	void component_declarant::operator()(
 		std::string const& type_name,

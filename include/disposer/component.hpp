@@ -189,6 +189,17 @@ namespace disposer{
 
 
 	private:
+		/// \brief shutdown component if it has a shutdown function
+		void shutdown(disposer_key const&)override{
+			auto has_shutdown =
+				hana::is_valid([](auto& t)->decltype((void)t.shutdown()){})
+				(component_);
+			if constexpr(has_shutdown){
+				component_.shutdown();
+			}
+		}
+
+
 		/// \brief Module access object for component_
 		accessory_type accessory_;
 

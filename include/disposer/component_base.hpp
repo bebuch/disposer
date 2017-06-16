@@ -45,6 +45,10 @@ namespace disposer{
 		virtual ~component_base() = default;
 
 
+		/// \brief shutdown component if it has a shutdown function
+		virtual void shutdown(disposer_key const&) = 0;
+
+
 		/// \brief Name of the component in config file section 'component'
 		std::string const name;
 
