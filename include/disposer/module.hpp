@@ -219,35 +219,35 @@ namespace disposer{
 
 
 	/// \brief Wrapper for the module enable function
-	template < typename ModuleFn >
+	template < typename ModuleEnableFn >
 	class module_enable{
 	public:
-		module_enable(ModuleFn&& module_fn)
-			: module_fn_(static_cast< ModuleFn&& >(module_fn)) {}
+		module_enable(ModuleEnableFn&& module_fn)
+			: module_fn_(static_cast< ModuleEnableFn&& >(module_fn)) {}
 
 		template < typename Accessory >
 		auto operator()(Accessory const& accessory)const{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 			static_assert(std::is_callable_v<
-					ModuleFn const(Accessory const&) >
-				|| std::is_callable_v< ModuleFn const() >,
+					ModuleEnableFn const(Accessory const&) >
+				|| std::is_callable_v< ModuleEnableFn const() >,
 				"module_enable function must be invokable with module& or "
 				"without an argument");
 			if constexpr(std::is_callable_v<
-				ModuleFn const(Accessory const&) >
+				ModuleEnableFn const(Accessory const&) >
 			){
 				return module_fn_(accessory);
 			}else{
 				return module_fn_();
 			}
 	#else
-			static_assert(std::is_invocable_v< ModuleFn const,
+			static_assert(std::is_invocable_v< ModuleEnableFn const,
 					Accessory const& >
-				|| std::is_invocable_v< ModuleFn const >,
+				|| std::is_invocable_v< ModuleEnableFn const >,
 				"module_enable function must be invokable with module& or "
 				"without an argument");
-			if constexpr(std::is_invocable_v< ModuleFn const,
+			if constexpr(std::is_invocable_v< ModuleEnableFn const,
 				Accessory const& >
 			){
 				return module_fn_(accessory);
@@ -258,7 +258,73 @@ namespace disposer{
 		}
 
 	private:
-		ModuleFn const module_fn_;
+		ModuleEnableFn const module_fn_;
+	};
+
+	/// \brief Wrapper for the module enable function
+	template < typename ModuleExecFn >
+	class module_exec{
+	public:
+		module_exec(ModuleExecFn&& module_fn)
+			: module_fn_(static_cast< ModuleExecFn&& >(module_fn)) {}
+
+		template < typename Accessory >
+		auto operator()(Accessory& accessory, std::size_t id){
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(
+				std::is_callable_v<
+					ModuleExecFn(Accessory&, std::size_t) >
+				|| std::is_callable_v< ModuleExecFn(Accessory&) >
+				|| std::is_callable_v< ModuleExecFn(std::size_t) >
+				|| std::is_callable_v< ModuleExecFn() >,
+				"exec_fn is not invokable with module& and/or id or without "
+				"arguments");
+			if constexpr(
+				std::is_callable_v< ModuleExecFn(Accessory&, std::size_t) >
+			){
+				return module_fn_(accessory, id);
+			}else if constexpr(
+				std::is_callable_v< ModuleExecFn(Accessory&) >
+			){
+				return module_fn_(accessory);
+			}else if constexpr(
+				std::is_callable_v< ModuleExecFn(std::size_t) >
+			){
+				return module_fn_(id);
+			}else{
+				return module_fn_();
+			}
+#else
+			static_assert(
+				std::is_invocable_v< ModuleExecFn, Accessory&,
+					std::size_t >
+				|| std::is_invocable_v< ModuleExecFn, Accessory& >
+				|| std::is_invocable_v< ModuleExecFn, std::size_t >
+				|| std::is_invocable_v< ModuleExecFn >,
+				"exec_fn is not invokable with module& and/or id or without "
+				"arguments");
+			if constexpr(
+				std::is_invocable_v< ModuleExecFn, Accessory&,
+					std::size_t >
+			){
+				return module_fn_(accessory, id);
+			}else if constexpr(
+				std::is_invocable_v< ModuleExecFn, Accessory& >
+			){
+				return module_fn_(accessory);
+			}else if constexpr(
+				std::is_invocable_v< ModuleExecFn, std::size_t >
+			){
+				return module_fn_(id);
+			}else{
+				return module_fn_();
+			}
+#endif
+		}
+
+	private:
+		ModuleExecFn module_fn_;
 	};
 
 
@@ -284,10 +350,16 @@ namespace disposer{
 		static_assert(std::is_callable_v<
 			module_enable< EnableFn >(accessory_type const&) >,
 			"enable_fn is not invokable with const module&");
+
+		using exec_fn_t = module_exec< std::result_of_t<
+			module_enable< EnableFn >(accessory_type const&) > >;
 #else
 		static_assert(std::is_invocable_v<
 			module_enable< EnableFn >, accessory_type const& >,
 			"enable_fn is not invokable with const module&");
+
+		using exec_fn_t = module_exec< std::invoke_result_t<
+			module_enable< EnableFn >, accessory_type const& > >;
 #endif
 
 
@@ -337,25 +409,6 @@ namespace disposer{
 				throw std::logic_error("module is not enabled");
 			}
 		}
-
-
-		/// \brief Type of the exec-function
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		using exec_fn_t = std::result_of_t<
-			module_enable< EnableFn >(accessory_type const&) >;
-
-		static_assert(std::is_callable_v<
-			exec_fn_t(exec_accessory_type&, std::size_t) >,
-			"exec_fn is not invokable with module& and id");
-#else
-		using exec_fn_t = std::invoke_result_t<
-			module_enable< EnableFn >, accessory_type const& >;
-
-		static_assert(std::is_invocable_v<
-			exec_fn_t, exec_accessory_type&, std::size_t >,
-			"exec_fn is not invokable with module& and id");
-#endif
 
 
 		/// \brief Module access object for exec_fn_
