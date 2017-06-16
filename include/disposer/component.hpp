@@ -277,18 +277,21 @@ namespace disposer{
 					component_fn
 				);
 
+			auto& component = *result.get();
+
 			// register the component modules for this component instance
 			hana::for_each(component_modules,
-				[&data, &result, &disposer](auto const& component_module_maker){
+				[&data, &component, &disposer](auto const& component_module_maker){
 					make_module_register_fn(
 						component_module_maker.iop_maker_list,
 						component_module_maker.id_increase_fn,
-						[&result, enable_fn{component_module_maker.enable_fn}]
+						[&component, enable_fn{component_module_maker.enable_fn}]
 							(auto const& module){
-								return enable_fn(*result.get(), module);
+								return enable_fn(component, module);
 							}
 					)(
-						data.name + std::string(component_module_maker.name),
+						data.name + "_"
+							+ std::string(component_module_maker.name),
 						disposer.module_declarant()
 					);
 				});
