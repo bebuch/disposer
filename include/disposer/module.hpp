@@ -44,25 +44,25 @@ namespace disposer{
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)noexcept{
-			return get(*this, static_cast< ConfigList&& >(list));
+		template < typename IOP >
+		decltype(auto) operator()(IOP&& iop)noexcept{
+			return get(*this, static_cast< IOP&& >(iop));
 		}
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)const noexcept{
-			return get(*this, static_cast< ConfigList&& >(list));
+		template < typename IOP >
+		decltype(auto) operator()(IOP&& iop)const noexcept{
+			return get(*this, static_cast< IOP&& >(iop));
 		}
 
 
 	private:
 		/// \brief Implementation for \ref operator()
-		template < typename Config, typename ConfigList >
-		static decltype(auto) get(Config& config, ConfigList&&)noexcept{
+		template < typename Config, typename IOP >
+		static decltype(auto) get(Config& config, IOP&&)noexcept{
 			using io_t =
-				std::remove_cv_t< std::remove_reference_t< ConfigList > >;
+				std::remove_cv_t< std::remove_reference_t< IOP > >;
 			static_assert(
 				hana::is_a< input_name_tag, io_t > ||
 				hana::is_a< output_name_tag, io_t > ||
