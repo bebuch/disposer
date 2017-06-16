@@ -44,7 +44,8 @@ int main(){
 				[](auto const& component){
 					component.log([](logsys::stdlogb&){});
 					return 0;
-				}
+				},
+				disposer::component_modules()
 			);
 			component_register_fn("c1", cdeclarant);
 		}
@@ -57,9 +58,35 @@ int main(){
 				[](auto const& component){
 					component.log([](logsys::stdlogb&){});
 					return 0;
-				}
+				},
+				disposer::component_modules()
 			);
-			component_register_fn("c1", cdeclarant);
+			component_register_fn("c2", cdeclarant);
+		}
+
+		{
+			auto component_register_fn = disposer::make_component_register_fn(
+				disposer::component_configure(
+					"v"_param(hana::type_c< int >)
+				),
+				[](auto const& component){
+					component.log([](logsys::stdlogb&){});
+					return 0;
+				},
+				disposer::component_modules(
+					"cm1"_module(
+						disposer::module_configure(),
+						disposer::normal_id_increase(),
+						[](auto& /*component*/, auto const& module){
+							module.log([](logsys::stdlogb&){});
+							return [](auto& module, std::size_t){
+								module.log([](logsys::stdlogb&){});
+							};
+						}
+					)
+				)
+			);
+			component_register_fn("c3", cdeclarant);
 		}
 
 		{

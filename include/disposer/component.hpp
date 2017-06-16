@@ -12,6 +12,8 @@
 #include "parameter.hpp"
 #include "component_base.hpp"
 #include "component_make_data.hpp"
+#include "module.hpp"
+#include "module_name.hpp"
 #include "add_log.hpp"
 
 #include <type_traits>
@@ -32,25 +34,25 @@ namespace disposer{
 
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)noexcept{
-			return get(*this, static_cast< ConfigList&& >(list));
+		template < typename P >
+		decltype(auto) operator()(P&& param)noexcept{
+			return get(*this, static_cast< P&& >(param));
 		}
 
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
-		template < typename ConfigList >
-		decltype(auto) operator()(ConfigList&& list)const noexcept{
-			return get(*this, static_cast< ConfigList&& >(list));
+		template < typename P >
+		decltype(auto) operator()(P&& param)const noexcept{
+			return get(*this, static_cast< P&& >(param));
 		}
 
 
 	private:
 		/// \brief Implementation for \ref operator()
-		template < typename Config, typename ConfigList >
-		static decltype(auto) get(Config& config, ConfigList&&)noexcept{
+		template < typename Config, typename P >
+		static decltype(auto) get(Config& config, P&&)noexcept{
 			using io_t =
-				std::remove_cv_t< std::remove_reference_t< ConfigList > >;
+				std::remove_cv_t< std::remove_reference_t< P > >;
 			static_assert(
 				hana::is_a< parameter_name_tag, io_t >,
 				"parameter io must be a parameter_name");
@@ -164,6 +166,28 @@ namespace disposer{
 			, component_(component_fn(accessory_)) {}
 
 
+		/// \brief Get reference to an parameter-object via
+		///        its corresponding compile time name
+		template < typename P >
+		decltype(auto) operator()(P&& param)noexcept{
+			return accessory_(static_cast< P&& >(param));
+		}
+
+		/// \brief Get reference to an parameter-object via
+		///        its corresponding compile time name
+		template < typename P >
+		decltype(auto) operator()(P&& param)const noexcept{
+			return accessory_(static_cast< P&& >(param));
+		}
+
+
+		/// \brief Access to the component object
+		component_t& data()noexcept{ return component_; }
+
+		/// \brief Access to the const component object
+		component_t const& data()const noexcept{ return component_; }
+
+
 	private:
 		/// \brief Module access object for component_
 		accessory_type accessory_;
@@ -199,13 +223,17 @@ namespace disposer{
 	/// \brief Provids types for constructing an component
 	template <
 		typename P_MakerList,
-		typename ComponentFn >
+		typename ComponentFn,
+		typename ComponentModules >
 	struct component_maker{
 		/// \brief Tuple of parameter-maker objects
 		P_MakerList makers;
 
 		/// \brief The function object that is called at construction
 		ComponentFn component_fn;
+
+		/// \brief hana::tuple of \ref component_module_maker
+		ComponentModules component_modules;
 
 
 		/// \brief Create an component object
@@ -241,13 +269,31 @@ namespace disposer{
 			);
 
 			// Create the component
-			return make_component_ptr(
+			auto result = make_component_ptr(
 					data.name, data.type_name,
 					disposer,
 					as_iop_map(hana::filter(
 						std::move(p_list), hana::is_a< parameter_tag >)),
 					component_fn
 				);
+
+			// register the component modules for this component instance
+			hana::for_each(component_modules,
+				[&data, &result, &disposer](auto const& component_module_maker){
+					make_module_register_fn(
+						component_module_maker.iop_maker_list,
+						component_module_maker.id_increase_fn,
+						[&result, enable_fn{component_module_maker.enable_fn}]
+							(auto const& module){
+								return enable_fn(*result.get(), module);
+							}
+					)(
+						data.name + std::string(component_module_maker.name),
+						disposer.module_declarant()
+					);
+				});
+
+			return result;
 		}
 	};
 
@@ -263,26 +309,43 @@ namespace disposer{
 		return hana::make_tuple(static_cast< P_MakerList&& >(list) ...);
 	}
 
+
+	template < typename ... ComponentModules >
+	auto component_modules(ComponentModules&& ... component_modules){
+		static_assert(hana::and_(hana::true_c,
+			hana::is_a< component_module_maker_tag, ComponentModules >() ...),
+			"at least one of the configure arguments is not a disposer "
+			"module maker");
+
+		return hana::make_tuple(
+			static_cast< ComponentModules&& >(component_modules) ...);
+	}
+
+
 	struct unit_test_key;
 
 	/// \brief Registers a component configuration in the \ref disposer
 	template <
 		typename P_MakerList,
-		typename ComponentFn >
+		typename ComponentFn,
+		typename ComponentModules >
 	class component_register_fn{
 	public:
 		/// \brief Constructor
 		template <
 			typename P_MakerListParam,
-			typename ComponentFnParam >
+			typename ComponentFnParam,
+			typename ComponentModulesParam >
 		constexpr component_register_fn(
 			P_MakerListParam&& list,
-			ComponentFnParam&& component_fn
+			ComponentFnParam&& component_fn,
+			ComponentModulesParam&& component_modules
 		)
 			: called_flag_(false)
 			, maker_{
 				static_cast< P_MakerListParam&& >(list),
-				static_cast< ComponentFnParam&& >(component_fn)
+				static_cast< ComponentFnParam&& >(component_fn),
+				static_cast< ComponentModulesParam&& >(component_modules)
 			}
 			{}
 
@@ -311,26 +374,29 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The component_maker object
-		component_maker< P_MakerList, ComponentFn > maker_;
+		component_maker< P_MakerList, ComponentFn, ComponentModules > maker_;
 
 		friend struct unit_test_key;
 	};
 
-
 	/// \brief Maker function for \ref component_register_fn
 	template <
 		typename IOP_MakerList,
-		typename ComponentFn >
+		typename ComponentFn,
+		typename ComponentModules >
 	constexpr auto make_component_register_fn(
 		IOP_MakerList&& list,
-		ComponentFn&& component_fn
+		ComponentFn&& component_fn,
+		ComponentModules&& component_modules
 	){
 		return component_register_fn<
 				std::remove_reference_t< IOP_MakerList >,
-				std::remove_reference_t< ComponentFn >
+				std::remove_reference_t< ComponentFn >,
+				std::remove_reference_t< ComponentModules >
 			>(
 				static_cast< IOP_MakerList&& >(list),
-				static_cast< ComponentFn&& >(component_fn)
+				static_cast< ComponentFn&& >(component_fn),
+				static_cast< ComponentModules&& >(component_modules)
 			);
 	}
 
