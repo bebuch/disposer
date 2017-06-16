@@ -74,16 +74,18 @@ int main(){
 					return 0;
 				},
 				disposer::component_modules(
-					"cm1"_module(
-						disposer::module_configure(),
-						disposer::normal_id_increase(),
-						[](auto& /*component*/, auto const& module){
-							module.log([](logsys::stdlogb&){});
-							return [](auto& module, std::size_t){
+					"cm1"_module([](auto& /*component*/){
+						return disposer::make_module_register_fn(
+							disposer::module_configure(),
+							disposer::normal_id_increase(),
+							[](auto const& module){
 								module.log([](logsys::stdlogb&){});
-							};
-						}
-					)
+								return [](auto& module, std::size_t){
+									module.log([](logsys::stdlogb&){});
+								};
+							}
+						);
+					})
 				)
 			);
 			component_register_fn("c3", cdeclarant);

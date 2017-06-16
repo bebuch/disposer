@@ -494,6 +494,9 @@ namespace disposer{
 
 	struct unit_test_key;
 
+	/// \brief Hana Tag for \ref module_register_fn
+	struct module_register_fn_tag{};
+
 	/// \brief Registers a module configuration in the \ref disposer
 	template <
 		typename IOP_MakerList,
@@ -501,6 +504,9 @@ namespace disposer{
 		typename EnableFn >
 	class module_register_fn{
 	public:
+		/// \brief Hana tag to identify module register functions
+		using hana_tag = module_register_fn_tag;
+
 		/// \brief Constructor
 		template <
 			typename IOP_MakerListParam,

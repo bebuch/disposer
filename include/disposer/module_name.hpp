@@ -11,6 +11,7 @@
 
 #include "ct_name.hpp"
 #include "config_fn.hpp"
+#include "module.hpp"
 
 #include <string_view>
 
@@ -22,10 +23,7 @@ namespace disposer{
 	struct component_module_maker_tag{};
 
 	/// \brief Data to create a component module
-	template <
-		typename IOP_MakerList,
-		typename IdIncreaseFn,
-		typename EnableFn >
+	template < typename ModuleRegisterFn >
 	struct component_module_maker{
 		/// \brief Hana tag to identify component module makers
 		using hana_tag = component_module_maker_tag;
@@ -34,14 +32,9 @@ namespace disposer{
 		std::string_view name;
 
 		/// \brief A list of module IOPs
-		IOP_MakerList iop_maker_list;
-
-		/// \brief The modules id increase function
-		IdIncreaseFn id_increase_fn;
-
-		/// \brief The modules enable function
-		EnableFn enable_fn;
+		ModuleRegisterFn module_register_fn;
 	};
+
 
 	/// \brief Hana Tag for \ref module_name
 	struct module_name_tag{};
@@ -52,25 +45,16 @@ namespace disposer{
 		/// \brief Hana tag to identify module names
 		using hana_tag = module_name_tag;
 
-		/// \brief Creates a \ref component_module_maker object
-		template <
-			typename IOP_MakerList,
-			typename IdIncreaseFn,
-			typename EnableFn >
+		/// \brief Creates a \ref module_register_fn object
+		template < typename ModuleRegisterFn >
 		constexpr auto operator()(
-			IOP_MakerList&& list,
-			IdIncreaseFn&& id_increase,
-			EnableFn&& enable_fn
+			ModuleRegisterFn&& module_register_fn
 		)const{
 			return component_module_maker<
-				std::remove_reference_t< IOP_MakerList >,
-				std::remove_reference_t< IdIncreaseFn >,
-				std::remove_reference_t< EnableFn >
+				std::remove_reference_t< ModuleRegisterFn >
 			>{
 				std::string_view(this->value.c_str()),
-				static_cast< IOP_MakerList&& >(list),
-				static_cast< IdIncreaseFn&& >(id_increase),
-				static_cast< EnableFn&& >(enable_fn)
+				static_cast< ModuleRegisterFn&& >(module_register_fn)
 			};
 		}
 	};
