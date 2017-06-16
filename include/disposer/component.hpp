@@ -190,6 +190,9 @@ namespace disposer{
 
 	private:
 		/// \brief shutdown component if it has a shutdown function
+		///
+		/// Every component which controls the disposer asynchronous should
+		/// implement such a function.
 		void shutdown(disposer_key const&)override{
 			auto has_shutdown =
 				hana::is_valid([](auto& t)->decltype((void)t.shutdown()){})
