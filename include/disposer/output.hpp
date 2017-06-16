@@ -117,7 +117,8 @@ namespace disposer{
 			if(!enabled_map_[hana::type_c< V >]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
-					"output '", name.c_str(), "' put disabled type [",
+					"output '", to_std_string_view(name),
+					"' put disabled type [",
 					type_name< V >(), "]"
 				));
 			}
@@ -149,7 +150,7 @@ namespace disposer{
 
 		/// \brief Returns the output name
 		virtual std::string_view get_name()const noexcept override{
-			return std::string_view(name.c_str());
+			return to_std_string_view(name);
 		}
 
 
@@ -374,7 +375,7 @@ namespace disposer{
 		auto output_name_list = outputs;
 		hana::for_each(output_names,
 			[&output_name_list](auto const& name){
-				output_name_list.erase(name.c_str());
+				output_name_list.erase(to_std_string(name));
 			});
 
 		for(auto const& out: output_name_list){

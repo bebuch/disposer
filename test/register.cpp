@@ -39,7 +39,7 @@ int main(){
 		auto& mdeclarant = program.module_declarant();
 
 		{
-			auto component_register_fn = disposer::make_component_register_fn(
+			auto component_register_fn = disposer::component_register_fn(
 				disposer::component_configure(),
 				[](auto const& component){
 					component.log([](logsys::stdlogb&){});
@@ -51,7 +51,7 @@ int main(){
 		}
 
 		{
-			auto component_register_fn = disposer::make_component_register_fn(
+			auto component_register_fn = disposer::component_register_fn(
 				disposer::component_configure(
 					"v"_param(hana::type_c< int >)
 				),
@@ -65,7 +65,7 @@ int main(){
 		}
 
 		{
-			auto component_register_fn = disposer::make_component_register_fn(
+			auto component_register_fn = disposer::component_register_fn(
 				disposer::component_configure(
 					"v"_param(hana::type_c< int >)
 				),
@@ -75,7 +75,7 @@ int main(){
 				},
 				disposer::component_modules(
 					"cm1"_module([](auto& /*component*/){
-						return disposer::make_module_register_fn(
+						return disposer::module_register_fn(
 							disposer::module_configure(),
 							disposer::normal_id_increase(),
 							[](auto const& module){
@@ -92,7 +92,7 @@ int main(){
 		}
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
 				disposer::normal_id_increase(),
 				[](auto const& module){
@@ -106,7 +106,7 @@ int main(){
 		}
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >)
 				),
@@ -150,7 +150,7 @@ int main(){
 
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_out(hana::type_c< int >)
 				),
@@ -162,7 +162,7 @@ int main(){
 
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_param(hana::type_c< int >)
 				),
@@ -173,7 +173,7 @@ int main(){
 		}
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >),
@@ -186,21 +186,21 @@ int main(){
 		}
 
 		{
-			auto module_register_fn = disposer::make_module_register_fn(
+			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
-						disposer::enable([](auto const& get, auto type){
-							bool active = get("v"_in).is_enabled(type);
+						disposer::enable([](auto const& iop, auto type){
+							bool active = iop("v"_in).is_enabled(type);
 							assert(!active);
 							return active;
 						})),
 					"v"_param(hana::type_c< int >,
 						disposer::value_verify(disposer::value_verify_always()),
-						disposer::enable([](auto const& get, auto type){
-							bool active1 = get("v"_in).is_enabled(type);
-							bool active2 = get("v"_out).is_enabled(type);
+						disposer::enable([](auto const& iop, auto type){
+							bool active1 = iop("v"_in).is_enabled(type);
+							bool active2 = iop("v"_out).is_enabled(type);
 							assert(!active1 && !active2);
 							return false;
 						}),
@@ -219,13 +219,13 @@ int main(){
 							}),
 						disposer::type_verify(
 							[](
-								auto const& get,
+								auto const& iop,
 								auto type,
 								disposer::output_info const&
 							){
-								bool active1 = get("v"_in).is_enabled(type);
-								bool active2 = get("v"_out).is_enabled(type);
-								bool active3 = get("v"_param).is_enabled(type);
+								bool active1 = iop("v"_in).is_enabled(type);
+								bool active2 = iop("v"_out).is_enabled(type);
+								bool active3 = iop("v"_param).is_enabled(type);
 								assert(!active1 && !active2 && !active3);
 							}))
 				),

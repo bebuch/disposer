@@ -53,7 +53,7 @@ namespace disposer{
 			return component_module_maker<
 				std::remove_reference_t< ModuleRegisterFn >
 			>{
-				std::string_view(this->value.c_str()),
+				to_std_string_view(this->value),
 				static_cast< ModuleRegisterFn&& >(module_register_fn)
 			};
 		}

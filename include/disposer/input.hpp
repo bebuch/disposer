@@ -501,7 +501,7 @@ namespace disposer{
 			[](auto const& pair){ return pair.first; });
 		hana::for_each(input_names,
 			[&input_name_list](auto const& name){
-				input_name_list.erase(name.c_str());
+				input_name_list.erase(to_std_string(name));
 			});
 
 		for(auto const& in: input_name_list){

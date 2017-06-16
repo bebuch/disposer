@@ -64,7 +64,7 @@ int main(){
 
 	try{
 		{
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
 				disposer::normal_id_increase(),
 				enable_fn()
@@ -88,7 +88,7 @@ int main(){
 		}
 
 		{
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >)
 				),
@@ -124,7 +124,7 @@ int main(){
 
 
 		{
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_out(hana::type_c< int >)
 				),
@@ -160,7 +160,7 @@ int main(){
 
 
 		{
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_param(hana::type_c< int >)
 				),
@@ -200,7 +200,7 @@ int main(){
 		}
 
 		{
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >),
@@ -292,7 +292,7 @@ int main(){
 					assert(!active1 && !active2 && !active3);
 				};
 
-			auto const module_register_fn = disposer::make_module_register_fn(
+			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >,

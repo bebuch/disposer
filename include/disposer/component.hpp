@@ -276,7 +276,7 @@ namespace disposer{
 					return hana::append(
 						static_cast< decltype(get)&& >(get),
 						maker(make_iop_list(iop_log{basic_location,
-							"parameter", maker.name.c_str()}, get),
+							"parameter", to_std_string_view(maker.name)}, get),
 							make_parameter(location, maker,
 								data.parameters)));
 				}
@@ -343,20 +343,16 @@ namespace disposer{
 	class component_register_fn{
 	public:
 		/// \brief Constructor
-		template <
-			typename P_MakerListParam,
-			typename ComponentFnParam,
-			typename ComponentModulesParam >
 		constexpr component_register_fn(
-			P_MakerListParam&& list,
-			ComponentFnParam&& component_fn,
-			ComponentModulesParam&& component_modules
+			P_MakerList&& list,
+			ComponentFn&& component_fn,
+			ComponentModules&& component_modules
 		)
 			: called_flag_(false)
 			, maker_{
-				static_cast< P_MakerListParam&& >(list),
-				static_cast< ComponentFnParam&& >(component_fn),
-				static_cast< ComponentModulesParam&& >(component_modules)
+				static_cast< P_MakerList&& >(list),
+				static_cast< ComponentFn&& >(component_fn),
+				static_cast< ComponentModules&& >(component_modules)
 			}
 			{}
 
@@ -389,27 +385,6 @@ namespace disposer{
 
 		friend struct unit_test_key;
 	};
-
-	/// \brief Maker function for \ref component_register_fn
-	template <
-		typename IOP_MakerList,
-		typename ComponentFn,
-		typename ComponentModules >
-	constexpr auto make_component_register_fn(
-		IOP_MakerList&& list,
-		ComponentFn&& component_fn,
-		ComponentModules&& component_modules
-	){
-		return component_register_fn<
-				std::remove_reference_t< IOP_MakerList >,
-				std::remove_reference_t< ComponentFn >,
-				std::remove_reference_t< ComponentModules >
-			>(
-				static_cast< IOP_MakerList&& >(list),
-				static_cast< ComponentFn&& >(component_fn),
-				static_cast< ComponentModules&& >(component_modules)
-			);
-	}
 
 
 }

@@ -140,7 +140,7 @@ namespace disposer{
 		decltype(auto) get(Type const& type)const{
 			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
-					"accessed parameter '", name.c_str(),
+					"accessed parameter '", to_std_string_view(name),
 					"' with disabled type [",
 					type_name< typename Type::type >(), "]"
 				));
@@ -233,12 +233,12 @@ namespace disposer{
 		)const{
 			return type(hana::unpack(hana::transform(types, [&](auto type){
 					auto value = make_value(
-						name.c_str(),
+						to_std_string(name),
 						iop_list,
 						values[type],
 						default_values,
 						type,
-						to_text[type].c_str());
+						to_std_string_view(to_text[type]));
 					if(value) value_verify(iop_list, *value);
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map));
@@ -470,7 +470,7 @@ namespace disposer{
 			[](auto const& pair){ return pair.first; });
 		hana::for_each(parameters_names,
 			[&parameter_name_list](auto const& name){
-				parameter_name_list.erase(name.c_str());
+				parameter_name_list.erase(to_std_string(name));
 			});
 
 		for(auto const& param: parameter_name_list){
@@ -487,7 +487,7 @@ namespace disposer{
 		Maker const& maker,
 		parameter_list const& params
 	){
-		auto const name = maker.name.c_str();
+		auto const name = to_std_string(maker.name);
 		auto const iter = params.find(name);
 		auto const found = iter != params.end();
 
@@ -501,7 +501,7 @@ namespace disposer{
 
 			auto const specialization = iter->second
 				.specialized_values.find(
-					maker.to_text[type].c_str());
+					to_std_string(maker.to_text[type]));
 			auto const end =
 				iter->second.specialized_values.end();
 			if(specialization == end){
@@ -509,7 +509,7 @@ namespace disposer{
 				if(!iter->second.generic_value){
 					throw std::logic_error(
 						location + "parameter("
-						+ std::string(name) + ") has neither a "
+						+ name + ") has neither a "
 						"generic value but a specialization "
 						"for type '" + specialization->first
 						+ "'"

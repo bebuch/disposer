@@ -260,10 +260,12 @@ namespace disposer{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		static_assert(std::is_callable_v<
-			EnableFn(accessory_type const&) >);
+			EnableFn(accessory_type const&) >,
+			"enable_fn is not invokable with const module&");
 #else
 		static_assert(std::is_invocable_v<
-			EnableFn, accessory_type const& >);
+			EnableFn, accessory_type const& >,
+			"enable_fn is not invokable with const module&");
 #endif
 
 
@@ -322,13 +324,15 @@ namespace disposer{
 			EnableFn(accessory_type const&) >;
 
 		static_assert(std::is_callable_v<
-			exec_fn_t(exec_accessory_type&, std::size_t) >);
+			exec_fn_t(exec_accessory_type&, std::size_t) >,
+			"exec_fn is not invokable with module& and id");
 #else
 		using exec_fn_t = std::invoke_result_t<
 			EnableFn, accessory_type const& >;
 
 		static_assert(std::is_invocable_v<
-			exec_fn_t, exec_accessory_type&, std::size_t >);
+			exec_fn_t, exec_accessory_type&, std::size_t >,
+			"exec_fn is not invokable with module& and id");
 #endif
 
 
@@ -424,7 +428,7 @@ namespace disposer{
 						"maker is not an iop (this is a bug in disposer!)");
 
 					if constexpr(is_input){
-						auto iter = data.inputs.find(maker.name.c_str());
+						auto iter = data.inputs.find(to_std_string(maker.name));
 						auto output = iter == data.inputs.end()
 							? static_cast< output_base* >(nullptr)
 							: std::get< 0 >(iter->second);
@@ -441,19 +445,20 @@ namespace disposer{
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"input", {maker.name.c_str()}}, get),
-								output, last_use, info));
+								"input", {to_std_string_view(maker.name)}},
+								get), output, last_use, info));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"output", {maker.name.c_str()}}, get)));
+								"output", {to_std_string_view(maker.name)}},
+								get)));
 					}else{
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
 							maker(make_iop_list(iop_log{basic_location,
-								"parameter", {maker.name.c_str()}}, get),
-								make_parameter(location, maker,
+								"parameter", {to_std_string_view(maker.name)}},
+								get), make_parameter(location, maker,
 									data.parameters)));
 					}
 				}
@@ -508,20 +513,16 @@ namespace disposer{
 		using hana_tag = module_register_fn_tag;
 
 		/// \brief Constructor
-		template <
-			typename IOP_MakerListParam,
-			typename IdIncreaseFnParam,
-			typename EnableFnParam >
 		constexpr module_register_fn(
-			IOP_MakerListParam&& list,
-			IdIncreaseFnParam&& id_increase,
-			EnableFnParam&& enable_fn
+			IOP_MakerList&& list,
+			IdIncreaseFn&& id_increase,
+			EnableFn&& enable_fn
 		)
 			: called_flag_(false)
 			, maker_{
-				static_cast< IOP_MakerListParam&& >(list),
-				static_cast< IdIncreaseFnParam&& >(id_increase),
-				static_cast< EnableFnParam&& >(enable_fn)
+				static_cast< IOP_MakerList&& >(list),
+				static_cast< IdIncreaseFn&& >(id_increase),
+				static_cast< EnableFn&& >(enable_fn)
 			}
 			{}
 
@@ -550,28 +551,6 @@ namespace disposer{
 
 		friend struct unit_test_key;
 	};
-
-
-	/// \brief Maker function for \ref module_register_fn
-	template <
-		typename IOP_MakerList,
-		typename IdIncreaseFn,
-		typename EnableFn >
-	constexpr auto make_module_register_fn(
-		IOP_MakerList&& list,
-		IdIncreaseFn&& id_increase,
-		EnableFn&& enable_fn
-	){
-		return module_register_fn<
-				std::remove_reference_t< IOP_MakerList >,
-				std::remove_reference_t< IdIncreaseFn >,
-				std::remove_reference_t< EnableFn >
-			>(
-				static_cast< IOP_MakerList&& >(list),
-				static_cast< IdIncreaseFn&& >(id_increase),
-				static_cast< EnableFn&& >(enable_fn)
-			);
-	}
 
 
 }
