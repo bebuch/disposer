@@ -138,28 +138,6 @@ namespace disposer{
 	};
 
 
-	/// \brief Maker of \ref module_config
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters >
-	auto make_module_config(
-		Inputs&& inputs,
-		Outputs&& outputs,
-		Parameters&& parameters
-	){
-		return module_config<
-				std::remove_const_t< std::remove_reference_t< Inputs > >,
-				std::remove_const_t< std::remove_reference_t< Outputs > >,
-				std::remove_const_t< std::remove_reference_t< Parameters > >
-			>(
-				static_cast< Inputs&& >(inputs),
-				static_cast< Outputs&& >(outputs),
-				static_cast< Parameters&& >(parameters)
-			);
-	}
-
-
 	/// \brief Accessory of a module during enable/disable calls
 	template <
 		typename Inputs,

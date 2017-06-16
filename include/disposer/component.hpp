@@ -76,17 +76,6 @@ namespace disposer{
 	};
 
 
-	/// \brief Maker of \ref component_config
-	template < typename Parameters >
-	auto make_component_config(Parameters&& parameters){
-		return component_config<
-				std::remove_const_t< std::remove_reference_t< Parameters > >
-			>(
-				static_cast< Parameters&& >(parameters)
-			);
-	}
-
-
 	/// \brief Accessory of a component
 	template < typename Parameters >
 	class component_accessory
