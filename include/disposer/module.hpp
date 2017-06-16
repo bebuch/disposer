@@ -218,6 +218,50 @@ namespace disposer{
 	using to_exec_accessory_t = typename to_exec_accessory< Accessory >::type;
 
 
+	/// \brief Wrapper for the module enable function
+	template < typename ModuleFn >
+	class module_enable{
+	public:
+		module_enable(ModuleFn&& module_fn)
+			: module_fn_(static_cast< ModuleFn&& >(module_fn)) {}
+
+		template < typename Accessory >
+		auto operator()(Accessory const& accessory)const{
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(std::is_callable_v<
+					ModuleFn const(Accessory const&) >
+				|| std::is_callable_v< ModuleFn const() >,
+				"module_enable function must be invokable with module& or "
+				"without an argument");
+			if constexpr(std::is_callable_v<
+				ModuleFn const(Accessory const&) >
+			){
+				return module_fn_(accessory);
+			}else{
+				return module_fn_();
+			}
+	#else
+			static_assert(std::is_invocable_v< ModuleFn const,
+					Accessory const& >
+				|| std::is_invocable_v< ModuleFn const >,
+				"module_enable function must be invokable with module& or "
+				"without an argument");
+			if constexpr(std::is_invocable_v< ModuleFn const,
+				Accessory const& >
+			){
+				return module_fn_(accessory);
+			}else{
+				return module_fn_();
+			}
+#endif
+		}
+
+	private:
+		ModuleFn const module_fn_;
+	};
+
+
 	/// \brief The actual module type
 	template <
 		typename Inputs,
@@ -238,11 +282,11 @@ namespace disposer{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		static_assert(std::is_callable_v<
-			EnableFn(accessory_type const&) >,
+			module_enable< EnableFn >(accessory_type const&) >,
 			"enable_fn is not invokable with const module&");
 #else
 		static_assert(std::is_invocable_v<
-			EnableFn, accessory_type const& >,
+			module_enable< EnableFn >, accessory_type const& >,
 			"enable_fn is not invokable with const module&");
 #endif
 
@@ -256,7 +300,7 @@ namespace disposer{
 			Inputs&& inputs,
 			Outputs&& outputs,
 			Parameters&& parameters,
-			EnableFn const& enable_fn
+			module_enable< EnableFn > const& enable_fn
 		)
 			: module_base(
 					module_type, chain, number, id_increase,
@@ -299,14 +343,14 @@ namespace disposer{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
 		using exec_fn_t = std::result_of_t<
-			EnableFn(accessory_type const&) >;
+			module_enable< EnableFn >(accessory_type const&) >;
 
 		static_assert(std::is_callable_v<
 			exec_fn_t(exec_accessory_type&, std::size_t) >,
 			"exec_fn is not invokable with module& and id");
 #else
 		using exec_fn_t = std::invoke_result_t<
-			EnableFn, accessory_type const& >;
+			module_enable< EnableFn >, accessory_type const& >;
 
 		static_assert(std::is_invocable_v<
 			exec_fn_t, exec_accessory_type&, std::size_t >,
@@ -318,7 +362,7 @@ namespace disposer{
 		exec_accessory_type accessory_;
 
 		/// \brief The function object that is called in enable()
-		EnableFn enable_fn_;
+		module_enable< EnableFn > enable_fn_;
 
 		/// \brief The function object that is called in exec()
 		std::optional< exec_fn_t > exec_fn_;
@@ -339,19 +383,19 @@ namespace disposer{
 		Inputs&& inputs,
 		Outputs&& outputs,
 		Parameters&& parameters,
-		EnableFn&& enable_fn
+		module_enable< EnableFn > const& enable_fn
 	){
 		return std::make_unique< module<
 				std::remove_const_t< std::remove_reference_t< Inputs > >,
 				std::remove_const_t< std::remove_reference_t< Outputs > >,
 				std::remove_const_t< std::remove_reference_t< Parameters > >,
-				std::remove_const_t< std::remove_reference_t< EnableFn > >
+				EnableFn
 			> >(
 				type_name, chain, number, id_increase,
 				static_cast< Inputs&& >(inputs),
 				static_cast< Outputs&& >(outputs),
 				static_cast< Parameters&& >(parameters),
-				static_cast< EnableFn&& >(enable_fn)
+				enable_fn
 			);
 	}
 
@@ -369,7 +413,7 @@ namespace disposer{
 		id_increase_fn< IdIncreaseFn > id_increase;
 
 		/// \brief The function object that is called in enable()
-		EnableFn enable_fn;
+		module_enable< EnableFn > enable_fn;
 
 
 		/// \brief Create an module object
@@ -494,13 +538,13 @@ namespace disposer{
 		constexpr module_register_fn(
 			IOP_MakerList&& list,
 			IdIncreaseFn&& id_increase,
-			EnableFn&& enable_fn
+			module_enable< EnableFn >&& enable_fn
 		)
 			: called_flag_(false)
 			, maker_{
 				static_cast< IOP_MakerList&& >(list),
 				static_cast< IdIncreaseFn&& >(id_increase),
-				static_cast< EnableFn&& >(enable_fn)
+				std::move(enable_fn)
 			}
 			{}
 

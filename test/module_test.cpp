@@ -67,7 +67,7 @@ int main(){
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v< decltype(
@@ -93,7 +93,7 @@ int main(){
 					"v"_in(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -129,7 +129,7 @@ int main(){
 					"v"_out(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -165,7 +165,7 @@ int main(){
 					"v"_param(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -207,7 +207,7 @@ int main(){
 					"v"_param(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -309,7 +309,7 @@ int main(){
 						disposer::type_verify(enable_in_t))
 				),
 				disposer::normal_id_increase(),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v<

@@ -41,10 +41,10 @@ int main(){
 		{
 			auto component_register_fn = disposer::component_register_fn(
 				disposer::component_configure(),
-				[](auto const& component){
+				disposer::component_init([](auto const& component){
 					component.log([](logsys::stdlogb&){});
 					return 0;
-				},
+				}),
 				disposer::component_modules()
 			);
 			component_register_fn("c1", cdeclarant);
@@ -55,10 +55,10 @@ int main(){
 				disposer::component_configure(
 					"v"_param(hana::type_c< int >)
 				),
-				[](auto const& component){
+				disposer::component_init([](auto const& component){
 					component.log([](logsys::stdlogb&){});
 					return 0;
-				},
+				}),
 				disposer::component_modules()
 			);
 			component_register_fn("c2", cdeclarant);
@@ -69,21 +69,21 @@ int main(){
 				disposer::component_configure(
 					"v"_param(hana::type_c< int >)
 				),
-				[](auto const& component){
+				disposer::component_init([](auto const& component){
 					component.log([](logsys::stdlogb&){});
 					return 0;
-				},
+				}),
 				disposer::component_modules(
 					"cm1"_module([](auto& /*component*/){
 						return disposer::module_register_fn(
 							disposer::module_configure(),
 							disposer::normal_id_increase(),
-							[](auto const& module){
+							disposer::module_enable([](auto const& module){
 								module.log([](logsys::stdlogb&){});
 								return [](auto& module, std::size_t){
 									module.log([](logsys::stdlogb&){});
 								};
-							}
+							})
 						);
 					})
 				)
@@ -95,12 +95,12 @@ int main(){
 			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
 				disposer::normal_id_increase(),
-				[](auto const& module){
+				disposer::module_enable([](auto const& module){
 					module.log([](logsys::stdlogb&){});
 					return [](auto& module, std::size_t){
 						module.log([](logsys::stdlogb&){});
 					};
-				}
+				})
 			);
 			module_register_fn("m1", mdeclarant);
 		}
@@ -111,7 +111,7 @@ int main(){
 					"v"_in(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				[](auto const& config){
+				disposer::module_enable([](auto const& config){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
@@ -143,7 +143,7 @@ int main(){
 								std::reference_wrapper< int const> > >;
 						static_assert(valid_ref_type);
 					};
-				}
+				})
 			);
 			module_register_fn("m2", mdeclarant);
 		}
@@ -155,7 +155,9 @@ int main(){
 					"v"_out(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				disposer::module_enable([](auto const&){
+					return [](auto&, std::size_t){};
+				})
 			);
 			module_register_fn("m3", mdeclarant);
 		}
@@ -167,7 +169,9 @@ int main(){
 					"v"_param(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				disposer::module_enable([](auto const&){
+					return [](auto&, std::size_t){};
+				})
 			);
 			module_register_fn("m4", mdeclarant);
 		}
@@ -180,7 +184,9 @@ int main(){
 					"v"_param(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				disposer::module_enable([](auto const&){
+					return [](auto&, std::size_t){};
+				})
 			);
 			module_register_fn("m5", mdeclarant);
 		}
@@ -230,7 +236,9 @@ int main(){
 							}))
 				),
 				disposer::normal_id_increase(),
-				[](auto const&){ return [](auto&, std::size_t){}; }
+				disposer::module_enable([](auto const&){
+					return [](auto&, std::size_t){};
+				})
 			);
 			module_register_fn("m6", mdeclarant);
 		}

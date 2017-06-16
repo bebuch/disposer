@@ -113,6 +113,44 @@ namespace disposer{
 	};
 
 
+	/// \brief Wrapper for the component object creation function
+	template < typename ComponentFn >
+	class component_init{
+	public:
+		component_init(ComponentFn&& component_fn)
+			: component_fn_(static_cast< ComponentFn&& >(component_fn)) {}
+
+		template < typename Accessory >
+		auto operator()(Accessory& accessory)const{
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+			static_assert(std::is_callable_v< ComponentFn const(Accessory&) >
+				|| std::is_callable_v< ComponentFn const() >,
+				"component_init function must be invokable with component& or "
+				"without an argument");
+			if constexpr(std::is_callable_v< ComponentFn const(Accessory&) >){
+				return component_fn_(accessory);
+			}else{
+				return component_fn_();
+			}
+	#else
+			static_assert(std::is_invocable_v< ComponentFn const, Accessory& >
+				|| std::is_invocable_v< ComponentFn const >,
+				"component_init function must be invokable with component& or "
+				"without an argument");
+			if constexpr(std::is_invocable_v< ComponentFn const, Accessory& >){
+				return component_fn_(accessory);
+			}else{
+				return component_fn_();
+			}
+#endif
+		}
+
+	private:
+		ComponentFn const component_fn_;
+	};
+
+
 	/// \brief The actual component type
 	template <
 		typename Parameters,
@@ -125,17 +163,11 @@ namespace disposer{
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-		static_assert(std::is_callable_v<
-			ComponentFn(accessory_type&) >);
-
 		using component_t = std::result_of_t<
-			ComponentFn(accessory_type&) >;
+			component_init< ComponentFn >(accessory_type&) >;
 #else
-		static_assert(std::is_invocable_v<
-			ComponentFn, accessory_type& >);
-
 		using component_t = std::invoke_result_t<
-			ComponentFn, accessory_type& >;
+			component_init< ComponentFn >, accessory_type& >;
 #endif
 
 		static_assert(!std::is_same_v< component_t, void >,
@@ -148,7 +180,7 @@ namespace disposer{
 			std::string const& type_name,
 			disposer& disposer,
 			Parameters&& parameters,
-			ComponentFn const& component_fn
+			component_init< ComponentFn > const& component_fn
 		)
 			: component_base(name, type_name)
 			, accessory_(*this, disposer, std::move(parameters))
@@ -209,16 +241,16 @@ namespace disposer{
 		std::string const& type_name,
 		disposer& disposer,
 		Parameters&& parameters,
-		ComponentFn&& component_fn
+		component_init< ComponentFn > const& component_fn
 	){
 		return std::make_unique< component<
 				std::remove_const_t< std::remove_reference_t< Parameters > >,
-				std::remove_const_t< std::remove_reference_t< ComponentFn > >
+				ComponentFn
 			> >(
 				name, type_name,
 				disposer,
 				static_cast< Parameters&& >(parameters),
-				static_cast< ComponentFn&& >(component_fn)
+				component_fn
 			);
 	}
 
@@ -233,7 +265,7 @@ namespace disposer{
 		P_MakerList makers;
 
 		/// \brief The function object that is called at construction
-		ComponentFn component_fn;
+		component_init< ComponentFn > component_fn;
 
 		/// \brief hana::tuple of \ref component_module_maker
 		ComponentModules component_modules;
@@ -334,13 +366,13 @@ namespace disposer{
 		/// \brief Constructor
 		constexpr component_register_fn(
 			P_MakerList&& list,
-			ComponentFn&& component_fn,
+			component_init< ComponentFn >&& component_fn,
 			ComponentModules&& component_modules
 		)
 			: called_flag_(false)
 			, maker_{
 				static_cast< P_MakerList&& >(list),
-				static_cast< ComponentFn&& >(component_fn),
+				std::move(component_fn),
 				static_cast< ComponentModules&& >(component_modules)
 			}
 			{}
