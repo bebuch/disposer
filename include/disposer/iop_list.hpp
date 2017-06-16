@@ -147,15 +147,6 @@ namespace disposer{
 			as_reference_list{})) iop_tuple_;
 	};
 
-	/// \brief Maker function for \ref iop_list
-	template < typename IOP_Tuple >
-	constexpr auto make_iop_list(
-		iop_log const& log_fn,
-		IOP_Tuple const& iop_tuple
-	)noexcept{
-		return iop_list< IOP_Tuple >(log_fn, iop_tuple);
-	}
-
 
 }
 

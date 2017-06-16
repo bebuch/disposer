@@ -393,7 +393,7 @@ namespace disposer{
 
 			// create inputs, outputs and parameter in the order of there
 			// definition in the module
-			auto iop_list = hana::fold_left(makers, hana::make_tuple(),
+			auto list = hana::fold_left(makers, hana::make_tuple(),
 				[&data, &location, &basic_location](auto&& get, auto&& maker){
 					auto is_input =
 						hana::is_a< input_maker_tag >(maker);
@@ -422,19 +422,19 @@ namespace disposer{
 
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(iop_log{basic_location,
+							maker(iop_list(iop_log{basic_location,
 								"input", {to_std_string_view(maker.name)}},
 								get), output, last_use, info));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(iop_log{basic_location,
+							maker(iop_list(iop_log{basic_location,
 								"output", {to_std_string_view(maker.name)}},
 								get)));
 					}else{
 						return hana::append(
 							static_cast< decltype(get)&& >(get),
-							maker(make_iop_list(iop_log{basic_location,
+							maker(iop_list(iop_log{basic_location,
 								"parameter", {to_std_string_view(maker.name)}},
 								get), make_parameter(location, maker,
 									data.parameters)));
@@ -443,19 +443,19 @@ namespace disposer{
 			);
 
 			auto const id_increase_value = id_increase(
-				make_iop_list(iop_log{basic_location,
-					"id increase", {}}, iop_list));
+				iop_list(iop_log{basic_location,
+					"id increase", {}}, list));
 
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
 					id_increase_value,
 					as_iop_map(hana::filter(
-						std::move(iop_list), hana::is_a< input_tag >)),
+						std::move(list), hana::is_a< input_tag >)),
 					as_iop_map(hana::filter(
-						std::move(iop_list), hana::is_a< output_tag >)),
+						std::move(list), hana::is_a< output_tag >)),
 					as_iop_map(hana::filter(
-						std::move(iop_list), hana::is_a< parameter_tag >)),
+						std::move(list), hana::is_a< parameter_tag >)),
 					enable_fn
 				);
 		}

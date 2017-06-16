@@ -264,7 +264,7 @@ namespace disposer{
 
 					return hana::append(
 						static_cast< decltype(get)&& >(get),
-						maker(make_iop_list(iop_log{basic_location,
+						maker(iop_list(iop_log{basic_location,
 							"parameter", to_std_string_view(maker.name)}, get),
 							make_parameter(location, maker,
 								data.parameters)));
