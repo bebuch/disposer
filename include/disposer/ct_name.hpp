@@ -22,6 +22,11 @@ namespace disposer{
 	namespace hana = boost::hana;
 
 
+	/// \brief Utility to make the value false template parameter dependet
+	template < typename >
+	constexpr bool false_c = false;
+
+
 	/// \brief Converts a hana::string to std::string_view
 	template < typename String,
 		typename = std::enable_if< hana::is_a< hana::string_tag, String >() > >

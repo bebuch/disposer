@@ -155,8 +155,11 @@ int main(){
 					"v"_out(hana::type_c< int >)
 				),
 				disposer::normal_id_increase(),
-				disposer::module_enable([](auto const&){
-					return [](auto&, std::size_t){};
+				disposer::module_enable([]{
+					return [](auto& module){
+						auto& out = module("v"_out);
+						(void) out;
+					};
 				})
 			);
 			module_register_fn("m3", mdeclarant);

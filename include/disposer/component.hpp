@@ -124,24 +124,25 @@ namespace disposer{
 		auto operator()(Accessory& accessory)const{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-			static_assert(std::is_callable_v< ComponentFn const(Accessory&) >
-				|| std::is_callable_v< ComponentFn const() >,
-				"component_init function must be invokable with component& or "
-				"without an argument");
 			if constexpr(std::is_callable_v< ComponentFn const(Accessory&) >){
 				return component_fn_(accessory);
-			}else{
+			}else if constexpr(std::is_callable_v< ComponentFn const() >){
 				return component_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"component_init function must be invokable with component& "
+					"or without an argument");
 			}
 	#else
-			static_assert(std::is_invocable_v< ComponentFn const, Accessory& >
-				|| std::is_invocable_v< ComponentFn const >,
-				"component_init function must be invokable with component& or "
-				"without an argument");
 			if constexpr(std::is_invocable_v< ComponentFn const, Accessory& >){
 				return component_fn_(accessory);
-			}else{
+			}else if constexpr(std::is_invocable_v< ComponentFn const >){
+				(void)accessory; // silance GCC
 				return component_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"component_init function must be invokable with component& "
+					"or without an argument");
 			}
 #endif
 		}

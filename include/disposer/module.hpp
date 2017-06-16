@@ -229,30 +229,29 @@ namespace disposer{
 		auto operator()(Accessory const& accessory)const{
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-			static_assert(std::is_callable_v<
-					ModuleEnableFn const(Accessory const&) >
-				|| std::is_callable_v< ModuleEnableFn const() >,
-				"module_enable function must be invokable with module& or "
-				"without an argument");
 			if constexpr(std::is_callable_v<
 				ModuleEnableFn const(Accessory const&) >
 			){
 				return module_fn_(accessory);
-			}else{
+			}else if constexpr(std::is_callable_v< ModuleEnableFn const() >){
 				return module_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"module_enable function must be invokable with module& or "
+					"without an argument");
 			}
 	#else
-			static_assert(std::is_invocable_v< ModuleEnableFn const,
-					Accessory const& >
-				|| std::is_invocable_v< ModuleEnableFn const >,
-				"module_enable function must be invokable with module& or "
-				"without an argument");
-			if constexpr(std::is_invocable_v< ModuleEnableFn const,
-				Accessory const& >
+			if constexpr(
+				std::is_invocable_v< ModuleEnableFn const, Accessory const& >
 			){
 				return module_fn_(accessory);
-			}else{
+			}else if constexpr(std::is_invocable_v< ModuleEnableFn const >){
+				(void)accessory; // silance GCC
 				return module_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"module_enable function must be invokable with module& or "
+					"without an argument");
 			}
 #endif
 		}
@@ -272,14 +271,6 @@ namespace disposer{
 		auto operator()(Accessory& accessory, std::size_t id){
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-			static_assert(
-				std::is_callable_v<
-					ModuleExecFn(Accessory&, std::size_t) >
-				|| std::is_callable_v< ModuleExecFn(Accessory&) >
-				|| std::is_callable_v< ModuleExecFn(std::size_t) >
-				|| std::is_callable_v< ModuleExecFn() >,
-				"exec_fn is not invokable with module& and/or id or without "
-				"arguments");
 			if constexpr(
 				std::is_callable_v< ModuleExecFn(Accessory&, std::size_t) >
 			){
@@ -292,21 +283,18 @@ namespace disposer{
 				std::is_callable_v< ModuleExecFn(std::size_t) >
 			){
 				return module_fn_(id);
-			}else{
+			}else if constexpr(std::is_callable_v< ModuleExecFn() >){
 				return module_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"exec_fn is not invokable with module& and/or id or "
+					"without arguments");
 			}
 #else
-			static_assert(
-				std::is_invocable_v< ModuleExecFn, Accessory&,
-					std::size_t >
-				|| std::is_invocable_v< ModuleExecFn, Accessory& >
-				|| std::is_invocable_v< ModuleExecFn, std::size_t >
-				|| std::is_invocable_v< ModuleExecFn >,
-				"exec_fn is not invokable with module& and/or id or without "
-				"arguments");
+			(void)id; // silance GCC
+			(void)accessory; // silance GCC
 			if constexpr(
-				std::is_invocable_v< ModuleExecFn, Accessory&,
-					std::size_t >
+				std::is_invocable_v< ModuleExecFn, Accessory&, std::size_t >
 			){
 				return module_fn_(accessory, id);
 			}else if constexpr(
@@ -317,8 +305,12 @@ namespace disposer{
 				std::is_invocable_v< ModuleExecFn, std::size_t >
 			){
 				return module_fn_(id);
-			}else{
+			}else if constexpr(std::is_invocable_v< ModuleExecFn >){
 				return module_fn_();
+			}else{
+				static_assert(false_c< Accessory >,
+					"exec_fn is not invokable with module& and/or id or "
+					"without arguments");
 			}
 #endif
 		}
