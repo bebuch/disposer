@@ -66,14 +66,13 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
 			static_assert(std::is_same_v< decltype(
 				key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
@@ -92,7 +91,6 @@ int main(){
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
@@ -105,7 +103,7 @@ int main(){
 						disposer::connection_verify_always,
 						disposer::type_verify_always
 					>
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
@@ -128,7 +126,6 @@ int main(){
 				disposer::module_configure(
 					"v"_out(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
@@ -140,7 +137,7 @@ int main(){
 							disposer::no_transform, int >,
 						disposer::enable_always
 					>
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
@@ -164,7 +161,6 @@ int main(){
 				disposer::module_configure(
 					"v"_param(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
@@ -180,7 +176,7 @@ int main(){
 							hana::make_pair(hana::type_c< int >, "sint32"_s)
 						))
 					>
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
@@ -206,7 +202,6 @@ int main(){
 					"v"_out(hana::type_c< int >),
 					"v"_param(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
@@ -233,7 +228,7 @@ int main(){
 							hana::make_pair(hana::type_c< int >, "sint32"_s)
 						))
 					>
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
@@ -308,7 +303,6 @@ int main(){
 						disposer::connection_verify(enable_in_c),
 						disposer::type_verify(enable_in_t))
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable(enable_fn())
 			);
 
@@ -341,7 +335,7 @@ int main(){
 						decltype(enable_in_c),
 						decltype(enable_in_t)
 					>
-				>, disposer::normal_id_increase, enable_fn > >);
+				>, enable_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{

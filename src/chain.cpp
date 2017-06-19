@@ -32,16 +32,6 @@ namespace disposer{
 	):
 		name(config_chain.name),
 		modules_(create_chain_modules(maker_list, config_chain)),
-		id_increase_(std::accumulate(
-			modules_.cbegin(),
-			modules_.cend(),
-			std::size_t(1),
-			[](std::size_t increase, module_ptr const& module){
-				// TODO: optimize by using reduce
-				increase *= module->id_increase.expand;
-				return increase;
-			}
-		)),
 		generate_id_(generate_id),
 		next_run_(0),
 		ready_run_(modules_.size()),
@@ -93,7 +83,7 @@ namespace disposer{
 		exec_call_manager lock(exec_calls_count_, enable_cv_);
 
 		// generate a new id for the exec
-		std::size_t const id = generate_id_(id_increase_);
+		std::size_t const id = generate_id_();
 
 		// generate a unique continuous index for the call
 		std::size_t const run = next_run_++;

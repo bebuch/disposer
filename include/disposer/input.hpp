@@ -163,18 +163,16 @@ namespace disposer{
 
 		/// \brief Get all data until the current id without transferring
 		///        ownership
-		std::multimap< std::size_t, references_type > get_references(){
+		std::vector< references_type > get_references(){
 			if(!output_ptr()){
 				throw std::logic_error("input is not linked to an output");
 			}
 
-			std::multimap< std::size_t, references_type > result;
-			for(auto& carrier: output_ptr()->get_references(
+			std::vector< references_type > result;
+			for(auto const& carrier: output_ptr()->get_references(
 				input_key(), current_id()
 			)){
-				result.emplace_hint(
-					result.end(),
-					carrier.id,
+				result.emplace_back(
 					ref_convert_rt(carrier.type, carrier.data)
 				);
 			}
@@ -183,38 +181,31 @@ namespace disposer{
 
 		/// \brief Get all data until the current id with transferring
 		///        ownership
-		std::multimap< std::size_t, values_type > get_values(){
+		std::vector< values_type > get_values(){
 			if(!output_ptr()){
 				throw std::logic_error("input is not linked to an output");
 			}
 
-			std::multimap< std::size_t, values_type > result;
+			std::vector< values_type > result;
 			if(last_use()){
-				output_ptr()->transfer_values(input_key(), current_id(),
-					[&result](std::vector< value_carrier >&& list){
-						for(auto& carrier: list){
-							result.emplace_hint(
-								result.end(),
-								carrier.id,
-								val_convert_rt(
-									carrier.type, std::move(carrier.data))
-							);
-						}
-					});
-			}else{
-				for(auto& carrier: output_ptr()->get_references(
+				for(auto& carrier: output_ptr()->get_values(
 					input_key(), current_id()
 				)){
+					result.emplace_back(
+						val_convert_rt(carrier.type, std::move(carrier.data))
+					);
+				};
+			}else{
+				for(auto const& carrier: output_ptr()->get_references(
+					input_key(), current_id()
+				)){
+					// copy from std::reference_wrapper wrapper needs condition
 					if constexpr(type_count == 1){
-						result.emplace_hint(
-							result.end(),
-							carrier.id,
+						result.emplace_back(
 							ref_convert_rt(carrier.type, carrier.data).get()
 						);
 					}else{
-						result.emplace_hint(
-							result.end(),
-							carrier.id,
+						result.emplace_back(
 							std::visit([](auto const& ref)->values_type{
 									return ref.get();
 								},

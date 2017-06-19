@@ -33,13 +33,9 @@ namespace disposer{
 	/// \brief Transfer reference to data from output to input
 	struct reference_carrier{
 		reference_carrier(
-			std::size_t id,
 			type_index const& type,
 			any_type const& data
-		): id(id), type(type), data(data) {}
-
-		/// \brief ID of the data
-		std::size_t id;
+		): type(type), data(data) {}
 
 		/// \brief Type of the data at runtime
 		type_index type;
@@ -51,13 +47,9 @@ namespace disposer{
 	/// \brief Transfer data (inclusive ownership) from output to input
 	struct value_carrier{
 		value_carrier(
-			std::size_t id,
 			type_index const& type,
 			any_type&& data
-		): id(id), type(type), data(std::move(data)) {}
-
-		/// \brief ID of the data
-		std::size_t id;
+		): type(type), data(std::move(data)) {}
 
 		/// \brief Type of the data at runtime
 		type_index type;
@@ -99,8 +91,11 @@ namespace disposer{
 		virtual std::map< type_index, bool > enabled_types()const = 0;
 
 
-		/// \brief Set the new id for the next exec or cleanup
-		void set_id(module_base_key&&, std::size_t id)noexcept{ id_ = id; }
+		/// \brief Set id and call prepare()
+		void prepare(module_base_key&&, std::size_t id)noexcept{
+			id_ = id;
+			prepare();
+		}
 
 		/// \brief Call cleanup(id)
 		void cleanup(module_base_key&&, std::size_t id)noexcept{
@@ -110,17 +105,14 @@ namespace disposer{
 
 		/// \brief Call get_references(id)
 		std::vector< reference_carrier >
-		get_references(input_key&&, std::size_t id){
+		get_references(input_key&&, std::size_t id)const{
 			return get_references(id);
 		}
 
-		/// \brief Call transfer_values(id, fn)
-		void transfer_values(
-			input_key&&,
-			std::size_t id,
-			TransferFn const& fn
-		){
-			return transfer_values(id, fn);
+		/// \brief Call get_values(id)
+		std::vector< value_carrier >
+		get_values(input_key&&, std::size_t id){
+			return get_values(id);
 		}
 
 
@@ -129,19 +121,23 @@ namespace disposer{
 
 
 	protected:
-		/// \brief Get reference of all data until id
+		/// \brief Get vector of references to all data with id
 		///
 		/// This is called, if data is refered via reference or copied from
 		/// output to input.
 		virtual std::vector< reference_carrier >
-		get_references(std::size_t id) = 0;
+		get_references(std::size_t id)const = 0;
 
-		/// \brief Call fn with a vector of all data until id
+		/// \brief Get vector of values with all data with id
 		///
 		/// This is called, if data is moved from output to input.
-		virtual void transfer_values(std::size_t id, TransferFn const& fn) = 0;
+		virtual std::vector< value_carrier >
+		get_values(std::size_t id) = 0;
 
-		/// \brief Clean up all data with ID less or equal id
+		/// \brief Prepare output for exec
+		virtual void prepare()noexcept = 0;
+
+		/// \brief Clean up all data with ID
 		virtual void cleanup(std::size_t id)noexcept = 0;
 
 

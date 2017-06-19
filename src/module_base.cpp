@@ -25,14 +25,12 @@ namespace disposer{
 		std::string const& type_name,
 		std::string const& chain,
 		std::size_t number,
-		id_increase_t id_increase,
 		input_list&& inputs,
 		output_list&& outputs
 	):
 		type_name(type_name),
 		chain(chain),
 		number(number),
-		id_increase(id_increase),
 		id(id_),
 		id_(0),
 		inputs_(std::move(inputs)),
@@ -52,7 +50,7 @@ namespace disposer{
 			input.get().set_id(module_base_key(), id);
 		}
 		for(auto& output: outputs_){
-			output.get().set_id(module_base_key(), id);
+			output.get().prepare(module_base_key(), id);
 		}
 	}
 

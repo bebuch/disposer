@@ -12,7 +12,6 @@
 #include "disposer.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
-#include "id_increase.hpp"
 
 #include <functional>
 
@@ -40,7 +39,6 @@ namespace disposer{
 			std::string const& type_name,
 			std::string const& chain,
 			std::size_t number,
-			id_increase_t id_increase,
 			input_list&& inputs,
 			output_list&& outputs
 		);
@@ -100,20 +98,6 @@ namespace disposer{
 		/// The first module has number 1.
 		std::size_t const number;
 
-
-		/// \brief Number of ID's to output
-		///
-		/// Most modules process one id by one trigger. Some modules collect
-		/// several inputs (with different ID's) to process them together. And
-		/// some modules get one input and produce several outputs with
-		/// different ID's. With the id_increase you reserve a range of unique
-		/// ID's.
-		///
-		/// Example: id_increase == 4
-		///
-		/// When your module is triggered with the ID 8, you can put outputs
-		/// with the ID's 8, 9, 10 and 11.
-		id_increase_t const id_increase;
 
 		/// Read only reference to the ID while exec() does run
 		std::size_t const& id;

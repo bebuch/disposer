@@ -37,8 +37,6 @@ namespace disposer{
 		///
 		/// \param config_chain configuration data from config file
 		/// \param generate_id Reference to a id_generator
-		///
-		/// The id increase for the id_generator is calculated over all modules.
 		chain(
 			module_maker_list const& maker_list,
 			types::merge::chain const& config_chain,
@@ -107,9 +105,6 @@ namespace disposer{
 		/// \brief List of modules
 		std::vector< module_ptr > const modules_;
 
-
-		/// \brief Increase for the id_generator
-		std::size_t const id_increase_;
 
 		/// \brief Referenz to the id_generator
 		id_generator& generate_id_;

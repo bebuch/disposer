@@ -96,14 +96,12 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		constexpr output(enabled_map_type&& enable_map)noexcept:
-			enabled_map_(std::move(enable_map))
-			{}
+		constexpr output(enabled_map_type&& enable_map)noexcept
+			: enabled_map_(std::move(enable_map)) {}
 
 		/// \brief Outputs are default-movable
-		constexpr output(output&& other):
-			enabled_map_(std::move(other.enabled_map_)),
-			data_(std::move(other.data_)){}
+		constexpr output(output&& other)
+			: enabled_map_(std::move(other.enabled_map_)) {}
 
 
 		/// \brief Add given data with the current id to \ref data_
@@ -123,7 +121,7 @@ namespace disposer{
 				));
 			}
 
-			data_.emplace(current_id(), static_cast< V&& >(value));
+			data_.at(current_id()).emplace_back(static_cast< V&& >(value));
 		}
 
 		/// \brief true if any type is enabled
@@ -169,89 +167,80 @@ namespace disposer{
 
 
 	private:
-		/// \brief Get references of all data until the given id
+		/// \brief Get vector of references to all data with id
 		virtual std::vector< reference_carrier >
-		get_references(std::size_t id)override{
-			std::lock_guard< std::mutex > lock(mutex_);
-
-			auto from = data_.begin();
-			auto const to = data_.upper_bound(id);
-
+		get_references(std::size_t id)const override{
 			std::vector< reference_carrier > result;
-			result.reserve(std::distance(from, to));
+			result.reserve(data_.size());
 
-			for(; from != to; ++from){
+			for(auto const& data: data_.at(id)){
 				if constexpr(type_count == 1){
 					result.emplace_back(
-						from->first,
-						type_index::type_id< decltype(from->second) >(),
-						reinterpret_cast< any_type const& >(from->second));
+						type_index::type_id< decltype(data) >(),
+						reinterpret_cast< any_type const& >(data));
 				}else{
 					result.emplace_back(
-						from->first,
 						std::visit([](auto const& data){
 							return type_index::type_id< decltype(data) >();
-						}, from->second),
+						}, data),
 						std::visit([](auto const& data)->any_type const&{
 							return reinterpret_cast< any_type const& >(data);
-						}, from->second));
+						}, data));
 				}
 			}
 
 			return result;
 		}
 
-		/// \brief Call fn with a vector of all data until the given id
+		/// \brief Get vector of values with all data with id
 		///
 		/// The data is moved into the vector!
-		virtual void transfer_values(
-			std::size_t id,
-			TransferFn const& fn
-		)override{
-			std::lock_guard< std::mutex > lock(mutex_);
-
-			auto from = data_.begin();
-			auto const to = data_.upper_bound(id);
-
+		virtual std::vector< value_carrier >
+		get_values(std::size_t id) override{
 			std::vector< value_carrier > result;
-			result.reserve(std::distance(from, to));
+			result.reserve(data_.size());
 
-			for(; from != to; ++from){
+			for(auto& data: data_.at(id)){
 				if constexpr(type_count == 1){
 					result.emplace_back(
-						from->first,
-						type_index::type_id< decltype(from->second) >(),
-						reinterpret_cast< any_type&& >(from->second));
+						type_index::type_id< decltype(data) >(),
+						reinterpret_cast< any_type&& >(data));
 				}else{
 					result.emplace_back(
-						from->first,
 						std::visit([](auto&& data){
 							return type_index::type_id< decltype(data) >();
-						}, std::move(from->second)),
+						}, std::move(data)),
 						std::visit([](auto&& data)->any_type&&{
 							return reinterpret_cast< any_type&& >(data);
-						}, std::move(from->second)));
+						}, std::move(data)));
 				}
 			}
 
-			fn(std::move(result));
+			return result;
+		}
+
+		/// \brief Remove all data until the given id
+		virtual void prepare()noexcept override{
+			data_.try_emplace(data_.end(), current_id());
 		}
 
 		/// \brief Remove all data until the given id
 		virtual void cleanup(std::size_t id)noexcept override{
-			std::lock_guard< std::mutex > lock(mutex_);
-			data_.erase(data_.begin(), data_.upper_bound(id));
+			data_.erase(id);
 		}
 
-
-		/// \brief Protect \ref data_
-		std::mutex mutex_;
 
 		/// \brief hana::map from type to bool, bool is true if type is enabled
 		enabled_map_type enabled_map_;
 
-		/// \brief Map from id to data
-		std::multimap< std::size_t, value_type > data_;
+
+		/// \brief Map from exec id to data vector
+		///
+		/// Since emplace and erase of map don't affect existing elements and
+		/// these operations can't be called while get_references and
+		/// transfer_values are running on the same exec id, all 4 operations
+		/// are naturally thread safe.
+		std::map< std::size_t, std::vector< value_type > > data_;
 	};
 
 

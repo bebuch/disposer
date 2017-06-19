@@ -77,7 +77,6 @@ int main(){
 					"cm1"_module([](auto& /*component*/){
 						return disposer::module_register_fn(
 							disposer::module_configure(),
-							disposer::normal_id_increase(),
 							disposer::module_enable([](auto const& module){
 								module.log([](logsys::stdlogb&){});
 								return [](auto& module, std::size_t){
@@ -94,7 +93,6 @@ int main(){
 		{
 			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::normal_id_increase(),
 				disposer::module_enable([](auto const& module){
 					module.log([](logsys::stdlogb&){});
 					return [](auto& module, std::size_t){
@@ -110,7 +108,6 @@ int main(){
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable([](auto const& config){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
@@ -134,13 +131,13 @@ int main(){
 
 						auto valid_value_type =  hana::type_c<
 							decltype(module("v"_in).get_values()) > ==
-							hana::type_c< std::multimap< std::size_t, int > >;
+							hana::type_c< std::vector< int > >;
 						static_assert(valid_value_type );
 
 						auto valid_ref_type =  hana::type_c<
 							decltype(module("v"_in).get_references()) > ==
-							hana::type_c< std::multimap< std::size_t,
-								std::reference_wrapper< int const> > >;
+							hana::type_c< std::vector<
+								std::reference_wrapper< int const > > >;
 						static_assert(valid_ref_type);
 					};
 				})
@@ -154,7 +151,6 @@ int main(){
 				disposer::module_configure(
 					"v"_out(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable([]{
 					return [](auto& module){
 						auto& out = module("v"_out);
@@ -171,7 +167,6 @@ int main(){
 				disposer::module_configure(
 					"v"_param(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable([](auto const&){
 					return [](auto&, std::size_t){};
 				})
@@ -186,7 +181,6 @@ int main(){
 					"v"_out(hana::type_c< int >),
 					"v"_param(hana::type_c< int >)
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable([](auto const&){
 					return [](auto&, std::size_t){};
 				})
@@ -238,7 +232,6 @@ int main(){
 								assert(!active1 && !active2 && !active3);
 							}))
 				),
-				disposer::normal_id_increase(),
 				disposer::module_enable([](auto const&){
 					return [](auto&, std::size_t){};
 				})
