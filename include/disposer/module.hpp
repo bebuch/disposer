@@ -591,7 +591,6 @@ namespace disposer{
 				throw std::runtime_error("called module register function '"
 					+ module_type + "' more than once");
 			}
-
 		}
 
 
