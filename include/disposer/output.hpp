@@ -99,7 +99,7 @@ namespace disposer{
 		constexpr output(
 			Maker const& maker,
 			IOP_List const& iop_list
-		)noexcept
+		)
 			: enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),

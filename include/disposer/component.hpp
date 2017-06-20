@@ -287,7 +287,7 @@ namespace disposer{
 			// create parameter in the order of there definition in the
 			// component
 			auto p_list = hana::fold_left(makers, hana::make_tuple(),
-				[&data, &location, &basic_location](auto&& get, auto&& maker){
+				[&data, &location, &basic_location](auto&& iop, auto&& maker){
 					auto is_parameter =
 						hana::is_a< parameter_maker_tag >(maker);
 
@@ -295,12 +295,19 @@ namespace disposer{
 						"maker is not a parameter (this is a bug in "
 						"disposer!)");
 
+					auto make_accessory = [&basic_location, &maker, &iop]
+						(std::string_view type){
+							return iop_list(iop_log{basic_location,
+								type, {to_std_string_view(maker.name)}}, iop);
+						};
+
+					using type = typename
+						decltype(hana::typeid_(maker))::type::type;
+
 					return hana::append(
-						static_cast< decltype(get)&& >(get),
-						maker(iop_list(iop_log{basic_location,
-							"parameter", to_std_string_view(maker.name)}, get),
-							make_parameter(location, maker,
-								data.parameters)));
+						static_cast< decltype(iop)&& >(iop),
+						type(maker, make_accessory("parameter"),
+							make_parameter(location, maker, data.parameters)));
 				}
 			);
 

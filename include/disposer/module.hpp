@@ -488,6 +488,12 @@ namespace disposer{
 					static_assert(is_input || is_output || is_parameter,
 						"maker is not an iop (this is a bug in disposer!)");
 
+					auto make_accessory = [&basic_location, &maker, &iop]
+						(std::string_view type){
+							return iop_list(iop_log{basic_location,
+								type, {to_std_string_view(maker.name)}}, iop);
+						};
+
 					using type = typename
 						decltype(hana::typeid_(maker))::type::type;
 
@@ -506,27 +512,21 @@ namespace disposer{
 								output->enabled_types())
 							: std::optional< output_info >();
 
-						auto accessory = iop_list(iop_log{basic_location,
-							"input", {to_std_string_view(maker.name)}}, iop);
-
-						type::verify_maker_data(maker, accessory, info);
+						type::verify_maker_data(
+							maker, make_accessory("input"), info);
 
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
 							type(info, output, last_use));
 					}else if constexpr(is_output){
-						auto accessory = iop_list(iop_log{basic_location,
-							"output", {to_std_string_view(maker.name)}}, iop);
-
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(maker, accessory));
+							type(maker, make_accessory("output")));
 					}else{
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							maker(iop_list(iop_log{basic_location,
-								"parameter", {to_std_string_view(maker.name)}},
-								iop), make_parameter(location, maker,
+							type(maker, make_accessory("parameter"),
+								make_parameter(location, maker,
 									data.parameters)));
 					}
 				}

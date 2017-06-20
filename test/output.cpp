@@ -40,7 +40,7 @@ int main(){
 
 	static constexpr disposer::iop_log iop_log{"pre"sv, "output"sv, "v"sv};
 	static constexpr auto iops = hana::make_tuple();
-	static constexpr auto get_object =
+	static constexpr auto accessory =
 		disposer::iop_list< hana::tuple<> >(iop_log, iops);
 
 	std::size_t ct = 0;
@@ -57,7 +57,8 @@ int main(){
 					disposer::enable_always
 				> const >);
 
-			auto object = maker(get_object);
+			using type = decltype(hana::typeid_(maker))::type::type;
+			type object(maker, accessory);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
@@ -86,7 +87,8 @@ int main(){
 					disposer::enable_always
 				> const >);
 
-			auto object = maker(get_object);
+			using type = decltype(hana::typeid_(maker))::type::type;
+			type object(maker, accessory);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
@@ -118,7 +120,8 @@ int main(){
 					disposer::enable_always
 				> const >);
 
-			auto object = maker(get_object);
+			using type = decltype(hana::typeid_(maker))::type::type;
+			type object(maker, accessory);
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),

@@ -109,9 +109,40 @@ namespace disposer{
 				std::declval< std::optional< T const > >()) ... ));
 
 
+		template <
+			typename Maker,
+			typename IOP_List,
+			typename Value,
+			typename Type >
+		static std::optional< Type const > make_value(
+			Maker const& maker,
+			IOP_List const& iop_list,
+			Value const& value,
+			std::string const& name,
+			hana::basic_type< Type > type
+		){
+			if(!maker.enable(iop_list, type,
+				to_std_string_view(maker.to_text[type]))) return {};
+			if(value) return maker.parser(iop_list, *value, type);
+			if(maker.default_values) return (*maker.default_values)[type];
+			throw std::logic_error("parameter(" + name + ") is required");
+		}
+
+
 		/// \brief Constructor
-		parameter(type_value_map_t&& type_value_map):
-			type_value_map_(std::move(type_value_map)) {}
+		template < typename Maker, typename IOP_List, typename Values >
+		parameter(
+			Maker const& maker,
+			IOP_List const& iop_list,
+			Values const& values
+		):
+			type_value_map_(hana::unpack(hana::transform(types, [&](auto type){
+					auto value = make_value(
+						maker, iop_list, values[type],
+						to_std_string(maker.name), type);
+					if(value) maker.value_verify(iop_list, *value);
+					return hana::make_pair(type, std::move(value));
+				}), hana::make_map)) {}
 
 
 		/// \brief true if any type is enabled, otherwise false
@@ -206,43 +237,6 @@ namespace disposer{
 
 		/// \brief hana::map from hana::type to hana::string
 		TypeToText to_text;
-
-		template <
-			typename IOP_List,
-			typename Value,
-			typename DefaultValues,
-			typename T >
-		std::optional< T const > make_value(
-			std::string const& name,
-			IOP_List const& iop_list,
-			Value const& value,
-			DefaultValues const& default_values,
-			hana::basic_type< T > type,
-			std::string_view type_as_text
-		)const{
-			if(!enable(iop_list, type, type_as_text)) return {};
-			if(value) return parser(iop_list, *value, type);
-			if(default_values) return (*default_values)[type];
-			throw std::logic_error("parameter '" + name + "' is required");
-		}
-
-		template < typename IOP_List, typename Values >
-		constexpr auto operator()(
-			IOP_List const& iop_list,
-			Values const& values
-		)const{
-			return type(hana::unpack(hana::transform(types, [&](auto type){
-					auto value = make_value(
-						to_std_string(name),
-						iop_list,
-						values[type],
-						default_values,
-						type,
-						to_std_string_view(to_text[type]));
-					if(value) value_verify(iop_list, *value);
-					return hana::make_pair(type, std::move(value));
-				}), hana::make_map));
-		}
 	};
 
 
