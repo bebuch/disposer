@@ -263,12 +263,14 @@ int main(){
 			};
 
 			constexpr auto enable_in_c = [](auto const&, bool connected){
+				(void)connected;
 				assert(!connected);
 			};
 
 			constexpr auto enable_param = [](auto const& get, auto type){
 				bool active1 = get("v"_in).is_enabled(type);
 				bool active2 = get("v"_out).is_enabled(type);
+				(void)active1, (void)active2;
 				assert(!active1 && !active2);
 				return false;
 			};
@@ -284,6 +286,7 @@ int main(){
 					bool active1 = get("v"_in).is_enabled(type);
 					bool active2 = get("v"_out).is_enabled(type);
 					bool active3 = get("v"_param).is_enabled(type);
+					(void)active1, (void)active2, (void)active3;
 					assert(!active1 && !active2 && !active3);
 				};
 
