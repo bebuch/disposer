@@ -39,26 +39,6 @@ namespace disposer{
 		friend class input;
 	};
 
-	template <
-		typename InputType,
-		typename ConnectionVerifyFn,
-		typename TypeVerifyFn >
-	struct input_maker;
-
-	/// \brief Class input_key access key
-	struct input_maker_key{
-	private:
-		/// \brief Constructor
-		constexpr input_maker_key()noexcept = default;
-
-		template <
-			typename InputType,
-			typename ConnectionVerifyFn,
-			typename TypeVerifyFn >
-		friend struct input_maker;
-	};
-
-
 	/// \brief The actual input type
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input: public input_base{
@@ -143,12 +123,36 @@ namespace disposer{
 		>;
 
 
+		template < typename InputMaker, typename IOP_List >
+		static constexpr void verify_maker_data(
+			InputMaker const& maker,
+			IOP_List const& iop_list,
+			std::optional< output_info > const& info
+		){
+			if(info){
+				constexpr auto key = input_key();
+				hana::unpack(types, [&info, key](auto ... type){
+					info->verify_nothing_enabled_except(key, type ...);
+				});
+			}
+
+			maker.connection_verify(iop_list, static_cast< bool >(info));
+
+			if(info){
+				hana::for_each(types,
+					[&maker, &iop_list, &info](auto const& type){
+						maker.type_verify(iop_list, type, *info);
+					});
+			}
+		}
+
+
 		/// \brief Constructor
 		constexpr input(
+			std::optional< output_info > const& info,
 			output_base* output,
-			bool last_use,
-			std::optional< output_info > const& info
-		)noexcept
+			bool last_use
+		)
 			: input_base(output, last_use)
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
@@ -354,35 +358,6 @@ namespace disposer{
 
 		/// \brief Function which verifies the active types
 		type_verify_fn< TypeVerifyFn > type_verify;
-
-
-		/// \brief Create an input object
-		template < typename IOP_List >
-		constexpr auto operator()(
-			IOP_List const& iop_list,
-			output_base* output,
-			bool last_use,
-			std::optional< output_info > const& info
-		)const{
-			if(info){
-				constexpr auto key = input_maker_key();
-				hana::unpack(type::types, [&info, key](auto ... type){
-					info->verify_nothing_enabled_except(key, type ...);
-				});
-			}
-
-			auto input = type(output, last_use, info);
-			connection_verify(iop_list, static_cast< bool >(info));
-
-			if(info){
-				hana::for_each(type::types,
-					[this, &iop_list, &info](auto const& type){
-						type_verify(iop_list, type, *info);
-					});
-			}
-
-			return input;
-		}
 	};
 
 

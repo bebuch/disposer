@@ -477,7 +477,7 @@ namespace disposer{
 			// create inputs, outputs and parameter in the order of there
 			// definition in the module
 			auto list = hana::fold_left(makers, hana::make_tuple(),
-				[&data, &location, &basic_location](auto&& get, auto&& maker){
+				[&data, &location, &basic_location](auto&& iop, auto&& maker){
 					auto is_input =
 						hana::is_a< input_maker_tag >(maker);
 					auto is_output =
@@ -503,27 +503,42 @@ namespace disposer{
 								output->enabled_types())
 							: std::optional< output_info >();
 
+						auto accessory = iop_list(iop_log{basic_location,
+							"input", {to_std_string_view(maker.name)}}, iop);
+
+						using input_type = typename
+							decltype(hana::typeid_(maker))::type::type;
+
+						input_type::verify_maker_data(maker, accessory, info);
+
 						return hana::append(
-							static_cast< decltype(get)&& >(get),
-							maker(iop_list(iop_log{basic_location,
-								"input", {to_std_string_view(maker.name)}},
-								get), output, last_use, info));
+							static_cast< decltype(iop)&& >(iop),
+							input_type(info, output, last_use));
 					}else if constexpr(is_output){
 						return hana::append(
-							static_cast< decltype(get)&& >(get),
+							static_cast< decltype(iop)&& >(iop),
 							maker(iop_list(iop_log{basic_location,
 								"output", {to_std_string_view(maker.name)}},
-								get)));
+								iop)));
 					}else{
 						return hana::append(
-							static_cast< decltype(get)&& >(get),
+							static_cast< decltype(iop)&& >(iop),
 							maker(iop_list(iop_log{basic_location,
 								"parameter", {to_std_string_view(maker.name)}},
-								get), make_parameter(location, maker,
+								iop), make_parameter(location, maker,
 									data.parameters)));
 					}
 				}
 			);
+
+			// TODO: Don't move or copy iop's after creation
+// 			auto list_type = hana::unpack(makers, [](auto const& ... maker){
+// 				return hana::type_c< decltype(hana::make_tuple(
+// 						std::declval< typename
+// 							decltype(hana::typeid_(maker))::type::type >() ...
+// 					)) >;
+// 			});
+// 			static_assert(list_type == hana::typeid_(list));
 
 			// Create the module
 			return make_module_ptr(

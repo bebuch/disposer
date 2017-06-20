@@ -24,7 +24,7 @@ namespace disposer{
 	namespace hana = boost::hana;
 
 
-	struct input_maker_key;
+	struct input_key;
 
 	/// \brief Provides information which output types are enabled
 	class output_info{
@@ -52,7 +52,7 @@ namespace disposer{
 		///        a type of the input
 		template < typename ... T >
 		void verify_nothing_enabled_except(
-			input_maker_key const&,
+			input_key const&,
 			hana::basic_type< T > ...
 		)const{
 			std::set< type_index > const legal_types{
