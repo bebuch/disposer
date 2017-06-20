@@ -41,7 +41,7 @@ int main(){
 	static constexpr disposer::iop_log iop_log{"pre"sv, "output"sv, "v"sv};
 	static constexpr auto iops = hana::make_tuple();
 	static constexpr auto accessory =
-		disposer::iop_list< hana::tuple<> >(iop_log, iops);
+		disposer::iop_accessory< hana::tuple<> >(iop_log, iops);
 
 	std::size_t ct = 0;
 	std::size_t error_count = 0;

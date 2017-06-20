@@ -446,9 +446,9 @@ namespace disposer{
 		);
 	}
 
-	template < typename LocationFn, typename Makers >
+	template < typename Makers >
 	auto check_parameters(
-		LocationFn const& location,
+		std::string const& location,
 		Makers const& makers,
 		parameter_list const& params
 	){
@@ -475,9 +475,9 @@ namespace disposer{
 		}
 	}
 
-	template < typename LocationFn, typename Maker >
+	template < typename Maker >
 	auto make_parameter(
-		LocationFn const& location,
+		std::string const& location,
 		Maker const& maker,
 		parameter_list const& params
 	){

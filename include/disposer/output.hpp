@@ -346,9 +346,9 @@ namespace disposer{
 	}
 
 
-	template < typename LocationFn, typename Makers >
+	template < typename Makers >
 	auto invalid_outputs(
-		LocationFn const& location,
+		std::string const& location,
 		Makers const& makers,
 		output_list const& outputs
 	){

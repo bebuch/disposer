@@ -449,9 +449,9 @@ namespace disposer{
 	}
 
 
-	template < typename LocationFn, typename Makers >
+	template < typename Makers >
 	auto invalid_inputs(
-		LocationFn const& location,
+		std::string const& location,
 		Makers const& makers,
 		input_list const& inputs
 	){
