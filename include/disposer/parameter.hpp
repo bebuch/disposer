@@ -112,12 +112,11 @@ namespace disposer{
 		template <
 			typename Maker,
 			typename IOP_Accessory,
-			typename Value,
 			typename Type >
 		static std::optional< Type const > make_value(
 			Maker const& maker,
 			IOP_Accessory const& iop_accessory,
-			Value const& value,
+			std::optional< std::string_view > value,
 			std::string const& name,
 			hana::basic_type< Type > type
 		){
@@ -518,7 +517,7 @@ namespace disposer{
 
 		auto result = hana::to_map(hana::transform(
 			maker.types,
-			[&get_value](auto&& type){
+			[&get_value](auto type){
 				return hana::make_pair(type, get_value(type));
 			}));
 
