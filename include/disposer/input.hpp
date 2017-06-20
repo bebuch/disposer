@@ -13,7 +13,7 @@
 #include "input_base.hpp"
 #include "input_name.hpp"
 #include "output_base.hpp"
-#include "iop_list.hpp"
+#include "iop_accessory.hpp"
 #include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -123,10 +123,10 @@ namespace disposer{
 		>;
 
 
-		template < typename InputMaker, typename IOP_List >
+		template < typename InputMaker, typename IOP_Accessory >
 		static constexpr void verify_maker_data(
 			InputMaker const& maker,
-			IOP_List const& iop_list,
+			IOP_Accessory const& iop_accessory,
 			std::optional< output_info > const& info
 		){
 			if(info){
@@ -136,12 +136,12 @@ namespace disposer{
 				});
 			}
 
-			maker.connection_verify(iop_list, static_cast< bool >(info));
+			maker.connection_verify(iop_accessory, static_cast< bool >(info));
 
 			if(info){
 				hana::for_each(types,
-					[&maker, &iop_list, &info](auto const& type){
-						maker.type_verify(iop_list, type, *info);
+					[&maker, &iop_accessory, &info](auto const& type){
+						maker.type_verify(iop_accessory, type, *info);
 					});
 			}
 		}

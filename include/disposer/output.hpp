@@ -12,7 +12,7 @@
 #include "output_base.hpp"
 #include "type_index.hpp"
 #include "output_name.hpp"
-#include "iop_list.hpp"
+#include "iop_accessory.hpp"
 #include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -95,15 +95,15 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename Maker, typename IOP_List >
+		template < typename Maker, typename IOP_Accessory >
 		constexpr output(
 			Maker const& maker,
-			IOP_List const& iop_list
+			IOP_Accessory const& iop_accessory
 		)
 			: enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),
-						maker.enable(iop_list, subtype));
+						maker.enable(iop_accessory, subtype));
 				}), hana::make_map)) {}
 
 		/// \brief Outputs are default-movable

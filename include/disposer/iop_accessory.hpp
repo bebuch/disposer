@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__iop_list__hpp_INCLUDED_
-#define _disposer__iop_list__hpp_INCLUDED_
+#ifndef _disposer__iop_accessory__hpp_INCLUDED_
+#define _disposer__iop_accessory__hpp_INCLUDED_
 
 #include "add_log.hpp"
 #include "input_name.hpp"
@@ -78,10 +78,10 @@ namespace disposer{
 
 	/// \brief Accessory object for all former IOP-object
 	template < typename IOP_Tuple >
-	struct iop_list: add_log< iop_list< IOP_Tuple > >{
+	struct iop_accessory: add_log< iop_accessory< IOP_Tuple > >{
 	public:
 		/// \brief Constructor
-		constexpr iop_list(
+		constexpr iop_accessory(
 			iop_log const& log_fn,
 			IOP_Tuple const& iop_tuple
 		)noexcept

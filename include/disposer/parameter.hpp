@@ -11,7 +11,7 @@
 
 #include "parameter_name.hpp"
 #include "type_index.hpp"
-#include "iop_list.hpp"
+#include "iop_accessory.hpp"
 #include "merge.hpp"
 #include "as_text.hpp"
 
@@ -111,36 +111,36 @@ namespace disposer{
 
 		template <
 			typename Maker,
-			typename IOP_List,
+			typename IOP_Accessory,
 			typename Value,
 			typename Type >
 		static std::optional< Type const > make_value(
 			Maker const& maker,
-			IOP_List const& iop_list,
+			IOP_Accessory const& iop_accessory,
 			Value const& value,
 			std::string const& name,
 			hana::basic_type< Type > type
 		){
-			if(!maker.enable(iop_list, type,
+			if(!maker.enable(iop_accessory, type,
 				to_std_string_view(maker.to_text[type]))) return {};
-			if(value) return maker.parser(iop_list, *value, type);
+			if(value) return maker.parser(iop_accessory, *value, type);
 			if(maker.default_values) return (*maker.default_values)[type];
 			throw std::logic_error("parameter(" + name + ") is required");
 		}
 
 
 		/// \brief Constructor
-		template < typename Maker, typename IOP_List, typename Values >
+		template < typename Maker, typename IOP_Accessory, typename Values >
 		parameter(
 			Maker const& maker,
-			IOP_List const& iop_list,
+			IOP_Accessory const& iop_accessory,
 			Values const& values
 		):
 			type_value_map_(hana::unpack(hana::transform(types, [&](auto type){
 					auto value = make_value(
-						maker, iop_list, values[type],
+						maker, iop_accessory, values[type],
 						to_std_string(maker.name), type);
-					if(value) maker.value_verify(iop_list, *value);
+					if(value) maker.value_verify(iop_accessory, *value);
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map)) {}
 

@@ -490,7 +490,7 @@ namespace disposer{
 
 					auto make_accessory = [&basic_location, &maker, &iop]
 						(std::string_view type){
-							return iop_list(iop_log{basic_location,
+							return iop_accessory(iop_log{basic_location,
 								type, {to_std_string_view(maker.name)}}, iop);
 						};
 
