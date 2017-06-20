@@ -137,7 +137,7 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to an iop_log object
-		iop_log const& log_fn_;
+		iop_log log_fn_;
 
 		/// \brief hana::tuple of std::reference_wrapper's of all previos iop's
 		///
