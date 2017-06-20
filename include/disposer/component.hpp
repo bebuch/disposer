@@ -307,7 +307,8 @@ namespace disposer{
 					return hana::append(
 						static_cast< decltype(iop)&& >(iop),
 						type(maker, make_accessory("parameter"),
-							make_parameter(location, maker, data.parameters)));
+							make_parameter_value_map(location, maker,
+								data.parameters)));
 				}
 			);
 
