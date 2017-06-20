@@ -488,6 +488,9 @@ namespace disposer{
 					static_assert(is_input || is_output || is_parameter,
 						"maker is not an iop (this is a bug in disposer!)");
 
+					using type = typename
+						decltype(hana::typeid_(maker))::type::type;
+
 					if constexpr(is_input){
 						auto iter = data.inputs.find(to_std_string(maker.name));
 						auto output = iter == data.inputs.end()
@@ -506,20 +509,18 @@ namespace disposer{
 						auto accessory = iop_list(iop_log{basic_location,
 							"input", {to_std_string_view(maker.name)}}, iop);
 
-						using input_type = typename
-							decltype(hana::typeid_(maker))::type::type;
-
-						input_type::verify_maker_data(maker, accessory, info);
+						type::verify_maker_data(maker, accessory, info);
 
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							input_type(info, output, last_use));
+							type(info, output, last_use));
 					}else if constexpr(is_output){
+						auto accessory = iop_list(iop_log{basic_location,
+							"output", {to_std_string_view(maker.name)}}, iop);
+
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							maker(iop_list(iop_log{basic_location,
-								"output", {to_std_string_view(maker.name)}},
-								iop)));
+							type(maker, accessory));
 					}else{
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),

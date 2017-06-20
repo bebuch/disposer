@@ -95,8 +95,16 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		constexpr output(enabled_map_type&& enable_map)noexcept
-			: enabled_map_(std::move(enable_map)) {}
+		template < typename Maker, typename IOP_List >
+		constexpr output(
+			Maker const& maker,
+			IOP_List const& iop_list
+		)noexcept
+			: enabled_map_(hana::unpack(hana::transform(subtypes,
+				[&](auto subtype){
+					return hana::make_pair(type_transform(subtype),
+						maker.enable(iop_list, subtype));
+				}), hana::make_map)) {}
 
 		/// \brief Outputs are default-movable
 		constexpr output(output&& other)
@@ -262,16 +270,6 @@ namespace disposer{
 
 		/// \brief Enable function
 		enable_fn< EnableFn > enable;
-
-		/// \brief Create an output object
-		template < typename IOP_List >
-		constexpr auto operator()(IOP_List const& iop_list)const{
-			return type(hana::unpack(hana::transform(type::subtypes,
-				[&](auto subtype){
-					return hana::make_pair(type::type_transform(subtype),
-						enable(iop_list, subtype));
-				}), hana::make_map));
-		}
 	};
 
 
