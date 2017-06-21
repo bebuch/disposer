@@ -71,7 +71,8 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory, value_int);
+			type object(disposer::parameter_make_data(
+				maker, accessory, value_int));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int > >);
@@ -108,7 +109,8 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory, value_int_float);
+			type object(disposer::parameter_make_data(
+				maker, accessory, value_int_float));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);
@@ -150,7 +152,8 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory, value_int_float);
+			type object(disposer::parameter_make_data(
+				maker, accessory, value_int_float));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);

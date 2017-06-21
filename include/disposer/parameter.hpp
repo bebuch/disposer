@@ -67,6 +67,22 @@ namespace disposer{
 	}
 
 
+	template < typename Maker, typename IOP_Accessory, typename ValueMap >
+	struct parameter_make_data{
+		constexpr parameter_make_data(
+			Maker const& maker,
+			IOP_Accessory const& iop_accessory,
+			ValueMap const& value_map
+		)noexcept
+			: maker(maker)
+			, iop_accessory(iop_accessory)
+			, value_map(value_map) {}
+
+		Maker const& maker;
+		IOP_Accessory const& iop_accessory;
+		ValueMap const& value_map;
+	};
+
 	template < typename Name, typename ... T >
 	class parameter{
 	public:
@@ -131,15 +147,15 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename Maker, typename IOP_Accessory, typename ValueMap >
 		parameter(
-			Maker const& maker,
-			IOP_Accessory const& iop_accessory,
-			ValueMap const& value_map
+			parameter_make_data< Maker, IOP_Accessory, ValueMap > const& data
 		):
 			type_value_map_(hana::unpack(hana::transform(types, [&](auto type){
 					auto value = make_value(
-						maker, iop_accessory, value_map[type],
-						to_std_string(maker.name), type);
-					if(value) maker.value_verify(iop_accessory, *value);
+						data.maker, data.iop_accessory, data.value_map[type],
+						to_std_string(data.maker.name), type);
+					if(value){
+						data.maker.value_verify(data.iop_accessory, *value);
+					}
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map)) {}
 

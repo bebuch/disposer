@@ -558,6 +558,8 @@ namespace disposer{
 
 					if constexpr(is_input){
 						auto iter = data.inputs.find(to_std_string(maker.name));
+
+						// output referes to an output in a former module
 						auto output = iter == data.inputs.end()
 							? static_cast< output_base* >(nullptr)
 							: std::get< 0 >(iter->second);
@@ -574,19 +576,20 @@ namespace disposer{
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
 							type(input_make_data
-								{maker, make_accessory("input"),
-									info, output, last_use}));
+								(maker, make_accessory("input"),
+									info, output, last_use)));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
 							type(output_make_data
-								{maker, make_accessory("output")}));
+								(maker, make_accessory("output"))));
 					}else{
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(maker, make_accessory("parameter"),
-								make_parameter_value_map(location, maker,
-									data.parameters)));
+							type(parameter_make_data
+								(maker, make_accessory("parameter"),
+									make_parameter_value_map(location, maker,
+										data.parameters))));
 					}
 				}
 			);
