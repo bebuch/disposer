@@ -43,6 +43,8 @@ int main(){
 	static constexpr auto accessory =
 		disposer::iop_accessory< hana::tuple<> >(iop_log, iops);
 
+	disposer::module_base_key* key = nullptr;
+
 	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
@@ -58,12 +60,13 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory);
+			type object(disposer::output_make_data(maker, accessory));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
 					disposer::no_transform, int > >);
 
+			object.output_base::prepare(std::move(*key), 0);
 			object.put(0);
 
 			error_count = check(ct++,
@@ -88,12 +91,13 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory);
+			type object(disposer::output_make_data(maker, accessory));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
 					disposer::no_transform, int, float > >);
 
+			object.output_base::prepare(std::move(*key), 0);
 			object.put(3);
 			object.put(3.f);
 
@@ -121,12 +125,13 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(maker, accessory);
+			type object(disposer::output_make_data(maker, accessory));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
 					disposer::no_transform, int, float > >);
 
+			object.output_base::prepare(std::move(*key), 0);
 			object.put(3);
 			object.put(3.f);
 
