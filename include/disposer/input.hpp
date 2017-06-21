@@ -44,21 +44,15 @@ namespace disposer{
 		constexpr input_make_data(
 			InputMaker const& maker,
 			IOP_Accessory const& iop_accessory,
-			std::optional< output_info > const& info,
-			output_base* output,
-			bool last_use
+			std::optional< output_info > const& info
 		)noexcept
 			: maker(maker)
 			, iop_accessory(iop_accessory)
-			, info(info)
-			, output(output)
-			, last_use(last_use) {}
+			, info(info){}
 
 		InputMaker const& maker;
 		IOP_Accessory const& iop_accessory;
 		std::optional< output_info > const& info;
-		output_base* output;
-		bool last_use;
 	};
 
 	/// \brief The actual input type
@@ -154,8 +148,8 @@ namespace disposer{
 				(verify_maker_data(
 						data.maker, data.iop_accessory, data.info
 					) // precondition call
-				, data.output),
-				data.last_use)
+					, data.info ? data.info->output() : nullptr),
+				data.info ? data.info->last_use() : true)
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),

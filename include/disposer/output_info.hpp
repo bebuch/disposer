@@ -9,7 +9,8 @@
 #ifndef _disposer__output_info__hpp_INCLUDED_
 #define _disposer__output_info__hpp_INCLUDED_
 
-#include "type_index.hpp"
+#include "merge.hpp"
+#include "output_base.hpp"
 
 #include <boost/hana/type.hpp>
 
@@ -30,8 +31,10 @@ namespace disposer{
 	class output_info{
 	public:
 		/// \brief Constructor
-		output_info(std::map< type_index, bool > const& enabled_types):
-			enabled_types_(enabled_types) {}
+		output_info(output_base* output, bool last_use)
+			: output_(output)
+			, last_use_(last_use)
+			, enabled_types_(output->enabled_types()) {}
 
 
 		/// \brief true if type exists and is enabled, false otherwise
@@ -45,6 +48,17 @@ namespace disposer{
 		template < typename T >
 		bool is_enabled(hana::basic_type< T > const&)const{
 			return is_enabled(type_index::type_id< T >());
+		}
+
+
+		/// \brief pointer to an object in a former module
+		output_base* output()const noexcept{
+			return output_;
+		}
+
+		/// \brief true if this is the last use of the config file variable
+		bool last_use()const noexcept{
+			return last_use_;
 		}
 
 
@@ -88,8 +102,25 @@ namespace disposer{
 
 
 	private:
+		output_base* output_;
+		bool last_use_;
 		std::map< type_index, bool > const enabled_types_;
 	};
+
+	/// \brief Create output_info if an output is connected
+	std::optional< output_info > make_output_info(
+		input_list const& list,
+		std::string const& input_name
+	){
+		auto iter = list.find(input_name);
+
+		// output referes to an output in a former module
+		return iter != list.end()
+			? std::optional< output_info >(std::in_place,
+				std::get< 0 >(iter->second), std::get< 1 >(iter->second))
+			: std::optional< output_info >();
+
+	}
 
 
 }

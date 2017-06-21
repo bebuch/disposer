@@ -58,8 +58,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(
-				maker, accessory, info, nullptr, true));
+			type object(disposer::input_make_data(maker, accessory, {}));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
@@ -81,8 +80,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(
-				maker, accessory, info, nullptr, true));
+			type object(disposer::input_make_data(maker, accessory, {}));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
@@ -104,8 +102,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(
-				maker, accessory, info, nullptr, true));
+			type object(disposer::input_make_data(maker, accessory, {}));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),

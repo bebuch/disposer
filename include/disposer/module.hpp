@@ -557,39 +557,24 @@ namespace disposer{
 						decltype(hana::typeid_(maker))::type::type;
 
 					if constexpr(is_input){
-						auto iter = data.inputs.find(to_std_string(maker.name));
-
-						// output referes to an output in a former module
-						auto output = iter == data.inputs.end()
-							? static_cast< output_base* >(nullptr)
-							: std::get< 0 >(iter->second);
-
-						auto last_use = output
-							? std::get< 1 >(iter->second)
-							: true;
-
-						auto info = output
-							? std::optional< output_info >(
-								output->enabled_types())
-							: std::optional< output_info >();
-
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(input_make_data
-								(maker, make_accessory("input"),
-									info, output, last_use)));
+							type(input_make_data(
+								maker, make_accessory("input"),
+								make_output_info(data.inputs,
+									to_std_string(maker.name)))));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(output_make_data
-								(maker, make_accessory("output"))));
+							type(output_make_data(
+								maker, make_accessory("output"))));
 					}else{
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(parameter_make_data
-								(maker, make_accessory("parameter"),
-									make_parameter_value_map(location, maker,
-										data.parameters))));
+							type(parameter_make_data(
+								maker, make_accessory("parameter"),
+								make_parameter_value_map(location, maker,
+									data.parameters))));
 					}
 				}
 			);
