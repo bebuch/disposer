@@ -39,6 +39,28 @@ namespace disposer{
 		friend class input;
 	};
 
+	template < typename InputMaker, typename IOP_Accessory >
+	struct input_make_data{
+		constexpr input_make_data(
+			InputMaker const& maker,
+			IOP_Accessory const& iop_accessory,
+			std::optional< output_info > const& info,
+			output_base* output,
+			bool last_use
+		)noexcept
+			: maker(maker)
+			, iop_accessory(iop_accessory)
+			, info(info)
+			, output(output)
+			, last_use(last_use) {}
+
+		InputMaker const& maker;
+		IOP_Accessory const& iop_accessory;
+		std::optional< output_info > const& info;
+		output_base* output;
+		bool last_use;
+	};
+
 	/// \brief The actual input type
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input: public input_base{
@@ -123,44 +145,24 @@ namespace disposer{
 		>;
 
 
-		template < typename InputMaker, typename IOP_Accessory >
-		static constexpr void verify_maker_data(
-			InputMaker const& maker,
-			IOP_Accessory const& iop_accessory,
-			std::optional< output_info > const& info
-		){
-			if(info){
-				constexpr auto key = input_key();
-				hana::unpack(types, [&info, key](auto ... type){
-					info->verify_nothing_enabled_except(key, type ...);
-				});
-			}
-
-			maker.connection_verify(iop_accessory, static_cast< bool >(info));
-
-			if(info){
-				hana::for_each(types,
-					[&maker, &iop_accessory, &info](auto const& type){
-						maker.type_verify(iop_accessory, type, *info);
-					});
-			}
-		}
-
-
 		/// \brief Constructor
+		template < typename InputMaker, typename IOP_Accessory >
 		constexpr input(
-			std::optional< output_info > const& info,
-			output_base* output,
-			bool last_use
+			input_make_data< InputMaker, IOP_Accessory > const& data
 		)
-			: input_base(output, last_use)
+			: input_base(
+				(verify_maker_data(
+						data.maker, data.iop_accessory, data.info
+					) // precondition call
+				, data.output),
+				data.last_use)
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),
 					[](std::optional< output_info > const& info, auto type){
 						if(!info) return false;
 						return info->is_enabled(type_transform(type));
-					}(info, hana::type_c< T >)
+					}(data.info, hana::type_c< T >)
 				) ...)
 			) {}
 
@@ -246,6 +248,31 @@ namespace disposer{
 
 
 	private:
+		/// \brief Checks to make before object initialization
+		template < typename InputMaker, typename IOP_Accessory >
+		static constexpr void verify_maker_data(
+			InputMaker const& maker,
+			IOP_Accessory const& iop_accessory,
+			std::optional< output_info > const& info
+		){
+			if(info){
+				constexpr auto key = input_key();
+				hana::unpack(types, [&info, key](auto ... type){
+					info->verify_nothing_enabled_except(key, type ...);
+				});
+			}
+
+			maker.connection_verify(iop_accessory, static_cast< bool >(info));
+
+			if(info){
+				hana::for_each(types,
+					[&maker, &iop_accessory, &info](auto const& type){
+						maker.type_verify(iop_accessory, type, *info);
+					});
+			}
+		}
+
+
 		/// \brief Pointer to function to convert \ref any_type to
 		///        \ref references_type
 		using ref_convert_fn = references_type(*)(any_type const& data);

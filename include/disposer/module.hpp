@@ -571,12 +571,11 @@ namespace disposer{
 								output->enabled_types())
 							: std::optional< output_info >();
 
-						type::verify_maker_data(
-							maker, make_accessory("input"), info);
-
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
-							type(info, output, last_use));
+							type(input_make_data
+								{maker, make_accessory("input"),
+									info, output, last_use}));
 					}else if constexpr(is_output){
 						return hana::append(
 							static_cast< decltype(iop)&& >(iop),
