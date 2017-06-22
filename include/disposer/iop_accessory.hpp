@@ -124,7 +124,7 @@ namespace disposer{
 			, value_map(other.value_map) {}
 
 		Maker const& maker;
-		ValueMap const& value_map;
+		ValueMap const value_map;
 	};
 
 
