@@ -130,7 +130,7 @@ namespace disposer{
 
 	template < typename Maker >
 	auto make_parameter_value_map(
-		std::string const& location,
+		std::string_view location,
 		Maker const& maker,
 		parameter_list const& params
 	){
@@ -155,7 +155,7 @@ namespace disposer{
 				all_specialized = false;
 				if(!iter->second.generic_value){
 					throw std::logic_error(
-						location + "parameter("
+						std::string(location) + "parameter("
 						+ name + ") has neither a "
 						"generic value but a specialization "
 						"for type '" + specialization->first
@@ -192,12 +192,14 @@ namespace disposer{
 	auto iop_make_data(
 		Maker const& maker,
 		MakeData const& data,
-		std::string const& location
+		std::string_view location
 	){
 		auto is_input = hana::is_a< input_maker_tag >(maker);
 		auto is_output = hana::is_a< output_maker_tag >(maker);
 		auto is_parameter = hana::is_a< parameter_maker_tag >(maker);
-		(void)is_input; (void)is_output; (void)is_parameter;
+
+		// silance GCC ...
+		(void)is_input; (void)is_output; (void)is_parameter; (void)location;
 
 		if constexpr(is_input){
 			return disposer::input_make_data(maker,
@@ -267,7 +269,7 @@ namespace disposer{
 	struct iops_make_data{
 		constexpr iops_make_data(
 			MakeData&& make_data,
-			std::string const& location,
+			std::string_view location,
 			IOP_RefTuple const& iop_tuple,
 			hana::size_t< I >
 		)noexcept
@@ -287,14 +289,17 @@ namespace disposer{
 		module_iop(
 			MakerList const& maker_list,
 			MakeData const& data,
-			std::string const& location,
+			std::string_view location,
 			std::index_sequence< I ... >
 		)
 			: iop_tuple(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
 				location,
 				hana::slice_c< 0, I >(hana::transform(iop_tuple, cref{})),
-				hana::size_c< I >) ...) {}
+				hana::size_c< I >) ...)
+		{
+			(void)location; // silance GCC ...
+		}
 
 		IOP_Tuple iop_tuple;
 	};

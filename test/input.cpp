@@ -39,11 +39,10 @@ int main(){
 	std::size_t error_count = 0;
 
 	auto iop_tuple = hana::make_tuple();
-	auto location = std::string("location");
-	auto make_data = [&iop_tuple, &location](auto const& maker){
+	auto make_data = [&iop_tuple](auto const& maker){
 		auto make_data = disposer::input_make_data(maker, {});
 		disposer::iops_make_data data(
-				std::move(make_data), location, iop_tuple, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_tuple, hana::size_c< 0 >
 			);
 
 		return data;
