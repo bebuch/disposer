@@ -240,7 +240,7 @@ namespace disposer{
 					"module_enable function must be invokable with module& or "
 					"without an argument");
 			}
-	#else
+#else
 			if constexpr(
 				std::is_invocable_v< ModuleEnableFn const, Accessory const& >
 			){
@@ -443,65 +443,6 @@ namespace disposer{
 	}
 
 
-// 	template < typename IOP_Tuple >
-// 	struct module_iop{
-// 		template < typename MakeData, std::size_t I >
-// 		struct iops_accessory{
-// 		public:
-// 			constexpr iops_accessory(
-// 				IOP_Tuple const& iop_tuple,
-// 				MakeData const& make_data,
-// 				hana::size_t< I >
-// 			)noexcept
-// 				: iop_tuple_(hana::slice_c< 0, I >(
-// 					hana::transform(iop_tuple, as_reference_list{})) {}
-//
-// 			/// \brief Get reference to an input-, output- or parameter-object
-// 			///        via its corresponding compile time name
-// 			template < typename IOP >
-// 			decltype(auto) operator()(IOP&& iop)const noexcept{
-// 				using iop_t =
-// 					std::remove_cv_t< std::remove_reference_t< IOP > >;
-// 				static_assert(
-// 					hana::is_a< input_name_tag, iop_t > ||
-// 					hana::is_a< output_name_tag, iop_t > ||
-// 					hana::is_a< parameter_name_tag, iop_t >,
-// 					"parameter iop must be an input_name, an output_name or a "
-// 					"parameter_name");
-//
-// 				using iop_tag = typename iop_t::hana_tag;
-//
-// 				auto iop_ref = hana::find_if(iop_tuple_, [](auto ref){
-// 					using tag = typename decltype(ref)::type::hana_tag;
-// 					return hana::type_c< iop_tag > == hana::type_c< tag >
-// 						&& ref.get().name.value == iop.value;
-// 				})
-//
-// 				auto is_iop_valid = iop_ref != hana::nothing;
-// 				static_assert(is_iop_valid,
-// 					"parameter iop doesn't exist (yet)");
-//
-// 				return iop_ref->get();
-// 			}
-//
-// 		private:
-// 			IOP_Tuple const& iop_tuple_;
-// 		};
-//
-//
-// 		template < typename MakeData, std::size_t I ... >
-// 		module_iop(
-// 			MakeData const& make_data,
-// 			std::index_sequence< I ... >
-// 		)
-// 			: iop_tuple_(
-// 				iops_accessory(iop_tuple_, make_data, hana::size_c< I >) ...) {}
-//
-//
-// 		IOP_Tuple iop_tuple_;
-// 	};
-
-
 	/// \brief Provids types for constructing an module
 	template <
 		typename IOP_MakerList,
@@ -531,72 +472,30 @@ namespace disposer{
 				}
 			}
 
+			auto list_type = hana::unpack(makers, [](auto const& ... maker){
+				return hana::type_c< decltype(hana::make_tuple(
+						std::declval< typename
+							decltype(hana::typeid_(maker))::type::type >() ...
+					)) >;
+			});
+
 			std::string const basic_location = data.basic_location();
 
-			// create inputs, outputs and parameter in the order of there
-			// definition in the module
-			auto list = hana::fold_left(makers, hana::make_tuple(),
-				[&data, &location, &basic_location](auto&& iop, auto&& maker){
-					auto is_input =
-						hana::is_a< input_maker_tag >(maker);
-					auto is_output =
-						hana::is_a< output_maker_tag >(maker);
-					auto is_parameter =
-						hana::is_a< parameter_maker_tag >(maker);
-
-					static_assert(is_input || is_output || is_parameter,
-						"maker is not an iop (this is a bug in disposer!)");
-
-					auto make_accessory = [&basic_location, &maker, &iop]
-						(std::string_view type){
-							return iop_accessory(iop_log{basic_location,
-								type, {to_std_string_view(maker.name)}}, iop);
-						};
-
-					using type = typename
-						decltype(hana::typeid_(maker))::type::type;
-
-					if constexpr(is_input){
-						return hana::append(
-							static_cast< decltype(iop)&& >(iop),
-							type(input_make_data(
-								maker, make_accessory("input"),
-								make_output_info(data.inputs,
-									to_std_string(maker.name)))));
-					}else if constexpr(is_output){
-						return hana::append(
-							static_cast< decltype(iop)&& >(iop),
-							type(output_make_data(
-								maker, make_accessory("output"))));
-					}else{
-						return hana::append(
-							static_cast< decltype(iop)&& >(iop),
-							type(parameter_make_data(
-								maker, make_accessory("parameter"),
-								make_parameter_value_map(location, maker,
-									data.parameters))));
-					}
-				}
-			);
-
-			// TODO: Don't move or copy iop's after creation
-// 			auto list_type = hana::unpack(makers, [](auto const& ... maker){
-// 				return hana::type_c< decltype(hana::make_tuple(
-// 						std::declval< typename
-// 							decltype(hana::typeid_(maker))::type::type >() ...
-// 					)) >;
-// 			});
-// 			static_assert(list_type == hana::typeid_(list));
+			auto const maker_count_hana = hana::size(makers);
+			constexpr auto maker_count = maker_count_hana.value;
+			module_iop< typename decltype(list_type)::type >
+				l(makers, data, basic_location,
+					std::make_index_sequence< maker_count >());
 
 			// Create the module
 			return make_module_ptr(
 					data.type_name, data.chain, data.number,
 					as_iop_map(hana::filter(
-						std::move(list), hana::is_a< input_tag >)),
+						std::move(l.iop_tuple), hana::is_a< input_tag >)),
 					as_iop_map(hana::filter(
-						std::move(list), hana::is_a< output_tag >)),
+						std::move(l.iop_tuple), hana::is_a< output_tag >)),
 					as_iop_map(hana::filter(
-						std::move(list), hana::is_a< parameter_tag >)),
+						std::move(l.iop_tuple), hana::is_a< parameter_tag >)),
 					enable_fn
 				);
 		}

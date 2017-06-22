@@ -24,20 +24,6 @@
 namespace disposer{
 
 
-	template < typename Maker, typename IOP_Accessory >
-	struct output_make_data{
-		constexpr output_make_data(
-			Maker const& maker,
-			IOP_Accessory const& iop_accessory
-		)noexcept
-			: maker(maker)
-			, iop_accessory(iop_accessory) {}
-
-		Maker const& maker;
-		IOP_Accessory const& iop_accessory;
-	};
-
-
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class output: public output_base{
 	public:
@@ -109,13 +95,12 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename Maker, typename IOP_Accessory >
-		constexpr output(output_make_data< Maker, IOP_Accessory > const& data)
+		template < typename MakeData >
+		constexpr output(MakeData const& m)
 			: enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),
-						data.maker.enable(
-							data.iop_accessory, subtype));
+						m.data.maker.enable(m.accessory, subtype));
 				}), hana::make_map)) {}
 
 		/// \brief Outputs are default-movable

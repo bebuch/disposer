@@ -21,6 +21,7 @@
 #include <variant>
 #include <optional>
 #include <unordered_map>
+#include <string_view>
 
 
 namespace disposer{
@@ -37,22 +38,6 @@ namespace disposer{
 
 		template < typename Name, typename TypeTransformFn, typename ... T >
 		friend class input;
-	};
-
-	template < typename InputMaker, typename IOP_Accessory >
-	struct input_make_data{
-		constexpr input_make_data(
-			InputMaker const& maker,
-			IOP_Accessory const& iop_accessory,
-			std::optional< output_info > const& info
-		)noexcept
-			: maker(maker)
-			, iop_accessory(iop_accessory)
-			, info(info){}
-
-		InputMaker const& maker;
-		IOP_Accessory const& iop_accessory;
-		std::optional< output_info > const& info;
 	};
 
 	/// \brief The actual input type
@@ -140,23 +125,21 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename InputMaker, typename IOP_Accessory >
-		constexpr input(
-			input_make_data< InputMaker, IOP_Accessory > const& data
-		)
+		template < typename MakeData >
+		constexpr input(MakeData const& m)
 			: input_base(
 				(verify_maker_data(
-						data.maker, data.iop_accessory, data.info
+						m.data.maker, m.accessory, m.data.info
 					) // precondition call
-					, data.info ? data.info->output() : nullptr),
-				data.info ? data.info->last_use() : true)
+					, m.data.info ? m.data.info->output() : nullptr),
+				m.data.info ? m.data.info->last_use() : true)
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),
 					[](std::optional< output_info > const& info, auto type){
 						if(!info) return false;
 						return info->is_enabled(type_transform(type));
-					}(data.info, hana::type_c< T >)
+					}(m.data.info, hana::type_c< T >)
 				) ...)
 			) {}
 

@@ -38,11 +38,6 @@ int main(){
 	using namespace hana::literals;
 	using hana::type_c;
 
-	static constexpr disposer::iop_log iop_log{"pre"sv, "parameter"sv, "v"sv};
-	static constexpr auto iops = hana::make_tuple();
-	static constexpr auto accessory =
-		disposer::iop_accessory< hana::tuple<> >(iop_log, iops);
-
 	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
@@ -54,6 +49,16 @@ int main(){
 		hana::make_pair(hana::type_c< int >, std::make_optional("5"sv)),
 		hana::make_pair(hana::type_c< float >, std::make_optional("5"sv))
 	);
+
+	auto iop_tuple = hana::make_tuple();
+	auto make_data = [&iop_tuple](auto const& maker, auto const& value_map){
+		auto make_data = disposer::parameter_make_data(maker, value_map);
+		disposer::iops_make_data data(
+				std::move(make_data), "location"sv, iop_tuple, hana::size_c< 0 >
+			);
+
+		return data;
+	};
 
 	try{
 		{
@@ -71,8 +76,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::parameter_make_data(
-				maker, accessory, value_int));
+			type object(make_data(maker, value_int));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int > >);
@@ -109,8 +113,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::parameter_make_data(
-				maker, accessory, value_int_float));
+			type object(make_data(maker, value_int_float));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);
@@ -152,8 +155,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::parameter_make_data(
-				maker, accessory, value_int_float));
+			type object(make_data(maker, value_int_float));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param), int, float > >);

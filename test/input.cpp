@@ -35,15 +35,18 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
-	static constexpr disposer::iop_log iop_log{"pre"sv, "input"sv, "v"sv};
-	static constexpr auto iops = hana::make_tuple();
-	static constexpr auto accessory =
-		disposer::iop_accessory< hana::tuple<> >(iop_log, iops);
-
-	std::optional< disposer::output_info > const info;
-
 	std::size_t ct = 0;
 	std::size_t error_count = 0;
+
+	auto iop_tuple = hana::make_tuple();
+	auto make_data = [&iop_tuple](auto const& maker){
+		auto make_data = disposer::input_make_data(maker, {});
+		disposer::iops_make_data data(
+				std::move(make_data), "location"sv, iop_tuple, hana::size_c< 0 >
+			);
+
+		return data;
+	};
 
 	try{
 		{
@@ -58,7 +61,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(maker, accessory, {}));
+			type object(make_data(maker));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
@@ -80,7 +83,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(maker, accessory, {}));
+			type object(make_data(maker));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
@@ -102,7 +105,7 @@ int main(){
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(disposer::input_make_data(maker, accessory, {}));
+			type object(make_data(maker));
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
