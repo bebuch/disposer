@@ -282,43 +282,27 @@ namespace disposer{
 			auto const location = data.location();
 			check_parameters(location, makers, data.parameters);
 
+			auto list_type = hana::unpack(makers, [](auto const& ... maker){
+				return hana::type_c< decltype(hana::make_tuple(
+						std::declval< typename
+							decltype(hana::typeid_(maker))::type::type >() ...
+					)) >;
+			});
+
 			std::string const basic_location = data.basic_location();
 
-			// create parameter in the order of there definition in the
-			// component
-			auto p_list = hana::fold_left(makers, hana::make_tuple(),
-				[&data, &location, &basic_location](auto&& iop, auto&& maker){
-					auto is_parameter =
-						hana::is_a< parameter_maker_tag >(maker);
-
-					static_assert(is_parameter,
-						"maker is not a parameter (this is a bug in "
-						"disposer!)");
-
-					auto make_accessory = [&basic_location, &maker, &iop]
-						(std::string_view type){
-							return iop_accessory(iop_log{basic_location,
-								type, {to_std_string_view(maker.name)}}, iop);
-						};
-
-					using type = typename
-						decltype(hana::typeid_(maker))::type::type;
-
-					return hana::append(
-						static_cast< decltype(iop)&& >(iop),
-						type(parameter_make_data(
-							maker, make_accessory("parameter"),
-							make_parameter_value_map(location, maker,
-								data.parameters))));
-				}
-			);
+			auto const maker_count_hana = hana::size(makers);
+			constexpr auto maker_count = maker_count_hana.value;
+			module_iop< typename decltype(list_type)::type >
+				l(makers, data, basic_location,
+					std::make_index_sequence< maker_count >());
 
 			// Create the component
 			auto result = make_component_ptr(
 					data.name, data.type_name,
 					disposer,
 					as_iop_map(hana::filter(
-						std::move(p_list), hana::is_a< parameter_tag >)),
+						std::move(l.iop_tuple), hana::is_a< parameter_tag >)),
 					component_fn
 				);
 

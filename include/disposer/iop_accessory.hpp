@@ -213,19 +213,14 @@ namespace disposer{
 		}
 	}
 
-
-	template < typename IOP_Tuple, std::size_t I >
-	class iops_accessory: public add_log< iops_accessory< IOP_Tuple, I > >{
+	template < typename IOP_RefTuple, std::size_t I >
+	class iops_accessory: public add_log< iops_accessory< IOP_RefTuple, I > >{
 	public:
-		using iop_tuple_ref_type = decltype(hana::slice_c< 0, I >(
-			hana::transform(std::declval< IOP_Tuple >(), cref{})));
-
 		constexpr iops_accessory(
-			IOP_Tuple const& iop_tuple,
+			IOP_RefTuple const& iop_tuple,
 			iop_log&& log_fn
 		)noexcept
-			: iop_tuple_(hana::slice_c< 0, I >(
-				hana::transform(iop_tuple, cref{})))
+			: iop_tuple_(iop_tuple)
 			, log_fn_(std::move(log_fn)) {}
 
 		/// \brief Get reference to an input-, output- or parameter-object
@@ -243,7 +238,7 @@ namespace disposer{
 			using iop_tag = typename iop_t::hana_tag;
 
 			auto iop_ref = hana::find_if(iop_tuple_, [&iop](auto ref){
-				using tag = typename decltype(ref)::type::hana_tag;
+				using tag = typename decltype(ref)::type::name_type::hana_tag;
 				return hana::type_c< iop_tag > == hana::type_c< tag >
 					&& ref.get().name == iop.value;
 			});
@@ -262,18 +257,18 @@ namespace disposer{
 		}
 
 	private:
-		iop_tuple_ref_type iop_tuple_;
+		IOP_RefTuple iop_tuple_;
 
 		/// \brief Reference to an iop_log object
 		iop_log log_fn_;
 	};
 
-	template < typename IOP_Tuple, typename MakeData, std::size_t I >
+	template < typename IOP_RefTuple, typename MakeData, std::size_t I >
 	struct iops_make_data{
 		constexpr iops_make_data(
 			MakeData&& make_data,
 			std::string const& location,
-			IOP_Tuple const& iop_tuple,
+			IOP_RefTuple const& iop_tuple,
 			hana::size_t< I >
 		)noexcept
 			: data(static_cast< MakeData&& >(make_data))
@@ -282,9 +277,8 @@ namespace disposer{
 				to_std_string_view(make_data.maker.name)}) {}
 
 		MakeData data;
-		iops_accessory< IOP_Tuple, I > accessory;
+		iops_accessory< IOP_RefTuple, I > accessory;
 	};
-
 
 
 	template < typename IOP_Tuple >
@@ -298,8 +292,9 @@ namespace disposer{
 		)
 			: iop_tuple(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, iop_tuple, hana::size_c< I >) ...) {}
-
+				location,
+				hana::slice_c< 0, I >(hana::transform(iop_tuple, cref{})),
+				hana::size_c< I >) ...) {}
 
 		IOP_Tuple iop_tuple;
 	};
