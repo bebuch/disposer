@@ -219,7 +219,7 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) const operator()(IOP const& iop)const noexcept{
+		decltype(auto) operator()(IOP const& iop)const noexcept{
 			using iop_t = std::remove_reference_t< IOP >;
 			static_assert(
 				hana::is_a< input_name_tag, iop_t > ||
@@ -240,7 +240,8 @@ namespace disposer{
 			static_assert(is_iop_valid,
 				"requested iop doesn't exist (yet)");
 
-			return iop_ref->get();
+			auto const& ref = iop_ref->get();
+			return (ref);
 		}
 
 
