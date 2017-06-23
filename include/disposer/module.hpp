@@ -24,141 +24,136 @@
 namespace disposer{
 
 
+	/// \brief std::ref as callable object
+	struct ref{
+		template < typename T >
+		constexpr auto operator()(T& iop)const noexcept{
+			return std::ref(iop);
+		}
+	};
+
+
 	/// \brief Accessory of a \ref module without log
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters >
+	template < typename IOP_List >
 	class module_config{
 	public:
 		/// \brief Constructor
+		template < typename MakerList, typename MakeData, std::size_t ... I >
 		module_config(
-			Inputs&& inputs,
-			Outputs&& outputs,
-			Parameters&& parameters
+			MakerList const& maker_list,
+			MakeData const& data,
+			std::string_view location,
+			std::index_sequence< I ... >
 		)
-			: inputs_(std::move(inputs))
-			, outputs_(std::move(outputs))
-			, parameters_(std::move(parameters)) {}
+			: // iop_list_ can be referenced before initialization
+				iop_ref_list_(hana::transform(iop_list_, ref{}))
+			, iop_list_(iops_make_data(
+				iop_make_data(maker_list[hana::size_c< I >], data, location),
+				location, hana::slice_c< 0, I >(iop_ref_list_),
+				hana::size_c< I >) ...)
+		{
+			(void)location; // GCC bug (silance unused warning)
+		}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) operator()(IOP&& iop)noexcept{
-			return get(*this, static_cast< IOP&& >(iop));
+		decltype(auto) operator()(IOP const& iop)noexcept{
+			return get(*this, iop);
 		}
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) operator()(IOP&& iop)const noexcept{
-			return get(*this, static_cast< IOP&& >(iop));
+		decltype(auto) const operator()(IOP const& iop)const noexcept{
+			return get(*this, iop);
 		}
 
 
 	private:
 		/// \brief Implementation for \ref operator()
 		template < typename Config, typename IOP >
-		static decltype(auto) get(Config& config, IOP&&)noexcept{
-			using io_t =
-				std::remove_cv_t< std::remove_reference_t< IOP > >;
+		static decltype(auto) get(Config& config, IOP const& iop)noexcept{
+			using iop_t = std::remove_reference_t< IOP >;
 			static_assert(
-				hana::is_a< input_name_tag, io_t > ||
-				hana::is_a< output_name_tag, io_t > ||
-				hana::is_a< parameter_name_tag, io_t >,
-				"parameter io must be an input_name, an output_name or a"
+				hana::is_a< input_name_tag, iop_t > ||
+				hana::is_a< output_name_tag, iop_t > ||
+				hana::is_a< parameter_name_tag, iop_t >,
+				"parameter is not an input_name, output_name or "
 				"parameter_name");
 
-			if constexpr(hana::is_a< input_name_tag, io_t >){
-				static_assert(have_input(io_t::value),
-					"input doesn't exist");
-				return config.inputs_[io_t::value];
-			}else if constexpr(hana::is_a< output_name_tag, io_t >){
-				static_assert(have_output(io_t::value),
-					"output doesn't exist");
-				return config.outputs_[io_t::value];
-			}else{
-				static_assert(have_parameter(io_t::value),
-					"parameter doesn't exist");
-				return config.parameters_[io_t::value];
-			}
+			using iop_tag = typename iop_t::hana_tag;
+
+			auto iop_ref = hana::find_if(config.iop_list_, [&iop](auto ref){
+				using tag = typename decltype(ref)::type::name_type::hana_tag;
+				return hana::type_c< iop_tag > == hana::type_c< tag >
+					&& ref.get().name == iop.value;
+			});
+
+			auto is_iop_valid = iop_ref != hana::nothing;
+			static_assert(is_iop_valid,
+				"requested iop doesn't exist");
+
+			return iop_ref->get();
 		}
 
 
-		/// \brief hana::true_ if input_name exists
-		template < typename String >
-		constexpr static auto have_input(String){
-			return
-				hana::contains(decltype(hana::keys(inputs_))(), String());
-		}
+		/// \brief Like IOP_List but with elements in std::reference_wrapper
+		using iop_ref_list_type =
+			decltype(hana::transform(std::declval< IOP_List& >(), ref{}));
 
-		/// \brief hana::true_ if output_name exists
-		template < typename String >
-		constexpr static auto have_output(String){
-			return
-				hana::contains(decltype(hana::keys(outputs_))(), String());
-		}
+		/// \brief hana::tuple of references to inputs, outputs and parameters
+		iop_ref_list_type iop_ref_list_;
 
-		/// \brief hana::true_ if parameter_name exists
-		template < typename String >
-		constexpr static auto have_parameter(String){
-			return
-				hana::contains(decltype(hana::keys(parameters_))(), String());
-		}
-
-
-		/// \brief hana::map from input_name's to input's
-		Inputs inputs_;
-
-		/// \brief hana::map from output_name's to output's
-		Outputs outputs_;
-
-		/// \brief hana::map from parameter_name's to parameter's
-		Parameters parameters_;
+		/// \brief hana::tuple of the inputs, outputs and parameters
+		IOP_List iop_list_;
 
 
 		/// \brief std::vector with references to all input's (input_base)
 		friend auto generate_input_list(module_config& config){
-			return hana::unpack(config.inputs_, [](auto& ... input){
+			auto iop_ref_list = hana::transform(config.iop_list_, ref{});
+			auto input_ref_list = hana::filter(iop_ref_list, [](auto ref){
+				return hana::is_a< input_tag >(ref.get());
+			});
+			return hana::unpack(input_ref_list, [](auto ... input_ref){
 				return std::vector< std::reference_wrapper< input_base > >{
-					std::ref(static_cast< input_base& >(hana::second(input)))
-					... };
+					std::reference_wrapper< input_base >(input_ref) ... };
 			});
 		}
 
 		/// \brief std::vector with references to all output's (output_base)
 		friend auto generate_output_list(module_config& config){
-			return hana::unpack(config.outputs_, [](auto& ... output){
+			auto iop_ref_list = hana::transform(config.iop_list_, ref{});
+			auto output_ref_list = hana::filter(iop_ref_list, [](auto ref){
+				return hana::is_a< output_tag >(ref.get());
+			});
+			return hana::unpack(output_ref_list, [](auto ... output_ref){
 				return std::vector< std::reference_wrapper< output_base > >{
-					std::ref(static_cast< output_base& >(hana::second(output)))
-					... };
+					std::reference_wrapper< output_base >(output_ref) ... };
 			});
 		}
 	};
 
 
 	/// \brief Accessory of a module during enable/disable calls
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters >
+	template < typename IOP_List >
 	class module_accessory
-		: public module_config< Inputs, Outputs, Parameters >
-		, public add_log< module_accessory< Inputs, Outputs, Parameters > >
+		: public module_config< IOP_List >
+		, public add_log< module_accessory< IOP_List > >
 	{
 	public:
 		/// \brief Constructor
+		template < typename MakerList, typename MakeData >
 		module_accessory(
 			module_base& module,
-			Inputs&& inputs,
-			Outputs&& outputs,
-			Parameters&& parameters
+			MakerList const& maker_list,
+			MakeData const& data,
+			std::string_view location
 		)
-			: module_config< Inputs, Outputs, Parameters >(
-					std::move(inputs),
-					std::move(outputs),
-					std::move(parameters)
+			: module_config< IOP_List >(
+					maker_list, data, location, std::make_index_sequence<
+						decltype(hana::size(maker_list))::value >()
 				)
 			, module_(module) {}
 
@@ -176,20 +171,17 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during exec calls
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters >
+	template < typename IOP_List >
 	class module_exec_accessory
-		: public module_accessory< Inputs, Outputs, Parameters >
-		, public add_log< module_exec_accessory< Inputs, Outputs, Parameters > >
+		: public module_accessory< IOP_List >
+		, public add_log< module_exec_accessory< IOP_List > >
 	{
 	private:
 		using log_class =
-			add_log< module_exec_accessory< Inputs, Outputs, Parameters > >;
+			add_log< module_exec_accessory< IOP_List > >;
 
 	public:
-		using module_accessory< Inputs, Outputs, Parameters >::module_accessory;
+		using module_accessory< IOP_List >::module_accessory;
 
 		using log_class::log;
 		using log_class::exception_catching_log;
@@ -208,9 +200,9 @@ namespace disposer{
 	struct to_exec_accessory;
 
 	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
-	template < typename Inputs, typename Outputs, typename Parameters >
-	struct to_exec_accessory< module_accessory< Inputs, Outputs, Parameters > >{
-		using type = module_exec_accessory< Inputs, Outputs, Parameters >;
+	template < typename IOP_List >
+	struct to_exec_accessory< module_accessory< IOP_List > >{
+		using type = module_exec_accessory< IOP_List >;
 	};
 
 	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
@@ -321,20 +313,14 @@ namespace disposer{
 
 
 	/// \brief The actual module type
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters,
-		typename EnableFn >
+	template < typename IOP_List, typename EnableFn >
 	class module: public module_base{
 	public:
 		/// \brief Type for enable_fn
-		using accessory_type =
-			module_accessory< Inputs, Outputs, Parameters >;
+		using accessory_type = module_accessory< IOP_List >;
 
 		/// \brief Type for exec_fn
-		using exec_accessory_type =
-			module_exec_accessory< Inputs, Outputs, Parameters >;
+		using exec_accessory_type = module_exec_accessory< IOP_List >;
 
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
@@ -356,26 +342,20 @@ namespace disposer{
 
 
 		/// \brief Constructor
+		template < typename MakerList, typename MakeData >
 		module(
-			std::string const& module_type,
-			std::string const& chain,
-			std::size_t number,
-			Inputs&& inputs,
-			Outputs&& outputs,
-			Parameters&& parameters,
+			MakerList const& maker_list,
+			MakeData const& data,
+			std::string_view location,
 			module_enable< EnableFn > const& enable_fn
 		)
 			: module_base(
-					module_type, chain, number,
-					// these two functions can be called prior initialzation
+					data.type_name, data.chain, data.number,
+					// accessory_ can be referenced before initialization
 					generate_input_list(accessory_),
 					generate_output_list(accessory_)
 				)
-			, accessory_(*this,
-					std::move(inputs),
-					std::move(outputs),
-					std::move(parameters)
-				)
+			, accessory_(*this, maker_list, data, location)
 			, enable_fn_(enable_fn) {}
 
 
@@ -414,32 +394,24 @@ namespace disposer{
 
 
 	/// \brief Maker function for \ref module in a std::unique_ptr
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters,
-		typename EnableFn >
+	template < typename MakerList, typename MakeData, typename EnableFn >
 	auto make_module_ptr(
-		std::string const& type_name,
-		std::string const& chain,
-		std::size_t number,
-		Inputs&& inputs,
-		Outputs&& outputs,
-		Parameters&& parameters,
+		MakerList const& maker_list,
+		MakeData const& data,
+		std::string_view location,
 		module_enable< EnableFn > const& enable_fn
 	){
-		return std::make_unique< module<
-				std::remove_const_t< std::remove_reference_t< Inputs > >,
-				std::remove_const_t< std::remove_reference_t< Outputs > >,
-				std::remove_const_t< std::remove_reference_t< Parameters > >,
-				EnableFn
-			> >(
-				type_name, chain, number,
-				static_cast< Inputs&& >(inputs),
-				static_cast< Outputs&& >(outputs),
-				static_cast< Parameters&& >(parameters),
-				enable_fn
-			);
+		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
+			return hana::type_c< decltype(hana::make_tuple(
+					std::declval< typename
+						decltype(hana::typeid_(maker))::type::type >() ...
+				)) >;
+		});
+
+		using iop_list_type = typename decltype(list_type)::type;
+
+		return std::make_unique< module< iop_list_type, EnableFn > >(
+			maker_list, data, location, enable_fn);
 	}
 
 
@@ -472,32 +444,10 @@ namespace disposer{
 				}
 			}
 
-			auto list_type = hana::unpack(makers, [](auto const& ... maker){
-				return hana::type_c< decltype(hana::make_tuple(
-						std::declval< typename
-							decltype(hana::typeid_(maker))::type::type >() ...
-					)) >;
-			});
-
 			std::string const basic_location = data.basic_location();
 
-			auto const maker_count_hana = hana::size(makers);
-			constexpr auto maker_count = maker_count_hana.value;
-			module_iop< typename decltype(list_type)::type >
-				l(makers, data, basic_location,
-					std::make_index_sequence< maker_count >());
-
 			// Create the module
-			return make_module_ptr(
-					data.type_name, data.chain, data.number,
-					as_iop_map(hana::filter(
-						std::move(l.iop_tuple), hana::is_a< input_tag >)),
-					as_iop_map(hana::filter(
-						std::move(l.iop_tuple), hana::is_a< output_tag >)),
-					as_iop_map(hana::filter(
-						std::move(l.iop_tuple), hana::is_a< parameter_tag >)),
-					enable_fn
-				);
+			return make_module_ptr(makers, data, basic_location, enable_fn);
 		}
 	};
 

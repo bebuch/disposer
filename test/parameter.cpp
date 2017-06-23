@@ -50,11 +50,11 @@ int main(){
 		hana::make_pair(hana::type_c< float >, std::make_optional("5"sv))
 	);
 
-	auto iop_tuple = hana::make_tuple();
-	auto make_data = [&iop_tuple](auto const& maker, auto const& value_map){
+	auto iop_list = hana::make_tuple();
+	auto make_data = [&iop_list](auto const& maker, auto const& value_map){
 		auto make_data = disposer::parameter_make_data(maker, value_map);
 		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_tuple, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
 			);
 
 		return data;

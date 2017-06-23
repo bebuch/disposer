@@ -42,15 +42,6 @@ namespace disposer{
 	struct parameter_tag{};
 
 
-	/// \brief std::cref as callable object
-	struct cref{
-		template < typename T >
-		constexpr auto operator()(T const& iop)const noexcept{
-			return std::cref(iop);
-		}
-	};
-
-
 	/// \brief Log Implementation for \ref iop_ref
 	struct iop_log{
 		std::string_view location;
@@ -215,20 +206,20 @@ namespace disposer{
 		}
 	}
 
-	template < typename IOP_RefTuple, std::size_t I >
-	class iops_accessory: public add_log< iops_accessory< IOP_RefTuple, I > >{
+	template < typename IOP_RefList, std::size_t I >
+	class iops_accessory: public add_log< iops_accessory< IOP_RefList, I > >{
 	public:
 		constexpr iops_accessory(
-			IOP_RefTuple const& iop_tuple,
+			IOP_RefList const& iop_list,
 			iop_log&& log_fn
 		)noexcept
-			: iop_tuple_(iop_tuple)
+			: iop_list_(iop_list)
 			, log_fn_(std::move(log_fn)) {}
 
 		/// \brief Get reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) operator()(IOP const& iop)const noexcept{
+		decltype(auto) const operator()(IOP const& iop)const noexcept{
 			using iop_t = std::remove_reference_t< IOP >;
 			static_assert(
 				hana::is_a< input_name_tag, iop_t > ||
@@ -239,7 +230,7 @@ namespace disposer{
 
 			using iop_tag = typename iop_t::hana_tag;
 
-			auto iop_ref = hana::find_if(iop_tuple_, [&iop](auto ref){
+			auto iop_ref = hana::find_if(iop_list_, [&iop](auto ref){
 				using tag = typename decltype(ref)::type::name_type::hana_tag;
 				return hana::type_c< iop_tag > == hana::type_c< tag >
 					&& ref.get().name == iop.value;
@@ -259,51 +250,28 @@ namespace disposer{
 		}
 
 	private:
-		IOP_RefTuple iop_tuple_;
+		IOP_RefList iop_list_;
 
 		/// \brief Reference to an iop_log object
 		iop_log log_fn_;
 	};
 
-	template < typename IOP_RefTuple, typename MakeData, std::size_t I >
+	template < typename IOP_RefList, typename MakeData, std::size_t I >
 	struct iops_make_data{
 		constexpr iops_make_data(
 			MakeData&& make_data,
 			std::string_view location,
-			IOP_RefTuple const& iop_tuple,
+			IOP_RefList const& iop_list,
 			hana::size_t< I >
 		)noexcept
 			: data(static_cast< MakeData&& >(make_data))
-			, accessory(iop_tuple, iop_log{
+			, accessory(iop_list, iop_log{
 				location, make_data.log_name,
 				to_std_string_view(make_data.maker.name)}) {}
 
 		MakeData data;
-		iops_accessory< IOP_RefTuple, I > accessory;
+		iops_accessory< IOP_RefList, I > accessory;
 	};
-
-
-	template < typename IOP_Tuple >
-	struct module_iop{
-		template < typename MakerList, typename MakeData, std::size_t ... I >
-		module_iop(
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
-			std::index_sequence< I ... >
-		)
-			: iop_tuple(iops_make_data(
-				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location,
-				hana::slice_c< 0, I >(hana::transform(iop_tuple, cref{})),
-				hana::size_c< I >) ...)
-		{
-			(void)location; // silance GCC ...
-		}
-
-		IOP_Tuple iop_tuple;
-	};
-
 
 
 }

@@ -302,7 +302,7 @@ namespace disposer{
 					data.name, data.type_name,
 					disposer,
 					as_iop_map(hana::filter(
-						std::move(l.iop_tuple), hana::is_a< parameter_tag >)),
+						std::move(l.iop_list), hana::is_a< parameter_tag >)),
 					component_fn
 				);
 
