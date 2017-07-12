@@ -72,7 +72,7 @@ namespace disposer{
 
 			using iop_tag = typename iop_t::hana_tag;
 
-			auto iop_ref = hana::find_if(config.iop_list_, [&iop](auto ref){
+			auto iop_ref = hana::find_if(config.iop_ref_list_, [&iop](auto ref){
 				using tag = typename decltype(ref)::type::name_type::hana_tag;
 				return hana::type_c< iop_tag > == hana::type_c< tag >
 					&& ref.get().name == iop.value;
