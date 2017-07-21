@@ -9,6 +9,8 @@
 #ifndef _disposer__config_fn__hpp_INCLUDED_
 #define _disposer__config_fn__hpp_INCLUDED_
 
+#include "output_info.hpp"
+
 #include <type_traits>
 
 #include <boost/hana/core/is_a.hpp>
@@ -20,8 +22,6 @@
 #include <logsys/stdlogb.hpp>
 
 #include <optional>
-
-#include "output_info.hpp"
 
 
 namespace disposer{
