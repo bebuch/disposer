@@ -48,65 +48,65 @@ namespace disposer{
 		,hana::make_pair(hana::type_c< std::string >,
 			BOOST_HANA_STRING("string"))
 #ifdef DISPOSER_BITMAP_PIXEL_AS_TEXT
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga8 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga8 >,
 			BOOST_HANA_STRING("ga8"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga16 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga16 >,
 			BOOST_HANA_STRING("ga16"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga32 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga32 >,
 			BOOST_HANA_STRING("ga32"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga64 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga64 >,
 			BOOST_HANA_STRING("ga64"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga8u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga8u >,
 			BOOST_HANA_STRING("ga8u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga16u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga16u >,
 			BOOST_HANA_STRING("ga16u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga32u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga32u >,
 			BOOST_HANA_STRING("ga32u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga64u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga64u >,
 			BOOST_HANA_STRING("ga64u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga32f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga32f >,
 			BOOST_HANA_STRING("ga32f"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::ga64f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::ga64f >,
 			BOOST_HANA_STRING("ga64f"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb8 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb8 >,
 			BOOST_HANA_STRING("rgb8"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb16 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb16 >,
 			BOOST_HANA_STRING("rgb16"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb32 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb32 >,
 			BOOST_HANA_STRING("rgb32"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb64 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb64 >,
 			BOOST_HANA_STRING("rgb64"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb8u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb8u >,
 			BOOST_HANA_STRING("rgb8u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb16u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb16u >,
 			BOOST_HANA_STRING("rgb16u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb32u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb32u >,
 			BOOST_HANA_STRING("rgb32u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb64u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb64u >,
 			BOOST_HANA_STRING("rgb64u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb32f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb32f >,
 			BOOST_HANA_STRING("rgb32f"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgb64f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgb64f >,
 			BOOST_HANA_STRING("rgb64f"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba8 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba8 >,
 			BOOST_HANA_STRING("rgba8"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba16 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba16 >,
 			BOOST_HANA_STRING("rgba16"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba32 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba32 >,
 			BOOST_HANA_STRING("rgba32"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba64 >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba64 >,
 			BOOST_HANA_STRING("rgba64"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba8u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba8u >,
 			BOOST_HANA_STRING("rgba8u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba16u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba16u >,
 			BOOST_HANA_STRING("rgba16u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba32u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba32u >,
 			BOOST_HANA_STRING("rgba32u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba64u >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba64u >,
 			BOOST_HANA_STRING("rgba64u"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba32f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba32f >,
 			BOOST_HANA_STRING("rgba32f"))
-		,hana::make_pair(hana::type_c< ::bitmap::pixel::rgba64f >,
+		,hana::make_pair(hana::type_c< ::bmp::pixel::rgba64f >,
 			BOOST_HANA_STRING("rgba64f"))
 #endif
 	);
