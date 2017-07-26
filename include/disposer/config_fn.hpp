@@ -215,14 +215,6 @@ namespace disposer{
 	}
 
 
-	struct connection_verify_always{
-		template < typename IOP_Accessory >
-		constexpr void operator()(
-			IOP_Accessory const& /* iop_accessory */,
-			bool /*connected*/
-		)const noexcept{}
-	};
-
 	struct connection_verify_fn_tag;
 
 	template < typename Fn >
@@ -292,9 +284,13 @@ namespace disposer{
 			static_cast< Fn&& >(fn));
 	}
 
-	constexpr auto required = connection_verify([](auto const&, bool connected){
+	constexpr auto required =
+		connection_verify([](auto const&, bool connected){
 			if(!connected) throw std::logic_error("input is required");
 		});
+
+	constexpr auto optional =
+		connection_verify([](auto const&, bool connected)noexcept{});
 
 
 	struct type_verify_always{

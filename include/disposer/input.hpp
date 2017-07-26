@@ -445,7 +445,7 @@ namespace disposer{
 				type_transform_fn< no_transform >{}),
 			get_or_default(std::move(args),
 				hana::is_a< connection_verify_fn_tag >,
-				connection_verify_fn< connection_verify_always >{}),
+				required),
 			get_or_default(std::move(args),
 				hana::is_a< type_verify_fn_tag >,
 				type_verify_fn< type_verify_always >{})
