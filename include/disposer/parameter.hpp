@@ -430,7 +430,7 @@ namespace disposer{
 				value_verify_fn< value_verify_always >{}),
 			get_or_default(std::move(args),
 				hana::is_a< enable_fn_tag >,
-				enable_fn< enable_always >{}),
+				enable_always),
 			get_or_default(std::move(args),
 				hana::is_a< parser_fn_tag >,
 				parser_fn< stream_parser >{}),

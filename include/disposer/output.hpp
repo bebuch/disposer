@@ -338,7 +338,7 @@ namespace disposer{
 				type_transform_fn< no_transform >{}),
 			get_or_default(std::move(args),
 				hana::is_a< enable_fn_tag >,
-				enable_fn< enable_always >{})
+				enable_always)
 		);
 	}
 

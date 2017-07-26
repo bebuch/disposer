@@ -87,16 +87,6 @@ namespace disposer{
 		= type_transform(template_transform< Template >{});
 
 
-	struct enable_always{
-		template < typename IOP_Accessory, typename T >
-		constexpr bool operator()(
-			IOP_Accessory const& /* iop_accessory */,
-			hana::basic_type< T > /*type*/
-		)const noexcept{
-			return true;
-		}
-	};
-
 	struct enable_fn_tag;
 
 	template < typename Fn >
@@ -184,6 +174,11 @@ namespace disposer{
 	private:
 		Fn fn_;
 	};
+
+	constexpr auto enable_always = enable_fn([](auto const&, auto)noexcept{
+			return true;
+		});
+
 
 	template < typename Fn >
 	constexpr auto enable(Fn&& fn)
