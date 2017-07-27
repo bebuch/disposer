@@ -36,14 +36,16 @@ namespace disposer{
 			typename Arg3 = no_argument,
 			typename Arg4 = no_argument,
 			typename Arg5 = no_argument,
-			typename Arg6 = no_argument >
+			typename Arg6 = no_argument,
+			typename Arg7 = no_argument >
 		constexpr auto operator()(
 			Types const& types,
 			Arg2&& arg2 = {},
 			Arg3&& arg3 = {},
 			Arg4&& arg4 = {},
 			Arg5&& arg5 = {},
-			Arg6&& arg6 = {}
+			Arg6&& arg6 = {},
+			Arg6&& arg7 = {}
 		)const;
 	};
 
