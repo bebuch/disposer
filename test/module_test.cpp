@@ -97,7 +97,7 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::connection_verify_always,
+						disposer::required_t,
 						disposer::type_verify_always
 					>
 				>, enable_fn > >);
@@ -129,7 +129,7 @@ int main(){
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
 							disposer::no_transform, int >,
-						disposer::enable_always
+						disposer::enable_always_t
 					>
 				>, enable_fn > >);
 
@@ -158,12 +158,13 @@ int main(){
 				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::parameter_maker<
-						disposer::parameter< decltype("v"_param), int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >,
 						disposer::value_verify_always,
-						disposer::enable_always,
+						disposer::enable_always_t,
 						disposer::stream_parser,
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
 				>, enable_fn > >);
@@ -176,7 +177,8 @@ int main(){
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
 					hana::tuple<
-						disposer::parameter< decltype("v"_param), int >
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >
 					>, enable_fn
 				> > >);
 		}
@@ -197,21 +199,22 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::connection_verify_always,
+						disposer::required_t,
 						disposer::type_verify_always
 					>,
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
 							disposer::no_transform, int >,
-						disposer::enable_always
+						disposer::enable_always_t
 					>,
 					disposer::parameter_maker<
-						disposer::parameter< decltype("v"_param), int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >,
 						disposer::value_verify_always,
-						disposer::enable_always,
+						disposer::enable_always_t,
 						disposer::stream_parser,
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
 				>, enable_fn > >);
@@ -228,7 +231,8 @@ int main(){
 							disposer::no_transform, int >,
 						disposer::output< decltype("v"_out),
 							disposer::no_transform, int >,
-						disposer::parameter< decltype("v"_param), int >
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >
 					>, enable_fn
 				> > >);
 		}
@@ -293,7 +297,7 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::connection_verify_always,
+						disposer::required_t,
 						disposer::type_verify_always
 					>,
 					disposer::output_maker<
@@ -302,12 +306,13 @@ int main(){
 						decltype(enable_out)
 					>,
 					disposer::parameter_maker<
-						disposer::parameter< decltype("v"_param), int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >,
 						disposer::value_verify_always,
 						decltype(enable_param),
 						decltype(parser),
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>,
 					disposer::input_maker<
@@ -330,7 +335,8 @@ int main(){
 							disposer::no_transform, int >,
 						disposer::output< decltype("v"_out),
 							disposer::no_transform, int >,
-						disposer::parameter< decltype("v"_param), int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::no_transform, int >,
 						disposer::input< decltype("w"_in),
 							disposer::no_transform, int >
 					>, enable_fn
