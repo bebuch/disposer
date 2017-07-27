@@ -1,3 +1,4 @@
+#include <disposer/output.hpp>
 #include <disposer/input.hpp>
 
 
@@ -39,8 +40,21 @@ int main(){
 	std::size_t error_count = 0;
 
 	auto iop_list = hana::make_tuple();
-	auto make_data = [&iop_list](auto const& maker){
-		auto make_data = disposer::input_make_data(maker, {});
+	auto output_make_data = [&iop_list](auto const& maker){
+		auto make_data = disposer::output_make_data(maker);
+		disposer::iops_make_data data(
+				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
+			);
+
+		return data;
+	};
+	constexpr auto output_maker = "v"_out(hana::type_c< int >);
+	using output_type = decltype(hana::typeid_(output_maker))::type::type;
+	output_type output(output_make_data(output_maker));
+
+	auto make_data = [&iop_list, &output](auto const& maker){
+		auto make_data = disposer::input_make_data(
+			maker, disposer::output_info(&output, true));
 		disposer::iops_make_data data(
 				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
 			);
@@ -67,8 +81,8 @@ int main(){
 				disposer::input< decltype("v"_in),
 					disposer::no_transform, int > >);
 
-			error_count = check(ct++, object.is_enabled(), false);
-			error_count = check(ct++, object.is_enabled(type_c< int >), false);
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
 		}
 
 		{
@@ -89,8 +103,8 @@ int main(){
 				disposer::input< decltype("v"_in),
 					disposer::no_transform, int, float > >);
 
-			error_count = check(ct++, object.is_enabled(), false);
-			error_count = check(ct++, object.is_enabled(type_c< int >), false);
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
 		}
 
 		{
@@ -111,8 +125,8 @@ int main(){
 				disposer::input< decltype("v"_in),
 					disposer::no_transform, int, float > >);
 
-			error_count = check(ct++, object.is_enabled(), false);
-			error_count = check(ct++, object.is_enabled(type_c< int >), false);
+			error_count = check(ct++, object.is_enabled(), true);
+			error_count = check(ct++, object.is_enabled(type_c< int >), true);
 		}
 
 		if(error_count == 0){
