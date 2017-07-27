@@ -109,7 +109,6 @@ int main(){
 					"v"_in(hana::type_c< int >)
 				),
 				disposer::module_enable([](auto const& config){
-					config("v"_in) + 1;
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
