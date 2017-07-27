@@ -59,22 +59,22 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) operator()(IOP const& iop)noexcept{
-			return get(*this, iop);
+		auto& operator()(IOP const& iop)noexcept{
+			return get(iop);
 		}
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) const operator()(IOP const& iop)const noexcept{
-			return get(*this, iop);
+		auto const& operator()(IOP const& iop)const noexcept{
+			return get(iop);
 		}
 
 
 	private:
 		/// \brief Implementation for \ref operator()
-		template < typename Config, typename IOP >
-		static decltype(auto) get(Config& config, IOP const& iop)noexcept{
+		template < typename IOP >
+		auto& get(IOP const& iop)const noexcept{
 			using iop_t = std::remove_reference_t< IOP >;
 			static_assert(
 				hana::is_a< input_name_tag, iop_t > ||
@@ -85,7 +85,7 @@ namespace disposer{
 
 			using iop_tag = typename iop_t::hana_tag;
 
-			auto iop_ref = hana::find_if(config.iop_ref_list_, [&iop](auto ref){
+			auto iop_ref = hana::find_if(iop_ref_list_, [&iop](auto ref){
 				using tag = typename decltype(ref)::type::name_type::hana_tag;
 				return hana::type_c< iop_tag > == hana::type_c< tag >
 					&& ref.get().name == iop.value;

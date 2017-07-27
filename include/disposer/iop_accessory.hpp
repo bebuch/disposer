@@ -219,7 +219,26 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename IOP >
-		decltype(auto) operator()(IOP const& iop)const noexcept{
+		auto& operator()(IOP const& iop)noexcept{
+			return get(iop);
+		}
+
+		/// \brief Get const reference to an input-, output- or parameter-object
+		///        via its corresponding compile time name
+		template < typename IOP >
+		auto const& operator()(IOP const& iop)const noexcept{
+			return get(iop);
+		}
+
+
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			log_fn_(os);
+		}
+
+	private:
+		template < typename IOP >
+		auto& get(IOP const& iop)const noexcept{
 			using iop_t = std::remove_reference_t< IOP >;
 			static_assert(
 				hana::is_a< input_name_tag, iop_t > ||
@@ -240,17 +259,10 @@ namespace disposer{
 			static_assert(is_iop_valid,
 				"requested iop doesn't exist (yet)");
 
-			auto const& ref = iop_ref->get();
-			return (ref);
+			return iop_ref->get();
 		}
 
 
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			log_fn_(os);
-		}
-
-	private:
 		IOP_RefList iop_list_;
 
 		/// \brief Reference to an iop_log object
