@@ -149,7 +149,7 @@ namespace disposer{
 				!maker.default_value_generator.is_void_r(iop_accessory, type);
 			if constexpr(have_default_fn){
 				auto value = maker.default_value_generator(iop_accessory, type);
-				if(value) return value;
+				if(value) return *value;
 			}
 			throw std::logic_error("parameter(" + name + ") is required");
 		}
