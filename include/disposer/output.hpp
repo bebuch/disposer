@@ -103,9 +103,12 @@ namespace disposer{
 						m.data.maker.enable(m.accessory, subtype));
 				}), hana::make_map)) {}
 
-		/// \brief Outputs are default-movable
-		constexpr output(output&& other)
-			: enabled_map_(std::move(other.enabled_map_)) {}
+		/// \brief Outputs are not copyable
+		output(output const&) = delete;
+
+		/// \brief Outputs are not movable
+		output(output&&) = delete;
+
 
 
 		/// \brief Add given data with the current id to \ref data_

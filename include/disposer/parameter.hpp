@@ -163,6 +163,12 @@ namespace disposer{
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map)) {}
 
+		/// \brief Parameters are not copyable
+		parameter(parameter const&) = delete;
+
+		/// \brief Parameters are not movable
+		parameter(parameter&&) = delete;
+
 
 		/// \brief true if any type is enabled, otherwise false
 		constexpr bool is_enabled()const noexcept{

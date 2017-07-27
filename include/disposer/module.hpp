@@ -358,6 +358,13 @@ namespace disposer{
 			, enable_fn_(enable_fn) {}
 
 
+		/// \brief Modules are not copyable
+		module(module const&) = delete;
+
+		/// \brief Modules are not movable
+		module(module&&) = delete;
+
+
 	private:
 		/// \brief Enables the module for exec calls
 		virtual void enable()override{
@@ -401,10 +408,8 @@ namespace disposer{
 		module_enable< EnableFn > const& enable_fn
 	){
 		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
-			return hana::type_c< decltype(hana::make_tuple(
-					std::declval< typename
-						decltype(hana::typeid_(maker))::type::type >() ...
-				)) >;
+			return hana::type_c< hana::tuple<
+				typename decltype(hana::typeid_(maker))::type::type ... > >;
 		});
 
 		using iop_list_type = typename decltype(list_type)::type;

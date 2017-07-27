@@ -212,6 +212,13 @@ namespace disposer{
 			, component_(component_fn(accessory_)) {}
 
 
+		/// \brief Components are not copyable
+		component(component const&) = delete;
+
+		/// \brief Components are not movable
+		component(component&&) = delete;
+
+
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
 		template < typename P >
@@ -267,10 +274,8 @@ namespace disposer{
 		component_init< ComponentFn > const& component_fn
 	){
 		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
-			return hana::type_c< decltype(hana::make_tuple(
-					std::declval< typename
-						decltype(hana::typeid_(maker))::type::type >() ...
-				)) >;
+			return hana::type_c< hana::tuple<
+				typename decltype(hana::typeid_(maker))::type::type ... > >;
 		});
 
 		using iop_list_type = typename decltype(list_type)::type;

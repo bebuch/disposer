@@ -143,6 +143,12 @@ namespace disposer{
 				) ...)
 			) {}
 
+		/// \brief Inputs are not copyable
+		input(input const&) = delete;
+
+		/// \brief Inputs are not movable
+		input(input&&) = delete;
+
 
 		/// \brief Get all data until the current id without transferring
 		///        ownership
