@@ -61,7 +61,7 @@ int main(){
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int >,
-					disposer::enable_always
+					disposer::enable_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -92,7 +92,7 @@ int main(){
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int, float >,
-					disposer::enable_always
+					disposer::enable_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -126,7 +126,7 @@ int main(){
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
 						disposer::no_transform, int, float >,
-					disposer::enable_always
+					disposer::enable_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;

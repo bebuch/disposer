@@ -175,9 +175,14 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	constexpr auto enable_always = enable_fn([](auto const&, auto)noexcept{
-			return true;
-		});
+	struct enable_always_t{
+		template < typename IOP_Accessory, typename T >
+		constexpr bool operator()(
+			IOP_Accessory const&, hana::basic_type< T >
+		)const noexcept{ return true; }
+	};
+
+	constexpr auto enable_always = enable_fn(enable_always_t{});
 
 
 	template < typename Fn >
@@ -284,13 +289,21 @@ namespace disposer{
 			static_cast< Fn&& >(fn));
 	}
 
-	constexpr auto required =
-		connection_verify([](auto const&, bool connected){
+	struct required_t{
+		template < typename IOP_Accessory >
+		constexpr void operator()(IOP_Accessory const&,bool connected)const{
 			if(!connected) throw std::logic_error("input is required");
-		});
+		}
+	};
 
-	constexpr auto optional =
-		connection_verify([](auto const&, bool connected)noexcept{});
+	constexpr auto required = connection_verify(required_t{});
+
+	struct optional_t{
+		template < typename IOP_Accessory >
+		constexpr void operator()(IOP_Accessory const&, bool)const noexcept{}
+	};
+
+	constexpr auto optional = connection_verify(optional_t{});
 
 
 	struct type_verify_always{

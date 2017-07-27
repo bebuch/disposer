@@ -56,7 +56,7 @@ int main(){
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int >,
-					disposer::connection_verify_always,
+					disposer::required_t,
 					disposer::type_verify_always
 				> const >);
 
@@ -78,7 +78,7 @@ int main(){
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int, float >,
-					disposer::connection_verify_always,
+					disposer::required_t,
 					disposer::type_verify_always
 				> const >);
 
@@ -100,7 +100,7 @@ int main(){
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
 						disposer::no_transform, int, float >,
-					disposer::connection_verify_always,
+					disposer::required_t,
 					disposer::type_verify_always
 				> const >);
 
