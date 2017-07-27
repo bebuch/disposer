@@ -291,7 +291,7 @@ namespace disposer{
 
 	struct required_t{
 		template < typename IOP_Accessory >
-		constexpr void operator()(IOP_Accessory const&,bool connected)const{
+		constexpr void operator()(IOP_Accessory const&, bool connected)const{
 			if(!connected) throw std::logic_error("input is required");
 		}
 	};
@@ -543,6 +543,7 @@ namespace disposer{
 			std::string_view value,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
+			// TODO: Print parsed value if possible
 			return iop_accessory.log(
 				[](logsys::stdlogb& os){
 					os << "parse value ["
@@ -577,22 +578,122 @@ namespace disposer{
 	}
 
 
-	struct default_values_tuple_tag;
+	struct default_value_fn_tag;
 
-	template < typename DefaultValuesTuple >
-	struct default_values_tuple{
-		using hana_tag = default_values_tuple_tag;
+	template < typename Fn >
+	class default_value_fn{
+	public:
+		using hana_tag = default_value_fn_tag;
 
-		DefaultValuesTuple values;
+		constexpr default_value_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		explicit constexpr default_value_fn(Fn const& fn)
+			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
+			: fn_(fn) {}
+
+		explicit constexpr default_value_fn(Fn&& fn)
+			noexcept(std::is_nothrow_move_constructible_v< Fn >)
+			: fn_(std::move(fn)) {}
+
+
+		template < typename IOP_Accessory, typename T >
+		static constexpr bool is_invocable_v()noexcept{
+			return std::is_invocable_v< Fn const, IOP_Accessory const&,
+				hana::basic_type< T > >;
+		}
+
+		/// \brief true if correctly invocable and return type void,
+		///        false otherwise
+		template < typename IOP_Accessory, typename T >
+		static constexpr bool is_void_r_v()noexcept{
+			if constexpr(is_invocable_v< IOP_Accessory, T >()){
+				return std::is_void_v< std::invoke_result_t< Fn const,
+					IOP_Accessory const&, hana::basic_type< T > > >;
+			}else{
+				return false;
+			}
+		}
+
+		/// \brief true if correctly invocable and return type void,
+		///        false otherwise
+		template < typename IOP_Accessory, typename T >
+		static constexpr auto is_void_r(
+			IOP_Accessory const&, hana::basic_type< T >
+		)noexcept{
+			if constexpr(is_void_r_v< IOP_Accessory, T >()){
+				return std::true_type{};
+			}else{
+				return std::false_type{};
+			}
+		}
+
+		template < typename IOP_Accessory, typename T >
+		static constexpr bool calc_noexcept()noexcept{
+			static_assert(std::is_invocable_r_v< std::optional< T >, Fn const,
+				IOP_Accessory const&, hana::basic_type< T > >
+				|| is_void_r_v< IOP_Accessory, T >(),
+				"Wrong function signature, expected: "
+				"std::optional< T > "
+				"f(auto const& iop, hana::basic_type< T > type) or"
+				"void f(auto const& iop, hana::basic_type< T > type)"
+			);
+
+			return noexcept(std::declval< Fn const >()(
+				std::declval< IOP_Accessory const >(),
+				std::declval< hana::basic_type< T > const >()
+			));
+		}
+
+		/// \brief Operator for outputs
+		template < typename IOP_Accessory, typename T >
+		constexpr auto operator()(
+			IOP_Accessory const& iop_accessory,
+			hana::basic_type< T > type
+		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
+			std::optional< T > result;
+			iop_accessory.log([&result](logsys::stdlogb& os){
+					if(result){
+						os << "generated default value";
+						auto const is_printable = hana::is_valid([](auto& x)
+							->decltype((void)std::declval< std::ostream& >()
+								<< x){})(*result);
+						if constexpr(is_printable){
+							os << ": " << *result;
+						}
+					}else{
+						os << "no default value generated";
+					}
+					os << " [" << type_index::type_id< T >().pretty_name()
+						<< ']';
+				},
+				[&](){ result = fn_(iop_accessory, type); });
+			return result;
+		}
+
+
+	private:
+		Fn fn_;
 	};
 
-	template < typename ... Value >
-	constexpr auto default_values(Value&& ... value)noexcept{
-		return default_values_tuple<
-			decltype(hana::make_tuple(static_cast< Value&& >(value) ...)) >{
-				hana::make_tuple(static_cast< Value&& >(value) ...)
-			};
+	template < typename Fn >
+	constexpr auto default_value(Fn&& fn)
+		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
+		return default_value_fn< std::remove_reference_t< Fn > >(
+			static_cast< Fn&& >(fn));
 	}
+
+
+	struct no_default_t{
+		template < typename IOP_Accessory, typename T >
+		constexpr void operator()(
+			IOP_Accessory const&, hana::basic_type< T >
+		)const noexcept{}
+	};
+
+	constexpr auto no_default = default_value(no_default_t{});
+
 
 
 	struct type_as_text_map_tag;

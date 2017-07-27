@@ -145,7 +145,12 @@ namespace disposer{
 			if(!maker.enable(iop_accessory, type,
 				to_std_string_view(maker.to_text[type]))) return {};
 			if(value) return maker.parser(iop_accessory, *value, type);
-			if(maker.default_values) return (*maker.default_values)[type];
+			auto const have_default_fn =
+				!maker.default_value_generator.is_void_r(iop_accessory, type);
+			if constexpr(have_default_fn){
+				auto value = maker.default_value_generator(iop_accessory, type);
+				if(value) return value;
+			}
 			throw std::logic_error("parameter(" + name + ") is required");
 		}
 
@@ -231,6 +236,7 @@ namespace disposer{
 		typename ValueVerifyFn,
 		typename EnableFn,
 		typename ParserFn,
+		typename DefaultValueFn,
 		typename TypeToText >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
@@ -257,69 +263,12 @@ namespace disposer{
 		/// \brief Parameter parser function
 		parser_fn< ParserFn > parser;
 
-		/// \brief Optional default values
-		default_value_type< decltype(types) > default_values;
+		/// \brief Default value function
+		default_value_fn< DefaultValueFn > default_value_generator;
 
 		/// \brief hana::map from hana::type to hana::string
 		TypeToText to_text;
 	};
-
-
-	struct no_defaults{};
-
-	template <
-		typename Types,
-		typename TypeTransformFn,
-		typename DefaultValues >
-	constexpr auto make_default_value_map(
-		Types const& /*types*/,
-		type_transform_fn< TypeTransformFn >&&,
-		DefaultValues&& default_values
-	){
-		constexpr auto typelist = hana::transform(to_typelist(Types{}),
-			type_transform_fn< TypeTransformFn >{});
-
-		if constexpr(
-			hana::type_c< DefaultValues > == hana::type_c< no_defaults >
-		){
-			(void)default_values; // silence clang ...
-			if constexpr(hana::all_of(typelist, impl::hana_is_optional)){
-				return std::make_optional(hana::unpack(typelist,
-					[](auto ... types){
-						return hana::make_map(
-							hana::make_pair(types,
-								typename decltype(types)::type()) ...);
-					}));
-			}else{
-				return default_value_type< decltype(typelist) >();
-			}
-		}else{
-			static_assert(hana::is_a< hana::tuple_tag, DefaultValues >,
-				"DefaultValues must be a hana::tuple with a value for "
-				"every of the parameters type's");
-			static_assert(
-				hana::length(DefaultValues{}) == hana::length(typelist),
-				"DefaultValues must have the same number of values as the "
-				"parameter has types");
-			static_assert(
-				hana::all_of(hana::zip(typelist, DefaultValues{}),
-					[](auto&& tuple){
-						using namespace hana::literals;
-						return tuple[0_c] == hana::typeid_(tuple[1_c]);
-					}
-				),
-				"DefaultValues must have the same types in the same order "
-				"as parameter's type's");
-			return std::make_optional(hana::unpack(
-				static_cast< DefaultValues&& >(default_values),
-				[](auto&& ... values){
-					return hana::make_map(
-						hana::make_pair(
-							hana::basic_type< typename decltype(hana::typeid_(values))::type >(),
-							static_cast< decltype(values)&& >(values)) ...);
-				}));
-		}
-	}
 
 
 	template <
@@ -329,16 +278,16 @@ namespace disposer{
 		typename ValueVerifyFn,
 		typename EnableFn,
 		typename ParserFn,
-		typename DefaultValues,
+		typename DefaultValueFn,
 		typename AsText >
 	constexpr auto create_parameter_maker(
 		Name const&,
-		Types const& types,
+		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
 		value_verify_fn< ValueVerifyFn >&& value_verify,
 		enable_fn< EnableFn >&& enable,
 		parser_fn< ParserFn >&& parser,
-		default_values_tuple< DefaultValues >&& default_values,
+		default_value_fn< DefaultValueFn >&& default_value_generator,
 		type_as_text_map< AsText >&&
 	){
 		constexpr auto typelist = to_typelist(Types{});
@@ -385,15 +334,13 @@ namespace disposer{
 
 		return parameter_maker<
 				typename decltype(type_parameter)::type,
-				ValueVerifyFn, EnableFn, ParserFn,
+				ValueVerifyFn, EnableFn, ParserFn, DefaultValueFn,
 				std::remove_const_t< decltype(type_to_text) >
 			>{
 				std::move(value_verify),
 				std::move(enable),
 				std::move(parser),
-				make_default_value_map(types,
-					type_transform_fn< TypeTransformFn >{},
-					std::move(default_values.values)),
+				std::move(default_value_generator),
 				type_to_text
 			};
 	}
@@ -415,14 +362,14 @@ namespace disposer{
 		Arg4&& arg4,
 		Arg5&& arg5,
 		Arg6&& arg6,
-		Arg6&& arg7
+		Arg7&& arg7
 	)const{
 		constexpr auto valid_argument = [](auto const& arg){
 				return hana::is_a< type_transform_fn_tag >(arg)
 					|| hana::is_a< value_verify_fn_tag >(arg)
 					|| hana::is_a< enable_fn_tag >(arg)
 					|| hana::is_a< parser_fn_tag >(arg)
-					|| hana::is_a< default_values_tuple_tag >(arg)
+					|| hana::is_a< default_value_fn_tag >(arg)
 					|| hana::is_a< type_as_text_map_tag >(arg)
 					|| hana::is_a< no_argument_tag >(arg);
 			};
@@ -446,7 +393,7 @@ namespace disposer{
 			static_cast< Arg4&& >(arg4),
 			static_cast< Arg5&& >(arg5),
 			static_cast< Arg6&& >(arg6),
-			static_cast< Arg6&& >(arg7)
+			static_cast< Arg7&& >(arg7)
 		);
 
 		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
@@ -461,9 +408,9 @@ namespace disposer{
 		auto pf = hana::count_if(args, hana::is_a< parser_fn_tag >)
 			<= hana::size_c< 1 >;
 		static_assert(pf, "more than one parser_fn");
-		auto ct = hana::count_if(args, hana::is_a< default_values_tuple_tag >)
+		auto ct = hana::count_if(args, hana::is_a< default_value_fn_tag >)
 			<= hana::size_c< 1 >;
-		static_assert(ct, "more than one default_values_tuple");
+		static_assert(ct, "more than one default_value_fn");
 		auto tm = hana::count_if(args, hana::is_a< type_as_text_map_tag >)
 			<= hana::size_c< 1 >;
 		static_assert(tm, "more than one type_as_text_map");
@@ -484,8 +431,8 @@ namespace disposer{
 				hana::is_a< parser_fn_tag >,
 				parser_fn< stream_parser >{}),
 			get_or_default(std::move(args),
-				hana::is_a< default_values_tuple_tag >,
-				default_values_tuple< no_defaults >{}),
+				hana::is_a< default_value_fn_tag >,
+				no_default),
 			get_or_default(std::move(args),
 				hana::is_a< type_as_text_map_tag >,
 				type_as_text())

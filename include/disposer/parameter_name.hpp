@@ -45,7 +45,7 @@ namespace disposer{
 			Arg4&& arg4 = {},
 			Arg5&& arg5 = {},
 			Arg6&& arg6 = {},
-			Arg6&& arg7 = {}
+			Arg7&& arg7 = {}
 		)const;
 	};
 

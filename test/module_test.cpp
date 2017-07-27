@@ -86,7 +86,7 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >)
+					"v"_in(hana::type_c< int >, disposer::optional)
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -97,7 +97,7 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::required_t,
+						disposer::optional_t,
 						disposer::type_verify_always
 					>
 				>, enable_fn > >);
@@ -163,6 +163,7 @@ int main(){
 						disposer::value_verify_always,
 						disposer::enable_always_t,
 						disposer::stream_parser,
+						disposer::no_default_t,
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
@@ -186,7 +187,7 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >),
+					"v"_in(hana::type_c< int >, disposer::optional),
 					"v"_out(hana::type_c< int >),
 					"v"_param(hana::type_c< int >)
 				),
@@ -199,7 +200,7 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::required_t,
+						disposer::optional_t,
 						disposer::type_verify_always
 					>,
 					disposer::output_maker<
@@ -213,6 +214,7 @@ int main(){
 						disposer::value_verify_always,
 						disposer::enable_always_t,
 						disposer::stream_parser,
+						disposer::no_default_t,
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
@@ -263,6 +265,11 @@ int main(){
 					return 5;
 				};
 
+			constexpr auto default_value =
+				[](auto const&, auto){
+					return 7;
+				};
+
 			constexpr auto enable_in_t =
 				[](auto const& get, auto type, disposer::output_info const&){
 					bool active1 = get("v"_in).is_enabled(type);
@@ -274,7 +281,7 @@ int main(){
 
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >),
+					"v"_in(hana::type_c< int >, disposer::optional),
 					"v"_out(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
 						disposer::enable(enable_out)),
@@ -282,7 +289,7 @@ int main(){
 						disposer::value_verify(disposer::value_verify_always()),
 						disposer::enable(enable_param),
 						disposer::parser(parser),
-						disposer::default_values(7)),
+						disposer::default_value(default_value)),
 					"w"_in(hana::type_c< int >,
 						disposer::type_transform(disposer::no_transform{}),
 						disposer::connection_verify(enable_in_c),
@@ -297,7 +304,7 @@ int main(){
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
 							disposer::no_transform, int >,
-						disposer::required_t,
+						disposer::optional_t,
 						disposer::type_verify_always
 					>,
 					disposer::output_maker<
@@ -311,6 +318,7 @@ int main(){
 						disposer::value_verify_always,
 						decltype(enable_param),
 						decltype(parser),
+						decltype(default_value),
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
