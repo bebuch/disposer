@@ -150,9 +150,9 @@ namespace disposer{
 			bool enable = false;
 			iop_accessory.log([&enable](logsys::stdlogb& os){
 					if(enable){
-						os << "enable";
+						os << "enabled";
 					}else{
-						os << "disable";
+						os << "disabled";
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << ']';
@@ -171,9 +171,9 @@ namespace disposer{
 			bool enable = false;
 			iop_accessory.log([&enable, name](logsys::stdlogb& os){
 					if(enable){
-						os << "enable";
+						os << "enabled";
 					}else{
-						os << "disable";
+						os << "disabled";
 					}
 					os << ' ' << name << " ["
 						<< type_index::type_id< T >().pretty_name() << ']';
@@ -275,7 +275,7 @@ namespace disposer{
 			bool connected
 		)const noexcept(calc_noexcept< IOP_Accessory >()){
 			iop_accessory.log([connected](logsys::stdlogb& os){
-					os << "verify ";
+					os << "verified ";
 					if(connected){
 						os << "enabled";
 					}else{
@@ -364,7 +364,7 @@ namespace disposer{
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
 			iop_accessory.log(
 				[&info, type](logsys::stdlogb& os){
-					os << "verify ";
+					os << "verified ";
 					if(info.is_enabled(type)){
 						os << "enabled";
 					}else{
@@ -443,7 +443,7 @@ namespace disposer{
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
 			iop_accessory.log(
 				[](logsys::stdlogb& os){
-					os << "verify value of type ["
+					os << "verified value of type ["
 						<< type_index::type_id< T >().pretty_name() << ']';
 				},
 				[&]{ fn_(iop_accessory, value); });
@@ -521,7 +521,7 @@ namespace disposer{
 			std::optional< T > result;
 			iop_accessory.log(
 				[&result](logsys::stdlogb& os){
-					os << "parse value";
+					os << "parsed value";
 					if(result){
 						os << ": ";
 						print_if_supported(os, *result);

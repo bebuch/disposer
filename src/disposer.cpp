@@ -49,7 +49,7 @@ namespace disposer{ namespace{
 		for(auto& config_component: config){
 			logsys::log([&config_component](logsys::stdlogb& os){
 				os << "component(" << config_component.name << ":"
-					<< config_component.type_name << ") create";
+					<< config_component.type_name << ") created";
 			}, [&]{
 				// emplace the new process chain
 				components.emplace(
@@ -75,7 +75,7 @@ namespace disposer{ namespace{
 
 		for(auto& config_chain: config){
 			logsys::log([&config_chain](logsys::stdlogb& os){
-				os << "chain(" << config_chain.name << ") create";
+				os << "chain(" << config_chain.name << ") created";
 			}, [&]{
 				// emplace the new process chain
 				chains.emplace(
@@ -124,7 +124,7 @@ namespace disposer{
 		component_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "register component type name '" << type_name << "'";
+			os << "registered component type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.component_maker_list_.insert(
 				std::make_pair(type_name, std::move(fn))
@@ -144,7 +144,7 @@ namespace disposer{
 		module_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "register module type name '" << type_name << "'";
+			os << "registered module type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.module_maker_list_.insert(
 				std::make_pair(type_name, std::move(fn))
@@ -169,27 +169,27 @@ namespace disposer{
 
 	void disposer::load(std::string const& filename){
 		auto config = logsys::log([&](logsys::stdlogb& os){
-				os << "parse '" << filename << "'";
+				os << "parsed '" << filename << "'";
 			}, [&](){ return parse(filename); });
 
 		logsys::log([](logsys::stdlogb& os){ os << "check semantic"; },
 			[&config](){ check_semantic(config); });
 
 		logsys::log([](logsys::stdlogb& os){
-				os << "look for unused stuff and warn about it";
+				os << "looked for unused stuff and warned about it";
 			}, [&config](){ unused_warnings(config); });
 
 		auto merged_config = logsys::log(
 			[](logsys::stdlogb& os){ os << "merge"; },
 			[&config](){ return merge(std::move(config)); });
 
-		logsys::log([](logsys::stdlogb& os){ os << "create components"; },
+		logsys::log([](logsys::stdlogb& os){ os << "created components"; },
 			[this, &merged_config](){
 				components_ = create_components(
 					component_maker_list_, std::move(merged_config.components));
 			});
 
-		logsys::log([](logsys::stdlogb& os){ os << "create chains"; },
+		logsys::log([](logsys::stdlogb& os){ os << "created chains"; },
 			[this, &merged_config](){
 				std::tie(chains_, id_generators_) = create_chains(
 					module_maker_list_, std::move(merged_config.chains));
