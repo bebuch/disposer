@@ -27,21 +27,6 @@
 namespace disposer{
 
 
-	struct no_transform{
-		template < typename T >
-		constexpr auto operator()(hana::basic_type< T > type)const noexcept{
-			return type;
-		}
-	};
-
-	template < template < typename > typename Template >
-	struct template_transform{
-		template < typename T >
-		constexpr auto operator()(hana::basic_type< T >)const noexcept{
-			return hana::type_c< Template< T > >;
-		}
-	};
-
 
 	struct type_transform_fn_tag;
 
@@ -77,14 +62,28 @@ namespace disposer{
 		}
 	};
 
-	template < typename Fn >
-	constexpr auto type_transform(Fn&&)noexcept{
-		return type_transform_fn< std::remove_reference_t< Fn > >();
-	}
+
+	struct none{
+		template < typename T >
+		constexpr auto operator()(hana::basic_type< T > type)const noexcept{
+			return type;
+		}
+	};
+
+	constexpr auto no_type_transform = type_transform_fn< none >{};
+
 
 	template < template < typename > typename Template >
-	constexpr auto template_transform_c
-		= type_transform(template_transform< Template >{});
+	struct wrap_in_t{
+		template < typename T >
+		constexpr auto operator()(hana::basic_type< T >)const noexcept{
+			return hana::type_c< Template< T > >;
+		}
+	};
+
+	template < template < typename > typename Template >
+	constexpr auto wrap_in = type_transform_fn< wrap_in_t< Template > >{};
+
 
 
 	struct enable_fn_tag;
@@ -175,6 +174,7 @@ namespace disposer{
 		Fn fn_;
 	};
 
+
 	struct enable_always_t{
 		template < typename IOP_Accessory, typename T >
 		constexpr bool operator()(
@@ -182,15 +182,8 @@ namespace disposer{
 		)const noexcept{ return true; }
 	};
 
-	constexpr auto enable_always = enable_fn(enable_always_t{});
+	constexpr auto enable_always = enable_fn< enable_always_t >{};
 
-
-	template < typename Fn >
-	constexpr auto enable(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return enable_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
 
 	template < typename IOP_Name >
 	struct enable_by_transformed_types_of_t{
@@ -203,8 +196,9 @@ namespace disposer{
 
 	template < typename IOP_Name >
 	constexpr auto enable_by_transformed_types_of(IOP_Name const&){
-		return enable(enable_by_transformed_types_of_t< IOP_Name >{});
+		return enable_fn(enable_by_transformed_types_of_t< IOP_Name >{});
 	}
+
 
 	template < typename IOP_Name >
 	struct enable_by_types_of_t{
@@ -216,8 +210,9 @@ namespace disposer{
 
 	template < typename IOP_Name >
 	constexpr auto enable_by_types_of(IOP_Name const&){
-		return enable(enable_by_types_of_t< IOP_Name >{});
+		return enable_fn(enable_by_types_of_t< IOP_Name >{});
 	}
+
 
 
 	struct connection_verify_fn_tag;
@@ -282,12 +277,6 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	template < typename Fn >
-	constexpr auto connection_verify(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return connection_verify_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
 
 	struct required_t{
 		template < typename IOP_Accessory >
@@ -296,24 +285,17 @@ namespace disposer{
 		}
 	};
 
-	constexpr auto required = connection_verify(required_t{});
+	constexpr auto required = connection_verify_fn(required_t{});
+
 
 	struct optional_t{
 		template < typename IOP_Accessory >
 		constexpr void operator()(IOP_Accessory const&, bool)const noexcept{}
 	};
 
-	constexpr auto optional = connection_verify(optional_t{});
+	constexpr auto optional = connection_verify_fn< optional_t >{};
 
 
-	struct type_verify_always{
-		template < typename IOP_Accessory, typename T >
-		constexpr void operator()(
-			IOP_Accessory const& /* iop_accessory */,
-			hana::basic_type< T > /*type*/,
-			output_info const& /*info*/
-		)const noexcept{}
-	};
 
 	struct type_verify_fn_tag;
 
@@ -379,21 +361,20 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	template < typename Fn >
-	constexpr auto type_verify(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return type_verify_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
 
-
-	struct value_verify_always{
+	struct type_verify_always_t{
 		template < typename IOP_Accessory, typename T >
 		constexpr void operator()(
 			IOP_Accessory const& /* iop_accessory */,
-			T const& /*value*/
+			hana::basic_type< T > /*type*/,
+			output_info const& /*info*/
 		)const noexcept{}
 	};
+
+	auto constexpr type_verify_always =
+		type_verify_fn< type_verify_always_t >{};
+
+
 
 	struct value_verify_fn_tag;
 
@@ -453,43 +434,18 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	template < typename Fn >
-	constexpr auto value_verify(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return value_verify_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
-
-
-	struct stream_parser{
+	struct value_verify_always_t{
 		template < typename IOP_Accessory, typename T >
-		T operator()(
-			IOP_Accessory const& /*iop_accessory*/,
-			std::string_view value,
-			hana::basic_type< T > type
-		)const{
-			if constexpr(type == hana::type_c< std::string >){
-				return std::string(value);
-			}else{
-				std::istringstream is((std::string(value)));
-				T result;
-				if constexpr(std::is_same_v< T, bool >){
-					is >> std::boolalpha;
-				}
-				is >> result;
-				return result;
-			}
-		}
-
-		template < typename IOP_Accessory, typename T >
-		std::optional< T > operator()(
-			IOP_Accessory const& iop_accessory,
-			std::string_view value,
-			hana::basic_type< std::optional< T > >
-		)const{
-			return (*this)(iop_accessory, value, hana::type_c< T >);
-		}
+		constexpr void operator()(
+			IOP_Accessory const& /* iop_accessory */,
+			T const& /*value*/
+		)const noexcept{}
 	};
+
+	auto constexpr value_verify_always =
+		value_verify_fn< value_verify_always_t >{};
+
+
 
 	struct parser_fn_tag;
 
@@ -556,26 +512,38 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	template < typename Fn >
-	constexpr auto parser(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return parser_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
-
-
-	/// \brief Create a hana::tuple of hana::type's with a given hana::type or
-	///        a hana::Sequence of hana::type's
-	template < typename Types >
-	constexpr auto to_typelist(Types const&)noexcept{
-		if constexpr(hana::is_a< hana::type_tag, Types >){
-			return hana::make_tuple(Types{});
-		}else{
-			static_assert(hana::Foldable< Types >::value);
-			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
-			return hana::to_tuple(Types{});
+	struct stream_parser_t{
+		template < typename IOP_Accessory, typename T >
+		T operator()(
+			IOP_Accessory const& /*iop_accessory*/,
+			std::string_view value,
+			hana::basic_type< T > type
+		)const{
+			if constexpr(type == hana::type_c< std::string >){
+				return std::string(value);
+			}else{
+				std::istringstream is((std::string(value)));
+				T result;
+				if constexpr(std::is_same_v< T, bool >){
+					is >> std::boolalpha;
+				}
+				is >> result;
+				return result;
+			}
 		}
-	}
+
+		template < typename IOP_Accessory, typename T >
+		std::optional< T > operator()(
+			IOP_Accessory const& iop_accessory,
+			std::string_view value,
+			hana::basic_type< std::optional< T > >
+		)const{
+			return (*this)(iop_accessory, value, hana::type_c< T >);
+		}
+	};
+
+	constexpr auto stream_parser = parser_fn< stream_parser_t >{};
+
 
 
 	struct default_value_fn_tag;
@@ -677,13 +645,6 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	template < typename Fn >
-	constexpr auto default_value(Fn&& fn)
-		noexcept(std::is_nothrow_constructible_v< Fn, Fn&& >){
-		return default_value_fn< std::remove_reference_t< Fn > >(
-			static_cast< Fn&& >(fn));
-	}
-
 
 	struct auto_default_t{
 		template < typename IOP_Accessory, typename T >
@@ -697,7 +658,7 @@ namespace disposer{
 		)const noexcept{ return {}; }
 	};
 
-	constexpr auto auto_default = default_value(auto_default_t{});
+	constexpr auto auto_default = default_value_fn(auto_default_t{});
 
 
 
@@ -723,11 +684,13 @@ namespace disposer{
 	}
 
 
+
 	struct no_argument_tag;
 
 	struct no_argument{
 		using hana_tag = no_argument_tag;
 	};
+
 
 
 	template < typename Tuple, typename Predicate, typename Default >
@@ -745,6 +708,22 @@ namespace disposer{
 			return static_cast< Default&& >(default_value);
 		}
 	}
+
+
+
+	/// \brief Create a hana::tuple of hana::type's with a given hana::type or
+	///        a hana::Sequence of hana::type's
+	template < typename Types >
+	constexpr auto to_typelist(Types const&)noexcept{
+		if constexpr(hana::is_a< hana::type_tag, Types >){
+			return hana::make_tuple(Types{});
+		}else{
+			static_assert(hana::Foldable< Types >::value);
+			static_assert(hana::all_of(Types{}, hana::is_a< hana::type_tag >));
+			return hana::to_tuple(Types{});
+		}
+	}
+
 
 
 }

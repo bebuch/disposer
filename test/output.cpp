@@ -60,7 +60,7 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
-						disposer::no_transform, int >,
+						disposer::none, int >,
 					disposer::enable_always_t
 				> const >);
 
@@ -69,7 +69,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
-					disposer::no_transform, int > >);
+					disposer::none, int > >);
 
 			object.output_base::prepare(std::move(*key), 0);
 			object.put(0);
@@ -91,7 +91,7 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
-						disposer::no_transform, int, float >,
+						disposer::none, int, float >,
 					disposer::enable_always_t
 				> const >);
 
@@ -100,7 +100,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			object.output_base::prepare(std::move(*key), 0);
 			object.put(3);
@@ -125,7 +125,7 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
 					disposer::output< decltype("v"_out),
-						disposer::no_transform, int, float >,
+						disposer::none, int, float >,
 					disposer::enable_always_t
 				> const >);
 
@@ -134,7 +134,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::output< decltype("v"_out),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			object.output_base::prepare(std::move(*key), 0);
 			object.put(3);

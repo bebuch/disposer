@@ -112,21 +112,21 @@ int main(){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
-							disposer::no_transform, int > const& >;
+							disposer::none, int > const& >;
 					static_assert(valid_type);
 
 					return [](auto& module, std::size_t){
 						auto valid_type =
 							hana::type_c< decltype(module("v"_in)) >
 							== hana::type_c< disposer::input< decltype("v"_in),
-								disposer::no_transform, int >& >;
+								disposer::none, int >& >;
 						static_assert(valid_type);
 
 						auto const& const_module = module;
 						auto valid_const_type =
 							hana::type_c< decltype(const_module("v"_in)) >
 							== hana::type_c< disposer::input< decltype("v"_in),
-								disposer::no_transform, int > const& >;
+								disposer::none, int > const& >;
 						static_assert(valid_const_type);
 
 						auto valid_value_type =  hana::type_c<
@@ -193,21 +193,21 @@ int main(){
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >),
 					"v"_out(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::enable([](auto const& iop, auto type){
+						disposer::no_type_transform,
+						disposer::enable_fn([](auto const& iop, auto type){
 							bool active = iop("v"_in).is_enabled(type);
 							assert(!active);
 							return active;
 						})),
 					"v"_param(hana::type_c< int >,
-						disposer::value_verify(disposer::value_verify_always()),
-						disposer::enable([](auto const& iop, auto type){
+						disposer::value_verify_always,
+						disposer::enable_fn([](auto const& iop, auto type){
 							bool active1 = iop("v"_in).is_enabled(type);
 							bool active2 = iop("v"_out).is_enabled(type);
 							assert(!active1 && !active2);
 							return false;
 						}),
-						disposer::parser([](
+						disposer::parser_fn([](
 							auto const& /*iop*/, std::string_view, auto type
 						){
 							static_assert(type == hana::type_c< int >);
@@ -217,12 +217,12 @@ int main(){
 							return 7;
 						})),
 					"w"_in(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::connection_verify(
+						disposer::no_type_transform,
+						disposer::connection_verify_fn(
 							[](auto const&, bool connected){
 								assert(!connected);
 							}),
-						disposer::type_verify(
+						disposer::type_verify_fn(
 							[](
 								auto const& iop,
 								auto type,

@@ -69,9 +69,9 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
-						disposer::no_transform, int >,
+						disposer::none, int >,
 					disposer::required_t,
-					disposer::type_verify_always
+					disposer::type_verify_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -79,7 +79,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
-					disposer::no_transform, int > >);
+					disposer::none, int > >);
 
 			error_count = check(ct++, object.is_enabled(), true);
 			error_count = check(ct++, object.is_enabled(type_c< int >), true);
@@ -91,9 +91,9 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
-						disposer::no_transform, int, float >,
+						disposer::none, int, float >,
 					disposer::required_t,
-					disposer::type_verify_always
+					disposer::type_verify_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -101,7 +101,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			error_count = check(ct++, object.is_enabled(), true);
 			error_count = check(ct++, object.is_enabled(type_c< int >), true);
@@ -113,9 +113,9 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<
 					disposer::input< decltype("v"_in),
-						disposer::no_transform, int, float >,
+						disposer::none, int, float >,
 					disposer::required_t,
-					disposer::type_verify_always
+					disposer::type_verify_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -123,7 +123,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::input< decltype("v"_in),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			error_count = check(ct++, object.is_enabled(), true);
 			error_count = check(ct++, object.is_enabled(type_c< int >), true);

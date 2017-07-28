@@ -448,13 +448,13 @@ namespace disposer{
 			types,
 			get_or_default(std::move(args),
 				hana::is_a< type_transform_fn_tag >,
-				type_transform_fn< no_transform >{}),
+				no_type_transform),
 			get_or_default(std::move(args),
 				hana::is_a< connection_verify_fn_tag >,
 				required),
 			get_or_default(std::move(args),
 				hana::is_a< type_verify_fn_tag >,
-				type_verify_fn< type_verify_always >{})
+				type_verify_always)
 		);
 	}
 

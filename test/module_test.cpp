@@ -96,9 +96,9 @@ int main(){
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always
+						disposer::type_verify_always_t
 					>
 				>, enable_fn > >);
 
@@ -109,7 +109,7 @@ int main(){
 				std::unique_ptr< disposer::module<
 					hana::tuple<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >
+							disposer::none, int >
 					>, enable_fn
 				> > >);
 		}
@@ -128,7 +128,7 @@ int main(){
 				disposer::module_maker< hana::tuple<
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::enable_always_t
 					>
 				>, enable_fn > >);
@@ -140,7 +140,7 @@ int main(){
 				std::unique_ptr< disposer::module<
 					hana::tuple<
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >
+							disposer::none, int >
 					>, enable_fn
 				> > >);
 		}
@@ -159,11 +159,11 @@ int main(){
 				disposer::module_maker< hana::tuple<
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >,
-						disposer::value_verify_always,
-						disposer::enable_always_t,
-						disposer::stream_parser,
-						disposer::auto_default_t,
+							disposer::none, int >,
+							disposer::value_verify_always_t,
+							disposer::enable_always_t,
+							disposer::stream_parser_t,
+							disposer::auto_default_t,
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
@@ -179,7 +179,7 @@ int main(){
 				std::unique_ptr< disposer::module<
 					hana::tuple<
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >
+							disposer::none, int >
 					>, enable_fn
 				> > >);
 		}
@@ -199,22 +199,22 @@ int main(){
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always
+						disposer::type_verify_always_t
 					>,
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::enable_always_t
 					>,
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >,
-						disposer::value_verify_always,
-						disposer::enable_always_t,
-						disposer::stream_parser,
-						disposer::auto_default_t,
+							disposer::none, int >,
+							disposer::value_verify_always_t,
+							disposer::enable_always_t,
+							disposer::stream_parser_t,
+							disposer::auto_default_t,
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
@@ -230,11 +230,11 @@ int main(){
 				std::unique_ptr< disposer::module<
 					hana::tuple<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >
+							disposer::none, int >
 					>, enable_fn
 				> > >);
 		}
@@ -283,17 +283,17 @@ int main(){
 				disposer::module_configure(
 					"v"_in(hana::type_c< int >, disposer::optional),
 					"v"_out(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::enable(enable_out)),
+						disposer::no_type_transform,
+						disposer::enable_fn(enable_out)),
 					"v"_param(hana::type_c< int >,
-						disposer::value_verify(disposer::value_verify_always()),
-						disposer::enable(enable_param),
-						disposer::parser(parser),
-						disposer::default_value(default_value)),
+						disposer::value_verify_always,
+						disposer::enable_fn(enable_param),
+						disposer::parser_fn(parser),
+						disposer::default_value_fn(default_value)),
 					"w"_in(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::connection_verify(enable_in_c),
-						disposer::type_verify(enable_in_t))
+						disposer::no_type_transform,
+						disposer::connection_verify_fn(enable_in_c),
+						disposer::type_verify_fn(enable_in_t))
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -303,31 +303,31 @@ int main(){
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always
+						disposer::type_verify_always_t
 					>,
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
-						decltype(enable_out)
+							disposer::none, int >,
+						std::remove_const_t< decltype(enable_out) >
 					>,
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >,
-						disposer::value_verify_always,
-						decltype(enable_param),
-						decltype(parser),
-						decltype(default_value),
+							disposer::none, int >,
+						disposer::value_verify_always_t,
+						std::remove_const_t< decltype(enable_param) >,
+						std::remove_const_t< decltype(parser) >,
+						std::remove_const_t< decltype(default_value) >,
 						decltype(hana::make_map(
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>,
 					disposer::input_maker<
 						disposer::input< decltype("w"_in),
-							disposer::no_transform, int >,
-						decltype(enable_in_c),
-						decltype(enable_in_t)
+							disposer::none, int >,
+						std::remove_const_t< decltype(enable_in_c) >,
+						std::remove_const_t< decltype(enable_in_t) >
 					>
 				>, enable_fn > >);
 
@@ -340,13 +340,13 @@ int main(){
 				std::unique_ptr< disposer::module<
 					hana::tuple<
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::parameter< decltype("v"_param),
-							disposer::no_transform, int >,
+							disposer::none, int >,
 						disposer::input< decltype("w"_in),
-							disposer::no_transform, int >
+							disposer::none, int >
 					>, enable_fn
 				> > >);
 		}

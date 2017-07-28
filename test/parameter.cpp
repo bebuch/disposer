@@ -67,10 +67,10 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
-						disposer::no_transform, int >,
-					disposer::value_verify_always,
+						disposer::none, int >,
+					disposer::value_verify_always_t,
 					disposer::enable_always_t,
-					disposer::stream_parser,
+					disposer::stream_parser_t,
 					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
@@ -82,7 +82,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param),
-					disposer::no_transform, int > >);
+					disposer::none, int > >);
 
 			error_count = check(ct++,
 				object.is_enabled(hana::type_c< int >),
@@ -106,10 +106,10 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
-						disposer::no_transform, int, float >,
-					disposer::value_verify_always,
+						disposer::none, int, float >,
+					disposer::value_verify_always_t,
 					disposer::enable_always_t,
-					disposer::stream_parser,
+					disposer::stream_parser_t,
 					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s),
@@ -122,7 +122,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			error_count = check(ct++,
 				object.is_enabled(hana::type_c< int >),
@@ -151,10 +151,10 @@ int main(){
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
-						disposer::no_transform, int, float >,
-					disposer::value_verify_always,
+						disposer::none, int, float >,
+					disposer::value_verify_always_t,
 					disposer::enable_always_t,
-					disposer::stream_parser,
+					disposer::stream_parser_t,
 					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s),
@@ -167,7 +167,7 @@ int main(){
 
 			static_assert(std::is_same_v< decltype(object),
 				disposer::parameter< decltype("v"_param),
-					disposer::no_transform, int, float > >);
+					disposer::none, int, float > >);
 
 			error_count = check(ct++,
 				object.is_enabled(hana::type_c< int >),
