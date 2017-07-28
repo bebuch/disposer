@@ -198,11 +198,11 @@ namespace disposer::parser{
 	x3::rule< comment_tag > const comment("comment");
 
 	struct keyword_spaces_tag;
-	x3::rule< keyword_spaces_tag > const
+	x3::rule< keyword_spaces_tag, std::string > const
 		keyword_spaces("keyword_spaces");
 
 	struct value_spaces_tag;
-	x3::rule< value_spaces_tag > const
+	x3::rule< value_spaces_tag, std::string > const
 		value_spaces("value_spaces");
 
 	auto const space_def =
@@ -228,7 +228,6 @@ namespace disposer::parser{
 	auto const value_spaces_def =
 		+(char_(' ') | char_('\t')) >> !(eol | eoi)
 	;
-
 
 	struct keyword_tag;
 	x3::rule< keyword_tag, std::string > const keyword("keyword");
