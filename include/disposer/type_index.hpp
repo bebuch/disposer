@@ -10,7 +10,6 @@
 #define _disposer__type_index__hpp_INCLUDED_
 
 #include <boost/functional/hash.hpp>
-#include <boost/type_index.hpp>
 #include <boost/type_index/ctti_type_index.hpp>
 
 
@@ -36,7 +35,7 @@ namespace disposer{
 	template < typename T >
 	std::string type_name(T&& value){
 		try{
-			return boost::typeindex::type_id_runtime(value).pretty_name();
+			return type_index::type_id_runtime(value).pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
 			return "could not find type: "s + e.what();
@@ -49,7 +48,7 @@ namespace disposer{
 	template < typename T >
 	std::string type_name(){
 		try{
-			return boost::typeindex::type_id< T >().pretty_name();
+			return type_index::type_id< T >().pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
 			return "could not find type: "s + e.what();
@@ -62,7 +61,7 @@ namespace disposer{
 	template < typename T >
 	std::string type_name_with_cvr(){
 		try{
-			return boost::typeindex::type_id_with_cvr< T >().pretty_name();
+			return type_index::type_id_with_cvr< T >().pretty_name();
 		}catch(std::exception const& e){
 			using namespace std::literals::string_literals;
 			return "could not find type: "s + e.what();
