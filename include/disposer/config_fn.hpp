@@ -28,6 +28,18 @@ namespace disposer{
 
 
 
+	template < typename LogStream, typename T >
+	void print_if_supported(LogStream& os, T const& v){
+		auto const is_printable = hana::is_valid([](auto& x)
+			->decltype((void)(std::declval< std::ostream& >() << x)){})(v);
+		if constexpr(is_printable){
+			os << v;
+		}else{
+			os << "value output on std::ostream& is not supported by type";
+		}
+	}
+
+
 	struct type_transform_fn_tag;
 
 	template < typename Fn >
@@ -506,13 +518,19 @@ namespace disposer{
 			std::string_view value,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			// TODO: Print parsed value if possible
-			return iop_accessory.log(
-				[](logsys::stdlogb& os){
-					os << "parse value ["
+			std::optional< T > result;
+			iop_accessory.log(
+				[&result](logsys::stdlogb& os){
+					os << "parse value";
+					if(result){
+						os << ": ";
+						print_if_supported(os, *result);
+					}
+					os << " ["
 						<< type_index::type_id< T >().pretty_name() << ']';
 				},
-				[&]{ return fn_(iop_accessory, value, type); });
+				[&]{ result = fn_(iop_accessory, value, type); });
+			return std::move(*result);
 		}
 
 	private:
@@ -630,13 +648,8 @@ namespace disposer{
 			std::optional< T > result;
 			iop_accessory.log([&result](logsys::stdlogb& os){
 					if(result){
-						os << "generated default value";
-						auto const is_printable = hana::is_valid([](auto& x)
-							->decltype((void)std::declval< std::ostream& >()
-								<< x){})(*result);
-						if constexpr(is_printable){
-							os << ": " << *result;
-						}
+						os << "generated default value: ";
+						print_if_supported(os, *result);
 					}else{
 						os << "no default value generated";
 					}
