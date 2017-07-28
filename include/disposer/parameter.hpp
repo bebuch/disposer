@@ -151,7 +151,11 @@ namespace disposer{
 				auto value = maker.default_value_generator(iop_accessory, type);
 				if(value) return *value;
 			}
-			throw std::logic_error("parameter(" + name + ") is required");
+
+			std::ostringstream os;
+			os << "parameter(" << name << ") of type [" << type_name< Type >()
+				<< "] is required";
+			throw std::logic_error(os.str());
 		}
 
 

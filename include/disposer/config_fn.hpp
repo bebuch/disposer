@@ -263,12 +263,13 @@ namespace disposer{
 			bool connected
 		)const noexcept(calc_noexcept< IOP_Accessory >()){
 			iop_accessory.log([connected](logsys::stdlogb& os){
-					os << "verify connection with connected = ";
+					os << "verify ";
 					if(connected){
-						os << "true";
+						os << "enabled";
 					}else{
-						os << "false";
+						os << "disabled";
 					}
+					os << " connection";
 				},
 				[&]{ fn_(iop_accessory, connected); });
 		}
@@ -350,8 +351,14 @@ namespace disposer{
 			output_info const& info
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
 			iop_accessory.log(
-				[](logsys::stdlogb& os){
-					os << "verify type ["
+				[&info, type](logsys::stdlogb& os){
+					os << "verify ";
+					if(info.is_enabled(type)){
+						os << "enabled";
+					}else{
+						os << "disabled";
+					}
+					os << " type ["
 						<< type_index::type_id< T >().pretty_name() << ']';
 				},
 				[&]{ fn_(iop_accessory, type, info); });
