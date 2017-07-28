@@ -538,6 +538,20 @@ namespace disposer{
 	};
 
 	struct stream_parser_t{
+		static void verify_istream(std::string_view value, std::istream& is){
+			if(!is){
+				throw std::runtime_error("parsing of '" + std::string(value)
+					+ "' failed");
+			}
+			if(!is.eof()){
+				std::ostringstream os;
+				for(char c = is.get(); is; c = is.get()) os << c;
+				throw std::runtime_error("parsing of '" + std::string(value)
+					+ "' not exhaustive, rest: '"
+					+ os.str() + "'");
+			}
+		}
+
 		template < typename IOP_Accessory, typename T >
 		T operator()(
 			IOP_Accessory const& /*iop_accessory*/,
@@ -548,10 +562,6 @@ namespace disposer{
 				return std::string(value);
 			}else{
 				std::istringstream is((std::string(value)));
-				if constexpr(std::is_same_v< T, bool >){
-					is >> std::boolalpha;
-				}
-
 				if constexpr(
 					std::is_same_v< T, char > ||
 					std::is_same_v< T, signed char > ||
@@ -559,10 +569,16 @@ namespace disposer{
 				){
 					int result;
 					is >> result;
+					verify_istream(value, is);
 					return static_cast< T >(result);
 				}else{
+					if constexpr(std::is_same_v< T, bool >){
+						is >> std::boolalpha;
+					}
+
 					T result;
 					is >> result;
+					verify_istream(value, is);
 					return result;
 				}
 			}

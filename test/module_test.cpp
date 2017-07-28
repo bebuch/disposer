@@ -172,7 +172,7 @@ int main(){
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
-					{}, {}, {}, {}, {}, {{"v", {"value", {}}}}
+					{}, {}, {}, {}, {}, {{"v", {"3", {}}}}
 				});
 
 			static_assert(std::is_same_v< decltype(object),
@@ -223,7 +223,7 @@ int main(){
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
-					{}, {}, {}, {}, {}, {{"v", {"value", {}}}}
+					{}, {}, {}, {}, {}, {{"v", {"3", {}}}}
 				});
 
 			static_assert(std::is_same_v< decltype(object),
@@ -333,7 +333,7 @@ int main(){
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
-					{}, {}, {}, {}, {}, {{"v", {"value", {}}}}
+					{}, {}, {}, {}, {}, {{"v", {"7", {}}}}
 				});
 
 			static_assert(std::is_same_v< decltype(object),
