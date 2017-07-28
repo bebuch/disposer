@@ -432,7 +432,7 @@ namespace disposer{
 				parser_fn< stream_parser >{}),
 			get_or_default(std::move(args),
 				hana::is_a< default_value_fn_tag >,
-				no_default),
+				auto_default),
 			get_or_default(std::move(args),
 				hana::is_a< type_as_text_map_tag >,
 				type_as_text())

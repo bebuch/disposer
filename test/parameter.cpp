@@ -71,7 +71,7 @@ int main(){
 					disposer::value_verify_always,
 					disposer::enable_always_t,
 					disposer::stream_parser,
-					disposer::no_default_t,
+					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 					))
@@ -110,7 +110,7 @@ int main(){
 					disposer::value_verify_always,
 					disposer::enable_always_t,
 					disposer::stream_parser,
-					disposer::no_default_t,
+					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s),
 						hana::make_pair(hana::basic_type< float >{}, "float32"_s)
@@ -155,7 +155,7 @@ int main(){
 					disposer::value_verify_always,
 					disposer::enable_always_t,
 					disposer::stream_parser,
-					disposer::no_default_t,
+					disposer::auto_default_t,
 					decltype(hana::make_map(
 						hana::make_pair(hana::basic_type< int >{}, "sint32"_s),
 						hana::make_pair(hana::basic_type< float >{}, "float32"_s)

@@ -685,14 +685,19 @@ namespace disposer{
 	}
 
 
-	struct no_default_t{
+	struct auto_default_t{
 		template < typename IOP_Accessory, typename T >
 		constexpr void operator()(
 			IOP_Accessory const&, hana::basic_type< T >
 		)const noexcept{}
+
+		template < typename IOP_Accessory, typename T >
+		constexpr std::optional< T > operator()(
+			IOP_Accessory const&, hana::basic_type< std::optional< T > >
+		)const noexcept{ return {}; }
 	};
 
-	constexpr auto no_default = default_value(no_default_t{});
+	constexpr auto auto_default = default_value(auto_default_t{});
 
 
 
