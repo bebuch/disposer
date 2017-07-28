@@ -56,12 +56,14 @@ project disposer_tests
 exe parse_errors
 	:
 	parse_errors.cpp
+	/logsys//logsys
 	/disposer//disposer
 	;
 
 exe parse_check
 	:
 	parse_check.cpp
+	/logsys//logsys
 	/disposer//disposer
 	;
 

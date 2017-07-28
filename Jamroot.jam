@@ -45,5 +45,4 @@ project disposer
 lib disposer
 	:
 	[ glob *.cpp ]
-	/logsys//logsys
 	;
