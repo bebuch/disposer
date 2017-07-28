@@ -155,7 +155,7 @@ namespace disposer{
 						os << "disabled";
 					}
 					os << " ["
-						<< type_index::type_id< T >().pretty_name() << ']';
+						<< type_index::type_id< T >().pretty_name() << "]";
 				},
 				[&]{ enable = fn_(iop_accessory, type); });
 			return enable;
@@ -175,8 +175,8 @@ namespace disposer{
 					}else{
 						os << "disabled";
 					}
-					os << ' ' << name << " ["
-						<< type_index::type_id< T >().pretty_name() << ']';
+					os << " " << name << " ["
+						<< type_index::type_id< T >().pretty_name() << "]";
 				},
 				[&]{ enable = fn_(iop_accessory, type); });
 			return enable;
@@ -371,7 +371,7 @@ namespace disposer{
 						os << "disabled";
 					}
 					os << " type ["
-						<< type_index::type_id< T >().pretty_name() << ']';
+						<< type_index::type_id< T >().pretty_name() << "]";
 				},
 				[&]{ fn_(iop_accessory, type, info); });
 		}
@@ -444,7 +444,7 @@ namespace disposer{
 			iop_accessory.log(
 				[](logsys::stdlogb& os){
 					os << "verified value of type ["
-						<< type_index::type_id< T >().pretty_name() << ']';
+						<< type_index::type_id< T >().pretty_name() << "]";
 				},
 				[&]{ fn_(iop_accessory, value); });
 		}
@@ -527,7 +527,7 @@ namespace disposer{
 						print_if_supported(os, *result);
 					}
 					os << " ["
-						<< type_index::type_id< T >().pretty_name() << ']';
+						<< type_index::type_id< T >().pretty_name() << "]";
 				},
 				[&]{ result = fn_(iop_accessory, value, type); });
 			return std::move(*result);
@@ -548,12 +548,23 @@ namespace disposer{
 				return std::string(value);
 			}else{
 				std::istringstream is((std::string(value)));
-				T result;
 				if constexpr(std::is_same_v< T, bool >){
 					is >> std::boolalpha;
 				}
-				is >> result;
-				return result;
+
+				if constexpr(
+					std::is_same_v< T, char > ||
+					std::is_same_v< T, signed char > ||
+					std::is_same_v< T, unsigned char >
+				){
+					int result;
+					is >> result;
+					return static_cast< T >(result);
+				}else{
+					T result;
+					is >> result;
+					return result;
+				}
 			}
 		}
 
@@ -654,7 +665,7 @@ namespace disposer{
 						os << "no default value generated";
 					}
 					os << " [" << type_index::type_id< T >().pretty_name()
-						<< ']';
+						<< "]";
 				},
 				[&](){ result = fn_(iop_accessory, type); });
 			return result;

@@ -87,13 +87,13 @@ namespace disposer{
 				auto first = true;
 				for(auto const& type: illegal_types){
 					if(!first){ os << ", "; }else{ first = false; }
-					os << '[' << type.pretty_name() << ']';
+					os << "[" << type.pretty_name() << "]";
 				}
 				os << "; legal types are: ";
 				first = true;
 				for(auto const& type: legal_types){
 					if(!first){ os << ", "; }else{ first = false; }
-					os << '[' << type.pretty_name() << ']';
+					os << "[" << type.pretty_name() << "]";
 				}
 
 				throw std::runtime_error(os.str());

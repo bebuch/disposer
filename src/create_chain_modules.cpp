@@ -95,7 +95,7 @@ namespace disposer{
 
 			logsys::log([&config_chain, &config_module, i](logsys::stdlogb& os){
 				os << "chain(" << config_chain.name << ") module("
-					<< i + 1 << ':' << config_module.type_name << ") created";
+					<< i + 1 << ":" << config_module.type_name << ") created";
 			}, [&](){
 				// create input list
 				input_list config_inputs;
@@ -150,7 +150,7 @@ namespace disposer{
 			os << "variable(" << name << ") from chain(" << data.module.chain
 				<< ") module(" << data.module.number << ":"
 				<< data.module.type_name << ") output("
-				<< data.output.get_name() << ')';
+				<< data.output.get_name() << ")";
 		}
 
 		throw std::logic_error(os.str());
