@@ -68,7 +68,7 @@ int main(){
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
 						disposer::none, int >,
-					disposer::value_verify_always_t,
+					disposer::verify_value_always_t,
 					disposer::enable_always_t,
 					disposer::stream_parser_t,
 					disposer::auto_default_t,
@@ -107,7 +107,7 @@ int main(){
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
 						disposer::none, int, float >,
-					disposer::value_verify_always_t,
+					disposer::verify_value_always_t,
 					disposer::enable_always_t,
 					disposer::stream_parser_t,
 					disposer::auto_default_t,
@@ -152,7 +152,7 @@ int main(){
 				disposer::parameter_maker<
 					disposer::parameter< decltype("v"_param),
 						disposer::none, int, float >,
-					disposer::value_verify_always_t,
+					disposer::verify_value_always_t,
 					disposer::enable_always_t,
 					disposer::stream_parser_t,
 					disposer::auto_default_t,

@@ -98,7 +98,7 @@ int main(){
 						disposer::input< decltype("v"_in),
 							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always_t
+						disposer::verify_type_always_t
 					>
 				>, enable_fn > >);
 
@@ -160,7 +160,7 @@ int main(){
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
 							disposer::none, int >,
-							disposer::value_verify_always_t,
+							disposer::verify_value_always_t,
 							disposer::enable_always_t,
 							disposer::stream_parser_t,
 							disposer::auto_default_t,
@@ -201,7 +201,7 @@ int main(){
 						disposer::input< decltype("v"_in),
 							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always_t
+						disposer::verify_type_always_t
 					>,
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
@@ -211,7 +211,7 @@ int main(){
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
 							disposer::none, int >,
-							disposer::value_verify_always_t,
+							disposer::verify_value_always_t,
 							disposer::enable_always_t,
 							disposer::stream_parser_t,
 							disposer::auto_default_t,
@@ -286,14 +286,14 @@ int main(){
 						disposer::no_type_transform,
 						disposer::enable_fn(enable_out)),
 					"v"_param(hana::type_c< int >,
-						disposer::value_verify_always,
+						disposer::verify_value_always,
 						disposer::enable_fn(enable_param),
 						disposer::parser_fn(parser),
 						disposer::default_value_fn(default_value)),
 					"w"_in(hana::type_c< int >,
 						disposer::no_type_transform,
-						disposer::connection_verify_fn(enable_in_c),
-						disposer::type_verify_fn(enable_in_t))
+						disposer::verify_connection_fn(enable_in_c),
+						disposer::verify_type_fn(enable_in_t))
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -305,7 +305,7 @@ int main(){
 						disposer::input< decltype("v"_in),
 							disposer::none, int >,
 						disposer::optional_t,
-						disposer::type_verify_always_t
+						disposer::verify_type_always_t
 					>,
 					disposer::output_maker<
 						disposer::output< decltype("v"_out),
@@ -315,7 +315,7 @@ int main(){
 					disposer::parameter_maker<
 						disposer::parameter< decltype("v"_param),
 							disposer::none, int >,
-						disposer::value_verify_always_t,
+						disposer::verify_value_always_t,
 						std::remove_const_t< decltype(enable_param) >,
 						std::remove_const_t< decltype(parser) >,
 						std::remove_const_t< decltype(default_value) >,

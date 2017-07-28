@@ -215,22 +215,22 @@ namespace disposer{
 
 
 
-	struct connection_verify_fn_tag;
+	struct verify_connection_fn_tag;
 
 	template < typename Fn >
-	class connection_verify_fn{
+	class verify_connection_fn{
 	public:
-		using hana_tag = connection_verify_fn_tag;
+		using hana_tag = verify_connection_fn_tag;
 
-		constexpr connection_verify_fn()
+		constexpr verify_connection_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr connection_verify_fn(Fn const& fn)
+		explicit constexpr verify_connection_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr connection_verify_fn(Fn&& fn)
+		explicit constexpr verify_connection_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -285,7 +285,7 @@ namespace disposer{
 		}
 	};
 
-	constexpr auto required = connection_verify_fn(required_t{});
+	constexpr auto required = verify_connection_fn(required_t{});
 
 
 	struct optional_t{
@@ -293,26 +293,26 @@ namespace disposer{
 		constexpr void operator()(IOP_Accessory const&, bool)const noexcept{}
 	};
 
-	constexpr auto optional = connection_verify_fn< optional_t >{};
+	constexpr auto optional = verify_connection_fn< optional_t >{};
 
 
 
-	struct type_verify_fn_tag;
+	struct verify_type_fn_tag;
 
 	template < typename Fn >
-	class type_verify_fn{
+	class verify_type_fn{
 	public:
-		using hana_tag = type_verify_fn_tag;
+		using hana_tag = verify_type_fn_tag;
 
-		constexpr type_verify_fn()
+		constexpr verify_type_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr type_verify_fn(Fn const& fn)
+		explicit constexpr verify_type_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr type_verify_fn(Fn&& fn)
+		explicit constexpr verify_type_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -362,7 +362,7 @@ namespace disposer{
 	};
 
 
-	struct type_verify_always_t{
+	struct verify_type_always_t{
 		template < typename IOP_Accessory, typename T >
 		constexpr void operator()(
 			IOP_Accessory const& /* iop_accessory */,
@@ -371,27 +371,27 @@ namespace disposer{
 		)const noexcept{}
 	};
 
-	auto constexpr type_verify_always =
-		type_verify_fn< type_verify_always_t >{};
+	auto constexpr verify_type_always =
+		verify_type_fn< verify_type_always_t >{};
 
 
 
-	struct value_verify_fn_tag;
+	struct verify_value_fn_tag;
 
 	template < typename Fn >
-	class value_verify_fn{
+	class verify_value_fn{
 	public:
-		using hana_tag = value_verify_fn_tag;
+		using hana_tag = verify_value_fn_tag;
 
-		constexpr value_verify_fn()
+		constexpr verify_value_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr value_verify_fn(Fn const& fn)
+		explicit constexpr verify_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr value_verify_fn(Fn&& fn)
+		explicit constexpr verify_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -434,7 +434,7 @@ namespace disposer{
 		Fn fn_;
 	};
 
-	struct value_verify_always_t{
+	struct verify_value_always_t{
 		template < typename IOP_Accessory, typename T >
 		constexpr void operator()(
 			IOP_Accessory const& /* iop_accessory */,
@@ -442,8 +442,8 @@ namespace disposer{
 		)const noexcept{}
 	};
 
-	auto constexpr value_verify_always =
-		value_verify_fn< value_verify_always_t >{};
+	auto constexpr verify_value_always =
+		verify_value_fn< verify_value_always_t >{};
 
 
 

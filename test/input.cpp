@@ -71,7 +71,7 @@ int main(){
 					disposer::input< decltype("v"_in),
 						disposer::none, int >,
 					disposer::required_t,
-					disposer::type_verify_always_t
+					disposer::verify_type_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -93,7 +93,7 @@ int main(){
 					disposer::input< decltype("v"_in),
 						disposer::none, int, float >,
 					disposer::required_t,
-					disposer::type_verify_always_t
+					disposer::verify_type_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;
@@ -115,7 +115,7 @@ int main(){
 					disposer::input< decltype("v"_in),
 						disposer::none, int, float >,
 					disposer::required_t,
-					disposer::type_verify_always_t
+					disposer::verify_type_always_t
 				> const >);
 
 			using type = decltype(hana::typeid_(maker))::type::type;

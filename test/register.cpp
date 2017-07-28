@@ -200,7 +200,7 @@ int main(){
 							return active;
 						})),
 					"v"_param(hana::type_c< int >,
-						disposer::value_verify_always,
+						disposer::verify_value_always,
 						disposer::enable_fn([](auto const& iop, auto type){
 							bool active1 = iop("v"_in).is_enabled(type);
 							bool active2 = iop("v"_out).is_enabled(type);
@@ -218,11 +218,11 @@ int main(){
 						})),
 					"w"_in(hana::type_c< int >,
 						disposer::no_type_transform,
-						disposer::connection_verify_fn(
+						disposer::verify_connection_fn(
 							[](auto const&, bool connected){
 								assert(!connected);
 							}),
-						disposer::type_verify_fn(
+						disposer::verify_type_fn(
 							[](
 								auto const& iop,
 								auto type,

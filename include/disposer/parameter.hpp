@@ -163,7 +163,7 @@ namespace disposer{
 						m.data.maker, m.accessory, m.data.value_map[type],
 						to_std_string(m.data.maker.name), type);
 					if(value){
-						m.data.maker.value_verify(m.accessory, *value);
+						m.data.maker.verify_value(m.accessory, *value);
 					}
 					return hana::make_pair(type, std::move(value));
 				}), hana::make_map)) {}
@@ -255,7 +255,7 @@ namespace disposer{
 		static constexpr auto types = type::types;
 
 		/// \brief Function to verify the parameter value
-		value_verify_fn< ValueVerifyFn > value_verify;
+		verify_value_fn< ValueVerifyFn > verify_value;
 
 		/// \brief Enable function
 		enable_fn< EnableFn > enable;
@@ -284,7 +284,7 @@ namespace disposer{
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
-		value_verify_fn< ValueVerifyFn >&& value_verify,
+		verify_value_fn< ValueVerifyFn >&& verify_value,
 		enable_fn< EnableFn >&& enable,
 		parser_fn< ParserFn >&& parser,
 		default_value_fn< DefaultValueFn >&& default_value_generator,
@@ -337,7 +337,7 @@ namespace disposer{
 				ValueVerifyFn, EnableFn, ParserFn, DefaultValueFn,
 				std::remove_const_t< decltype(type_to_text) >
 			>{
-				std::move(value_verify),
+				std::move(verify_value),
 				std::move(enable),
 				std::move(parser),
 				std::move(default_value_generator),
@@ -366,7 +366,7 @@ namespace disposer{
 	)const{
 		constexpr auto valid_argument = [](auto const& arg){
 				return hana::is_a< type_transform_fn_tag >(arg)
-					|| hana::is_a< value_verify_fn_tag >(arg)
+					|| hana::is_a< verify_value_fn_tag >(arg)
 					|| hana::is_a< enable_fn_tag >(arg)
 					|| hana::is_a< parser_fn_tag >(arg)
 					|| hana::is_a< default_value_fn_tag >(arg)
@@ -399,9 +399,9 @@ namespace disposer{
 		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
 			<= hana::size_c< 1 >;
 		static_assert(tt, "more than one type_transform_fn");
-		auto vv = hana::count_if(args, hana::is_a< value_verify_fn_tag >)
+		auto vv = hana::count_if(args, hana::is_a< verify_value_fn_tag >)
 			<= hana::size_c< 1 >;
-		static_assert(vv, "more than one value_verify_fn");
+		static_assert(vv, "more than one verify_value_fn");
 		auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
 			<= hana::size_c< 1 >;
 		static_assert(ef, "more than one enable_fn");
@@ -422,8 +422,8 @@ namespace disposer{
 				hana::is_a< type_transform_fn_tag >,
 				no_type_transform),
 			get_or_default(std::move(args),
-				hana::is_a< value_verify_fn_tag >,
-				value_verify_always),
+				hana::is_a< verify_value_fn_tag >,
+				verify_value_always),
 			get_or_default(std::move(args),
 				hana::is_a< enable_fn_tag >,
 				enable_always),

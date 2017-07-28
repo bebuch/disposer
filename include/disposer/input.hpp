@@ -245,12 +245,12 @@ namespace disposer{
 				});
 			}
 
-			maker.connection_verify(iop_accessory, static_cast< bool >(info));
+			maker.verify_connection(iop_accessory, static_cast< bool >(info));
 
 			if(info){
 				hana::for_each(types,
 					[&maker, &iop_accessory, &info](auto const& type){
-						maker.type_verify(iop_accessory, type, *info);
+						maker.verify_type(iop_accessory, type, *info);
 					});
 			}
 		}
@@ -364,10 +364,10 @@ namespace disposer{
 		using type = InputType;
 
 		/// \brief Function which verifies the connection with an output
-		connection_verify_fn< ConnectionVerifyFn > connection_verify;
+		verify_connection_fn< ConnectionVerifyFn > verify_connection;
 
 		/// \brief Function which verifies the active types
-		type_verify_fn< TypeVerifyFn > type_verify;
+		verify_type_fn< TypeVerifyFn > verify_type;
 	};
 
 
@@ -382,8 +382,8 @@ namespace disposer{
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
-		connection_verify_fn< ConnectionVerifyFn >&& connection_verify,
-		type_verify_fn< TypeVerifyFn >&& type_verify
+		verify_connection_fn< ConnectionVerifyFn >&& verify_connection,
+		verify_type_fn< TypeVerifyFn >&& verify_type
 	){
 		constexpr auto typelist = to_typelist(Types{});
 
@@ -395,8 +395,8 @@ namespace disposer{
 
 		return input_maker< typename decltype(type_input)::type,
 			ConnectionVerifyFn, TypeVerifyFn >{
-				std::move(connection_verify),
-				std::move(type_verify)
+				std::move(verify_connection),
+				std::move(verify_type)
 			};
 	}
 
@@ -415,8 +415,8 @@ namespace disposer{
 	)const{
 		constexpr auto valid_argument = [](auto const& arg){
 				return hana::is_a< type_transform_fn_tag >(arg)
-					|| hana::is_a< connection_verify_fn_tag >(arg)
-					|| hana::is_a< type_verify_fn_tag >(arg)
+					|| hana::is_a< verify_connection_fn_tag >(arg)
+					|| hana::is_a< verify_type_fn_tag >(arg)
 					|| hana::is_a< no_argument_tag >(arg);
 			};
 
@@ -436,12 +436,12 @@ namespace disposer{
 		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
 			<= hana::size_c< 1 >;
 		static_assert(tt, "more than one type_transform_fn");
-		auto cv = hana::count_if(args, hana::is_a< connection_verify_fn_tag >)
+		auto cv = hana::count_if(args, hana::is_a< verify_connection_fn_tag >)
 			<= hana::size_c< 1 >;
-		static_assert(cv, "more than one connection_verify_fn");
-		auto tv = hana::count_if(args, hana::is_a< type_verify_fn_tag >)
+		static_assert(cv, "more than one verify_connection_fn");
+		auto tv = hana::count_if(args, hana::is_a< verify_type_fn_tag >)
 			<= hana::size_c< 1 >;
-		static_assert(tv, "more than one type_verify_fn");
+		static_assert(tv, "more than one verify_type_fn");
 
 		return create_input_maker(
 			(*this),
@@ -450,11 +450,11 @@ namespace disposer{
 				hana::is_a< type_transform_fn_tag >,
 				no_type_transform),
 			get_or_default(std::move(args),
-				hana::is_a< connection_verify_fn_tag >,
+				hana::is_a< verify_connection_fn_tag >,
 				required),
 			get_or_default(std::move(args),
-				hana::is_a< type_verify_fn_tag >,
-				type_verify_always)
+				hana::is_a< verify_type_fn_tag >,
+				verify_type_always)
 		);
 	}
 
