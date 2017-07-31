@@ -36,27 +36,100 @@ namespace disposer{
 	};
 
 
+	template < typename LogF >
+	constexpr bool is_simple_log_fn =
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+		std::is_callable_v< LogF(logsys::stdlogb&) >;
+#else
+		std::is_invocable_v< LogF, logsys::stdlogb& >;
+#endif
+
+	template < typename LogF, typename T >
+	constexpr bool is_extended_log_fn =
+// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
+#if __clang__
+		std::is_callable_v< LogF(logsys::stdlogb&, T const*) >;
+#else
+		std::is_invocable_v< LogF, logsys::stdlogb&, T const* >;
+#endif
+
+
 	template < typename Derived >
 	class add_log{
 	public:
 		/// \brief Add a line to the log
-		template < typename Log >
-		void log(Log&& f)const{
-			logsys::log(impl(f));
+		template < typename LogF >
+		void log(LogF&& f)const{
+			static_assert(is_simple_log_fn< LogF >,
+				"expected a log call of the form: "
+				"'.log([](logsys::stdlogb&){})'");
+
+			logsys::log(simple_impl(f));
 		}
 
 		/// \brief Add a line to the log with linked code block
-		template < typename Log, typename Body >
-		decltype(auto) log(Log&& f, Body&& body)const{
-			return logsys::log(impl(f), static_cast< Body&& >(body));
+		template < typename LogF, typename Body >
+		decltype(auto) log(LogF&& f, Body&& body)const{
+			using result_type = decltype(body());
+
+			if constexpr(std::is_void_v< result_type >){
+				static_assert(is_simple_log_fn< LogF >,
+					"expected a log call of the form: "
+					"'.log([](logsys::stdlogb&){}, []{})'");
+
+				logsys::log(simple_impl(f), static_cast< Body&& >(body));
+			}else{
+				static_assert(is_simple_log_fn< LogF >
+					|| is_extended_log_fn< LogF, result_type >,
+					"expected a log call of the form: "
+					"'.log([](logsys::stdlogb&){}, []{ return ...; })' or "
+					"'.log([](logsys::stdlogb&, auto const* result){}, "
+					"[]{ return ...; })'");
+
+				if constexpr(is_simple_log_fn< LogF >){
+					return logsys::log(simple_impl(f),
+						static_cast< Body&& >(body));
+				}else{
+					return logsys::log(logsys::type< logsys::stdlogb >,
+						extended_impl< result_type >(f),
+						static_cast< Body&& >(body));
+				}
+			}
 		}
 
 		/// \brief Add a line to the log with linked code block and catch all
 		///        exceptions
-		template < typename Log, typename Body >
-		decltype(auto) exception_catching_log(Log&& f, Body&& body)const{
-			return logsys::exception_catching_log(
-				impl(f), static_cast< Body&& >(body));
+		template < typename LogF, typename Body >
+		decltype(auto) exception_catching_log(LogF&& f, Body&& body)const{
+			using result_type = decltype(body());
+
+			if constexpr(std::is_void_v< result_type >){
+				static_assert(is_simple_log_fn< LogF >,
+					"expected a log call of the form: "
+					"'.exception_catching_log([](logsys::stdlogb&){}, []{})'");
+
+				logsys::log(simple_impl(f), static_cast< Body&& >(body));
+			}else{
+				static_assert(is_simple_log_fn< LogF >
+					|| is_extended_log_fn< LogF, result_type >,
+					"expected a log call of the form: "
+					"'.exception_catching_log([](logsys::stdlogb&){}, "
+					"[]{ return ...; })' or "
+					"'.exception_catching_log([](logsys::stdlogb&, "
+					"auto const* result){}, "
+					"[]{ return ...; })'");
+
+				if constexpr(is_simple_log_fn< LogF >){
+					return logsys::exception_catching_log(
+						simple_impl(f), static_cast< Body&& >(body));
+				}else{
+					return logsys::exception_catching_log(
+						logsys::type< logsys::stdlogb >,
+						extended_impl< result_type >(f),
+						static_cast< Body&& >(body));
+				}
+			}
 		}
 
 	protected:
@@ -73,26 +146,26 @@ namespace disposer{
 		}
 
 	private:
-		/// \brief Helper for log message functions
 		template < typename Log >
-		auto impl(Log& log)const{
+		void add_prefix(Log& os)const{
+			static_cast< Derived const& >(*this).log_prefix(log_key(), os);
+		}
+
+		/// \brief Helper for log message functions
+		template < typename LogF >
+		auto simple_impl(LogF& log)const{
 			return [&](logsys::stdlogb& os){
-				static_cast< Derived const& >(*this).log_prefix(log_key(), os);
-
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-				static_assert(
-					std::is_callable_v< Log(logsys::stdlogb&) >,
-					"log type must be logsys::stdlogb"
-				);
-#else
-				static_assert(
-					std::is_invocable_v< Log, logsys::stdlogb& >,
-					"log type must be logsys::stdlogb"
-				);
-#endif
-
+				add_prefix(os);
 				log(os);
+			};
+		}
+
+		/// \brief Helper for log message functions
+		template < typename T, typename LogF >
+		auto extended_impl(LogF& log)const{
+			return [&](logsys::stdlogb& os, T const* result){
+				add_prefix(os);
+				log(os, result);
 			};
 		}
 	};
