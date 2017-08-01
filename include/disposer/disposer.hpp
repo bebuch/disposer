@@ -143,7 +143,10 @@ namespace disposer{
 		/// \brief List of modules (map from module type name to maker function)
 		module_maker_list module_maker_list_;
 
-		/// \brief List of all chains (map from name to object)
+		/// \brief List of all inactive chains
+		std::unordered_set< std::string > inactive_chains_;
+
+		/// \brief List of all active chains (map from name to object)
 		std::unordered_map< std::string, chain > chains_;
 
 		/// \brief List of id_generators (map from name to object)

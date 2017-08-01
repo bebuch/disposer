@@ -129,7 +129,7 @@ namespace disposer{
 
 		logsys::log(
 			[this](logsys::stdlogb& os){
-				os << "chain(" << name << ") enable";
+				os << "chain(" << name << ") enabled";
 			},
 			[this]{
 				std::size_t i = 0;
@@ -139,7 +139,7 @@ namespace disposer{
 						logsys::log([this, i](logsys::stdlogb& os){
 								os << "chain(" << name << ") module("
 									<< modules_[i]->number << ":"
-									<< modules_[i]->type_name << ") enable";
+									<< modules_[i]->type_name << ") enabled";
 							}, [this, i]{
 								modules_[i]->enable(chain_key());
 							});
@@ -150,7 +150,7 @@ namespace disposer{
 						logsys::log([this, i, j](logsys::stdlogb& os){
 								os << "chain(" << name << ") module("
 									<< modules_[j]->number
-									<< ") disable because of exception while "
+									<< ") disabled because of exception while "
 									<< "enable module(" << modules_[i]->number
 									<< ")";
 							}, [this, j]{
@@ -175,7 +175,7 @@ namespace disposer{
 
 		logsys::log(
 			[this](logsys::stdlogb& os){
-				os << "chain(" << name << ") disable";
+				os << "chain(" << name << ") disabled";
 			},
 			[this]{
 				// disable all modules
@@ -183,7 +183,7 @@ namespace disposer{
 					logsys::log([this, i](logsys::stdlogb& os){
 							os << "chain(" << name << ") module("
 								<< modules_[i]->number << ":"
-								<< modules_[i]->type_name << ") disable";
+								<< modules_[i]->type_name << ") disabled";
 						}, [this, i]{
 							modules_[i]->disable(chain_key());
 						});

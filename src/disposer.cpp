@@ -73,10 +73,33 @@ namespace disposer{ namespace{
 		module_maker_list const& maker_list,
 		types::merge::chains_config&& config
 	){
+		std::unordered_set< std::string > inactive_chains;
 		std::unordered_map< std::string, chain > chains;
 		std::unordered_map< std::string, id_generator > id_generators;
 
 		for(auto& config_chain: config){
+			bool const chain_is_active = logsys::log(
+				[&config_chain](logsys::stdlogb& os, bool const* active){
+					os << "chain(" << config_chain.name << ") analysed";
+					if(!active || *active) return;
+					os << " and deactivated because it refers to at least one "
+						"unknown component module (WARNING)";
+				}, [&config_chain, &maker_list]{
+					for(auto const& module: config_chain.modules){
+						auto const& name = module.type_name;
+						if(name.find("//") == std::string::npos) continue;
+						if(maker_list.find(name) != maker_list.end()) continue;
+						return false;
+					}
+
+					return true;
+				});
+
+			if(!chain_is_active){
+				inactive_chains.emplace(config_chain.name);
+				continue;
+			}
+
 			logsys::log([&config_chain](logsys::stdlogb& os){
 				os << "chain(" << config_chain.name << ") created";
 			}, [&]{
@@ -96,6 +119,7 @@ namespace disposer{ namespace{
 		}
 
 		return std::make_tuple(
+			std::move(inactive_chains),
 			std::move(chains),
 			std::move(id_generators)
 		);
@@ -194,17 +218,20 @@ namespace disposer{
 
 		logsys::log([](logsys::stdlogb& os){ os << "created chains"; },
 			[this, &merged_config]{
-				std::tie(chains_, id_generators_) = create_chains(
-					module_maker_list_, std::move(merged_config.chains));
+				std::tie(inactive_chains_, chains_, id_generators_) =
+					create_chains(module_maker_list_,
+						std::move(merged_config.chains));
 			});
 	}
 
 	chain& disposer::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);
-		if(iter == chains_.end()){
-			throw std::logic_error("chain(" + chain + ") does not exist");
+		if(iter != chains_.end()) return iter->second;
+		if(inactive_chains_.find(chain) != inactive_chains_.end()){
+			throw std::runtime_error("chain(" + chain + ") is inactive, "
+				"at least one of its modules referes to a unknown component");
 		}
-		return iter->second;
+		throw std::logic_error("chain(" + chain + ") does not exist");
 	}
 
 	std::unordered_set< std::string > disposer::chains()const{
