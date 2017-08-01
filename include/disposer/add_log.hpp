@@ -49,9 +49,9 @@ namespace disposer{
 	constexpr bool is_extended_log_fn =
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t
 #if __clang__
-		std::is_callable_v< LogF(logsys::stdlogb&, T const*) >;
+		std::is_callable_v< LogF(logsys::stdlogb&, T) >;
 #else
-		std::is_invocable_v< LogF, logsys::stdlogb&, T const* >;
+		std::is_invocable_v< LogF, logsys::stdlogb&, T >;
 #endif
 
 
@@ -65,20 +65,20 @@ namespace disposer{
 				"expected a log call of the form: "
 				"'.log([](logsys::stdlogb&){})'");
 
-			logsys::log(simple_impl(f));
+			logsys::log< logsys::stdlogb >(simple_impl(f));
 		}
 
 		/// \brief Add a line to the log with linked code block
 		template < typename LogF, typename Body >
 		decltype(auto) log(LogF&& f, Body&& body)const{
-			using result_type = decltype(body());
+			using result_type = logsys::detail::result_as_ptr_t< Body >;
 
 			if constexpr(std::is_void_v< result_type >){
 				static_assert(is_simple_log_fn< LogF >,
 					"expected a log call of the form: "
 					"'.log([](logsys::stdlogb&){}, []{})'");
 
-				logsys::log(simple_impl(f), static_cast< Body&& >(body));
+				logsys::log< logsys::stdlogb >(simple_impl(f), body);
 			}else{
 				static_assert(is_simple_log_fn< LogF >
 					|| is_extended_log_fn< LogF, result_type >,
@@ -88,12 +88,10 @@ namespace disposer{
 					"[]{ return ...; })'");
 
 				if constexpr(is_simple_log_fn< LogF >){
-					return logsys::log(simple_impl(f),
-						static_cast< Body&& >(body));
+					return logsys::log< logsys::stdlogb >(simple_impl(f), body);
 				}else{
-					return logsys::log(logsys::type< logsys::stdlogb >,
-						extended_impl< result_type >(f),
-						static_cast< Body&& >(body));
+					return logsys::log< logsys::stdlogb >(
+						extended_impl< result_type >(f), body);
 				}
 			}
 		}
@@ -102,14 +100,15 @@ namespace disposer{
 		///        exceptions
 		template < typename LogF, typename Body >
 		decltype(auto) exception_catching_log(LogF&& f, Body&& body)const{
-			using result_type = decltype(body());
+			using result_type = logsys::detail::result_as_ptr_t< Body >;
 
 			if constexpr(std::is_void_v< result_type >){
 				static_assert(is_simple_log_fn< LogF >,
 					"expected a log call of the form: "
 					"'.exception_catching_log([](logsys::stdlogb&){}, []{})'");
 
-				logsys::log(simple_impl(f), static_cast< Body&& >(body));
+				logsys::exception_catching_log< logsys::stdlogb >(
+					simple_impl(f), body);
 			}else{
 				static_assert(is_simple_log_fn< LogF >
 					|| is_extended_log_fn< LogF, result_type >,
@@ -121,13 +120,11 @@ namespace disposer{
 					"[]{ return ...; })'");
 
 				if constexpr(is_simple_log_fn< LogF >){
-					return logsys::exception_catching_log(
-						simple_impl(f), static_cast< Body&& >(body));
+					return logsys::exception_catching_log< logsys::stdlogb >(
+						simple_impl(f), body);
 				}else{
-					return logsys::exception_catching_log(
-						logsys::type< logsys::stdlogb >,
-						extended_impl< result_type >(f),
-						static_cast< Body&& >(body));
+					return logsys::exception_catching_log< logsys::stdlogb >(
+						extended_impl< result_type >(f), body);
 				}
 			}
 		}
@@ -163,7 +160,7 @@ namespace disposer{
 		/// \brief Helper for log message functions
 		template < typename T, typename LogF >
 		auto extended_impl(LogF& log)const{
-			return [&](logsys::stdlogb& os, T const* result){
+			return [&](logsys::stdlogb& os, T result){
 				add_prefix(os);
 				log(os, result);
 			};
