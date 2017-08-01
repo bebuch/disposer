@@ -325,7 +325,7 @@ namespace disposer{
 				[&data, &component, &disposer]
 				(auto const& component_module_maker){
 					component_module_maker.module_register_fn(component)(
-						data.name + "_"
+						data.name + "/"
 							+ std::string(component_module_maker.name),
 						disposer.module_declarant()
 					);
