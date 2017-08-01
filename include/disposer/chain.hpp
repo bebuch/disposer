@@ -13,9 +13,6 @@
 #include "id_generator.hpp"
 #include "merge.hpp"
 
-#include <logsys/stdlogb.hpp>
-#include <logsys/log.hpp>
-
 #include <mutex>
 #include <string>
 #include <vector>

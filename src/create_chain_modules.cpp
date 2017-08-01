@@ -2,6 +2,9 @@
 #include <disposer/module_base.hpp>
 #include <disposer/module_make_data.hpp>
 
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
+
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <cassert>
@@ -96,7 +99,7 @@ namespace disposer{
 			logsys::log([&config_chain, &config_module, i](logsys::stdlogb& os){
 				os << "chain(" << config_chain.name << ") module("
 					<< i + 1 << ":" << config_module.type_name << ") created";
-			}, [&](){
+			}, [&]{
 				// create input list
 				input_list config_inputs;
 				for(auto const& config_input: config_module.inputs){

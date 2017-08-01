@@ -11,7 +11,8 @@
 
 #include "output_info.hpp"
 
-#include <type_traits>
+#include <logsys/log.hpp>
+#include <logsys/stdlogb.hpp>
 
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/all_of.hpp>
@@ -19,8 +20,7 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/map.hpp>
 
-#include <logsys/stdlogb.hpp>
-
+#include <type_traits>
 #include <optional>
 
 
@@ -147,18 +147,23 @@ namespace disposer{
 			IOP_Accessory const& iop_accessory,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			bool enable = false;
-			iop_accessory.log([&enable](logsys::stdlogb& os){
-					if(enable){
-						os << "enabled";
+			return iop_accessory.log(
+				[](logsys::stdlogb& os, bool const* enabled){
+					os << "type ";
+					if(enabled){
+						if(*enabled){
+							os << "enabled";
+						}else{
+							os << "disabled";
+						}
 					}else{
-						os << "disabled";
+						os << "enabling";
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				},
-				[&]{ enable = fn_(iop_accessory, type); });
-			return enable;
+				}, [&]()->bool{
+					return std::invoke(fn_, iop_accessory, type);
+				});
 		}
 
 		/// \brief Operator for parameters
@@ -168,18 +173,23 @@ namespace disposer{
 			hana::basic_type< T > type,
 			std::string_view name
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			bool enable = false;
-			iop_accessory.log([&enable, name](logsys::stdlogb& os){
-					if(enable){
-						os << "enabled";
+			return iop_accessory.log(
+				[name](logsys::stdlogb& os, bool const* enabled){
+					os << "type ";
+					if(enabled){
+						if(*enabled){
+							os << "enabled";
+						}else{
+							os << "disabled";
+						}
 					}else{
-						os << "disabled";
+						os << "enabling";
 					}
 					os << " " << name << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				},
-				[&]{ enable = fn_(iop_accessory, type); });
-			return enable;
+				}, [&]()->bool{
+					return std::invoke(fn_, iop_accessory, type);
+				});
 		}
 
 	private:
@@ -282,8 +292,7 @@ namespace disposer{
 						os << "disabled";
 					}
 					os << " connection";
-				},
-				[&]{ fn_(iop_accessory, connected); });
+				}, [&]{ std::invoke(fn_, iop_accessory, connected); });
 		}
 
 	private:
@@ -372,8 +381,7 @@ namespace disposer{
 					}
 					os << " type ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				},
-				[&]{ fn_(iop_accessory, type, info); });
+				}, [&]{ std::invoke(fn_, iop_accessory, type, info); });
 		}
 
 	private:
@@ -445,8 +453,7 @@ namespace disposer{
 				[](logsys::stdlogb& os){
 					os << "verified value of type ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				},
-				[&]{ fn_(iop_accessory, value); });
+				}, [&]{ std::invoke(fn_, iop_accessory, value); });
 		}
 
 	private:
@@ -518,19 +525,18 @@ namespace disposer{
 			std::string_view value,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			std::optional< T > result;
-			iop_accessory.log(
-				[&result](logsys::stdlogb& os){
+			return iop_accessory.log(
+				[](logsys::stdlogb& os, T const* value){
 					os << "parsed value";
-					if(result){
+					if(value){
 						os << ": ";
-						print_if_supported(os, *result);
+						print_if_supported(os, *value);
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				},
-				[&]{ result = fn_(iop_accessory, value, type); });
-			return std::move(*result);
+				}, [&]()->T{
+					return std::invoke(fn_, iop_accessory, value, type);
+				});
 		}
 
 	private:
@@ -668,23 +674,22 @@ namespace disposer{
 
 		/// \brief Operator for outputs
 		template < typename IOP_Accessory, typename T >
-		constexpr auto operator()(
+		constexpr std::optional< T > operator()(
 			IOP_Accessory const& iop_accessory,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			std::optional< T > result;
-			iop_accessory.log([&result](logsys::stdlogb& os){
-					if(result){
+			return iop_accessory.log([](logsys::stdlogb& os, T const* value){
+					if(value){
 						os << "generated default value: ";
-						print_if_supported(os, *result);
+						print_if_supported(os, *value);
 					}else{
 						os << "no default value generated";
 					}
 					os << " [" << type_index::type_id< T >().pretty_name()
 						<< "]";
-				},
-				[&](){ result = fn_(iop_accessory, type); });
-			return result;
+				}, [&]()->T{
+					return std::invoke(fn_, iop_accessory, type);
+				});
 		}
 
 

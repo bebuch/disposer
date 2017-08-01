@@ -126,16 +126,15 @@ namespace disposer{
 			decltype(hana::make_map(hana::make_pair(
 				type_transform(hana::type_c< T >),
 				std::declval< std::optional<
-					typename decltype(hana::traits::add_const(
-						type_transform(hana::type_c< T >)
-					))::type > >()) ... ));
+					typename decltype(type_transform(hana::type_c< T >))::type
+				> >()) ... ));
 
 
 		template <
 			typename Maker,
 			typename IOP_Accessory,
 			typename Type >
-		static std::optional< Type const > make_value(
+		static std::optional< Type > make_value(
 			Maker const& maker,
 			IOP_Accessory const& iop_accessory,
 			std::optional< std::string_view > value,
@@ -216,7 +215,7 @@ namespace disposer{
 
 	private:
 		/// \brief Map of parameter types to values
-		type_value_map_t const type_value_map_;
+		type_value_map_t type_value_map_;
 	};
 
 
