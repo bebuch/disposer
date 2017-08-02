@@ -10,8 +10,7 @@
 #define _disposer__parameter_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-
-#include "../config_fn.hpp"
+#include "parameter_maker.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -20,10 +19,6 @@
 
 
 namespace disposer{
-
-
-	/// \brief Hana Tag for \ref parameter_name
-	struct parameter_name_tag{};
 
 	template < char ... C >
 	struct parameter_name: ct_name< C ... >{
@@ -47,7 +42,81 @@ namespace disposer{
 			Arg5&& arg5 = {},
 			Arg6&& arg6 = {},
 			Arg7&& arg7 = {}
-		)const;
+		)const{
+			constexpr auto valid_argument = [](auto const& arg){
+					return hana::is_a< type_transform_fn_tag >(arg)
+						|| hana::is_a< verify_value_fn_tag >(arg)
+						|| hana::is_a< enable_fn_tag >(arg)
+						|| hana::is_a< parser_fn_tag >(arg)
+						|| hana::is_a< default_value_fn_tag >(arg)
+						|| hana::is_a< type_as_text_map_tag >(arg)
+						|| hana::is_a< no_argument_tag >(arg);
+				};
+
+			auto const arg2_valid = valid_argument(arg2);
+			static_assert(arg2_valid, "argument 2 is invalid");
+			auto const arg3_valid = valid_argument(arg3);
+			static_assert(arg3_valid, "argument 3 is invalid");
+			auto const arg4_valid = valid_argument(arg4);
+			static_assert(arg4_valid, "argument 4 is invalid");
+			auto const arg5_valid = valid_argument(arg5);
+			static_assert(arg5_valid, "argument 5 is invalid");
+			auto const arg6_valid = valid_argument(arg6);
+			static_assert(arg6_valid, "argument 6 is invalid");
+			auto const arg7_valid = valid_argument(arg7);
+			static_assert(arg7_valid, "argument 7 is invalid");
+
+			auto args = hana::make_tuple(
+				static_cast< Arg2&& >(arg2),
+				static_cast< Arg3&& >(arg3),
+				static_cast< Arg4&& >(arg4),
+				static_cast< Arg5&& >(arg5),
+				static_cast< Arg6&& >(arg6),
+				static_cast< Arg7&& >(arg7)
+			);
+
+			auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(tt, "more than one type_transform_fn");
+			auto vv = hana::count_if(args, hana::is_a< verify_value_fn_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(vv, "more than one verify_value_fn");
+			auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(ef, "more than one enable_fn");
+			auto pf = hana::count_if(args, hana::is_a< parser_fn_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(pf, "more than one parser_fn");
+			auto ct = hana::count_if(args, hana::is_a< default_value_fn_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(ct, "more than one default_value_fn");
+			auto tm = hana::count_if(args, hana::is_a< type_as_text_map_tag >)
+				<= hana::size_c< 1 >;
+			static_assert(tm, "more than one type_as_text_map");
+
+			return create_parameter_maker(
+				(*this),
+				types,
+				get_or_default(std::move(args),
+					hana::is_a< type_transform_fn_tag >,
+					no_type_transform),
+				get_or_default(std::move(args),
+					hana::is_a< verify_value_fn_tag >,
+					verify_value_always),
+				get_or_default(std::move(args),
+					hana::is_a< enable_fn_tag >,
+					enable_always),
+				get_or_default(std::move(args),
+					hana::is_a< parser_fn_tag >,
+					stream_parser),
+				get_or_default(std::move(args),
+					hana::is_a< default_value_fn_tag >,
+					auto_default),
+				get_or_default(std::move(args),
+					hana::is_a< type_as_text_map_tag >,
+					type_as_text())
+			);
+		}
 	};
 
 	/// \brief Make a \ref parameter_name object

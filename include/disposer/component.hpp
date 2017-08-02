@@ -13,6 +13,7 @@
 #include "detail/component_make_data.hpp"
 #include "detail/module_name.hpp"
 #include "detail/add_log.hpp"
+#include "detail/validate_parameters.hpp"
 
 #include "parameter.hpp"
 #include "module.hpp"
@@ -155,7 +156,7 @@ namespace disposer{
 			}else if constexpr(std::is_callable_v< ComponentFn const() >){
 				return component_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"component_init function must be invokable with component& "
 					"or without an argument");
 			}
@@ -166,7 +167,7 @@ namespace disposer{
 				(void)accessory; // silance GCC
 				return component_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"component_init function must be invokable with component& "
 					"or without an argument");
 			}
@@ -311,7 +312,7 @@ namespace disposer{
 			// Check config file data for undefined parameters and warn about
 			// them
 			auto const location = data.location();
-			check_parameters(location, makers, data.parameters);
+			validate_parameters(location, makers, data.parameters);
 
 			std::string const basic_location = data.basic_location();
 

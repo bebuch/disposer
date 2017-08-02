@@ -15,31 +15,12 @@
 #include "parameter_name.hpp"
 #include "output_info.hpp"
 #include "embedded_config.hpp"
+#include "false_c.hpp"
 
 #include <iostream>
 
 
 namespace disposer{
-
-
-	/// \brief Hana Tag for input_maker
-	struct input_maker_tag{};
-
-	/// \brief Hana Tag for output_maker
-	struct output_maker_tag{};
-
-	/// \brief Hana Tag for parameter_maker
-	struct parameter_maker_tag{};
-
-
-	/// \brief Hana Tag for input
-	struct input_tag{};
-
-	/// \brief Hana Tag for output
-	struct output_tag{};
-
-	/// \brief Hana Tag for parameter
-	struct parameter_tag{};
 
 
 	/// \brief Log Implementation for \ref iop_ref
@@ -125,7 +106,7 @@ namespace disposer{
 		Maker const& maker,
 		parameter_list const& params
 	){
-		auto const name = to_std_string(maker.name);
+		auto const name = detail::to_std_string(maker.name);
 		auto const iter = params.find(name);
 		auto const found = iter != params.end();
 
@@ -139,7 +120,7 @@ namespace disposer{
 
 			auto const specialization = iter->second
 				.specialized_values.find(
-					to_std_string(maker.to_text[type]));
+					detail::to_std_string(maker.to_text[type]));
 			auto const end =
 				iter->second.specialized_values.end();
 			if(specialization == end){
@@ -185,23 +166,18 @@ namespace disposer{
 		MakeData const& data,
 		std::string_view location
 	){
-		auto is_input = hana::is_a< input_maker_tag >(maker);
-		auto is_output = hana::is_a< output_maker_tag >(maker);
-		auto is_parameter = hana::is_a< parameter_maker_tag >(maker);
+		(void)location; // Silance GCC ...
 
-		// silance GCC ...
-		(void)is_input; (void)is_output; (void)is_parameter; (void)location;
-
-		if constexpr(is_input){
-			return input_make_data(maker,
-				make_output_info(data.inputs, to_std_string(maker.name)));
-		}else if constexpr(is_output){
+		if constexpr(hana::is_a< input_maker_tag >(maker)){
+			return input_make_data(maker, make_output_info(data.inputs,
+					detail::to_std_string(maker.name)));
+		}else if constexpr(hana::is_a< output_maker_tag >(maker)){
 			return output_make_data(maker);
-		}else if constexpr(is_parameter){
+		}else if constexpr(hana::is_a< parameter_maker_tag >(maker)){
 			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));
 		}else{
-			static_assert(false_c< decltype(maker) >,
+			static_assert(detail::false_c< decltype(maker) >,
 				"maker is not an iop (this is a bug in disposer!)");
 		}
 	}
@@ -280,7 +256,7 @@ namespace disposer{
 			: data(static_cast< MakeData&& >(make_data))
 			, accessory(iop_list, iop_log{
 				location, make_data.log_name,
-				to_std_string_view(make_data.maker.name)}) {}
+				detail::to_std_string_view(make_data.maker.name)}) {}
 
 		MakeData data;
 		iops_accessory< IOP_RefList, I > accessory;

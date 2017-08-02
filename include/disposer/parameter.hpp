@@ -9,11 +9,11 @@
 #ifndef _disposer__parameter__hpp_INCLUDED_
 #define _disposer__parameter__hpp_INCLUDED_
 
-#include "detail/parameter_name.hpp"
 #include "detail/type_index.hpp"
-#include "detail/accessory.hpp"
+#include "detail/to_std_string.hpp"
+#include "detail/to_std_string_view.hpp"
 
-#include "as_text.hpp"
+#include "config_fn.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -23,49 +23,14 @@
 namespace disposer{
 
 
-	namespace impl{
+	/// \brief Hana Tag for \ref parameter_name
+	struct parameter_name_tag{};
 
+	/// \brief Hana Tag for parameter_maker
+	struct parameter_maker_tag{};
 
-		template < typename T >
-		struct is_optional: std::false_type{};
-
-		template < typename T >
-		struct is_optional< std::optional< T > >: std::true_type{};
-
-		template < typename T >
-		constexpr bool is_optional_v = is_optional< T >::value;
-
-
-		struct hana_is_optional_t{
-			template < typename T >
-			constexpr auto operator()(hana::basic_type< T >)const noexcept{
-				if constexpr(is_optional_v< T >){
-					return hana::true_c;
-				}else{
-					return hana::false_c;
-				}
-			}
-		};
-
-		constexpr auto hana_is_optional = hana_is_optional_t{};
-
-
-		struct hana_remove_optional_t{
-			template < typename T >
-			constexpr auto operator()(hana::basic_type< T >)const noexcept{
-				if constexpr(is_optional_v< T >){
-					return hana::type_c< typename T::value_type >;
-				}else{
-					return hana::type_c< T >;
-				}
-			}
-		};
-
-		constexpr auto hana_remove_optional = hana_remove_optional_t{};
-
-
-	}
-
+	/// \brief Hana Tag for parameter
+	struct parameter_tag{};
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class parameter{
@@ -142,7 +107,7 @@ namespace disposer{
 			hana::basic_type< Type > type
 		){
 			if(!maker.enable(accessory, type,
-				to_std_string_view(maker.to_text[type]))) return {};
+				detail::to_std_string_view(maker.to_text[type]))) return {};
 			if(value) return maker.parser(accessory, *value, type);
 			auto const have_default_fn =
 				!maker.default_value_generator.is_void_r(accessory, type);
@@ -164,7 +129,7 @@ namespace disposer{
 			type_value_map_(hana::unpack(hana::transform(types, [&](auto type){
 					auto value = make_value(
 						m.data.maker, m.accessory, m.data.value_map[type],
-						to_std_string(m.data.maker.name), type);
+						detail::to_std_string(m.data.maker.name), type);
 					if(value){
 						m.data.maker.verify_value(m.accessory, *value);
 					}
@@ -204,7 +169,7 @@ namespace disposer{
 		decltype(auto) get(Type const& type)const{
 			if(!is_enabled(type)){
 				throw std::logic_error(io_tools::make_string(
-					"accessed parameter '", to_std_string_view(name),
+					"accessed parameter '", detail::to_std_string_view(name),
 					"' with disabled type [",
 					type_name< typename Type::type >(), "]"
 				));
@@ -231,245 +196,6 @@ namespace disposer{
 	template < typename Types >
 	using default_value_type = typename decltype(
 		hana::unpack(Types{}, default_value_type_impl{}))::type;
-
-
-	/// \brief Provid types for constructing an parameter
-	template <
-		typename ParameterType,
-		typename ValueVerifyFn,
-		typename EnableFn,
-		typename ParserFn,
-		typename DefaultValueFn,
-		typename TypeToText >
-	struct parameter_maker{
-		/// \brief Tag for boost::hana
-		using hana_tag = parameter_maker_tag;
-
-		/// \brief Parameter name as compile time string
-		using name_type = typename ParameterType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::parameter
-		using type = ParameterType;
-
-		/// \brief Possible types of the parameter value
-		static constexpr auto types = type::types;
-
-		/// \brief Function to verify the parameter value
-		verify_value_fn< ValueVerifyFn > verify_value;
-
-		/// \brief Enable function
-		enable_fn< EnableFn > enable;
-
-		/// \brief Parameter parser function
-		parser_fn< ParserFn > parser;
-
-		/// \brief Default value function
-		default_value_fn< DefaultValueFn > default_value_generator;
-
-		/// \brief hana::map from hana::type to hana::string
-		TypeToText to_text;
-	};
-
-
-	template <
-		typename Name,
-		typename Types,
-		typename TypeTransformFn,
-		typename ValueVerifyFn,
-		typename EnableFn,
-		typename ParserFn,
-		typename DefaultValueFn,
-		typename AsText >
-	constexpr auto create_parameter_maker(
-		Name const&,
-		Types const&,
-		type_transform_fn< TypeTransformFn >&&,
-		verify_value_fn< ValueVerifyFn >&& verify_value,
-		enable_fn< EnableFn >&& enable,
-		parser_fn< ParserFn >&& parser,
-		default_value_fn< DefaultValueFn >&& default_value_generator,
-		type_as_text_map< AsText >&&
-	){
-		constexpr auto typelist = to_typelist(Types{});
-
-		constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
-		static_assert(hana::is_subset(keys, typelist),
-			"AsText must contain only types which are also in the parameter's "
-			"type list");
-		static_assert(hana::all_of(typelist, [keys](auto type){
-				return hana::or_(
-					hana::contains(keys, impl::hana_remove_optional(type)),
-					hana::contains(as_text, impl::hana_remove_optional(type))
-				);
-			}),
-			"At least one of the parameter's types has neither a hana::string "
-			"representation in the default disposer as_text-list nor in the "
-			"parameters AsText-list");
-
-		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
-
-		constexpr auto type_parameter =
-			hana::unpack(unpack_types, hana::template_< parameter >);
-
-		constexpr auto type_to_text = hana::unpack(hana::transform(typelist,
-			[](auto type){
-				constexpr auto type_transform =
-					type_transform_fn< TypeTransformFn >{};
-				constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
-				if constexpr(hana::contains(keys, type)){
-					return hana::make_pair(type_transform(type),
-						AsText{}[impl::hana_remove_optional(type)]);
-				}else{
-					return hana::make_pair(type_transform(type),
-						as_text[impl::hana_remove_optional(type)]);
-				}
-			}), hana::make_map);
-
-		constexpr auto text_list = hana::values(type_to_text);
-		static_assert(hana::length(text_list) ==
-			hana::length(hana::to_set(text_list)),
-			"At least two of the parameter types have the same text "
-			"representation, check the parameters AsText-list");
-
-		return parameter_maker<
-				typename decltype(type_parameter)::type,
-				ValueVerifyFn, EnableFn, ParserFn, DefaultValueFn,
-				std::remove_const_t< decltype(type_to_text) >
-			>{
-				std::move(verify_value),
-				std::move(enable),
-				std::move(parser),
-				std::move(default_value_generator),
-				type_to_text
-			};
-	}
-
-
-	template < char ... C >
-	template <
-		typename Types,
-		typename Arg2,
-		typename Arg3,
-		typename Arg4,
-		typename Arg5,
-		typename Arg6,
-		typename Arg7 >
-	constexpr auto parameter_name< C ... >::operator()(
-		Types const& types,
-		Arg2&& arg2,
-		Arg3&& arg3,
-		Arg4&& arg4,
-		Arg5&& arg5,
-		Arg6&& arg6,
-		Arg7&& arg7
-	)const{
-		constexpr auto valid_argument = [](auto const& arg){
-				return hana::is_a< type_transform_fn_tag >(arg)
-					|| hana::is_a< verify_value_fn_tag >(arg)
-					|| hana::is_a< enable_fn_tag >(arg)
-					|| hana::is_a< parser_fn_tag >(arg)
-					|| hana::is_a< default_value_fn_tag >(arg)
-					|| hana::is_a< type_as_text_map_tag >(arg)
-					|| hana::is_a< no_argument_tag >(arg);
-			};
-
-		auto const arg2_valid = valid_argument(arg2);
-		static_assert(arg2_valid, "argument 2 is invalid");
-		auto const arg3_valid = valid_argument(arg3);
-		static_assert(arg3_valid, "argument 3 is invalid");
-		auto const arg4_valid = valid_argument(arg4);
-		static_assert(arg4_valid, "argument 4 is invalid");
-		auto const arg5_valid = valid_argument(arg5);
-		static_assert(arg5_valid, "argument 5 is invalid");
-		auto const arg6_valid = valid_argument(arg6);
-		static_assert(arg6_valid, "argument 6 is invalid");
-		auto const arg7_valid = valid_argument(arg7);
-		static_assert(arg7_valid, "argument 7 is invalid");
-
-		auto args = hana::make_tuple(
-			static_cast< Arg2&& >(arg2),
-			static_cast< Arg3&& >(arg3),
-			static_cast< Arg4&& >(arg4),
-			static_cast< Arg5&& >(arg5),
-			static_cast< Arg6&& >(arg6),
-			static_cast< Arg7&& >(arg7)
-		);
-
-		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(tt, "more than one type_transform_fn");
-		auto vv = hana::count_if(args, hana::is_a< verify_value_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(vv, "more than one verify_value_fn");
-		auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(ef, "more than one enable_fn");
-		auto pf = hana::count_if(args, hana::is_a< parser_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(pf, "more than one parser_fn");
-		auto ct = hana::count_if(args, hana::is_a< default_value_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(ct, "more than one default_value_fn");
-		auto tm = hana::count_if(args, hana::is_a< type_as_text_map_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(tm, "more than one type_as_text_map");
-
-		return create_parameter_maker(
-			(*this),
-			types,
-			get_or_default(std::move(args),
-				hana::is_a< type_transform_fn_tag >,
-				no_type_transform),
-			get_or_default(std::move(args),
-				hana::is_a< verify_value_fn_tag >,
-				verify_value_always),
-			get_or_default(std::move(args),
-				hana::is_a< enable_fn_tag >,
-				enable_always),
-			get_or_default(std::move(args),
-				hana::is_a< parser_fn_tag >,
-				stream_parser),
-			get_or_default(std::move(args),
-				hana::is_a< default_value_fn_tag >,
-				auto_default),
-			get_or_default(std::move(args),
-				hana::is_a< type_as_text_map_tag >,
-				type_as_text())
-		);
-	}
-
-	template < typename Makers >
-	auto check_parameters(
-		std::string const& location,
-		Makers const& makers,
-		parameter_list const& params
-	){
-		auto parameters_names = hana::transform(
-			hana::filter(makers, hana::is_a< parameter_maker_tag >),
-			[](auto const& parameters_maker){
-				return parameters_maker.name;
-			});
-
-		std::set< std::string > parameter_name_list;
-		std::transform(params.begin(), params.end(),
-			std::inserter(parameter_name_list, parameter_name_list.end()),
-			[](auto const& pair){ return pair.first; });
-		hana::for_each(parameters_names,
-			[&parameter_name_list](auto const& name){
-				parameter_name_list.erase(to_std_string(name));
-			});
-
-		for(auto const& param: parameter_name_list){
-			logsys::log([&location, &param](logsys::stdlogb& os){
-				os << location << "parameter("
-					<< param << ") doesn't exist (WARNING)";
-			});
-		}
-	}
 
 
 }

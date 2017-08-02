@@ -14,8 +14,6 @@
 #include "../config_fn.hpp"
 #include "../module.hpp"
 
-#include <string_view>
-
 
 namespace disposer{
 
@@ -54,7 +52,7 @@ namespace disposer{
 			return component_module_maker<
 				std::remove_reference_t< ModuleRegisterFn >
 			>{
-				to_std_string_view(this->value),
+				detail::to_std_string_view(this->value),
 				static_cast< ModuleRegisterFn&& >(module_register_fn)
 			};
 		}

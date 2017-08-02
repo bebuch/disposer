@@ -11,8 +11,9 @@
 
 #include "detail/output_base.hpp"
 #include "detail/type_index.hpp"
-#include "detail/output_name.hpp"
-#include "detail/accessory.hpp"
+#include "detail/to_std_string_view.hpp"
+
+#include "config_fn.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -22,6 +23,15 @@
 
 namespace disposer{
 
+
+	/// \brief Hana Tag for \ref output_name
+	struct output_name_tag{};
+
+	/// \brief Hana Tag for output_maker
+	struct output_maker_tag{};
+
+	/// \brief Hana Tag for output
+	struct output_tag{};
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class output: public output_base{
@@ -121,7 +131,7 @@ namespace disposer{
 			if(!enabled_map_[hana::type_c< V >]){
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
-					"output '", to_std_string_view(name),
+					"output '", detail::to_std_string_view(name),
 					"' put disabled type [", type_name< V >(), "]"
 				));
 			}
@@ -153,7 +163,7 @@ namespace disposer{
 
 		/// \brief Returns the output name
 		virtual std::string_view get_name()const noexcept override{
-			return to_std_string_view(name);
+			return detail::to_std_string_view(name);
 		}
 
 
@@ -247,129 +257,6 @@ namespace disposer{
 		/// are naturally thread safe.
 		std::map< std::size_t, std::vector< value_type > > data_;
 	};
-
-
-	/// \brief Provid types for constructing an output
-	template <
-		typename OutputType,
-		typename EnableFn >
-	struct output_maker{
-		/// \brief Tag for boost::hana
-		using hana_tag = output_maker_tag;
-
-		/// \brief Output name as compile time string
-		using name_type = typename OutputType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::output
-		using type = OutputType;
-
-		/// \brief Enable function
-		enable_fn< EnableFn > enable;
-	};
-
-
-	/// \brief Helper function for \ref output_name::operator()
-	template <
-		typename Name,
-		typename Types,
-		typename TypeTransformFn,
-		typename EnableFn >
-	constexpr auto create_output_maker(
-		Name const&,
-		Types const&,
-		type_transform_fn< TypeTransformFn >&&,
-		enable_fn< EnableFn >&& enable
-	){
-		constexpr auto typelist = to_typelist(Types{});
-
-		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
-
-		constexpr auto type_output =
-			hana::unpack(unpack_types, hana::template_< output >);
-
-		return output_maker<
-			typename decltype(type_output)::type, EnableFn >{
-				std::move(enable)
-			};
-	}
-
-
-	template < char ... C >
-	template <
-		typename Types,
-		typename Arg2,
-		typename Arg3 >
-	constexpr auto output_name< C ... >::operator()(
-		Types const& types,
-		Arg2&& arg2,
-		Arg3&& arg3
-	)const{
-		constexpr auto valid_argument = [](auto const& arg){
-				return hana::is_a< type_transform_fn_tag >(arg)
-					|| hana::is_a< enable_fn_tag >(arg)
-					|| hana::is_a< no_argument_tag >(arg);
-			};
-
-		auto const arg2_valid = valid_argument(arg2);
-		static_assert(arg2_valid, "argument 2 is invalid");
-		auto const arg3_valid = valid_argument(arg3);
-		static_assert(arg3_valid, "argument 3 is invalid");
-
-		auto args = hana::make_tuple(
-			static_cast< Arg2&& >(arg2),
-			static_cast< Arg3&& >(arg3)
-		);
-
-		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(tt, "more than one type_transform_fn");
-		auto ef = hana::count_if(args, hana::is_a< enable_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(ef, "more than one enable_fn");
-
-		return create_output_maker(
-			(*this),
-			types,
-			get_or_default(std::move(args),
-				hana::is_a< type_transform_fn_tag >,
-				no_type_transform),
-			get_or_default(std::move(args),
-				hana::is_a< enable_fn_tag >,
-				enable_always)
-		);
-	}
-
-
-	template < typename Makers >
-	auto invalid_outputs(
-		std::string const& location,
-		Makers const& makers,
-		output_list const& outputs
-	){
-		auto output_names = hana::transform(
-			hana::filter(makers, hana::is_a< output_maker_tag >),
-			[](auto const& output_maker){
-				return output_maker.name;
-			});
-
-		auto output_name_list = outputs;
-		hana::for_each(output_names,
-			[&output_name_list](auto const& name){
-				output_name_list.erase(to_std_string(name));
-			});
-
-		for(auto const& out: output_name_list){
-			logsys::log([&location, &out](logsys::stdlogb& os){
-				os << location << "output("
-					<< out << ") doesn't exist (ERROR)";
-			});
-		}
-		return output_name_list;
-	}
 
 
 }

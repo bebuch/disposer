@@ -10,13 +10,9 @@
 #define _disposer__input__hpp_INCLUDED_
 
 #include "detail/input_base.hpp"
-#include "detail/input_name.hpp"
 #include "detail/output_base.hpp"
-#include "detail/accessory.hpp"
 
 #include "config_fn.hpp"
-
-#include <io_tools/make_string.hpp>
 
 #include <variant>
 #include <optional>
@@ -26,6 +22,15 @@
 
 namespace disposer{
 
+
+	/// \brief Hana Tag for \ref input_name
+	struct input_name_tag{};
+
+	/// \brief Hana Tag for input_maker
+	struct input_maker_tag{};
+
+	/// \brief Hana Tag for input
+	struct input_tag{};
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class input;
@@ -343,151 +348,6 @@ namespace disposer{
 						template apply< T >::type >
 			} ...
 		};
-
-
-	/// \brief Provids types for constructing an input
-	template <
-		typename InputType,
-		typename ConnectionVerifyFn,
-		typename TypeVerifyFn >
-	struct input_maker{
-		/// \brief Tag for boost::hana
-		using hana_tag = input_maker_tag;
-
-		/// \brief Input name as compile time string
-		using name_type = typename InputType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::input
-		using type = InputType;
-
-		/// \brief Function which verifies the connection with an output
-		verify_connection_fn< ConnectionVerifyFn > verify_connection;
-
-		/// \brief Function which verifies the active types
-		verify_type_fn< TypeVerifyFn > verify_type;
-	};
-
-
-	/// \brief Helper function for \ref input_name::operator()
-	template <
-		typename Name,
-		typename Types,
-		typename TypeTransformFn,
-		typename ConnectionVerifyFn,
-		typename TypeVerifyFn >
-	constexpr auto create_input_maker(
-		Name const&,
-		Types const&,
-		type_transform_fn< TypeTransformFn >&&,
-		verify_connection_fn< ConnectionVerifyFn >&& verify_connection,
-		verify_type_fn< TypeVerifyFn >&& verify_type
-	){
-		constexpr auto typelist = to_typelist(Types{});
-
-		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
-
-		constexpr auto type_input =
-			hana::unpack(unpack_types, hana::template_< input >);
-
-		return input_maker< typename decltype(type_input)::type,
-			ConnectionVerifyFn, TypeVerifyFn >{
-				std::move(verify_connection),
-				std::move(verify_type)
-			};
-	}
-
-
-	template < char ... C >
-	template <
-		typename Types,
-		typename Arg2,
-		typename Arg3,
-		typename Arg4 >
-	constexpr auto input_name< C ... >::operator()(
-		Types const& types,
-		Arg2&& arg2,
-		Arg3&& arg3,
-		Arg4&& arg4
-	)const{
-		constexpr auto valid_argument = [](auto const& arg){
-				return hana::is_a< type_transform_fn_tag >(arg)
-					|| hana::is_a< verify_connection_fn_tag >(arg)
-					|| hana::is_a< verify_type_fn_tag >(arg)
-					|| hana::is_a< no_argument_tag >(arg);
-			};
-
-		auto const arg2_valid = valid_argument(arg2);
-		static_assert(arg2_valid, "argument 2 is invalid");
-		auto const arg3_valid = valid_argument(arg3);
-		static_assert(arg3_valid, "argument 3 is invalid");
-		auto const arg4_valid = valid_argument(arg4);
-		static_assert(arg4_valid, "argument 4 is invalid");
-
-		auto args = hana::make_tuple(
-			static_cast< Arg2&& >(arg2),
-			static_cast< Arg3&& >(arg3),
-			static_cast< Arg4&& >(arg4)
-		);
-
-		auto tt = hana::count_if(args, hana::is_a< type_transform_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(tt, "more than one type_transform_fn");
-		auto cv = hana::count_if(args, hana::is_a< verify_connection_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(cv, "more than one verify_connection_fn");
-		auto tv = hana::count_if(args, hana::is_a< verify_type_fn_tag >)
-			<= hana::size_c< 1 >;
-		static_assert(tv, "more than one verify_type_fn");
-
-		return create_input_maker(
-			(*this),
-			types,
-			get_or_default(std::move(args),
-				hana::is_a< type_transform_fn_tag >,
-				no_type_transform),
-			get_or_default(std::move(args),
-				hana::is_a< verify_connection_fn_tag >,
-				required),
-			get_or_default(std::move(args),
-				hana::is_a< verify_type_fn_tag >,
-				verify_type_always)
-		);
-	}
-
-
-	template < typename Makers >
-	auto invalid_inputs(
-		std::string const& location,
-		Makers const& makers,
-		input_list const& inputs
-	){
-		auto input_names = hana::transform(
-			hana::filter(makers, hana::is_a< input_maker_tag >),
-			[](auto const& input_maker){
-				return input_maker.name;
-			});
-
-		std::set< std::string > input_name_list;
-		std::transform(inputs.begin(), inputs.end(),
-			std::inserter(input_name_list, input_name_list.end()),
-			[](auto const& pair){ return pair.first; });
-		hana::for_each(input_names,
-			[&input_name_list](auto const& name){
-				input_name_list.erase(to_std_string(name));
-			});
-
-		for(auto const& in: input_name_list){
-			logsys::log([&location, &in](logsys::stdlogb& os){
-				os << location << "input("
-					<< in << ") doesn't exist (ERROR)";
-			});
-		}
-		return input_name_list;
-	}
 
 
 }

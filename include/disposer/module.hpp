@@ -13,10 +13,13 @@
 #include "detail/module_base.hpp"
 #include "detail/add_log.hpp"
 #include "detail/module_make_data.hpp"
-
-#include "input.hpp"
-#include "output.hpp"
-#include "parameter.hpp"
+#include "detail/accessory.hpp"
+#include "detail/validate_outputs.hpp"
+#include "detail/validate_inputs.hpp"
+#include "detail/validate_parameters.hpp"
+#include "detail/input_name.hpp"
+#include "detail/output_name.hpp"
+#include "detail/parameter_name.hpp"
 
 #include <type_traits>
 #include <atomic>
@@ -228,7 +231,7 @@ namespace disposer{
 			}else if constexpr(std::is_callable_v< ModuleEnableFn const() >){
 				return module_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"module_enable function must be invokable with module& or "
 					"without an argument");
 			}
@@ -241,7 +244,7 @@ namespace disposer{
 				(void)accessory; // silance GCC
 				return module_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"module_enable function must be invokable with module& or "
 					"without an argument");
 			}
@@ -278,7 +281,7 @@ namespace disposer{
 			}else if constexpr(std::is_callable_v< ModuleExecFn() >){
 				return module_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"exec_fn is not invokable with module& and/or id or "
 					"without arguments");
 			}
@@ -300,7 +303,7 @@ namespace disposer{
 			}else if constexpr(std::is_invocable_v< ModuleExecFn >){
 				return module_fn_();
 			}else{
-				static_assert(false_c< Accessory >,
+				static_assert(detail::false_c< Accessory >,
 					"exec_fn is not invokable with module& and/or id or "
 					"without arguments");
 			}
@@ -438,9 +441,9 @@ namespace disposer{
 			// parameters, warn about parameters, throw for inputs and outputs
 			auto const location = data.location();
 			{
-				auto inputs = invalid_inputs(location, makers, data.inputs);
-				auto outputs = invalid_outputs(location, makers, data.outputs);
-				check_parameters(location, makers, data.parameters);
+				auto inputs = validate_inputs(location, makers, data.inputs);
+				auto outputs = validate_outputs(location, makers, data.outputs);
+				validate_parameters(location, makers, data.parameters);
 
 				if(!inputs.empty() || !outputs.empty()){
 					throw std::logic_error(location + "some inputs or "
