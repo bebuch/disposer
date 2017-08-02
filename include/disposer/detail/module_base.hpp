@@ -9,9 +9,10 @@
 #ifndef _disposer__module_base__hpp_INCLUDED_
 #define _disposer__module_base__hpp_INCLUDED_
 
-#include "disposer.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
+
+#include "../disposer.hpp"
 
 #include <functional>
 

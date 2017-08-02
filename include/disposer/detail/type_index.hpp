@@ -12,7 +12,6 @@
 #include <boost/functional/hash.hpp>
 #include <boost/type_index/ctti_type_index.hpp>
 
-
 #include <string>
 
 

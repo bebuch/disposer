@@ -9,12 +9,12 @@
 #ifndef _disposer__input__hpp_INCLUDED_
 #define _disposer__input__hpp_INCLUDED_
 
+#include "detail/input_base.hpp"
+#include "detail/input_name.hpp"
+#include "detail/output_base.hpp"
+#include "detail/accessory.hpp"
+
 #include "config_fn.hpp"
-#include "input_base.hpp"
-#include "input_name.hpp"
-#include "output_base.hpp"
-#include "iop_accessory.hpp"
-#include "merge.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -232,10 +232,10 @@ namespace disposer{
 
 	private:
 		/// \brief Checks to make before object initialization
-		template < typename InputMaker, typename IOP_Accessory >
+		template < typename InputMaker, typename Accessory >
 		static constexpr void verify_maker_data(
 			InputMaker const& maker,
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			std::optional< output_info > const& info
 		){
 			if(info){
@@ -245,12 +245,12 @@ namespace disposer{
 				});
 			}
 
-			maker.verify_connection(iop_accessory, static_cast< bool >(info));
+			maker.verify_connection(accessory, static_cast< bool >(info));
 
 			if(info){
 				hana::for_each(types,
-					[&maker, &iop_accessory, &info](auto const& type){
-						maker.verify_type(iop_accessory, type, *info);
+					[&maker, &accessory, &info](auto const& type){
+						maker.verify_type(accessory, type, *info);
 					});
 			}
 		}

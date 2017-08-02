@@ -10,7 +10,8 @@
 #define _disposer__output_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-#include "config_fn.hpp"
+
+#include "../config_fn.hpp"
 
 
 namespace disposer{

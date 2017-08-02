@@ -9,7 +9,8 @@
 #ifndef _disposer__disposer__hpp_INCLUDED_
 #define _disposer__disposer__hpp_INCLUDED_
 
-#include "component_ptr.hpp"
+#include "detail/component_ptr.hpp"
+
 #include "chain.hpp"
 
 #include <unordered_map>

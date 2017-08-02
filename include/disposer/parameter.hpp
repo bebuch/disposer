@@ -9,10 +9,10 @@
 #ifndef _disposer__parameter__hpp_INCLUDED_
 #define _disposer__parameter__hpp_INCLUDED_
 
-#include "parameter_name.hpp"
-#include "type_index.hpp"
-#include "iop_accessory.hpp"
-#include "merge.hpp"
+#include "detail/parameter_name.hpp"
+#include "detail/type_index.hpp"
+#include "detail/accessory.hpp"
+
 #include "as_text.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -132,22 +132,22 @@ namespace disposer{
 
 		template <
 			typename Maker,
-			typename IOP_Accessory,
+			typename Accessory,
 			typename Type >
 		static std::optional< Type > make_value(
 			Maker const& maker,
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			std::optional< std::string_view > value,
 			std::string const& name,
 			hana::basic_type< Type > type
 		){
-			if(!maker.enable(iop_accessory, type,
+			if(!maker.enable(accessory, type,
 				to_std_string_view(maker.to_text[type]))) return {};
-			if(value) return maker.parser(iop_accessory, *value, type);
+			if(value) return maker.parser(accessory, *value, type);
 			auto const have_default_fn =
-				!maker.default_value_generator.is_void_r(iop_accessory, type);
+				!maker.default_value_generator.is_void_r(accessory, type);
 			if constexpr(have_default_fn){
-				auto value = maker.default_value_generator(iop_accessory, type);
+				auto value = maker.default_value_generator(accessory, type);
 				if(value) return *value;
 			}
 

@@ -9,13 +9,14 @@
 #ifndef _disposer__module__hpp_INCLUDED_
 #define _disposer__module__hpp_INCLUDED_
 
-#include "output_info.hpp"
+#include "detail/output_info.hpp"
+#include "detail/module_base.hpp"
+#include "detail/add_log.hpp"
+#include "detail/module_make_data.hpp"
+
 #include "input.hpp"
 #include "output.hpp"
 #include "parameter.hpp"
-#include "module_base.hpp"
-#include "add_log.hpp"
-#include "module_make_data.hpp"
 
 #include <type_traits>
 #include <atomic>
@@ -34,7 +35,7 @@ namespace disposer{
 
 
 	/// \brief Accessory of a \ref module without log
-	template < typename IOP_List >
+	template < typename List >
 	class module_config{
 	public:
 		/// \brief Constructor
@@ -98,15 +99,15 @@ namespace disposer{
 		}
 
 
-		/// \brief Like IOP_List but with elements in std::reference_wrapper
+		/// \brief Like List but with elements in std::reference_wrapper
 		using iop_ref_list_type =
-			decltype(hana::transform(std::declval< IOP_List& >(), ref{}));
+			decltype(hana::transform(std::declval< List& >(), ref{}));
 
 		/// \brief hana::tuple of references to inputs, outputs and parameters
 		iop_ref_list_type iop_ref_list_;
 
 		/// \brief hana::tuple of the inputs, outputs and parameters
-		IOP_List iop_list_;
+		List iop_list_;
 
 
 		/// \brief std::vector with references to all input's (input_base)
@@ -136,10 +137,10 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during enable/disable calls
-	template < typename IOP_List >
+	template < typename List >
 	class module_accessory
-		: public module_config< IOP_List >
-		, public add_log< module_accessory< IOP_List > >
+		: public module_config< List >
+		, public add_log< module_accessory< List > >
 	{
 	public:
 		/// \brief Constructor
@@ -150,7 +151,7 @@ namespace disposer{
 			MakeData const& data,
 			std::string_view location
 		)
-			: module_config< IOP_List >(
+			: module_config< List >(
 					maker_list, data, location, std::make_index_sequence<
 						decltype(hana::size(maker_list))::value >()
 				)
@@ -170,17 +171,17 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during exec calls
-	template < typename IOP_List >
+	template < typename List >
 	class module_exec_accessory
-		: public module_accessory< IOP_List >
-		, public add_log< module_exec_accessory< IOP_List > >
+		: public module_accessory< List >
+		, public add_log< module_exec_accessory< List > >
 	{
 	private:
 		using log_class =
-			add_log< module_exec_accessory< IOP_List > >;
+			add_log< module_exec_accessory< List > >;
 
 	public:
-		using module_accessory< IOP_List >::module_accessory;
+		using module_accessory< List >::module_accessory;
 
 		using log_class::log;
 		using log_class::exception_catching_log;
@@ -199,9 +200,9 @@ namespace disposer{
 	struct to_exec_accessory;
 
 	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
-	template < typename IOP_List >
-	struct to_exec_accessory< module_accessory< IOP_List > >{
-		using type = module_exec_accessory< IOP_List >;
+	template < typename List >
+	struct to_exec_accessory< module_accessory< List > >{
+		using type = module_exec_accessory< List >;
 	};
 
 	/// \brief Transfrom a \ref module_accessory to a \ref module_exec_accessory
@@ -312,14 +313,14 @@ namespace disposer{
 
 
 	/// \brief The actual module type
-	template < typename IOP_List, typename EnableFn >
+	template < typename List, typename EnableFn >
 	class module: public module_base{
 	public:
 		/// \brief Type for enable_fn
-		using accessory_type = module_accessory< IOP_List >;
+		using accessory_type = module_accessory< List >;
 
 		/// \brief Type for exec_fn
-		using exec_accessory_type = module_exec_accessory< IOP_List >;
+		using exec_accessory_type = module_exec_accessory< List >;
 
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t

@@ -6,10 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__config_merge_parameter__hpp_INCLUDED_
-#define _disposer__config_merge_parameter__hpp_INCLUDED_
+#ifndef _disposer__embedded_config__hpp_INCLUDED_
+#define _disposer__embedded_config__hpp_INCLUDED_
 
-#include "parse.hpp"
+#include "parse_config.hpp"
 
 #include <map>
 #include <set>
@@ -38,7 +38,7 @@ namespace disposer{
 
 
 
-	namespace types::merge{
+	namespace types::embedded_config{
 
 
 		struct component{
@@ -77,7 +77,9 @@ namespace disposer{
 	}
 
 
-	types::merge::config merge(types::parse::config&& config);
+	types::embedded_config::config create_embedded_config(
+		types::parse::config&& config
+	);
 
 
 }

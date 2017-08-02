@@ -9,9 +9,9 @@
 #ifndef _disposer__chain__hpp_INCLUDED_
 #define _disposer__chain__hpp_INCLUDED_
 
-#include "module_ptr.hpp"
-#include "id_generator.hpp"
-#include "merge.hpp"
+#include "detail/module_ptr.hpp"
+#include "detail/id_generator.hpp"
+#include "detail/embedded_config.hpp"
 
 #include <mutex>
 #include <string>
@@ -36,7 +36,7 @@ namespace disposer{
 		/// \param generate_id Reference to a id_generator
 		chain(
 			module_maker_list const& maker_list,
-			types::merge::chain const& config_chain,
+			types::embedded_config::chain const& config_chain,
 			id_generator& generate_id
 		);
 

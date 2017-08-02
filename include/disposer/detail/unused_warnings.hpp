@@ -6,21 +6,17 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__create_chain_modules__hpp_INCLUDED_
-#define _disposer__create_chain_modules__hpp_INCLUDED_
+#ifndef _disposer__config_unused_warnings__hpp_INCLUDED_
+#define _disposer__config_unused_warnings__hpp_INCLUDED_
 
-#include "module_ptr.hpp"
-#include "merge.hpp"
+#include "parse_config.hpp"
 
 
 namespace disposer{
 
 
-	/// \brief Creating a chain as given by the config
-	std::vector< module_ptr > create_chain_modules(
-		module_maker_list const& maker_list,
-		types::merge::chain const& config_chain
-	);
+	/// \brief Warn about unused stuff in the parsed config via the log
+	void unused_warnings(types::parse::config const& config);
 
 
 }

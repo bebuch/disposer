@@ -9,11 +9,10 @@
 #ifndef _disposer__output__hpp_INCLUDED_
 #define _disposer__output__hpp_INCLUDED_
 
-#include "output_base.hpp"
-#include "type_index.hpp"
-#include "output_name.hpp"
-#include "iop_accessory.hpp"
-#include "merge.hpp"
+#include "detail/output_base.hpp"
+#include "detail/type_index.hpp"
+#include "detail/output_name.hpp"
+#include "detail/accessory.hpp"
 
 #include <io_tools/make_string.hpp>
 
@@ -123,8 +122,7 @@ namespace disposer{
 				using namespace std::literals::string_literals;
 				throw std::logic_error(io_tools::make_string(
 					"output '", to_std_string_view(name),
-					"' put disabled type [",
-					type_name< V >(), "]"
+					"' put disabled type [", type_name< V >(), "]"
 				));
 			}
 

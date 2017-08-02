@@ -9,7 +9,7 @@
 #ifndef _disposer__component_base__hpp_INCLUDED_
 #define _disposer__component_base__hpp_INCLUDED_
 
-#include "disposer.hpp"
+#include "../disposer.hpp"
 
 
 namespace disposer{

@@ -10,8 +10,9 @@
 #define _disposer__module_name__hpp_INCLUDED_
 
 #include "ct_name.hpp"
-#include "config_fn.hpp"
-#include "module.hpp"
+
+#include "../config_fn.hpp"
+#include "../module.hpp"
 
 #include <string_view>
 

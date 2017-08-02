@@ -9,7 +9,7 @@
 #ifndef _disposer__module_make_data__hpp_INCLUDED_
 #define _disposer__module_make_data__hpp_INCLUDED_
 
-#include "merge.hpp"
+#include "embedded_config.hpp"
 
 
 namespace disposer{

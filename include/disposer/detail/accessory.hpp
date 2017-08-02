@@ -6,15 +6,15 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__iop_accessory__hpp_INCLUDED_
-#define _disposer__iop_accessory__hpp_INCLUDED_
+#ifndef _disposer__accessory__hpp_INCLUDED_
+#define _disposer__accessory__hpp_INCLUDED_
 
 #include "add_log.hpp"
 #include "input_name.hpp"
 #include "output_name.hpp"
 #include "parameter_name.hpp"
 #include "output_info.hpp"
-#include "merge.hpp"
+#include "embedded_config.hpp"
 
 #include <iostream>
 
@@ -193,12 +193,12 @@ namespace disposer{
 		(void)is_input; (void)is_output; (void)is_parameter; (void)location;
 
 		if constexpr(is_input){
-			return disposer::input_make_data(maker,
+			return input_make_data(maker,
 				make_output_info(data.inputs, to_std_string(maker.name)));
 		}else if constexpr(is_output){
-			return disposer::output_make_data(maker);
+			return output_make_data(maker);
 		}else if constexpr(is_parameter){
-			return disposer::parameter_make_data(maker,
+			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));
 		}else{
 			static_assert(false_c< decltype(maker) >,

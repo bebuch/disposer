@@ -6,9 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
+#include <disposer/detail/module_base.hpp>
+#include <disposer/detail/create_chain_modules.hpp>
+
 #include <disposer/chain.hpp>
-#include <disposer/module_base.hpp>
-#include <disposer/create_chain_modules.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -30,7 +31,7 @@ namespace disposer{
 
 	chain::chain(
 		module_maker_list const& maker_list,
-		types::merge::chain const& config_chain,
+		types::embedded_config::chain const& config_chain,
 		id_generator& generate_id
 	):
 		name(config_chain.name),

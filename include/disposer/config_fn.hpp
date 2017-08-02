@@ -9,7 +9,7 @@
 #ifndef _disposer__config_fn__hpp_INCLUDED_
 #define _disposer__config_fn__hpp_INCLUDED_
 
-#include "output_info.hpp"
+#include "detail/output_info.hpp"
 
 #include <logsys/log.hpp>
 #include <logsys/stdlogb.hpp>
@@ -118,36 +118,36 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(IOP_Accessory const&,
+				std::is_callable_v< Fn const(Accessory const&,
 					hana::basic_type< T >), bool >,
 				"Wrong function signature, expected: "
 				"bool f(auto const& iop, hana::basic_type< T > type)"
 			);
 #else
 			static_assert(
-				std::is_invocable_r_v< bool, Fn const, IOP_Accessory const&,
+				std::is_invocable_r_v< bool, Fn const, Accessory const&,
 					hana::basic_type< T > >,
 				"Wrong function signature, expected: "
 				"bool f(auto const& iop, hana::basic_type< T > type)"
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< hana::basic_type< T > const >()
 			));
 		}
 
 		/// \brief Operator for outputs
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr bool operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			return iop_accessory.log(
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			return accessory.log(
 				[](logsys::stdlogb& os, bool const* enabled){
 					os << "type ";
 					if(enabled){
@@ -162,18 +162,18 @@ namespace disposer{
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
 				}, [&]()->bool{
-					return std::invoke(fn_, iop_accessory, type);
+					return std::invoke(fn_, accessory, type);
 				});
 		}
 
 		/// \brief Operator for parameters
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr bool operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			hana::basic_type< T > type,
 			std::string_view name
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			return iop_accessory.log(
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			return accessory.log(
 				[name](logsys::stdlogb& os, bool const* enabled){
 					os << "type ";
 					if(enabled){
@@ -188,7 +188,7 @@ namespace disposer{
 					os << " " << name << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
 				}, [&]()->bool{
-					return std::invoke(fn_, iop_accessory, type);
+					return std::invoke(fn_, accessory, type);
 				});
 		}
 
@@ -198,41 +198,41 @@ namespace disposer{
 
 
 	struct enable_always_t{
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr bool operator()(
-			IOP_Accessory const&, hana::basic_type< T >
+			Accessory const&, hana::basic_type< T >
 		)const noexcept{ return true; }
 	};
 
 	constexpr auto enable_always = enable_fn< enable_always_t >{};
 
 
-	template < typename IOP_Name >
+	template < typename Name >
 	struct enable_by_transformed_types_of_t{
-		template < typename IOP_Accessory, typename Type >
-		constexpr auto operator()(IOP_Accessory const& iop, Type type)const{
-			auto const& other = iop(IOP_Name{});
+		template < typename Accessory, typename Type >
+		constexpr auto operator()(Accessory const& iop, Type type)const{
+			auto const& other = iop(Name{});
 			return other.is_enabled(other.type_transform(type));
 		}
 	};
 
-	template < typename IOP_Name >
-	constexpr auto enable_by_transformed_types_of(IOP_Name const&){
-		return enable_fn(enable_by_transformed_types_of_t< IOP_Name >{});
+	template < typename Name >
+	constexpr auto enable_by_transformed_types_of(Name const&){
+		return enable_fn(enable_by_transformed_types_of_t< Name >{});
 	}
 
 
-	template < typename IOP_Name >
+	template < typename Name >
 	struct enable_by_types_of_t{
-		template < typename IOP_Accessory, typename Type >
-		constexpr auto operator()(IOP_Accessory const& iop, Type type)const{
-			return iop(IOP_Name{}).is_subtype_enabled(type);
+		template < typename Accessory, typename Type >
+		constexpr auto operator()(Accessory const& iop, Type type)const{
+			return iop(Name{}).is_subtype_enabled(type);
 		}
 	};
 
-	template < typename IOP_Name >
-	constexpr auto enable_by_types_of(IOP_Name const&){
-		return enable_fn(enable_by_types_of_t< IOP_Name >{});
+	template < typename Name >
+	constexpr auto enable_by_types_of(Name const&){
+		return enable_fn(enable_by_types_of_t< Name >{});
 	}
 
 
@@ -257,34 +257,34 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory >
+		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(IOP_Accessory const&, bool) >,
+				std::is_callable_v< Fn const(Accessory const&, bool) >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, bool connected)"
 			);
 #else
 			static_assert(
-				std::is_invocable_v< Fn const, IOP_Accessory const&, bool >,
+				std::is_invocable_v< Fn const, Accessory const&, bool >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, bool connected)"
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< bool >()
 			));
 		}
 
 
-		template < typename IOP_Accessory >
+		template < typename Accessory >
 		constexpr void operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			bool connected
-		)const noexcept(calc_noexcept< IOP_Accessory >()){
-			iop_accessory.log([connected](logsys::stdlogb& os){
+		)const noexcept(calc_noexcept< Accessory >()){
+			accessory.log([connected](logsys::stdlogb& os){
 					os << "verified ";
 					if(connected){
 						os << "enabled";
@@ -292,7 +292,7 @@ namespace disposer{
 						os << "disabled";
 					}
 					os << " connection";
-				}, [&]{ std::invoke(fn_, iop_accessory, connected); });
+				}, [&]{ std::invoke(fn_, accessory, connected); });
 		}
 
 	private:
@@ -301,8 +301,8 @@ namespace disposer{
 
 
 	struct required_t{
-		template < typename IOP_Accessory >
-		constexpr void operator()(IOP_Accessory const&, bool connected)const{
+		template < typename Accessory >
+		constexpr void operator()(Accessory const&, bool connected)const{
 			if(!connected) throw std::logic_error("input is required");
 		}
 	};
@@ -311,8 +311,8 @@ namespace disposer{
 
 
 	struct optional_t{
-		template < typename IOP_Accessory >
-		constexpr void operator()(IOP_Accessory const&, bool)const noexcept{}
+		template < typename Accessory >
+		constexpr void operator()(Accessory const&, bool)const noexcept{}
 	};
 
 	constexpr auto optional = verify_connection_fn< optional_t >{};
@@ -339,11 +339,11 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(IOP_Accessory const&,
+				std::is_callable_v< Fn const(Accessory const&,
 					hana::basic_type< T >, output_info const&) >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, hana::basic_type< T > type, "
@@ -351,7 +351,7 @@ namespace disposer{
 			);
 #else
 			static_assert(
-				std::is_invocable_v< Fn const, IOP_Accessory const&,
+				std::is_invocable_v< Fn const, Accessory const&,
 					hana::basic_type< T >, output_info const& >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, hana::basic_type< T > type, "
@@ -359,19 +359,19 @@ namespace disposer{
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< hana::basic_type< T > const >(),
 				std::declval< output_info const& >()
 			));
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr void operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			hana::basic_type< T > type,
 			output_info const& info
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			iop_accessory.log(
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			accessory.log(
 				[&info, type](logsys::stdlogb& os){
 					os << "verified ";
 					if(info.is_enabled(type)){
@@ -381,7 +381,7 @@ namespace disposer{
 					}
 					os << " type ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				}, [&]{ std::invoke(fn_, iop_accessory, type, info); });
+				}, [&]{ std::invoke(fn_, accessory, type, info); });
 		}
 
 	private:
@@ -390,9 +390,9 @@ namespace disposer{
 
 
 	struct verify_type_always_t{
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr void operator()(
-			IOP_Accessory const& /* iop_accessory */,
+			Accessory const& /* accessory */,
 			hana::basic_type< T > /*type*/,
 			output_info const& /*info*/
 		)const noexcept{}
@@ -423,37 +423,37 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(IOP_Accessory const&, T const&) >,
+				std::is_callable_v< Fn const(Accessory const&, T const&) >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, auto const& value)"
 			);
 #else
 			static_assert(
-				std::is_invocable_v< Fn const, IOP_Accessory const&, T const& >,
+				std::is_invocable_v< Fn const, Accessory const&, T const& >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, auto const& value)"
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< T const >()
 			));
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr void operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			T const& value
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			iop_accessory.log(
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			accessory.log(
 				[](logsys::stdlogb& os){
 					os << "verified value of type ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				}, [&]{ std::invoke(fn_, iop_accessory, value); });
+				}, [&]{ std::invoke(fn_, accessory, value); });
 		}
 
 	private:
@@ -461,9 +461,9 @@ namespace disposer{
 	};
 
 	struct verify_value_always_t{
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr void operator()(
-			IOP_Accessory const& /* iop_accessory */,
+			Accessory const& /* accessory */,
 			T const& /*value*/
 		)const noexcept{}
 	};
@@ -493,11 +493,11 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 #if __clang__
 			static_assert(
-				std::is_callable_v< Fn const(IOP_Accessory const&,
+				std::is_callable_v< Fn const(Accessory const&,
 					std::string_view, hana::basic_type< T >), T >,
 				"Wrong function signature, expected: "
 				"T f(auto const& iop, std::string_view value, "
@@ -505,7 +505,7 @@ namespace disposer{
 			);
 #else
 			static_assert(
-				std::is_invocable_r_v< T, Fn const, IOP_Accessory const&,
+				std::is_invocable_r_v< T, Fn const, Accessory const&,
 					std::string_view, hana::basic_type< T > >,
 				"Wrong function signature, expected: "
 				"T f(auto const& iop, std::string_view value, "
@@ -513,19 +513,19 @@ namespace disposer{
 			);
 #endif
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< std::string_view >(),
 				std::declval< hana::basic_type< T > >()
 			));
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr T operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			std::string_view value,
 			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			return iop_accessory.log(
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			return accessory.log(
 				[](logsys::stdlogb& os, T const* value){
 					os << "parsed value";
 					if(value){
@@ -535,7 +535,7 @@ namespace disposer{
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
 				}, [&]()->T{
-					return std::invoke(fn_, iop_accessory, value, type);
+					return std::invoke(fn_, accessory, value, type);
 				});
 		}
 
@@ -558,9 +558,9 @@ namespace disposer{
 			}
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		T operator()(
-			IOP_Accessory const& /*iop_accessory*/,
+			Accessory const& /*accessory*/,
 			std::string_view value,
 			hana::basic_type< T > type
 		)const{
@@ -590,13 +590,13 @@ namespace disposer{
 			}
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		std::optional< T > operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			std::string_view value,
 			hana::basic_type< std::optional< T > >
 		)const{
-			return (*this)(iop_accessory, value, hana::type_c< T >);
+			return (*this)(accessory, value, hana::type_c< T >);
 		}
 	};
 
@@ -624,19 +624,19 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool is_invocable_v()noexcept{
-			return std::is_invocable_v< Fn const, IOP_Accessory const&,
+			return std::is_invocable_v< Fn const, Accessory const&,
 				hana::basic_type< T > >;
 		}
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool is_void_r_v()noexcept{
-			if constexpr(is_invocable_v< IOP_Accessory, T >()){
+			if constexpr(is_invocable_v< Accessory, T >()){
 				return std::is_void_v< std::invoke_result_t< Fn const,
-					IOP_Accessory const&, hana::basic_type< T > > >;
+					Accessory const&, hana::basic_type< T > > >;
 			}else{
 				return false;
 			}
@@ -644,22 +644,22 @@ namespace disposer{
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr auto is_void_r(
-			IOP_Accessory const&, hana::basic_type< T >
+			Accessory const&, hana::basic_type< T >
 		)noexcept{
-			if constexpr(is_void_r_v< IOP_Accessory, T >()){
+			if constexpr(is_void_r_v< Accessory, T >()){
 				return std::true_type{};
 			}else{
 				return std::false_type{};
 			}
 		}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(std::is_invocable_r_v< std::optional< T >, Fn const,
-				IOP_Accessory const&, hana::basic_type< T > >
-				|| is_void_r_v< IOP_Accessory, T >(),
+				Accessory const&, hana::basic_type< T > >
+				|| is_void_r_v< Accessory, T >(),
 				"Wrong function signature, expected: "
 				"std::optional< T > "
 				"f(auto const& iop, hana::basic_type< T > type) or"
@@ -667,18 +667,18 @@ namespace disposer{
 			);
 
 			return noexcept(std::declval< Fn const >()(
-				std::declval< IOP_Accessory const >(),
+				std::declval< Accessory const >(),
 				std::declval< hana::basic_type< T > const >()
 			));
 		}
 
 		/// \brief Operator for outputs
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr std::optional< T > operator()(
-			IOP_Accessory const& iop_accessory,
+			Accessory const& accessory,
 			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< IOP_Accessory, T >()){
-			return iop_accessory.log([](logsys::stdlogb& os, T const* value){
+		)const noexcept(calc_noexcept< Accessory, T >()){
+			return accessory.log([](logsys::stdlogb& os, T const* value){
 					if(value){
 						os << "generated default value: ";
 						print_if_supported(os, *value);
@@ -688,7 +688,7 @@ namespace disposer{
 					os << " [" << type_index::type_id< T >().pretty_name()
 						<< "]";
 				}, [&]()->T{
-					return std::invoke(fn_, iop_accessory, type);
+					return std::invoke(fn_, accessory, type);
 				});
 		}
 
@@ -699,14 +699,14 @@ namespace disposer{
 
 
 	struct auto_default_t{
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr void operator()(
-			IOP_Accessory const&, hana::basic_type< T >
+			Accessory const&, hana::basic_type< T >
 		)const noexcept{}
 
-		template < typename IOP_Accessory, typename T >
+		template < typename Accessory, typename T >
 		constexpr std::optional< T > operator()(
-			IOP_Accessory const&, hana::basic_type< std::optional< T > >
+			Accessory const&, hana::basic_type< std::optional< T > >
 		)const noexcept{ return {}; }
 	};
 

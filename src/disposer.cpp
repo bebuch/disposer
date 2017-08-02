@@ -6,13 +6,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
+#include <disposer/detail/check_semantic.hpp>
+#include <disposer/detail/unused_warnings.hpp>
+#include <disposer/detail/embedded_config.hpp>
+#include <disposer/detail/module_base.hpp>
+#include <disposer/detail/component_base.hpp>
+#include <disposer/detail/component_make_data.hpp>
+
 #include <disposer/disposer.hpp>
-#include <disposer/check_semantic.hpp>
-#include <disposer/unused_warnings.hpp>
-#include <disposer/merge.hpp>
-#include <disposer/module_base.hpp>
-#include <disposer/component_base.hpp>
-#include <disposer/component_make_data.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -45,7 +46,7 @@ namespace disposer{ namespace{
 
 	auto create_components(
 		component_maker_list const& maker_list,
-		types::merge::components_config&& config
+		types::embedded_config::components_config&& config
 	){
 		std::unordered_map< std::string, component_ptr > components;
 
@@ -71,7 +72,7 @@ namespace disposer{ namespace{
 
 	auto create_chains(
 		module_maker_list const& maker_list,
-		types::merge::chains_config&& config
+		types::embedded_config::chains_config&& config
 	){
 		std::unordered_set< std::string > inactive_chains;
 		std::unordered_map< std::string, chain > chains;
@@ -206,21 +207,21 @@ namespace disposer{
 				os << "looked for unused stuff and warned about it";
 			}, [&config]{ unused_warnings(config); });
 
-		auto merged_config = logsys::log(
-			[](logsys::stdlogb& os){ os << "merged config"; },
-			[&config]{ return merge(std::move(config)); });
+		auto embedded_config = logsys::log(
+			[](logsys::stdlogb& os){ os << "created embedded config"; },
+			[&config]{ return create_embedded_config(std::move(config)); });
 
 		logsys::log([](logsys::stdlogb& os){ os << "created components"; },
-			[this, &merged_config]{
+			[this, &embedded_config]{
 				components_ = create_components(
-					component_maker_list_, std::move(merged_config.components));
+					component_maker_list_, std::move(embedded_config.components));
 			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "created chains"; },
-			[this, &merged_config]{
+			[this, &embedded_config]{
 				std::tie(inactive_chains_, chains_, id_generators_) =
 					create_chains(module_maker_list_,
-						std::move(merged_config.chains));
+						std::move(embedded_config.chains));
 			});
 	}
 

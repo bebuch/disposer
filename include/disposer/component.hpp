@@ -9,12 +9,13 @@
 #ifndef _disposer__component__hpp_INCLUDED_
 #define _disposer__component__hpp_INCLUDED_
 
+#include "detail/component_base.hpp"
+#include "detail/component_make_data.hpp"
+#include "detail/module_name.hpp"
+#include "detail/add_log.hpp"
+
 #include "parameter.hpp"
-#include "component_base.hpp"
-#include "component_make_data.hpp"
 #include "module.hpp"
-#include "module_name.hpp"
-#include "add_log.hpp"
 
 #include <type_traits>
 #include <atomic>
@@ -24,7 +25,7 @@ namespace disposer{
 
 
 	/// \brief Accessory of a \ref component without log
-	template < typename IOP_List >
+	template < typename List >
 	class component_config{
 	public:
 		/// \brief Constructor
@@ -85,23 +86,23 @@ namespace disposer{
 		}
 
 
-		/// \brief Like IOP_List but with elements in std::reference_wrapper
+		/// \brief Like List but with elements in std::reference_wrapper
 		using iop_ref_list_type =
-			decltype(hana::transform(std::declval< IOP_List& >(), ref{}));
+			decltype(hana::transform(std::declval< List& >(), ref{}));
 
 		/// \brief hana::tuple of references to inputs, outputs and parameters
 		iop_ref_list_type iop_ref_list_;
 
 		/// \brief hana::tuple of the inputs, outputs and parameters
-		IOP_List iop_list_;
+		List iop_list_;
 	};
 
 
 	/// \brief Accessory of a component
-	template < typename IOP_List >
+	template < typename List >
 	class component_accessory
-		: public component_config< IOP_List >
-		, public add_log< component_accessory< IOP_List > >
+		: public component_config< List >
+		, public add_log< component_accessory< List > >
 	{
 	public:
 		/// \brief Constructor
@@ -113,7 +114,7 @@ namespace disposer{
 			MakeData const& data,
 			std::string_view location
 		)
-			: component_config< IOP_List >(
+			: component_config< List >(
 					maker_list, data, location, std::make_index_sequence<
 						decltype(hana::size(maker_list))::value >()
 				)
@@ -178,11 +179,11 @@ namespace disposer{
 
 
 	/// \brief The actual component type
-	template < typename IOP_List, typename ComponentFn >
+	template < typename List, typename ComponentFn >
 	class component: public component_base{
 	public:
 		/// \brief Type for exec_fn
-		using accessory_type = component_accessory< IOP_List >;
+		using accessory_type = component_accessory< List >;
 
 
 // TODO: remove result_of-version as soon as libc++ supports invoke_result_t

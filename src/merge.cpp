@@ -6,7 +6,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/merge.hpp>
+#include <disposer/detail/embedded_config.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -27,7 +27,7 @@ namespace disposer{ namespace{
 	}
 
 
-	auto merge_parameters(
+	auto embedded_config_parameters(
 		param_sets_map const& sets,
 		types::parse::parameters&& params
 	){
@@ -85,37 +85,37 @@ namespace disposer{ namespace{
 	}
 
 
-	auto merge_components(
+	auto embedded_config_components(
 		param_sets_map const& sets,
 		types::parse::components&& components
 	){
-		types::merge::components_config result;
+		types::embedded_config::components_config result;
 		for(auto& component: components){
 			result.push_back({
 				std::move(component.name),
 				std::move(component.type_name),
-				merge_parameters(sets, std::move(component.parameters))
+				embedded_config_parameters(sets, std::move(component.parameters))
 			});
 		}
 		return result;
 	}
 
-	auto merge_chains(
+	auto embedded_config_chains(
 		param_sets_map const& sets,
 		types::parse::chains&& chains
 	){
-		types::merge::chains_config result;
+		types::embedded_config::chains_config result;
 		for(auto& chain: chains){
-			auto& result_chain = result.emplace_back(types::merge::chain{
+			auto& result_chain = result.emplace_back(types::embedded_config::chain{
 				std::move(chain.name),
 				chain.id_generator.value_or("default"),
 				{}
 			});
 
 			for(auto& module: chain.modules){
-				result_chain.modules.emplace_back(types::merge::module{
+				result_chain.modules.emplace_back(types::embedded_config::module{
 					std::move(module.type_name),
-					merge_parameters(sets, std::move(module.parameters)),
+					embedded_config_parameters(sets, std::move(module.parameters)),
 					std::move(module.inputs),
 					std::move(module.outputs)
 				});
@@ -131,11 +131,13 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	types::merge::config merge(types::parse::config&& config){
+	types::embedded_config::config create_embedded_config(
+		types::parse::config&& config
+	){
 		auto sets = map_name_to_set(config.sets);
 		return {
-			merge_components(sets, std::move(config.components)),
-			merge_chains(sets, std::move(config.chains))
+			embedded_config_components(sets, std::move(config.components)),
+			embedded_config_chains(sets, std::move(config.chains))
 		};
 	}
 
