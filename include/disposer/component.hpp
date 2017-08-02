@@ -10,13 +10,15 @@
 #define _disposer__component__hpp_INCLUDED_
 
 #include "detail/component_base.hpp"
-#include "detail/component_make_data.hpp"
 #include "detail/module_name.hpp"
-#include "detail/add_log.hpp"
-#include "detail/validate_parameters.hpp"
 
 #include "parameter.hpp"
 #include "module.hpp"
+
+#include "config/component_make_data.hpp"
+#include "config/validate_parameters.hpp"
+
+#include "tool/add_log.hpp"
 
 #include <type_traits>
 #include <atomic>

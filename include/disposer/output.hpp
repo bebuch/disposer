@@ -10,10 +10,11 @@
 #define _disposer__output__hpp_INCLUDED_
 
 #include "detail/output_base.hpp"
-#include "detail/type_index.hpp"
-#include "detail/to_std_string_view.hpp"
 
 #include "config_fn.hpp"
+
+#include "tool/type_index.hpp"
+#include "tool/to_std_string_view.hpp"
 
 #include <io_tools/make_string.hpp>
 

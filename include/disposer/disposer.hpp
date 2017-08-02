@@ -9,7 +9,7 @@
 #ifndef _disposer__disposer__hpp_INCLUDED_
 #define _disposer__disposer__hpp_INCLUDED_
 
-#include "detail/component_ptr.hpp"
+#include "tool/component_ptr.hpp"
 
 #include "chain.hpp"
 

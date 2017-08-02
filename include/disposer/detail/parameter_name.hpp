@@ -9,8 +9,9 @@
 #ifndef _disposer__parameter_name__hpp_INCLUDED_
 #define _disposer__parameter_name__hpp_INCLUDED_
 
-#include "ct_name.hpp"
 #include "parameter_maker.hpp"
+
+#include "../tool/ct_name.hpp"
 
 #include <sstream>
 #include <iostream>
@@ -19,6 +20,7 @@
 
 
 namespace disposer{
+
 
 	template < char ... C >
 	struct parameter_name: ct_name< C ... >{

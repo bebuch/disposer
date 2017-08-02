@@ -11,15 +11,17 @@
 
 #include "detail/output_info.hpp"
 #include "detail/module_base.hpp"
-#include "detail/add_log.hpp"
-#include "detail/module_make_data.hpp"
-#include "detail/accessory.hpp"
-#include "detail/validate_outputs.hpp"
-#include "detail/validate_inputs.hpp"
-#include "detail/validate_parameters.hpp"
 #include "detail/input_name.hpp"
 #include "detail/output_name.hpp"
 #include "detail/parameter_name.hpp"
+#include "detail/accessory.hpp"
+
+#include "config/module_make_data.hpp"
+#include "config/validate_outputs.hpp"
+#include "config/validate_inputs.hpp"
+#include "config/validate_parameters.hpp"
+
+#include "tool/add_log.hpp"
 
 #include <type_traits>
 #include <atomic>

@@ -9,8 +9,8 @@
 #ifndef _disposer__output_base__hpp_INCLUDED_
 #define _disposer__output_base__hpp_INCLUDED_
 
-#include "any_type.hpp"
-#include "type_index.hpp"
+#include "../tool/any_type.hpp"
+#include "../tool/type_index.hpp"
 
 #include <boost/hana.hpp>
 

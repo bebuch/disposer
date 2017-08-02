@@ -7,9 +7,10 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include <disposer/detail/module_base.hpp>
-#include <disposer/detail/create_chain_modules.hpp>
 
 #include <disposer/chain.hpp>
+
+#include <disposer/config/create_chain_modules.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>

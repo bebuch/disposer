@@ -6,12 +6,13 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/detail/check_semantic.hpp>
-#include <disposer/detail/unused_warnings.hpp>
-#include <disposer/detail/embedded_config.hpp>
 #include <disposer/detail/module_base.hpp>
 #include <disposer/detail/component_base.hpp>
-#include <disposer/detail/component_make_data.hpp>
+
+#include <disposer/config/component_make_data.hpp>
+#include <disposer/config/check_semantic.hpp>
+#include <disposer/config/unused_warnings.hpp>
+#include <disposer/config/embedded_config.hpp>
 
 #include <disposer/disposer.hpp>
 

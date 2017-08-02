@@ -9,8 +9,9 @@
 #ifndef _disposer__create_chain_modules__hpp_INCLUDED_
 #define _disposer__create_chain_modules__hpp_INCLUDED_
 
-#include "module_ptr.hpp"
 #include "embedded_config.hpp"
+
+#include "../tool/module_ptr.hpp"
 
 
 namespace disposer{

@@ -9,9 +9,11 @@
 #ifndef _disposer__chain__hpp_INCLUDED_
 #define _disposer__chain__hpp_INCLUDED_
 
-#include "detail/module_ptr.hpp"
 #include "detail/id_generator.hpp"
-#include "detail/embedded_config.hpp"
+
+#include "config/embedded_config.hpp"
+
+#include "tool/module_ptr.hpp"
 
 #include <mutex>
 #include <string>

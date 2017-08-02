@@ -13,40 +13,10 @@
 #include "../as_text.hpp"
 #include "../config_fn.hpp"
 
-#include <optional>
+#include "../tool/remove_optional.hpp"
 
 
 namespace disposer{
-
-
-	namespace detail{
-
-
-		template < typename T >
-		struct is_optional: std::false_type{};
-
-		template < typename T >
-		struct is_optional< std::optional< T > >: std::true_type{};
-
-		template < typename T >
-		constexpr bool is_optional_v = is_optional< T >::value;
-
-
-		struct hana_remove_optional_t{
-			template < typename T >
-			constexpr auto operator()(hana::basic_type< T >)const noexcept{
-				if constexpr(is_optional_v< T >){
-					return hana::type_c< typename T::value_type >;
-				}else{
-					return hana::type_c< T >;
-				}
-			}
-		};
-
-		constexpr auto hana_remove_optional = hana_remove_optional_t{};
-
-
-	}
 
 
 	/// \brief Provid types for constructing an parameter
@@ -117,8 +87,8 @@ namespace disposer{
 			"type list");
 		static_assert(hana::all_of(typelist, [keys](auto type){
 				return hana::or_(
-					hana::contains(keys, detail::hana_remove_optional(type)),
-					hana::contains(as_text, detail::hana_remove_optional(type))
+					hana::contains(keys, detail::remove_optional(type)),
+					hana::contains(as_text, detail::remove_optional(type))
 				);
 			}),
 			"At least one of the parameter's types has neither a hana::string "
@@ -138,10 +108,10 @@ namespace disposer{
 				constexpr auto keys = hana::to_tuple(hana::keys(AsText{}));
 				if constexpr(hana::contains(keys, type)){
 					return hana::make_pair(type_transform(type),
-						AsText{}[detail::hana_remove_optional(type)]);
+						AsText{}[detail::remove_optional(type)]);
 				}else{
 					return hana::make_pair(type_transform(type),
-						as_text[detail::hana_remove_optional(type)]);
+						as_text[detail::remove_optional(type)]);
 				}
 			}), hana::make_map);
 

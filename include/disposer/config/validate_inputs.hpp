@@ -10,7 +10,8 @@
 #define _disposer__validate_inputs__hpp_INCLUDED_
 
 #include "embedded_config.hpp"
-#include "to_std_string.hpp"
+
+#include "../tool/to_std_string.hpp"
 
 #include <boost/hana/transform.hpp>
 #include <boost/hana/for_each.hpp>

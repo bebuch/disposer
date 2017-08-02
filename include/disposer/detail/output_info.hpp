@@ -9,7 +9,8 @@
 #ifndef _disposer__output_info__hpp_INCLUDED_
 #define _disposer__output_info__hpp_INCLUDED_
 
-#include "embedded_config.hpp"
+#include "../config/embedded_config.hpp"
+
 #include "output_base.hpp"
 
 #include <boost/hana/type.hpp>

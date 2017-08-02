@@ -9,8 +9,9 @@
 #ifndef _disposer__output_name__hpp_INCLUDED_
 #define _disposer__output_name__hpp_INCLUDED_
 
-#include "ct_name.hpp"
 #include "output_maker.hpp"
+
+#include "../tool/ct_name.hpp"
 
 
 namespace disposer{

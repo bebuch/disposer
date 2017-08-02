@@ -9,15 +9,15 @@
 #ifndef _disposer__accessory__hpp_INCLUDED_
 #define _disposer__accessory__hpp_INCLUDED_
 
-#include "add_log.hpp"
 #include "input_name.hpp"
 #include "output_name.hpp"
 #include "parameter_name.hpp"
 #include "output_info.hpp"
-#include "embedded_config.hpp"
-#include "false_c.hpp"
 
-#include <iostream>
+#include "../config/embedded_config.hpp"
+
+#include "../tool/add_log.hpp"
+#include "../tool/false_c.hpp"
 
 
 namespace disposer{
