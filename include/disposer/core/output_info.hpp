@@ -6,12 +6,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__output_info__hpp_INCLUDED_
-#define _disposer__output_info__hpp_INCLUDED_
-
-#include "../config/embedded_config.hpp"
+#ifndef _disposer__core__output_info__hpp_INCLUDED_
+#define _disposer__core__output_info__hpp_INCLUDED_
 
 #include "output_base.hpp"
+
+#include "../config/embedded_config.hpp"
 
 #include <boost/hana/type.hpp>
 

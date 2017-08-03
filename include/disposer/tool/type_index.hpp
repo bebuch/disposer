@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__type_index__hpp_INCLUDED_
-#define _disposer__type_index__hpp_INCLUDED_
+#ifndef _disposer__tool__type_index__hpp_INCLUDED_
+#define _disposer__tool__type_index__hpp_INCLUDED_
 
 #include <boost/functional/hash.hpp>
 #include <boost/type_index/ctti_type_index.hpp>

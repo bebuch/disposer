@@ -6,12 +6,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__input__hpp_INCLUDED_
-#define _disposer__input__hpp_INCLUDED_
+#ifndef _disposer__core__input__hpp_INCLUDED_
+#define _disposer__core__input__hpp_INCLUDED_
 
-#include "detail/input_base.hpp"
-#include "detail/output_base.hpp"
-
+#include "input_base.hpp"
+#include "output_base.hpp"
 #include "config_fn.hpp"
 
 #include <variant>

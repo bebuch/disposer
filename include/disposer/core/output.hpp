@@ -6,15 +6,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__output__hpp_INCLUDED_
-#define _disposer__output__hpp_INCLUDED_
+#ifndef _disposer__core__output__hpp_INCLUDED_
+#define _disposer__core__output__hpp_INCLUDED_
 
-#include "detail/output_base.hpp"
-
+#include "output_base.hpp"
 #include "config_fn.hpp"
 
-#include "tool/type_index.hpp"
-#include "tool/to_std_string_view.hpp"
+#include "../tool/type_index.hpp"
+#include "../tool/to_std_string_view.hpp"
 
 #include <io_tools/make_string.hpp>
 

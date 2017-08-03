@@ -6,12 +6,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__parameter_maker__hpp_INCLUDED_
-#define _disposer__parameter_maker__hpp_INCLUDED_
+#ifndef _disposer__core__parameter_maker__hpp_INCLUDED_
+#define _disposer__core__parameter_maker__hpp_INCLUDED_
 
-#include "../parameter.hpp"
-#include "../as_text.hpp"
-#include "../config_fn.hpp"
+#include "parameter.hpp"
+#include "as_text.hpp"
+#include "config_fn.hpp"
 
 #include "../tool/remove_optional.hpp"
 

@@ -1,5 +1,4 @@
 #include <disposer/component.hpp>
-#include <disposer/module.hpp>
 
 #include <iostream>
 #include <iomanip>

@@ -1,7 +1,6 @@
-#include <disposer/output.hpp>
-#include <disposer/input.hpp>
-
-#include <disposer/detail/accessory.hpp>
+#include <disposer/core/output.hpp>
+#include <disposer/core/input.hpp>
+#include <disposer/core/accessory.hpp>
 
 
 int success(std::size_t i){

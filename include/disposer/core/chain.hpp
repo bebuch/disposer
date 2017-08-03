@@ -6,14 +6,14 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__chain__hpp_INCLUDED_
-#define _disposer__chain__hpp_INCLUDED_
+#ifndef _disposer__core__chain__hpp_INCLUDED_
+#define _disposer__core__chain__hpp_INCLUDED_
 
-#include "detail/id_generator.hpp"
+#include "id_generator.hpp"
 
-#include "config/embedded_config.hpp"
+#include "../config/embedded_config.hpp"
 
-#include "tool/module_ptr.hpp"
+#include "../tool/module_ptr.hpp"
 
 #include <mutex>
 #include <string>

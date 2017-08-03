@@ -1,4 +1,4 @@
-#include <disposer/detail/module_base.hpp>
+#include <disposer/core/module_base.hpp>
 
 #include <disposer/config/module_make_data.hpp>
 #include <disposer/config/create_chain_modules.hpp>

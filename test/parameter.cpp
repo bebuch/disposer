@@ -1,6 +1,5 @@
-#include <disposer/parameter.hpp>
-
-#include <disposer/detail/accessory.hpp>
+#include <disposer/core/parameter.hpp>
+#include <disposer/core/accessory.hpp>
 
 #include <iostream>
 #include <iomanip>
