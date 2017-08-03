@@ -759,11 +759,10 @@ namespace disposer{
 		Predicate&& predicate,
 		Default&& default_value
 	){
-		auto result = hana::find_if(
-			static_cast< Tuple&& >(tuple), static_cast< Predicate >(predicate));
-		auto found = result != hana::nothing;
-		if constexpr(found){
-			return *result;
+		auto result = hana::find_if(static_cast< Tuple&& >(tuple),
+			static_cast< Predicate&& >(predicate));
+		if constexpr(auto const found = result != hana::nothing; found){
+			return *static_cast< decltype(result)&& >(result);
 		}else{
 			return static_cast< Default&& >(default_value);
 		}
