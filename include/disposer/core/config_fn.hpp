@@ -745,14 +745,6 @@ namespace disposer{
 
 
 
-	struct no_argument_tag;
-
-	struct no_argument{
-		using hana_tag = no_argument_tag;
-	};
-
-
-
 	template < typename Tuple, typename Predicate, typename Default >
 	constexpr auto get_or_default(
 		Tuple&& tuple,
