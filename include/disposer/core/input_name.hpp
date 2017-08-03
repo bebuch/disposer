@@ -35,22 +35,6 @@ namespace disposer{
 
 			auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
 
-			{
-				auto const count = hana::count_if(arg_tuple,
-					hana::is_a< type_transform_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one type_transform_fn");
-			}
-			{
-				auto const count = hana::count_if(arg_tuple,
-					hana::is_a< verify_connection_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one verify_connection_fn");
-			}
-			{
-				auto const count = hana::count_if(arg_tuple,
-					hana::is_a< verify_type_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one verify_type_fn");
-			}
-
 			return create_input_maker(
 				(*this),
 				types,

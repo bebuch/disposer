@@ -42,37 +42,6 @@ namespace disposer{
 
 			auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
 
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< type_transform_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one type_transform_fn");
-			}
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< verify_value_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one verify_value_fn");
-			}
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< enable_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one enable_fn");
-			}
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< parser_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one parser_fn");
-			}
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< default_value_fn_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one default_value_fn");
-			}
-			{
-				auto count = hana::count_if(arg_tuple,
-					hana::is_a< type_as_text_map_tag >) <= hana::size_c< 1 >;
-				static_assert(count, "more than one type_as_text_map");
-			}
-
 			return create_parameter_maker(
 				(*this),
 				types,

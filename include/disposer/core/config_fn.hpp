@@ -759,6 +759,10 @@ namespace disposer{
 		Predicate&& predicate,
 		Default&& default_value
 	){
+		auto const count = hana::count_if(tuple, predicate);
+		static_assert(count <= hana::size_c< 1 >,
+			"more than one argument with this tag");
+
 		auto result = hana::find_if(static_cast< Tuple&& >(tuple),
 			static_cast< Predicate&& >(predicate));
 		if constexpr(auto const found = result != hana::nothing; found){
