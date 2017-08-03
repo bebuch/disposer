@@ -12,6 +12,7 @@
 #include "input_base.hpp"
 #include "output_base.hpp"
 #include "config_fn.hpp"
+#include "input_name.hpp"
 
 #include <variant>
 #include <optional>
@@ -21,12 +22,6 @@
 
 namespace disposer{
 
-
-	/// \brief Hana Tag for \ref input_name
-	struct input_name_tag{};
-
-	/// \brief Hana Tag for input_maker
-	struct input_maker_tag{};
 
 	/// \brief Hana Tag for input
 	struct input_tag{};

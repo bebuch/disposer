@@ -1,4 +1,4 @@
-#include <disposer/core/parameter.hpp>
+#include <disposer/core/parameter_maker.hpp>
 #include <disposer/core/accessory.hpp>
 
 #include <iostream>
@@ -9,6 +9,8 @@ namespace hana = boost::hana;
 
 using namespace hana::literals;
 using namespace disposer::literals;
+
+using disposer::make;
 
 constexpr auto types = hana::tuple_t< int, float >;
 constexpr auto types_set = hana::to_set(types);
@@ -63,7 +65,7 @@ int main(){
 
 	try{
 		{
-			constexpr auto maker = "v"_param(hana::type_c< int >);
+			constexpr auto maker = make("v"_param, hana::type_c< int >);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
@@ -102,7 +104,7 @@ int main(){
 		}
 
 		{
-			constexpr auto maker = "v"_param(types);
+			constexpr auto maker = make("v"_param, types);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<
@@ -147,7 +149,7 @@ int main(){
 		}
 
 		{
-			constexpr auto maker = "v"_param(types_set);
+			constexpr auto maker = make("v"_param, types_set);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::parameter_maker<

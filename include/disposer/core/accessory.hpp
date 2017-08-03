@@ -18,6 +18,9 @@
 
 #include "../tool/add_log.hpp"
 #include "../tool/false_c.hpp"
+#include "../tool/to_std_string.hpp"
+#include "../tool/to_std_string_view.hpp"
+
 
 
 namespace disposer{

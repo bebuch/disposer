@@ -9,46 +9,23 @@
 #ifndef _disposer__core__input_name__hpp_INCLUDED_
 #define _disposer__core__input_name__hpp_INCLUDED_
 
-#include "input_maker.hpp"
-
 #include "../tool/ct_name.hpp"
-#include "../tool/validate_arguments.hpp"
 
 
 namespace disposer{
 
+
+	/// \brief Hana Tag for input_maker
+	struct input_maker_tag{};
+
+	/// \brief Hana Tag for \ref input_name
+	struct input_name_tag{};
 
 	/// \brief A compile time string type for inputs
 	template < char ... C >
 	struct input_name: ct_name< C ... >{
 		/// \brief Hana tag to identify input names
 		using hana_tag = input_name_tag;
-
-		/// \brief Creates a \ref input_maker object
-		template < typename Types, typename ... Args >
-		constexpr auto operator()(Types const& types, Args&& ... args)const{
-			detail::validate_arguments<
-					type_transform_fn_tag,
-					verify_connection_fn_tag,
-					verify_type_fn_tag
-				>(args ...);
-
-			auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
-
-			return create_input_maker(
-				(*this),
-				types,
-				get_or_default(std::move(arg_tuple),
-					hana::is_a< type_transform_fn_tag >,
-					no_type_transform),
-				get_or_default(std::move(arg_tuple),
-					hana::is_a< verify_connection_fn_tag >,
-					required),
-				get_or_default(std::move(arg_tuple),
-					hana::is_a< verify_type_fn_tag >,
-					verify_type_always)
-			);
-		}
 	};
 
 	/// \brief Make a \ref input_name object

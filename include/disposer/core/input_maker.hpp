@@ -12,6 +12,8 @@
 #include "input.hpp"
 #include "config_fn.hpp"
 
+#include "../tool/validate_arguments.hpp"
+
 
 namespace disposer{
 
@@ -70,6 +72,38 @@ namespace disposer{
 				std::move(verify_type)
 			};
 	}
+
+
+	/// \brief Creates a \ref input_maker object
+	template < char ... C, typename Types, typename ... Args >
+	constexpr auto make(
+		input_name< C ... >,
+		Types const& types,
+		Args&& ... args
+	){
+		detail::validate_arguments<
+				type_transform_fn_tag,
+				verify_connection_fn_tag,
+				verify_type_fn_tag
+			>(args ...);
+
+		auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
+
+		return create_input_maker(
+			input_name< C ... >{},
+			types,
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< type_transform_fn_tag >,
+				no_type_transform),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< verify_connection_fn_tag >,
+				required),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< verify_type_fn_tag >,
+				verify_type_always)
+		);
+	}
+
 
 
 }

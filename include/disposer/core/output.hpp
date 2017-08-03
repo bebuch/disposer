@@ -11,6 +11,7 @@
 
 #include "output_base.hpp"
 #include "config_fn.hpp"
+#include "output_name.hpp"
 
 #include "../tool/type_index.hpp"
 #include "../tool/to_std_string_view.hpp"
@@ -23,12 +24,6 @@
 
 namespace disposer{
 
-
-	/// \brief Hana Tag for \ref output_name
-	struct output_name_tag{};
-
-	/// \brief Hana Tag for output_maker
-	struct output_maker_tag{};
 
 	/// \brief Hana Tag for output
 	struct output_tag{};

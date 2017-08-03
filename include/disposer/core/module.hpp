@@ -11,9 +11,9 @@
 
 #include "output_info.hpp"
 #include "module_base.hpp"
-#include "input_name.hpp"
-#include "output_name.hpp"
-#include "parameter_name.hpp"
+#include "input_maker.hpp"
+#include "output_maker.hpp"
+#include "parameter_maker.hpp"
 #include "accessory.hpp"
 
 #include "../config/module_make_data.hpp"

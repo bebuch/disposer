@@ -14,6 +14,7 @@
 #include "config_fn.hpp"
 
 #include "../tool/remove_optional.hpp"
+#include "../tool/validate_arguments.hpp"
 
 
 namespace disposer{
@@ -132,6 +133,49 @@ namespace disposer{
 				std::move(default_value_generator),
 				type_to_text
 			};
+	}
+
+
+	/// \brief Creates a \ref parameter_maker object
+	template < char ... C, typename Types, typename ... Args >
+	constexpr auto make(
+		parameter_name< C ... >,
+		Types const& types,
+		Args&& ... args
+	){
+		detail::validate_arguments<
+				type_transform_fn_tag,
+				verify_value_fn_tag,
+				enable_fn_tag,
+				parser_fn_tag,
+				default_value_fn_tag,
+				type_as_text_map_tag
+			>(args ...);
+
+		auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
+
+		return create_parameter_maker(
+			parameter_name< C ... >{},
+			types,
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< type_transform_fn_tag >,
+				no_type_transform),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< verify_value_fn_tag >,
+				verify_value_always),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< enable_fn_tag >,
+				enable_always),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< parser_fn_tag >,
+				stream_parser),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< default_value_fn_tag >,
+				auto_default),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< type_as_text_map_tag >,
+				type_as_text())
+		);
 	}
 
 

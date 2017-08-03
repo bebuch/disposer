@@ -9,42 +9,23 @@
 #ifndef _disposer__core__output_name__hpp_INCLUDED_
 #define _disposer__core__output_name__hpp_INCLUDED_
 
-#include "output_maker.hpp"
-
 #include "../tool/ct_name.hpp"
-#include "../tool/validate_arguments.hpp"
 
 
 namespace disposer{
 
+
+	/// \brief Hana Tag for output_maker
+	struct output_maker_tag{};
+
+	/// \brief Hana Tag for \ref output_name
+	struct output_name_tag{};
 
 	/// \brief A compile time string type for outputs
 	template < char ... C >
 	struct output_name: ct_name< C ... >{
 		/// \brief Hana tag to identify output names
 		using hana_tag = output_name_tag;
-
-		/// \brief Creates a \ref output_maker object
-		template < typename Types, typename ... Args >
-		constexpr auto operator()(Types const& types, Args&& ... args)const{
-			detail::validate_arguments<
-					type_transform_fn_tag,
-					enable_fn_tag
-				>(args ...);
-
-			auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
-
-			return create_output_maker(
-				(*this),
-				types,
-				get_or_default(std::move(arg_tuple),
-					hana::is_a< type_transform_fn_tag >,
-					no_type_transform),
-				get_or_default(std::move(arg_tuple),
-					hana::is_a< enable_fn_tag >,
-					enable_always)
-			);
-		}
 	};
 
 	/// \brief Make a \ref output_name object

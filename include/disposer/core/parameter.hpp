@@ -10,6 +10,7 @@
 #define _disposer__core__parameter__hpp_INCLUDED_
 
 #include "config_fn.hpp"
+#include "parameter_name.hpp"
 
 #include "../tool/type_index.hpp"
 #include "../tool/to_std_string.hpp"
@@ -22,12 +23,6 @@
 
 namespace disposer{
 
-
-	/// \brief Hana Tag for \ref parameter_name
-	struct parameter_name_tag{};
-
-	/// \brief Hana Tag for parameter_maker
-	struct parameter_maker_tag{};
 
 	/// \brief Hana Tag for parameter
 	struct parameter_tag{};

@@ -86,7 +86,8 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >, disposer::optional)
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional)
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -118,7 +119,7 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_out(hana::type_c< int >)
+					disposer::make("v"_out, hana::type_c< int >)
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -149,7 +150,7 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_param(hana::type_c< int >)
+					disposer::make("v"_param, hana::type_c< int >)
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -187,9 +188,10 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >, disposer::optional),
-					"v"_out(hana::type_c< int >),
-					"v"_param(hana::type_c< int >)
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional),
+					disposer::make("v"_out, hana::type_c< int >),
+					disposer::make("v"_param, hana::type_c< int >)
 				),
 				disposer::module_enable(enable_fn())
 			);
@@ -281,16 +283,17 @@ int main(){
 
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(
-					"v"_in(hana::type_c< int >, disposer::optional),
-					"v"_out(hana::type_c< int >,
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional),
+					disposer::make("v"_out, hana::type_c< int >,
 						disposer::no_type_transform,
 						disposer::enable_fn(enable_out)),
-					"v"_param(hana::type_c< int >,
+					disposer::make("v"_param, hana::type_c< int >,
 						disposer::verify_value_always,
 						disposer::enable_fn(enable_param),
 						disposer::parser_fn(parser),
 						disposer::default_value_fn(default_value)),
-					"w"_in(hana::type_c< int >,
+					disposer::make("w"_in, hana::type_c< int >,
 						disposer::no_type_transform,
 						disposer::verify_connection_fn(enable_in_c),
 						disposer::verify_type_fn(enable_in_t))

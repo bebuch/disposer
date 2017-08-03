@@ -11,6 +11,8 @@
 
 #include "output.hpp"
 
+#include "../tool/validate_arguments.hpp"
+
 
 namespace disposer{
 
@@ -61,6 +63,33 @@ namespace disposer{
 			typename decltype(type_output)::type, EnableFn >{
 				std::move(enable)
 			};
+	}
+
+
+	/// \brief Creates a \ref output_maker object
+	template < char ... C, typename Types, typename ... Args >
+	constexpr auto make(
+		output_name< C ... >,
+		Types const& types,
+		Args&& ... args
+	){
+		detail::validate_arguments<
+				type_transform_fn_tag,
+				enable_fn_tag
+			>(args ...);
+
+		auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
+
+		return create_output_maker(
+			output_name< C ... >{},
+			types,
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< type_transform_fn_tag >,
+				no_type_transform),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< enable_fn_tag >,
+				enable_always)
+		);
 	}
 
 

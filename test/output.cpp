@@ -1,5 +1,7 @@
-#include <disposer/core/output.hpp>
+#include <disposer/core/output_maker.hpp>
 #include <disposer/core/accessory.hpp>
+
+#include <iomanip>
 
 
 int success(std::size_t i){
@@ -32,6 +34,8 @@ using namespace hana::literals;
 using namespace disposer::literals;
 using namespace std::literals::string_view_literals;
 
+using disposer::make;
+
 constexpr auto types = hana::tuple_t< int, float >;
 constexpr auto types_set = hana::to_set(types);
 
@@ -56,7 +60,7 @@ int main(){
 
 	try{
 		{
-			constexpr auto maker = "v"_out(hana::type_c< int >);
+			constexpr auto maker = make("v"_out, hana::type_c< int >);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
@@ -87,7 +91,7 @@ int main(){
 		}
 
 		{
-			constexpr auto maker = "v"_out(types);
+			constexpr auto maker = make("v"_out, types);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
@@ -121,7 +125,7 @@ int main(){
 		}
 
 		{
-			constexpr auto maker = "v"_out(types_set);
+			constexpr auto maker = make("v"_out, types_set);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::output_maker<
