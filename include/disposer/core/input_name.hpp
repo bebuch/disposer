@@ -12,6 +12,7 @@
 #include "input_maker.hpp"
 
 #include "../tool/ct_name.hpp"
+#include "../tool/validate_arguments.hpp"
 
 
 namespace disposer{
@@ -24,57 +25,42 @@ namespace disposer{
 		using hana_tag = input_name_tag;
 
 		/// \brief Creates a \ref input_maker object
-		template <
-			typename Types,
-			typename Arg2 = no_argument,
-			typename Arg3 = no_argument,
-			typename Arg4 = no_argument >
-		constexpr auto operator()(
-			Types const& types,
-			Arg2&& arg2 = {},
-			Arg3&& arg3 = {},
-			Arg4&& arg4 = {}
-		)const{
-			constexpr auto valid_argument = [](auto const& arg){
-					return hana::is_a< type_transform_fn_tag >(arg)
-						|| hana::is_a< verify_connection_fn_tag >(arg)
-						|| hana::is_a< verify_type_fn_tag >(arg)
-						|| hana::is_a< no_argument_tag >(arg);
-				};
+		template < typename Types, typename ... Args >
+		constexpr auto operator()(Types const& types, Args&& ... args)const{
+			detail::validate_arguments<
+					type_transform_fn_tag,
+					verify_connection_fn_tag,
+					verify_type_fn_tag
+				>(args ...);
 
-			auto const arg2_valid = valid_argument(arg2);
-			static_assert(arg2_valid, "argument 2 is invalid");
-			auto const arg3_valid = valid_argument(arg3);
-			static_assert(arg3_valid, "argument 3 is invalid");
-			auto const arg4_valid = valid_argument(arg4);
-			static_assert(arg4_valid, "argument 4 is invalid");
+			auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
 
-			auto args = hana::make_tuple(
-				static_cast< Arg2&& >(arg2),
-				static_cast< Arg3&& >(arg3),
-				static_cast< Arg4&& >(arg4)
-			);
-
-			auto tt = hana::count_if(args,
-				hana::is_a< type_transform_fn_tag >) <= hana::size_c< 1 >;
-			static_assert(tt, "more than one type_transform_fn");
-			auto cv = hana::count_if(args,
-				hana::is_a< verify_connection_fn_tag >) <= hana::size_c< 1 >;
-			static_assert(cv, "more than one verify_connection_fn");
-			auto tv = hana::count_if(args,
-				hana::is_a< verify_type_fn_tag >) <= hana::size_c< 1 >;
-			static_assert(tv, "more than one verify_type_fn");
+			{
+				auto const count = hana::count_if(arg_tuple,
+					hana::is_a< type_transform_fn_tag >) <= hana::size_c< 1 >;
+				static_assert(count, "more than one type_transform_fn");
+			}
+			{
+				auto const count = hana::count_if(arg_tuple,
+					hana::is_a< verify_connection_fn_tag >) <= hana::size_c< 1 >;
+				static_assert(count, "more than one verify_connection_fn");
+			}
+			{
+				auto const count = hana::count_if(arg_tuple,
+					hana::is_a< verify_type_fn_tag >) <= hana::size_c< 1 >;
+				static_assert(count, "more than one verify_type_fn");
+			}
 
 			return create_input_maker(
 				(*this),
 				types,
-				get_or_default(std::move(args),
+				get_or_default(std::move(arg_tuple),
 					hana::is_a< type_transform_fn_tag >,
 					no_type_transform),
-				get_or_default(std::move(args),
+				get_or_default(std::move(arg_tuple),
 					hana::is_a< verify_connection_fn_tag >,
 					required),
-				get_or_default(std::move(args),
+				get_or_default(std::move(arg_tuple),
 					hana::is_a< verify_type_fn_tag >,
 					verify_type_always)
 			);
