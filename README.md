@@ -5,8 +5,8 @@ A dynamic module management system
 
 ## Supported Compilers
 
-- GCC 7.0 and higher
-- LLVM 4.0 and higher
+- GCC 7.1 and higher
+- LLVM 5.0 and higher
 
 ## Direct dependencies
 
