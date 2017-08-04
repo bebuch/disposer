@@ -51,11 +51,11 @@ namespace disposer{
 			std::string_view location,
 			std::index_sequence< I ... >
 		)
-			: // iop_list_ can be referenced before initialization
-				iop_ref_list_(hana::transform(iop_list_, ref{}))
-			, iop_list_(iops_make_data(
+			: // list_ can be referenced before initialization
+				ref_list_(hana::transform(list_, ref{}))
+			, list_(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(iop_ref_list_),
+				location, hana::slice_c< 0, I >(ref_list_),
 				hana::size_c< I >) ...)
 		{
 			(void)location; // GCC bug (silance unused warning)
@@ -91,7 +91,7 @@ namespace disposer{
 
 			using iop_tag = typename iop_t::hana_tag;
 
-			auto iop_ref = hana::find_if(iop_ref_list_, [&iop](auto ref){
+			auto iop_ref = hana::find_if(ref_list_, [&iop](auto ref){
 				using tag = typename decltype(ref)::type::name_type::hana_tag;
 				return hana::type_c< iop_tag > == hana::type_c< tag >
 					&& ref.get().name == iop.value;
@@ -105,20 +105,20 @@ namespace disposer{
 
 
 		/// \brief Like List but with elements in std::reference_wrapper
-		using iop_ref_list_type =
+		using ref_list_type =
 			decltype(hana::transform(std::declval< List& >(), ref{}));
 
 		/// \brief hana::tuple of references to inputs, outputs and parameters
-		iop_ref_list_type iop_ref_list_;
+		ref_list_type ref_list_;
 
 		/// \brief hana::tuple of the inputs, outputs and parameters
-		List iop_list_;
+		List list_;
 
 
 		/// \brief std::vector with references to all input's (input_base)
 		friend auto generate_input_list(module_config& config){
-			auto iop_ref_list = hana::transform(config.iop_list_, ref{});
-			auto input_ref_list = hana::filter(iop_ref_list, [](auto ref){
+			auto ref_list = hana::transform(config.list_, ref{});
+			auto input_ref_list = hana::filter(ref_list, [](auto ref){
 				return hana::is_a< input_tag >(ref.get());
 			});
 			return hana::unpack(input_ref_list, [](auto ... input_ref){
@@ -129,8 +129,8 @@ namespace disposer{
 
 		/// \brief std::vector with references to all output's (output_base)
 		friend auto generate_output_list(module_config& config){
-			auto iop_ref_list = hana::transform(config.iop_list_, ref{});
-			auto output_ref_list = hana::filter(iop_ref_list, [](auto ref){
+			auto ref_list = hana::transform(config.list_, ref{});
+			auto output_ref_list = hana::filter(ref_list, [](auto ref){
 				return hana::is_a< output_tag >(ref.get());
 			});
 			return hana::unpack(output_ref_list, [](auto ... output_ref){

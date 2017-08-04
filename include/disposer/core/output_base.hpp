@@ -9,54 +9,14 @@
 #ifndef _disposer__core__output_base__hpp_INCLUDED_
 #define _disposer__core__output_base__hpp_INCLUDED_
 
-#include "../tool/any_type.hpp"
 #include "../tool/type_index.hpp"
 
-#include <boost/hana.hpp>
-
-#include <utility>
-#include <vector>
-#include <stdexcept>
 #include <string_view>
+#include <map>
 
 
 namespace disposer{
 
-
-	namespace hana = boost::hana;
-
-
-	struct module_base_key;
-	struct input_key;
-
-
-	/// \brief Transfer reference to data from output to input
-	struct reference_carrier{
-		reference_carrier(
-			type_index const& type,
-			any_type const& data
-		): type(type), data(data) {}
-
-		/// \brief Type of the data at runtime
-		type_index type;
-
-		/// \brief Typeless reference to the data
-		any_type const& data;
-	};
-
-	/// \brief Transfer data (inclusive ownership) from output to input
-	struct value_carrier{
-		value_carrier(
-			type_index const& type,
-			any_type&& data
-		): type(type), data(std::move(data)) {}
-
-		/// \brief Type of the data at runtime
-		type_index type;
-
-		/// \brief Typeless reference to the data
-		any_type&& data;
-	};
 
 
 	/// \brief Base for module outpus
@@ -67,17 +27,11 @@ namespace disposer{
 	/// An output might have more then one data type.
 	class output_base{
 	public:
-		using TransferFn =
-			std::function< void(std::vector< value_carrier >&&) >;
-
-		/// \brief Constructor
-		constexpr output_base()noexcept: id_(0) {}
-
 		/// \brief Outputs are not copyable
-		output_base(output_base const&) = default;
+		output_base(output_base const&) = delete;
 
-		/// \brief Outputs are default-movable
-		constexpr output_base(output_base&& other)noexcept = default;
+		/// \brief Outputs are not movable
+		output_base(output_base&&) = delete;
 
 
 		/// \brief Outputs are not copy-assignable
@@ -90,64 +44,8 @@ namespace disposer{
 		/// \brief List of enabled output types
 		virtual std::map< type_index, bool > enabled_types()const = 0;
 
-
-		/// \brief Set id and call prepare()
-		void prepare(module_base_key&&, std::size_t id)noexcept{
-			id_ = id;
-			prepare();
-		}
-
-		/// \brief Call cleanup(id)
-		void cleanup(module_base_key&&, std::size_t id)noexcept{
-			cleanup(id);
-		}
-
-
-		/// \brief Call get_references(id)
-		std::vector< reference_carrier >
-		get_references(input_key&&, std::size_t id)const{
-			return get_references(id);
-		}
-
-		/// \brief Call get_values(id)
-		std::vector< value_carrier >
-		get_values(input_key&&, std::size_t id){
-			return get_values(id);
-		}
-
-
 		/// \brief Returns the output name
 		virtual std::string_view get_name()const noexcept = 0;
-
-
-	protected:
-		/// \brief Get vector of references to all data with id
-		///
-		/// This is called, if data is refered via reference or copied from
-		/// output to input.
-		virtual std::vector< reference_carrier >
-		get_references(std::size_t id)const = 0;
-
-		/// \brief Get vector of values with all data with id
-		///
-		/// This is called, if data is moved from output to input.
-		virtual std::vector< value_carrier >
-		get_values(std::size_t id) = 0;
-
-		/// \brief Prepare output for exec
-		virtual void prepare()noexcept = 0;
-
-		/// \brief Clean up all data with ID
-		virtual void cleanup(std::size_t id)noexcept = 0;
-
-
-		/// \brief Get the current ID
-		std::size_t current_id()noexcept{ return id_; }
-
-
-	private:
-		/// \brief The current ID while module::exec() is running
-		std::size_t id_;
 	};
 
 

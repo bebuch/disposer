@@ -9,14 +9,9 @@
 #ifndef _disposer__core__input_base__hpp_INCLUDED_
 #define _disposer__core__input_base__hpp_INCLUDED_
 
-#include "output_base.hpp"
-
 
 namespace disposer{
 
-
-	struct module_base_key;
-	struct creator_key;
 
 	class output_base;
 
@@ -30,20 +25,15 @@ namespace disposer{
 	class input_base{
 	public:
 		/// \brief Constructor
-		constexpr input_base(
-			output_base* output,
-			bool last_use
-		)noexcept
-			:  output_(output)
-			, last_use_(last_use)
-			, id_(0) {}
+		constexpr input_base(output_base* output)noexcept
+			: output_(output) {}
 
 
 		/// \brief Inputs are not copyable
 		input_base(input_base const&) = delete;
 
-		/// \brief Inputs are default-movable
-		constexpr input_base(input_base&&)noexcept = default;
+		/// \brief Inputs are not movable
+		input_base(input_base&&) = delete;
 
 
 		/// \brief Inputs are not copy-assingable
@@ -53,38 +43,14 @@ namespace disposer{
 		input_base& operator=(input_base&&) = delete;
 
 
-		/// \brief Set the new id for the next exec or cleanup
-		void set_id(module_base_key&&, std::size_t id)noexcept{ id_ = id; }
-
-		/// \brief Remove data from connected output if last_use_
-		void cleanup(module_base_key&& key, std::size_t id)noexcept{
-			if(last_use_ && output_) output_->cleanup(std::move(key), id);
-		}
-
-
 	protected:
-		/// \brief Get the current ID
-		std::size_t current_id()const noexcept{ return id_; }
-
 		/// \brief Get connected output or nullptr
-		output_base* output_ptr()const noexcept{ return output_; }
-
-		/// \brief
-		bool last_use()const noexcept{
-			return last_use_;
-		}
+		constexpr output_base* output_ptr()const noexcept{ return output_; }
 
 
 	private:
 		/// \brief Pointer to the linked output
 		output_base* const output_;
-
-		/// \brief Is this the last use of the connected output?
-		bool const last_use_;
-
-		/// \brief The actual ID while module::exec() is running
-		std::size_t id_;
-
 	};
 
 
