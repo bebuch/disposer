@@ -23,18 +23,13 @@ project disposer
 	<c++-template-depth>1024
 
 	<define>BOOST_ASIO_HAS_STD_CHRONO
-	<define>BOOST_NO_AUTO_PTR
 
 	<toolset>gcc:<cxxflags>-std=gnu++1z
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
-	<toolset>gcc:<cxxflags>-Wall
-	<toolset>gcc:<cxxflags>-Wextra
 	<toolset>gcc:<linkflags>-lpthread
 
 	<toolset>clang:<cxxflags>-std=c++1z
 	<toolset>clang:<cxxflags>-fconstexpr-depth=1024
-	<toolset>clang:<cxxflags>-Wall
-	<toolset>clang:<cxxflags>-Wextra
 	<toolset>clang:<cxxflags>-stdlib=libc++
 	<toolset>clang:<linkflags>-lpthread
 	<toolset>clang:<linkflags>-lc++abi
@@ -50,5 +45,4 @@ project disposer
 lib disposer
 	:
 	[ glob *.cpp ]
-	/logsys//logsys
 	;

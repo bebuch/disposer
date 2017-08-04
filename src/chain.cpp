@@ -6,9 +6,13 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/chain.hpp>
-#include <disposer/module_base.hpp>
-#include <disposer/create_chain_modules.hpp>
+#include <disposer/core/chain.hpp>
+#include <disposer/core/module_base.hpp>
+
+#include <disposer/config/create_chain_modules.hpp>
+
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
 
 #include <numeric>
 
@@ -27,19 +31,11 @@ namespace disposer{
 
 	chain::chain(
 		module_maker_list const& maker_list,
-		types::merge::chain const& config_chain,
+		types::embedded_config::chain const& config_chain,
 		id_generator& generate_id
 	):
 		name(config_chain.name),
 		modules_(create_chain_modules(maker_list, config_chain)),
-		id_increase_(std::accumulate(
-			modules_.cbegin(),
-			modules_.cend(),
-			std::size_t(1),
-			[](std::size_t increase, module_ptr const& module){
-				return increase * module->id_increase;
-			}
-		)),
 		generate_id_(generate_id),
 		next_run_(0),
 		ready_run_(modules_.size()),
@@ -85,26 +81,27 @@ namespace disposer{
 
 	void chain::exec(){
 		if(!enabled_){
-			throw std::logic_error("chain '" + name + "' is not enabled");
+			throw std::logic_error("chain(" + name + ") is not enabled");
 		}
 
 		exec_call_manager lock(exec_calls_count_, enable_cv_);
 
 		// generate a new id for the exec
-		std::size_t const id = generate_id_(id_increase_);
+		std::size_t const id = generate_id_();
 
 		// generate a unique continuous index for the call
 		std::size_t const run = next_run_++;
 
 		// exec any module, call cleanup instead if the module throw
 		logsys::log([this, id](logsys::stdlogb& os){
-			os << "id(" << id << ") chain '" << name << "'";
+			os << "id(" << id << ") chain(" << name << ")";
 		}, [this, id, run]{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(chain_key(), id);
-					process_module(i, run, [](chain& c, std::size_t i){
-						c.modules_[i]->exec(chain_key());
+					process_module(i, run, [this, id](std::size_t i){
+						modules_[i]->exec(chain_key());
+						modules_[i]->cleanup(chain_key(), id);
 					}, "exec");
 				}
 			}catch(...){
@@ -113,8 +110,8 @@ namespace disposer{
 					// exec was successful
 					if(ready_run_[i] >= run + 1) continue;
 
-					process_module(i, run, [id](chain& c, std::size_t i){
-						c.modules_[i]->cleanup(chain_key(), id);
+					process_module(i, run, [this, id](std::size_t i){
+						modules_[i]->cleanup(chain_key(), id);
 					}, "cleanup");
 				}
 
@@ -133,7 +130,7 @@ namespace disposer{
 
 		logsys::log(
 			[this](logsys::stdlogb& os){
-				os << "chain '" << name << "' enable";
+				os << "chain(" << name << ") enabled";
 			},
 			[this]{
 				std::size_t i = 0;
@@ -141,8 +138,9 @@ namespace disposer{
 					// enable all modules
 					for(; i < modules_.size(); ++i){
 						logsys::log([this, i](logsys::stdlogb& os){
-								os << "chain '" << name << "' module '"
-									<< modules_[i]->number << "' enable";
+								os << "chain(" << name << ") module("
+									<< modules_[i]->number << ":"
+									<< modules_[i]->type_name << ") enabled";
 							}, [this, i]{
 								modules_[i]->enable(chain_key());
 							});
@@ -151,11 +149,11 @@ namespace disposer{
 					// disable all modules until the one who throw
 					for(std::size_t j = 0; j < i; ++j){
 						logsys::log([this, i, j](logsys::stdlogb& os){
-								os << "chain '" << name << "' module '"
+								os << "chain(" << name << ") module("
 									<< modules_[j]->number
-									<< "' disable because of exception while "
-									<< "enable module '" << modules_[i]->number
-									<< "'";
+									<< ") disabled because of exception while "
+									<< "enable module(" << modules_[i]->number
+									<< ")";
 							}, [this, j]{
 								modules_[j]->disable(chain_key());
 							});
@@ -178,14 +176,15 @@ namespace disposer{
 
 		logsys::log(
 			[this](logsys::stdlogb& os){
-				os << "chain '" << name << "' disable";
+				os << "chain(" << name << ") disabled";
 			},
 			[this]{
 				// disable all modules
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					logsys::log([this, i](logsys::stdlogb& os){
-							os << "chain '" << name << "' module '"
-								<< modules_[i]->number << "' disable";
+							os << "chain(" << name << ") module("
+								<< modules_[i]->number << ":"
+								<< modules_[i]->type_name << ") disabled";
 						}, [this, i]{
 							modules_[i]->disable(chain_key());
 						});
@@ -199,7 +198,7 @@ namespace disposer{
 		std::size_t const i,
 		std::size_t const run,
 		F const& action,
-		char const* const action_name
+		std::string_view action_name
 	){
 		// lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(module_mutexes_[i]);
@@ -207,10 +206,11 @@ namespace disposer{
 
 		// exec or cleanup the module
 		logsys::log([this, i, action_name](logsys::stdlogb& os){
-			os << "id(" << modules_[i]->id << "." << i << ") " << action_name
-				<< " chain '" << modules_[i]->chain << "' module '"
-				<< modules_[i]->number << "'";
-		}, [this, i, &action]{ action(*this, i); });
+			os << "id(" << modules_[i]->id << ") "
+				<< "chain(" << modules_[i]->chain << ") module("
+				<< modules_[i]->number << ":" << modules_[i]->type_name
+				<< ") " << action_name;
+		}, [i, &action]{ action(i); });
 
 		// make module ready
 		ready_run_[i] = run + 1;

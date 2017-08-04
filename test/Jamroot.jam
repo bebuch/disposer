@@ -26,7 +26,6 @@ project disposer_tests
 
 	<define>BOOST_HANA_CONFIG_ENABLE_STRING_UDL
 	<define>BOOST_ASIO_HAS_STD_CHRONO
-	<define>BOOST_NO_AUTO_PTR
 
 	<toolset>gcc:<cxxflags>-std=gnu++1z
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
@@ -57,12 +56,14 @@ project disposer_tests
 exe parse_errors
 	:
 	parse_errors.cpp
+	/logsys//logsys
 	/disposer//disposer
 	;
 
 exe parse_check
 	:
 	parse_check.cpp
+	/logsys//logsys
 	/disposer//disposer
 	;
 
@@ -70,18 +71,21 @@ exe output
 	:
 	output.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe input
 	:
 	input.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe parameter
 	:
 	parameter.cpp
 	/disposer//disposer
+	/logsys//logsys
 	;
 
 exe module_test

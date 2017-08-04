@@ -43,193 +43,201 @@ struct enable_fn{
 	}
 };
 
+struct disposer::unit_test_key{
+	template < typename Register >
+	constexpr auto copy(Register const& reg)const{
+		return (reg.maker_);
+	}
+
+	template < typename Register >
+	constexpr decltype(auto) ref(Register const& reg)const{
+		return (reg.maker_);
+	}
+};
+
 int main(){
 	using namespace hana::literals;
+
+	static constexpr auto key = disposer::unit_test_key{};
 
 	std::size_t error_count = 0;
 
 	try{
 		{
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(),
-				enable_fn()
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(),
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v< decltype(
+				key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map()),
-					decltype(hana::make_map()),
-					decltype(hana::make_map()),
-					enable_fn
+					hana::tuple<>, enable_fn
 				> > >);
 		}
 
 		{
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(
-					"v"_in(hana::type_c< int >)
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional)
 				),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v<
+				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
-						decltype("v"_in),
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
-						disposer::connection_verify_always,
-						disposer::type_verify_always
+							disposer::none, int >,
+						disposer::optional_t,
+						disposer::verify_type_always_t
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::input<
-							decltype("v"_in), disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map()),
-					decltype(hana::make_map()),
-					enable_fn
+					hana::tuple<
+						disposer::input< decltype("v"_in),
+							disposer::none, int >
+					>, enable_fn
 				> > >);
 		}
 
 
 		{
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(
-					"v"_out(hana::type_c< int >)
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(
+					disposer::make("v"_out, hana::type_c< int >)
 				),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v<
+				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::output_maker<
-						decltype("v"_out),
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
-						disposer::enable_always
+							disposer::none, int >,
+						disposer::enable_always_t
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map()),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::output<
-							decltype("v"_out),
-							disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map()),
-					enable_fn
+					hana::tuple<
+						disposer::output< decltype("v"_out),
+							disposer::none, int >
+					>, enable_fn
 				> > >);
 		}
 
 
 		{
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(
-					"v"_param(hana::type_c< int >)
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(
+					disposer::make("v"_param, hana::type_c< int >)
 				),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v<
+				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::parameter_maker<
-						decltype("v"_param),
-						disposer::parameter< decltype("v"_param), int >,
-						disposer::value_verify_always,
-						disposer::enable_always,
-						disposer::stream_parser,
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >,
+							disposer::verify_value_always_t,
+							disposer::enable_always_t,
+							disposer::stream_parser_t,
+							disposer::auto_default_t,
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{
+					{}, {}, {}, {}, {}, {{"v", {"3", {}}}}
+				});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map()),
-					decltype(hana::make_map()),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval<
-							disposer::parameter< decltype("v"_param), int > >())
-					)),
-					enable_fn
+					hana::tuple<
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >
+					>, enable_fn
 				> > >);
 		}
 
 		{
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(
-					"v"_in(hana::type_c< int >),
-					"v"_out(hana::type_c< int >),
-					"v"_param(hana::type_c< int >)
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional),
+					disposer::make("v"_out, hana::type_c< int >),
+					disposer::make("v"_param, hana::type_c< int >)
 				),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v<
+				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
-						decltype("v"_in),
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
-						disposer::connection_verify_always,
-						disposer::type_verify_always
+							disposer::none, int >,
+						disposer::optional_t,
+						disposer::verify_type_always_t
 					>,
 					disposer::output_maker<
-						decltype("v"_out),
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
-						disposer::enable_always
+							disposer::none, int >,
+						disposer::enable_always_t
 					>,
 					disposer::parameter_maker<
-						decltype("v"_param),
-						disposer::parameter< decltype("v"_param), int >,
-						disposer::value_verify_always,
-						disposer::enable_always,
-						disposer::stream_parser,
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >,
+							disposer::verify_value_always_t,
+							disposer::enable_always_t,
+							disposer::stream_parser_t,
+							disposer::auto_default_t,
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{
+					{}, {}, {}, {}, {}, {{"v", {"3", {}}}}
+				});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::input<
-							decltype("v"_in),
-							disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::output<
-							decltype("v"_out),
-							disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval<
-							disposer::parameter< decltype("v"_param), int > >())
-					)),
-					enable_fn
+					hana::tuple<
+						disposer::input< decltype("v"_in),
+							disposer::none, int >,
+						disposer::output< decltype("v"_out),
+							disposer::none, int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >
+					>, enable_fn
 				> > >);
 		}
 
@@ -241,12 +249,14 @@ int main(){
 			};
 
 			constexpr auto enable_in_c = [](auto const&, bool connected){
+				(void)connected;
 				assert(!connected);
 			};
 
 			constexpr auto enable_param = [](auto const& get, auto type){
 				bool active1 = get("v"_in).is_enabled(type);
 				bool active2 = get("v"_out).is_enabled(type);
+				(void)active1, (void)active2;
 				assert(!active1 && !active2);
 				return false;
 			};
@@ -257,89 +267,90 @@ int main(){
 					return 5;
 				};
 
+			constexpr auto default_value =
+				[](auto const&, auto){
+					return 7;
+				};
+
 			constexpr auto enable_in_t =
 				[](auto const& get, auto type, disposer::output_info const&){
 					bool active1 = get("v"_in).is_enabled(type);
 					bool active2 = get("v"_out).is_enabled(type);
 					bool active3 = get("v"_param).is_enabled(type);
+					(void)active1, (void)active2, (void)active3;
 					assert(!active1 && !active2 && !active3);
 				};
 
-			auto const register_fn = disposer::make_register_fn(
-				disposer::configure(
-					"v"_in(hana::type_c< int >),
-					"v"_out(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::enable(enable_out)),
-					"v"_param(hana::type_c< int >,
-						disposer::value_verify(disposer::value_verify_always()),
-						disposer::enable(enable_param),
-						disposer::parser(parser),
-						disposer::default_values(7)),
-					"w"_in(hana::type_c< int >,
-						disposer::type_transform(disposer::no_transform{}),
-						disposer::connection_verify(enable_in_c),
-						disposer::type_verify(enable_in_t))
+			auto const module_register_fn = disposer::module_register_fn(
+				disposer::module_configure(
+					disposer::make("v"_in, hana::type_c< int >,
+						disposer::optional),
+					disposer::make("v"_out, hana::type_c< int >,
+						disposer::no_type_transform,
+						disposer::enable_fn(enable_out)),
+					disposer::make("v"_param, hana::type_c< int >,
+						disposer::verify_value_always,
+						disposer::enable_fn(enable_param),
+						disposer::parser_fn(parser),
+						disposer::default_value_fn(default_value)),
+					disposer::make("w"_in, hana::type_c< int >,
+						disposer::no_type_transform,
+						disposer::verify_connection_fn(enable_in_c),
+						disposer::verify_type_fn(enable_in_t))
 				),
-				enable_fn()
+				disposer::module_enable(enable_fn())
 			);
 
-			static_assert(std::is_same_v< decltype(register_fn.maker),
+			static_assert(std::is_same_v<
+				decltype(key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
 					disposer::input_maker<
-						decltype("v"_in),
 						disposer::input< decltype("v"_in),
-							disposer::no_transform, int >,
-						disposer::connection_verify_always,
-						disposer::type_verify_always
+							disposer::none, int >,
+						disposer::optional_t,
+						disposer::verify_type_always_t
 					>,
 					disposer::output_maker<
-						decltype("v"_out),
 						disposer::output< decltype("v"_out),
-							disposer::no_transform, int >,
-						decltype(enable_out)
+							disposer::none, int >,
+						std::remove_const_t< decltype(enable_out) >
 					>,
 					disposer::parameter_maker<
-						decltype("v"_param),
-						disposer::parameter< decltype("v"_param), int >,
-						disposer::value_verify_always,
-						decltype(enable_param),
-						decltype(parser),
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >,
+						disposer::verify_value_always_t,
+						std::remove_const_t< decltype(enable_param) >,
+						std::remove_const_t< decltype(parser) >,
+						std::remove_const_t< decltype(default_value) >,
 						decltype(hana::make_map(
-							hana::make_pair(hana::type_c< int >, "sint32"_s)
+							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>,
 					disposer::input_maker<
-						decltype("w"_in),
 						disposer::input< decltype("w"_in),
-							disposer::no_transform, int >,
-						decltype(enable_in_c),
-						decltype(enable_in_t)
+							disposer::none, int >,
+						std::remove_const_t< decltype(enable_in_c) >,
+						std::remove_const_t< decltype(enable_in_t) >
 					>
 				>, enable_fn > >);
 
-			auto object = register_fn.maker(disposer::make_data{});
+			auto object =
+				key.ref(module_register_fn)(disposer::module_make_data{
+					{}, {}, {}, {}, {}, {{"v", {"7", {}}}}
+				});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::input<
-							decltype("v"_in),
-							disposer::no_transform, int > >()),
-						hana::make_pair("w"_s, std::declval< disposer::input<
-							decltype("w"_in),
-							disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval< disposer::output<
-							decltype("v"_out),
-							disposer::no_transform, int > >())
-					)),
-					decltype(hana::make_map(
-						hana::make_pair("v"_s, std::declval<
-							disposer::parameter< decltype("v"_param), int > >())
-					)),
-					enable_fn
+					hana::tuple<
+						disposer::input< decltype("v"_in),
+							disposer::none, int >,
+						disposer::output< decltype("v"_out),
+							disposer::none, int >,
+						disposer::parameter< decltype("v"_param),
+							disposer::none, int >,
+						disposer::input< decltype("w"_in),
+							disposer::none, int >
+					>, enable_fn
 				> > >);
 		}
 

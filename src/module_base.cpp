@@ -6,7 +6,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/module_base.hpp>
+#include <disposer/core/module_base.hpp>
 
 
 namespace disposer{
@@ -31,7 +31,6 @@ namespace disposer{
 		type_name(type_name),
 		chain(chain),
 		number(number),
-		id_increase(1),
 		id(id_),
 		id_(0),
 		inputs_(std::move(inputs)),
@@ -40,8 +39,8 @@ namespace disposer{
 
 
 	void module_base::cleanup(chain_key&&, std::size_t id)noexcept{
-		for(auto& output: outputs_){
-			output.get().cleanup(module_base_key(), id);
+		for(auto& input: inputs_){
+			input.get().cleanup(module_base_key(), id);
 		}
 	}
 
@@ -51,7 +50,7 @@ namespace disposer{
 			input.get().set_id(module_base_key(), id);
 		}
 		for(auto& output: outputs_){
-			output.get().set_id(module_base_key(), id);
+			output.get().prepare(module_base_key(), id);
 		}
 	}
 
@@ -59,7 +58,7 @@ namespace disposer{
 	module_base::get_outputs(creator_key&&)const{
 		std::map< std::string, output_base* > map;
 		for(auto output: outputs_){
-			map.emplace(output.get().name, &output.get());
+			map.emplace(output.get().get_name(), &output.get());
 		}
 		return map;
 	}
