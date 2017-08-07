@@ -59,12 +59,7 @@ namespace disposer{
 			using type = std::conditional_t<
 				hana::is_a< hana::type_tag, T >, T, hana::type< T > >;
 
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-			static_assert(std::is_nothrow_callable_v< Fn(type) >);
-#else
 			static_assert(std::is_nothrow_invocable_v< Fn, type >);
-#endif
 
 			using result = decltype(std::declval< Fn >()(type{}));
 
@@ -120,21 +115,13 @@ namespace disposer{
 
 		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
-#if __clang__
-			static_assert(
-				std::is_callable_v< Fn const(Accessory const&,
-					hana::basic_type< T >), bool >,
-				"Wrong function signature, expected: "
-				"bool f(auto const& iop, hana::basic_type< T > type)"
-			);
-#else
 			static_assert(
 				std::is_invocable_r_v< bool, Fn const, Accessory const&,
 					hana::basic_type< T > >,
 				"Wrong function signature, expected: "
 				"bool f(auto const& iop, hana::basic_type< T > type)"
 			);
-#endif
+
 			return noexcept(std::declval< Fn const >()(
 				std::declval< Accessory const >(),
 				std::declval< hana::basic_type< T > const >()
@@ -259,19 +246,12 @@ namespace disposer{
 
 		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
-#if __clang__
-			static_assert(
-				std::is_callable_v< Fn const(Accessory const&, bool) >,
-				"Wrong function signature, expected: "
-				"void f(auto const& iop, bool connected)"
-			);
-#else
 			static_assert(
 				std::is_invocable_v< Fn const, Accessory const&, bool >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, bool connected)"
 			);
-#endif
+
 			return noexcept(std::declval< Fn const >()(
 				std::declval< Accessory const >(),
 				std::declval< bool >()
@@ -341,15 +321,6 @@ namespace disposer{
 
 		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
-#if __clang__
-			static_assert(
-				std::is_callable_v< Fn const(Accessory const&,
-					hana::basic_type< T >, output_info const&) >,
-				"Wrong function signature, expected: "
-				"void f(auto const& iop, hana::basic_type< T > type, "
-				"output_info const& info)"
-			);
-#else
 			static_assert(
 				std::is_invocable_v< Fn const, Accessory const&,
 					hana::basic_type< T >, output_info const& >,
@@ -357,7 +328,7 @@ namespace disposer{
 				"void f(auto const& iop, hana::basic_type< T > type, "
 				"output_info const& info)"
 			);
-#endif
+
 			return noexcept(std::declval< Fn const >()(
 				std::declval< Accessory const >(),
 				std::declval< hana::basic_type< T > const >(),
@@ -425,19 +396,12 @@ namespace disposer{
 
 		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
-#if __clang__
-			static_assert(
-				std::is_callable_v< Fn const(Accessory const&, T const&) >,
-				"Wrong function signature, expected: "
-				"void f(auto const& iop, auto const& value)"
-			);
-#else
 			static_assert(
 				std::is_invocable_v< Fn const, Accessory const&, T const& >,
 				"Wrong function signature, expected: "
 				"void f(auto const& iop, auto const& value)"
 			);
-#endif
+
 			return noexcept(std::declval< Fn const >()(
 				std::declval< Accessory const >(),
 				std::declval< T const >()
@@ -495,15 +459,6 @@ namespace disposer{
 
 		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
-#if __clang__
-			static_assert(
-				std::is_callable_v< Fn const(Accessory const&,
-					std::string_view, hana::basic_type< T >), T >,
-				"Wrong function signature, expected: "
-				"T f(auto const& iop, std::string_view value, "
-				"hana::basic_type< T > type)"
-			);
-#else
 			static_assert(
 				std::is_invocable_r_v< T, Fn const, Accessory const&,
 					std::string_view, hana::basic_type< T > >,
@@ -511,7 +466,7 @@ namespace disposer{
 				"T f(auto const& iop, std::string_view value, "
 				"hana::basic_type< T > type)"
 			);
-#endif
+
 			return noexcept(std::declval< Fn const >()(
 				std::declval< Accessory const >(),
 				std::declval< std::string_view >(),

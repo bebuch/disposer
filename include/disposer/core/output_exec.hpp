@@ -97,6 +97,12 @@ namespace disposer{
 		}
 
 
+		/// \brief Returns the output name
+		virtual std::string_view get_name()const noexcept override{
+			return detail::to_std_string_view(name);
+		}
+
+
 	private:
 		/// \brief Get vector of references to all data
 		virtual std::vector< reference_carrier > get_references()override const{

@@ -76,7 +76,7 @@ int main(){
 					"cm1"_module([](auto& /*component*/){
 						return disposer::module_register_fn(
 							disposer::module_configure(),
-							disposer::module_enable([](auto const& module){
+							disposer::module_state([](auto const& module){
 								module.log([](logsys::stdlogb&){});
 								return [](auto& module, std::size_t){
 									module.log([](logsys::stdlogb&){});
@@ -92,7 +92,7 @@ int main(){
 		{
 			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::module_enable([](auto const& module){
+				disposer::module_state([](auto const& module){
 					module.log([](logsys::stdlogb&){});
 					return [](auto& module, std::size_t){
 						module.log([](logsys::stdlogb&){});
@@ -107,7 +107,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_in, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const& config){
+				disposer::module_state([](auto const& config){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
@@ -150,7 +150,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_out, hana::type_c< int >)
 				),
-				disposer::module_enable([]{
+				disposer::module_state([]{
 					return [](auto& module){
 						auto& out = module("v"_out);
 						(void) out;
@@ -166,7 +166,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const&){
+				disposer::module_state([](auto const&){
 					return [](auto&, std::size_t){};
 				})
 			);
@@ -180,7 +180,7 @@ int main(){
 					disposer::make("v"_out, hana::type_c< int >),
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const&){
+				disposer::module_state([](auto const&){
 					return [](auto&, std::size_t){};
 				})
 			);
@@ -233,7 +233,7 @@ int main(){
 								assert(!active1 && !active2 && !active3);
 							}))
 				),
-				disposer::module_enable([](auto const&){
+				disposer::module_state([](auto const&){
 					return [](auto&, std::size_t){};
 				})
 			);

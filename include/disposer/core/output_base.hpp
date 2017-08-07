@@ -43,9 +43,6 @@ namespace disposer{
 
 		/// \brief List of enabled output types
 		virtual std::map< type_index, bool > enabled_types()const = 0;
-
-		/// \brief Returns the output name
-		virtual std::string_view get_name()const noexcept = 0;
 	};
 
 

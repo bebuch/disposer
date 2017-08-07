@@ -38,21 +38,11 @@ namespace disposer{
 
 	template < typename LogF >
 	constexpr bool is_simple_log_fn =
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		std::is_callable_v< LogF(logsys::stdlogb&) >;
-#else
 		std::is_invocable_v< LogF, logsys::stdlogb& >;
-#endif
 
 	template < typename LogF, typename T >
 	constexpr bool is_extended_log_fn =
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		std::is_callable_v< LogF(logsys::stdlogb&, T) >;
-#else
 		std::is_invocable_v< LogF, logsys::stdlogb&, T >;
-#endif
 
 
 	template < typename Derived >

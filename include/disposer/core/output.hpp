@@ -123,12 +123,6 @@ namespace disposer{
 		}
 
 
-		/// \brief Returns the output name
-		virtual std::string_view get_name()const noexcept override{
-			return detail::to_std_string_view(name);
-		}
-
-
 	protected:
 		/// \brief Get a map from runtime types to bool
 		std::map< type_index, bool > enabled_types()const override{

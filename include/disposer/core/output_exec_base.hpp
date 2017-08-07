@@ -87,6 +87,10 @@ namespace disposer{
 		}
 
 
+		/// \brief Returns the output name
+		virtual std::string_view get_name()const noexcept = 0;
+
+
 	protected:
 		/// \brief Get vector of references with all data
 		///

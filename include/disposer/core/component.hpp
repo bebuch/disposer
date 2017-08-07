@@ -147,18 +147,6 @@ namespace disposer{
 
 		template < typename Accessory >
 		auto operator()(Accessory& accessory)const{
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-			if constexpr(std::is_callable_v< ComponentFn const(Accessory&) >){
-				return component_fn_(accessory);
-			}else if constexpr(std::is_callable_v< ComponentFn const() >){
-				return component_fn_();
-			}else{
-				static_assert(detail::false_c< Accessory >,
-					"component_init function must be invokable with component& "
-					"or without an argument");
-			}
-	#else
 			if constexpr(std::is_invocable_v< ComponentFn const, Accessory& >){
 				return component_fn_(accessory);
 			}else if constexpr(std::is_invocable_v< ComponentFn const >){
@@ -169,7 +157,6 @@ namespace disposer{
 					"component_init function must be invokable with component& "
 					"or without an argument");
 			}
-#endif
 		}
 
 	private:
@@ -185,14 +172,8 @@ namespace disposer{
 		using accessory_type = component_accessory< List >;
 
 
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		using component_t = std::result_of_t<
-			component_init< ComponentFn >(accessory_type&) >;
-#else
 		using component_t = std::invoke_result_t<
 			component_init< ComponentFn >, accessory_type& >;
-#endif
 
 		static_assert(!std::is_same_v< component_t, void >,
 			"ComponentFn must return an object");
