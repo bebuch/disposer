@@ -56,6 +56,11 @@ namespace disposer{
 	/// An output might have more then one data type.
 	class output_exec_base{
 	public:
+		/// \brief Constructor
+		output_exec_base(std::size_t use_count)noexcept
+			: remaining_use_count_(use_count) {}
+
+
 		/// \brief Outputs are not copyable
 		output_exec_base(output_exec_base const&) = delete;
 
@@ -70,9 +75,9 @@ namespace disposer{
 		output_exec_base& operator=(output_exec_base&&) = delete;
 
 
-		/// \brief Call cleanup()
+		/// \brief Call cleanup() if all connected inputs are ready
 		void cleanup(input_exec_key&&)noexcept{
-			cleanup();
+			if(--remaining_use_count_ == 0) cleanup();
 		}
 
 
@@ -105,6 +110,15 @@ namespace disposer{
 
 		/// \brief Clean up all data
 		virtual void cleanup()noexcept = 0;
+
+
+		/// \brief true if remaining_use_count_ is 1, false otherwise
+		bool is_last_use()noexcept const{ return remaining_use_count_ == 1; }
+
+
+		/// \brief Data can only be moved to an input, if all previos
+		///        inputs are ready
+		std::atomic< std::size_t > remaining_use_count_;
 	};
 
 

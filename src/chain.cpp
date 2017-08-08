@@ -75,7 +75,18 @@ namespace disposer{
 		};
 
 
+	}
 
+
+	std::vector< module_exec_ptr >
+	chain::make_exec_modules(std::size_t const id){
+		std::vector< module_exec_ptr > list;
+		list.reserve(modules_.size());
+
+		output_map_type output_map;
+		for(auto const& module: modules_){
+			list.push_back(module.make_module_exec(chain_key(), id, output_map);
+		}
 	}
 
 
@@ -89,8 +100,7 @@ namespace disposer{
 		// generate a new id for the exec
 		std::size_t const id = generate_id_();
 
-		// generate a unique continuous index for the call
-		std::size_t const run = next_run_++;
+		auto modules = make_exec_modules(id);
 
 		// exec any module, call cleanup instead if the module throw
 		logsys::log([this, id](logsys::stdlogb& os){
@@ -99,7 +109,7 @@ namespace disposer{
 			try{
 				for(std::size_t i = 0; i < modules_.size(); ++i){
 					modules_[i]->set_id(chain_key(), id);
-					process_module(i, run, [this, id](std::size_t i){
+					process_module(i, id, [this, id](std::size_t i){
 						modules_[i]->exec(chain_key());
 						modules_[i]->cleanup(chain_key(), id);
 					}, "exec");
@@ -108,9 +118,9 @@ namespace disposer{
 				// cleanup and unlock all executions
 				for(std::size_t i = 0; i < ready_run_.size(); ++i){
 					// exec was successful
-					if(ready_run_[i] >= run + 1) continue;
+					if(ready_run_[i] >= id + 1) continue;
 
-					process_module(i, run, [this, id](std::size_t i){
+					process_module(i, id, [this, id](std::size_t i){
 						modules_[i]->cleanup(chain_key(), id);
 					}, "cleanup");
 				}
@@ -123,9 +133,11 @@ namespace disposer{
 
 
 	void chain::enable(){
+		// TODO: Prevent enable while disable is waiting on exec's
 		std::unique_lock< std::mutex > lock(enable_mutex_);
 		if(enabled_) return;
 
+		// TODO: This line is redundant, right?
 		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
 		logsys::log(
@@ -196,13 +208,13 @@ namespace disposer{
 	template < typename F >
 	void chain::process_module(
 		std::size_t const i,
-		std::size_t const run,
+		std::size_t const id,
 		F const& action,
 		std::string_view action_name
 	){
 		// lock mutex and wait for the previous run to be ready
 		std::unique_lock< std::mutex > lock(module_mutexes_[i]);
-		module_cv_.wait(lock, [this, i, run]{ return ready_run_[i] == run; });
+		module_cv_.wait(lock, [this, i, id]{ return ready_run_[i] == id; });
 
 		// exec or cleanup the module
 		logsys::log([this, i, action_name](logsys::stdlogb& os){
@@ -213,7 +225,7 @@ namespace disposer{
 		}, [i, &action]{ action(i); });
 
 		// make module ready
-		ready_run_[i] = run + 1;
+		ready_run_[i] = id + 1;
 		module_cv_.notify_all();
 	}
 

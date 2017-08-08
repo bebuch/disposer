@@ -19,8 +19,14 @@ namespace disposer{
 
 	class module_base;
 
-	/// \brief unique_ptr to class module_base or derived classes
+	/// \brief unique_ptr of classes derived from module_base
 	using module_ptr = std::unique_ptr< module_base >;
+
+
+	class module_exec_base;
+
+	/// \brief unique_ptr of classes derived from module_exec_base
+	using module_exec_ptr = std::unique_ptr< module_exec_base >;
 
 
 	struct module_make_data;

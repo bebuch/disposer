@@ -83,6 +83,11 @@ namespace disposer{
 		>;
 
 
+		/// \brief Constructor
+		input_base(output_exec_base* output)noexcept
+			: input_exec_base(output) {}
+
+
 		/// \brief Get all data without transferring ownership
 		std::vector< references_type > get_references(){
 			if(!output_ptr()){

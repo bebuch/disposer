@@ -101,7 +101,7 @@ namespace disposer{
 
 		/// \brief Constructor
 		template < typename MakeData >
-		constexpr input(MakeData const& m)
+		input(MakeData const& m)
 			: input_base(
 				(verify_maker_data(
 						m.data.maker, m.accessory, m.data.info
@@ -118,22 +118,15 @@ namespace disposer{
 				) ...)
 			) {}
 
-		/// \brief Inputs are not copyable
-		input(input const&) = delete;
-
-		/// \brief Inputs are not movable
-		input(input&&) = delete;
-
 
 		/// \brief true if any type is enabled
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()noexcept const{
 			return hana::any(hana::values(enabled_map_));
 		}
 
 		/// \brief true if type is enabled
 		template < typename U >
-		constexpr bool
-		is_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_enabled(hana::basic_type< U > const& type)noexcept const{
 			auto const is_type_valid = hana::contains(enabled_map_, type);
 			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
@@ -141,8 +134,9 @@ namespace disposer{
 
 		/// \brief true if subtype is enabled
 		template < typename U >
-		constexpr bool
-		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_subtype_enabled(
+			hana::basic_type< U > const& type
+		)noexcept const{
 			return is_enabled(type_transform(type));
 		}
 
@@ -150,7 +144,7 @@ namespace disposer{
 	private:
 		/// \brief Checks to make before object initialization
 		template < typename InputMaker, typename Accessory >
-		static constexpr void verify_maker_data(
+		static void verify_maker_data(
 			InputMaker const& maker,
 			Accessory const& accessory,
 			std::optional< output_info > const& info

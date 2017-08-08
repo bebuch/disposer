@@ -9,6 +9,7 @@
 #ifndef _disposer__core__module_base__hpp_INCLUDED_
 #define _disposer__core__module_base__hpp_INCLUDED_
 
+#include "output_exec_base.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 #include "disposer.hpp"
@@ -33,17 +34,21 @@ namespace disposer{
 	struct chain_key;
 
 
+	using output_map_type
+		= std::unordered_map< output_base*, output_exec_base* >;
+
+
 	/// \brief Base class for all disposer modules
 	class module_base{
 	public:
 		/// \brief Constructor
 		module_base(
-			std::string const& type_name,
 			std::string const& chain,
+			std::string const& type_name,
 			std::size_t number
 		)
-			: type_name(type_name)
-			, chain(chain)
+			: chain(chain)
+			, type_name(type_name)
 			, number(number) {}
 
 		/// \brief Modules are not copyable
@@ -70,12 +75,19 @@ namespace disposer{
 		/// \brief Call the actual disable() function
 		void disable(chain_key&&)noexcept{ disable(); }
 
+		/// \brief Call the actual make_module_exec(id) function
+		module_exec_ptr make_module_exec(
+			chain_key&&, std::size_t id, output_map_type& output_map
+		){
+			return make_module_exec(id, output_map);
+		}
 
-		/// \brief Name of the module type given via class module_declarant
-		std::string const type_name;
 
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
+
+		/// \brief Name of the module type given via class module_declarant
+		std::string const type_name;
 
 		/// \brief Position of the module in the process chain
 		///
@@ -89,6 +101,10 @@ namespace disposer{
 
 		/// \brief Disables the module for exec calls
 		virtual void disable()noexcept = 0;
+
+		/// \brief Make a corresponding module_exec
+		virtual module_exec_ptr make_module_exec(
+			std::size_t id, output_map_type& output_map) = 0;
 	};
 
 

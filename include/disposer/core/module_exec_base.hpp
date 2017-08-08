@@ -11,7 +11,6 @@
 
 #include "output_exec_base.hpp"
 #include "input_exec_base.hpp"
-#include "module_base.hpp"
 
 
 namespace disposer{
@@ -28,9 +27,7 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		module_exec_base(module_base& module, std::size_t id)
-			: id(id)
-			, module_(module) {}
+		module_exec_base()noexcept = default;
 
 		/// \brief Modules are not copyable
 		module_exec_base(module_exec_base const&) = delete;
@@ -59,14 +56,10 @@ namespace disposer{
 		void cleanup(chain_key&&)noexcept{ cleanup(); }
 
 
-		/// \brief Call get_output_map()
-		output_map get_output_map(creator_key&&)const{
-			return get_output_map();
-		}
-
-
-		/// \brief Current exec id
-		std::size_t const id;
+// 		/// \brief Call get_output_map()
+// 		output_map get_output_map(creator_key&&)const{
+// 			return get_output_map();
+// 		}
 
 
 	protected:
@@ -74,14 +67,10 @@ namespace disposer{
 		virtual void exec() = 0;
 
 		/// \brief The cleanup function
-		virtual void cleanup() = 0;
+		virtual void cleanup()noexcept = 0;
 
-		/// \brief Get map from output names to output_exec_base pointers
-		virtual output_map_type get_output_map()const = 0;
-
-
-		/// \brief Reference to the module object
-		module_base& module_;
+// 		/// \brief Get map from output names to output_exec_base pointers
+// 		virtual output_map_type get_output_map()const = 0;
 	};
 
 

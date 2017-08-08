@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__module_data__hpp_INCLUDED_
-#define _disposer__core__module_data__hpp_INCLUDED_
+#ifndef _disposer__core__module_exec_data__hpp_INCLUDED_
+#define _disposer__core__module_exec_data__hpp_INCLUDED_
 
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/transform.hpp>
@@ -46,11 +46,11 @@ namespace disposer{
 
 	/// \brief Accessory of a \ref module without log
 	template < typename List >
-	class module_data{
+	class module_exec_data{
 	public:
 		/// \brief Constructor
 		template < typename MakerList, typename MakeData, std::size_t ... I >
-		module_data(
+		module_exec_data(
 			MakerList const& maker_list,
 			MakeData const& data,
 			std::string_view location,
@@ -92,15 +92,15 @@ namespace disposer{
 			using name_t = std::remove_reference_t< Name >;
 			static_assert(
 				hana::is_a< input_name_tag, name_t > ||
-				hana::is_a< output_name_tag, name_t > ||
-				hana::is_a< parameter_name_tag, name_t >,
-				"parameter is not an input_name, output_name or "
-				"parameter_name");
+				hana::is_a< output_name_tag, name_t >,
+				"parameter is not an input_name or output_name");
 
 			using name_tag = typename name_t::hana_tag;
 
 			auto ref = hana::find_if(ref_list(), [&name](auto ref){
-					return hana::is_a< name_tag >(ref.get().name)
+					using tag = typename decltype(ref)::type::name_type
+						::hana_tag;
+					return hana::type_c< name_tag > == hana::type_c< tag >
 						&& ref.get().name == name.value;
 				});
 
@@ -110,7 +110,7 @@ namespace disposer{
 			return ref->get();
 		}
 
-		/// \brief hana::tuple of the inputs, outputs and parameters
+		/// \brief hana::tuple of the inputs and outputs
 		List list_;
 	};
 

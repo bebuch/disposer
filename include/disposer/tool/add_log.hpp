@@ -120,7 +120,7 @@ namespace disposer{
 		}
 
 	protected:
-		constexpr add_log()noexcept{
+		add_log()noexcept{
 			static_assert(std::is_base_of_v< add_log, Derived >);
 
 			auto log_prefix_implemented =

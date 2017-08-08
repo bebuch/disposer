@@ -51,7 +51,7 @@ namespace disposer{
 		typename TypeTransformFn,
 		typename ConnectionVerifyFn,
 		typename TypeVerifyFn >
-	constexpr auto create_input_maker(
+	auto create_input_maker(
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
@@ -76,11 +76,7 @@ namespace disposer{
 
 	/// \brief Creates a \ref input_maker object
 	template < char ... C, typename Types, typename ... Args >
-	constexpr auto make(
-		input_name< C ... >,
-		Types const& types,
-		Args&& ... args
-	){
+	auto make(input_name< C ... >, Types const& types, Args&& ... args){
 		detail::validate_arguments<
 				type_transform_fn_tag,
 				verify_connection_fn_tag,

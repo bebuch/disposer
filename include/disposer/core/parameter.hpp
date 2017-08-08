@@ -139,7 +139,7 @@ namespace disposer{
 
 
 		/// \brief true if any type is enabled, otherwise false
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(type_value_map_));
 		}
 
@@ -177,20 +177,6 @@ namespace disposer{
 		/// \brief Map of parameter types to values
 		type_value_map_t type_value_map_;
 	};
-
-
-	struct default_value_type_impl{
-		template < typename ... T >
-		constexpr auto operator()(T ... v)const noexcept{
-			return hana::type_c< std::optional< decltype(hana::make_map(
-				hana::make_pair(v, std::declval< typename T::type >()) ...
-			)) > >;
-		}
-	};
-
-	template < typename Types >
-	using default_value_type = typename decltype(
-		hana::unpack(Types{}, default_value_type_impl{}))::type;
 
 
 }

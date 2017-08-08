@@ -9,9 +9,9 @@
 #ifndef _disposer__core__module_exec__hpp_INCLUDED_
 #define _disposer__core__module_exec__hpp_INCLUDED_
 
-#include "module_exec_base.hpp"
-#include "state_maker_fn.hpp"
-#include "exec_fn.hpp"
+#include "module.hpp"
+
+#include "../tool/exec_list_t.hpp"
 
 #include <cassert>
 
@@ -21,66 +21,71 @@ namespace disposer{
 
 	/// \brief The actual module_exec type
 	template < typename List, typename StateMakerFn, typename ExecFn >
-	class module_exec: public module_base{
+	class module_exec: public module_exec_base{
 	public:
-		/// \brief Type for state_maker_fn
-		using state_accessory_type = state_accessory< List >;
-
-		/// \brief Type for exec_fn
-		using exec_accessory_type = exec_accessory< List >;
-
-
-		/// \brief Type of the module_exec state object
-		using state_type = std::invoke_result_t<
-			module_state_maker< StateMakerFn >, state_accessory_type const& >;
-
-		static_assert(!std::is_void_v< state_type >,
-			"state_maker function must not return void");
-
-
 		/// \brief Constructor
-		template < typename MakerList, typename MakeData >
 		module_exec(
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
-			module_state_maker< StateMakerFn > const& state_maker_fn,
-			module_exec< ExecFn > const& exec_fn
-		)
-			: module_base(data.type_name, data.chain, data.number,
-				// data_ can be referenced before initialization
-				generate_input_list(data_),
-				generate_output_list(data_))
-			, data_(maker_list, data, location, std::make_index_sequence<
-				decltype(hana::size(maker_list))::value >())
-			, state_maker_fn_(state_maker_fn)
-			, exec_fn_(exec_fn) {}
+			module< List, StateMakerFn, ExecFn >& module,
+			std::size_t id,
+			output_map_type& output_map
+		)noexcept
+			: module_(module)
+			, id_(id) {}
 
 
-		/// \brief Modules are not copyable
-		module_exec(module_exec const&) = delete;
+		/// \brief Name of the process chain in config file section 'chain'
+		std::string const& chain()noexcept const{
+			return module_.chain();
+		}
 
-		/// \brief Modules are not movable
-		module_exec(module_exec&&) = delete;
+		/// \brief Name of the module type given via class module_declarant
+		std::string const& type_name()noexcept const{
+			return module_.type_name();
+		}
 
+		/// \brief Position of the module in the process chain
+		std::size_t number()noexcept const{
+			return module_.number();
+		}
 
-
-	private:
-		/// \brief The actual worker function called one times per trigger
-		virtual void exec()override{
-			assert(state_);
-			exec_fn_(accessory_, id, *state_);
+		/// \brief Current exec id
+		std::size_t id()noexcept const{
+			return id_;
 		}
 
 
-		/// \brief Module config file data
-		module_data< List > data_;
+	private:
+		/// \brief Reference to the module
+		module< List, StateMakerFn, ExecFn >& module_;
 
-		/// \brief The function object that is called in enable()
-		module_state_maker< StateMakerFn > state_maker_fn_;
+		/// \brief Current exec id
+		std::size_t const id_;
 
-		/// \brief The function object that is called in exec()
-		std::optional< state_type > state_;
+		/// \brief List of input_exec's and output_exec's
+		module_exec_data< exec_list_t< List > > data_;
+
+
+		/// \brief The actual worker function called one times per trigger
+		virtual void exec()override{
+			assert(state_);
+			exec_fn_(accessory_, *state_);
+		}
+
+		/// \brief The cleanup function
+		virtual void cleanup()noexcept override{
+			for(auto& input: inputs_){
+				input.get().cleanup(module_base_key());
+			}
+		}
+
+// 		/// \brief Get map from output names to output_exec_base pointers
+// 		virtual output_map_type get_output_map()override const{
+// 			output_map_type map;
+// 			for(auto output: outputs_){
+// 				map.emplace(output.get().get_name(), &output.get());
+// 			}
+// 			return map;
+// 		}
 	};
 
 

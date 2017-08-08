@@ -39,14 +39,14 @@ namespace disposer{ namespace{
 
 
 	struct output_t{
-		constexpr output_t(
+		output_t(
 			module_base const& module,
 			output_base& output
 		)noexcept
 			: module(module)
 			, output(output) {}
 
-		constexpr output_t(output_t const& other)noexcept
+		output_t(output_t const& other)noexcept
 			: module(other.module)
 			, output(other.output) {}
 

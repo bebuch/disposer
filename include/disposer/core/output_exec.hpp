@@ -60,11 +60,9 @@ namespace disposer{
 		static constexpr std::size_t type_count = output_type::type_count;
 
 
-		/// \brief Outputs are not copyable
-		output_exec(output_exec const&) = delete;
-
-		/// \brief Outputs are not movable
-		output_exec(output_exec&&) = delete;
+		/// \brief Constructor
+		output_base(std::size_t use_count)noexcept
+			: output_exec_base(use_count) {}
 
 
 		/// \brief If there is only one type than the type, otherwise

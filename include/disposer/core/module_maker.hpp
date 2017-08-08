@@ -18,33 +18,33 @@ namespace disposer{
 
 
 	/// \brief Maker function for \ref module in a std::unique_ptr
-	template < typename MakerList, typename MakeData, typename EnableFn >
+	template < typename MakerList, typename MakeData, typename StateMakerFn >
 	auto make_module_ptr(
 		MakerList const& maker_list,
 		MakeData const& data,
 		std::string_view location,
-		module_state< EnableFn > const& enable_fn
+		state_maker_fn< StateMakerFn > const& state_maker
 	){
-		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
+		auto type = hana::unpack(maker_list, [](auto const& ... maker){
 			return hana::type_c< hana::tuple<
 				typename decltype(hana::typeid_(maker))::type::type ... > >;
 		});
 
-		using iop_list_type = typename decltype(list_type)::type;
+		using list_type = typename decltype(type)::type;
 
-		return std::make_unique< module< iop_list_type, EnableFn > >(
-			maker_list, data, location, enable_fn);
+		return std::make_unique< module< list_type, StateMakerFn > >(
+			maker_list, data, location, state_maker);
 	}
 
 
 	/// \brief Provids types for constructing an module
-	template < typename MakerList, typename EnableFn >
+	template < typename MakerList, typename StateMakerFn >
 	struct module_maker{
 		/// \brief Tuple of input/output/parameter-maker objects
 		MakerList makers;
 
 		/// \brief The function object that is called in enable()
-		module_state< EnableFn > enable_fn;
+		state_maker_fn< StateMakerFn > state_maker;
 
 
 		/// \brief Create an module object
@@ -67,14 +67,14 @@ namespace disposer{
 			std::string const basic_location = data.basic_location();
 
 			// Create the module
-			return make_module_ptr(makers, data, basic_location, enable_fn);
+			return make_module_ptr(makers, data, basic_location, state_maker);
 		}
 	};
 
 
 	/// \brief Wraps all given IOP configurations into a hana::tuple
 	template < typename ... IOP_Makers >
-	constexpr auto module_configure(IOP_Makers&& ... list){
+	auto module_configure(IOP_Makers&& ... list){
 		static_assert(hana::and_(hana::true_c, hana::or_(
 			hana::is_a< input_maker_tag, IOP_Makers >(),
 			hana::is_a< output_maker_tag, IOP_Makers >(),
@@ -91,22 +91,28 @@ namespace disposer{
 	struct module_register_fn_tag{};
 
 	/// \brief Registers a module configuration in the \ref disposer
-	template < typename MakerList, typename EnableFn >
+	template < typename MakerList, typename StateMakerFn >
 	class module_register_fn{
 	public:
 		/// \brief Hana tag to identify module register functions
 		using hana_tag = module_register_fn_tag;
 
 		/// \brief Constructor
-		constexpr module_register_fn(
+		module_register_fn(
 			MakerList&& list,
-			module_state< EnableFn >&& enable_fn
+			state_maker_fn< StateMakerFn >&& state_maker
 		)
 			: called_flag_(false)
-			, maker_{
-				static_cast< MakerList&& >(list),
-				std::move(enable_fn)
-			}
+			, maker_{static_cast< MakerList&& >(list), std::move(state_maker)}
+			{}
+
+		/// \brief Constructor
+		module_register_fn(
+			MakerList&& list,
+			state_maker_fn< StateMakerFn > const& state_maker
+		)
+			: called_flag_(false)
+			, maker_{static_cast< MakerList&& >(list), state_maker}
 			{}
 
 		/// \brief Call this function to register the module with the given type
@@ -129,7 +135,7 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The module_maker object
-		module_maker< MakerList, EnableFn > maker_;
+		module_maker< MakerList, StateMakerFn > maker_;
 
 		friend struct unit_test_key;
 	};

@@ -55,14 +55,14 @@ namespace disposer{
 	struct input_make_data{
 		static constexpr auto log_name = "input"sv;
 
-		constexpr input_make_data(
+		input_make_data(
 			InputMaker const& maker,
 			std::optional< output_info > const& info
 		)noexcept
 			: maker(maker)
 			, info(info){}
 
-		constexpr input_make_data(input_make_data&& other)noexcept
+		input_make_data(input_make_data&& other)noexcept
 			: maker(other.maker)
 			, info(std::move(other.info)) {}
 
@@ -74,10 +74,10 @@ namespace disposer{
 	struct output_make_data{
 		static constexpr auto log_name = "output"sv;
 
-		constexpr output_make_data(Maker const& maker)noexcept
+		output_make_data(Maker const& maker)noexcept
 			: maker(maker) {}
 
-		constexpr output_make_data(output_make_data&& other)noexcept
+		output_make_data(output_make_data&& other)noexcept
 			: maker(other.maker) {}
 
 		Maker const& maker;
@@ -87,14 +87,14 @@ namespace disposer{
 	struct parameter_make_data{
 		static constexpr auto log_name = "parameter"sv;
 
-		constexpr parameter_make_data(
+		parameter_make_data(
 			Maker const& maker,
 			ValueMap const& value_map
 		)noexcept
 			: maker(maker)
 			, value_map(value_map) {}
 
-		constexpr parameter_make_data(parameter_make_data&& other)noexcept
+		parameter_make_data(parameter_make_data&& other)noexcept
 			: maker(other.maker)
 			, value_map(other.value_map) {}
 
@@ -180,7 +180,7 @@ namespace disposer{
 			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));
 		}else{
-			static_assert(detail::false_c< decltype(maker) >,
+			static_assert(detail::false_c< Maker >,
 				"maker is not an iop (this is a bug in disposer!)");
 		}
 	}
@@ -188,7 +188,7 @@ namespace disposer{
 	template < typename IOP_RefList, std::size_t I >
 	class iops_accessory: public add_log< iops_accessory< IOP_RefList, I > >{
 	public:
-		constexpr iops_accessory(
+		iops_accessory(
 			IOP_RefList const& iop_list,
 			iop_log&& log_fn
 		)noexcept
@@ -215,6 +215,7 @@ namespace disposer{
 			log_fn_(os);
 		}
 
+
 	private:
 		template < typename IOP >
 		auto& get(IOP const& iop)const noexcept{
@@ -229,8 +230,7 @@ namespace disposer{
 			using iop_tag = typename iop_t::hana_tag;
 
 			auto iop_ref = hana::find_if(iop_list_, [&iop](auto ref){
-				using tag = typename decltype(ref)::type::name_type::hana_tag;
-				return hana::type_c< iop_tag > == hana::type_c< tag >
+				return hana::is_a< iop_tag >(ref.get().name)
 					&& ref.get().name == iop.value;
 			});
 
@@ -250,7 +250,7 @@ namespace disposer{
 
 	template < typename IOP_RefList, typename MakeData, std::size_t I >
 	struct iops_make_data{
-		constexpr iops_make_data(
+		iops_make_data(
 			MakeData&& make_data,
 			std::string_view location,
 			IOP_RefList const& iop_list,

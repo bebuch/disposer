@@ -62,9 +62,9 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "id(" << this->module_.id << ") chain("
-				<< this->module_.chain << ") module(" << this->module_.number
-				<< ":" << this->module_.type_name << ") exec: ";
+			os << "id(" << module_.id() << ") chain("
+				<< module_.chain() << ") module(" << module_.number()
+				<< ":" << module_.type_name() << ") exec: ";
 		}
 
 

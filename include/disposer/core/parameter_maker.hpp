@@ -70,7 +70,7 @@ namespace disposer{
 		typename ParserFn,
 		typename DefaultValueFn,
 		typename AsText >
-	constexpr auto create_parameter_maker(
+	auto create_parameter_maker(
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
@@ -138,11 +138,7 @@ namespace disposer{
 
 	/// \brief Creates a \ref parameter_maker object
 	template < char ... C, typename Types, typename ... Args >
-	constexpr auto make(
-		parameter_name< C ... >,
-		Types const& types,
-		Args&& ... args
-	){
+	auto make(parameter_name< C ... >, Types const& types, Args&& ... args){
 		detail::validate_arguments<
 				type_transform_fn_tag,
 				verify_value_fn_tag,

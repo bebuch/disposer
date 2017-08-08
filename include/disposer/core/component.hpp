@@ -35,11 +35,9 @@ namespace disposer{
 			std::string_view location,
 			std::index_sequence< I ... >
 		)
-			: // iop_list_ can be referenced before initialization
-				iop_ref_list_(hana::transform(iop_list_, ref{}))
-			, iop_list_(iops_make_data(
+			: list_(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(iop_ref_list_),
+				location, hana::slice_c< 0, I >(ref_list()),
 				hana::size_c< I >) ...)
 		{
 			(void)location; // GCC bug (silance unused warning)
@@ -62,38 +60,35 @@ namespace disposer{
 
 
 	private:
+		/// \brief list_ as tuple of std::reference_wrapper's
+		auto ref_list()noexcept const{
+			return hana::transform(list_, detail::ref{});
+		}
+
 		/// \brief Implementation for \ref operator()
-		template < typename IOP >
-		auto& get(IOP const& iop)const noexcept{
-			using iop_t = std::remove_reference_t< IOP >;
+		template < typename Name >
+		auto& get(Name const& name)const noexcept{
+			using name_t = std::remove_reference_t< Name >;
 			static_assert(
-				hana::is_a< parameter_name_tag, iop_t >,
+				hana::is_a< parameter_name_tag, name_t >,
 				"parameter is not an parameter_name");
 
-			using iop_tag = typename iop_t::hana_tag;
+			using name_tag = typename name_t::hana_tag;
 
-			auto iop_ref = hana::find_if(iop_ref_list_, [&iop](auto ref){
-				using tag = typename decltype(ref)::type::name_type::hana_tag;
-				return hana::type_c< iop_tag > == hana::type_c< tag >
-					&& ref.get().name == iop.value;
+			auto ref = hana::find_if(ref_list(), [&name](auto ref){
+				return hana::is_a< name_tag >(ref.get().name)
+					&& ref.get().name == name.value;
 			});
 
-			auto is_iop_valid = iop_ref != hana::nothing;
-			static_assert(is_iop_valid, "requested iop doesn't exist");
+			auto is_iop_valid = ref != hana::nothing;
+			static_assert(is_iop_valid, "requested name doesn't exist");
 
-			return iop_ref->get();
+			return ref->get();
 		}
 
 
-		/// \brief Like List but with elements in std::reference_wrapper
-		using iop_ref_list_type =
-			decltype(hana::transform(std::declval< List& >(), ref{}));
-
-		/// \brief hana::tuple of references to inputs, outputs and parameters
-		iop_ref_list_type iop_ref_list_;
-
 		/// \brief hana::tuple of the inputs, outputs and parameters
-		List iop_list_;
+		List list_;
 	};
 
 
@@ -160,7 +155,7 @@ namespace disposer{
 		}
 
 	private:
-		ComponentFn const component_fn_;
+		ComponentFn component_fn_;
 	};
 
 
@@ -203,15 +198,15 @@ namespace disposer{
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
 		template < typename P >
-		decltype(auto) operator()(P&& param)noexcept{
-			return accessory_(static_cast< P&& >(param));
+		auto& operator()(P const& param)noexcept{
+			return accessory_(param);
 		}
 
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
 		template < typename P >
-		decltype(auto) operator()(P&& param)const noexcept{
-			return accessory_(static_cast< P&& >(param));
+		auto const& operator()(P const& param)const noexcept{
+			return accessory_(param);
 		}
 
 
@@ -254,14 +249,14 @@ namespace disposer{
 		std::string_view location,
 		component_init< ComponentFn > const& component_fn
 	){
-		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
+		auto type = hana::unpack(maker_list, [](auto const& ... maker){
 			return hana::type_c< hana::tuple<
 				typename decltype(hana::typeid_(maker))::type::type ... > >;
 		});
 
-		using iop_list_type = typename decltype(list_type)::type;
+		using list_type = typename decltype(type)::type;
 
-		return std::make_unique< component< iop_list_type, ComponentFn > >(
+		return std::make_unique< component< list_type, ComponentFn > >(
 			disposer, maker_list, data, location, component_fn);
 
 	}
@@ -319,7 +314,7 @@ namespace disposer{
 
 	/// \brief Wraps all given P configurations into a hana::tuple
 	template < typename ... P_MakerList >
-	constexpr auto component_configure(P_MakerList&& ... list){
+	auto component_configure(P_MakerList&& ... list){
 		static_assert(hana::and_(hana::true_c,
 			hana::is_a< parameter_maker_tag, P_MakerList >() ...),
 			"at least one of the configure arguments is not a disposer "
@@ -351,7 +346,7 @@ namespace disposer{
 	class component_register_fn{
 	public:
 		/// \brief Constructor
-		constexpr component_register_fn(
+		component_register_fn(
 			P_MakerList&& list,
 			component_init< ComponentFn >&& component_fn,
 			ComponentModules&& component_modules
@@ -360,6 +355,20 @@ namespace disposer{
 			, maker_{
 				static_cast< P_MakerList&& >(list),
 				std::move(component_fn),
+				static_cast< ComponentModules&& >(component_modules)
+			}
+			{}
+
+		/// \brief Constructor
+		component_register_fn(
+			P_MakerList&& list,
+			component_init< ComponentFn > const& component_fn,
+			ComponentModules&& component_modules
+		)
+			: called_flag_(false)
+			, maker_{
+				static_cast< P_MakerList&& >(list),
+				component_fn,
 				static_cast< ComponentModules&& >(component_modules)
 			}
 			{}

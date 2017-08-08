@@ -25,7 +25,7 @@ namespace disposer{
 	class input_base{
 	public:
 		/// \brief Constructor
-		constexpr input_base(output_base* output)noexcept
+		input_base(output_base* output)noexcept
 			: output_(output) {}
 
 
@@ -45,7 +45,7 @@ namespace disposer{
 
 	protected:
 		/// \brief Get connected output or nullptr
-		constexpr output_base* output_ptr()const noexcept{ return output_; }
+		output_base* output_ptr()const noexcept{ return output_; }
 
 
 	private:

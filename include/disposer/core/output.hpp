@@ -84,16 +84,9 @@ namespace disposer{
 			"disposer::output types must not be references");
 
 
-		/// \brief Outputs are not copyable
-		output(output const&) = delete;
-
-		/// \brief Outputs are not movable
-		output(output&&) = delete;
-
-
 		/// \brief Constructor
 		template < typename MakeData >
-		constexpr output(MakeData const& m)
+		output(MakeData const& m)
 			: enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),
@@ -102,14 +95,13 @@ namespace disposer{
 
 
 		/// \brief true if any type is enabled
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
 		/// \brief true if type is enabled
 		template < typename U >
-		constexpr bool
-		is_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_enabled(hana::basic_type< U > const& type)const noexcept{
 			auto const is_type_valid = hana::contains(enabled_map_, type);
 			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
@@ -117,8 +109,9 @@ namespace disposer{
 
 		/// \brief true if subtype is enabled
 		template < typename U >
-		constexpr bool
-		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_subtype_enabled(
+			hana::basic_type< U > const& type
+		)const noexcept{
 			return is_enabled(type_transform(type));
 		}
 

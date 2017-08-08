@@ -36,9 +36,9 @@ namespace disposer{
 		id_generator& operator=(id_generator&&) = delete;
 
 
-		/// \brief Get the next ID and increase the counter
+		/// \brief Get the ID and increase the counter
 		std::size_t operator()(){
-			return next_id.fetch_add(1);
+			return next_id++;
 		}
 
 

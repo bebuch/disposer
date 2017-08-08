@@ -100,15 +100,15 @@ namespace disposer{
 	public:
 		using hana_tag = enable_fn_tag;
 
-		constexpr enable_fn()
+		enable_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr enable_fn(Fn const& fn)
+		explicit enable_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr enable_fn(Fn&& fn)
+		explicit enable_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -130,7 +130,7 @@ namespace disposer{
 
 		/// \brief Operator for outputs
 		template < typename Accessory, typename T >
-		constexpr bool operator()(
+		bool operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< Accessory, T >()){
@@ -155,7 +155,7 @@ namespace disposer{
 
 		/// \brief Operator for parameters
 		template < typename Accessory, typename T >
-		constexpr bool operator()(
+		bool operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type,
 			std::string_view name
@@ -197,7 +197,7 @@ namespace disposer{
 	template < typename Name >
 	struct enable_by_transformed_types_of_t{
 		template < typename Accessory, typename Type >
-		constexpr auto operator()(Accessory const& iop, Type type)const{
+		auto operator()(Accessory const& iop, Type type)const{
 			auto const& other = iop(Name{});
 			return other.is_enabled(other.type_transform(type));
 		}
@@ -212,7 +212,7 @@ namespace disposer{
 	template < typename Name >
 	struct enable_by_types_of_t{
 		template < typename Accessory, typename Type >
-		constexpr auto operator()(Accessory const& iop, Type type)const{
+		auto operator()(Accessory const& iop, Type type)const{
 			return iop(Name{}).is_subtype_enabled(type);
 		}
 	};
@@ -231,15 +231,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_connection_fn_tag;
 
-		constexpr verify_connection_fn()
+		verify_connection_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_connection_fn(Fn const& fn)
+		explicit verify_connection_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_connection_fn(Fn&& fn)
+		explicit verify_connection_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -260,7 +260,7 @@ namespace disposer{
 
 
 		template < typename Accessory >
-		constexpr void operator()(
+		void operator()(
 			Accessory const& accessory,
 			bool connected
 		)const noexcept(calc_noexcept< Accessory >()){
@@ -282,7 +282,7 @@ namespace disposer{
 
 	struct required_t{
 		template < typename Accessory >
-		constexpr void operator()(Accessory const&, bool connected)const{
+		void operator()(Accessory const&, bool connected)const{
 			if(!connected) throw std::logic_error("input is required");
 		}
 	};
@@ -292,7 +292,7 @@ namespace disposer{
 
 	struct optional_t{
 		template < typename Accessory >
-		constexpr void operator()(Accessory const&, bool)const noexcept{}
+		void operator()(Accessory const&, bool)const noexcept{}
 	};
 
 	constexpr auto optional = verify_connection_fn< optional_t >{};
@@ -306,15 +306,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_type_fn_tag;
 
-		constexpr verify_type_fn()
+		verify_type_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_type_fn(Fn const& fn)
+		explicit verify_type_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_type_fn(Fn&& fn)
+		explicit verify_type_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -337,7 +337,7 @@ namespace disposer{
 		}
 
 		template < typename Accessory, typename T >
-		constexpr void operator()(
+		void operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type,
 			output_info const& info
@@ -362,7 +362,7 @@ namespace disposer{
 
 	struct verify_type_always_t{
 		template < typename Accessory, typename T >
-		constexpr void operator()(
+		void operator()(
 			Accessory const& /* accessory */,
 			hana::basic_type< T > /*type*/,
 			output_info const& /*info*/
@@ -381,15 +381,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_value_fn_tag;
 
-		constexpr verify_value_fn()
+		verify_value_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr verify_value_fn(Fn const& fn)
+		explicit verify_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr verify_value_fn(Fn&& fn)
+		explicit verify_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -409,7 +409,7 @@ namespace disposer{
 		}
 
 		template < typename Accessory, typename T >
-		constexpr void operator()(
+		void operator()(
 			Accessory const& accessory,
 			T const& value
 		)const noexcept(calc_noexcept< Accessory, T >()){
@@ -426,7 +426,7 @@ namespace disposer{
 
 	struct verify_value_always_t{
 		template < typename Accessory, typename T >
-		constexpr void operator()(
+		void operator()(
 			Accessory const& /* accessory */,
 			T const& /*value*/
 		)const noexcept{}
@@ -444,15 +444,15 @@ namespace disposer{
 	public:
 		using hana_tag = parser_fn_tag;
 
-		constexpr parser_fn()
+		parser_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr parser_fn(Fn const& fn)
+		explicit parser_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr parser_fn(Fn&& fn)
+		explicit parser_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -475,7 +475,7 @@ namespace disposer{
 		}
 
 		template < typename Accessory, typename T >
-		constexpr T operator()(
+		T operator()(
 			Accessory const& accessory,
 			std::string_view value,
 			hana::basic_type< T > type
@@ -566,15 +566,15 @@ namespace disposer{
 	public:
 		using hana_tag = default_value_fn_tag;
 
-		constexpr default_value_fn()
+		default_value_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit constexpr default_value_fn(Fn const& fn)
+		explicit default_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit constexpr default_value_fn(Fn&& fn)
+		explicit default_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -629,7 +629,7 @@ namespace disposer{
 
 		/// \brief Operator for outputs
 		template < typename Accessory, typename T >
-		constexpr std::optional< T > operator()(
+		std::optional< T > operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< Accessory, T >()){
@@ -655,12 +655,12 @@ namespace disposer{
 
 	struct auto_default_t{
 		template < typename Accessory, typename T >
-		constexpr void operator()(
+		void operator()(
 			Accessory const&, hana::basic_type< T >
 		)const noexcept{}
 
 		template < typename Accessory, typename T >
-		constexpr std::optional< T > operator()(
+		std::optional< T > operator()(
 			Accessory const&, hana::basic_type< std::optional< T > >
 		)const noexcept{ return {}; }
 	};
@@ -668,7 +668,7 @@ namespace disposer{
 	constexpr auto auto_default = default_value_fn(auto_default_t{});
 
 	template < typename T >
-	constexpr auto default_value(T&& value)
+	auto default_value(T&& value)
 	noexcept(std::is_nothrow_move_constructible_v< T >){
 		return default_value_fn([value = std::move(value)](auto const&, auto)
 			noexcept(std::is_nothrow_copy_constructible_v< T >)
@@ -701,7 +701,7 @@ namespace disposer{
 
 
 	template < typename Tuple, typename Predicate, typename Default >
-	constexpr auto get_or_default(
+	auto get_or_default(
 		Tuple&& tuple,
 		Predicate&& predicate,
 		Default&& default_value
