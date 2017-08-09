@@ -61,8 +61,9 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		output_base(std::size_t use_count)noexcept
+		output_exec(std::size_t use_count)noexcept
 			: output_exec_base(use_count) {}
+
 
 
 		/// \brief If there is only one type than the type, otherwise
@@ -96,14 +97,14 @@ namespace disposer{
 
 
 		/// \brief Returns the output name
-		virtual std::string_view get_name()const noexcept override{
+		virtual std::string_view get_name()noexcept const override{
 			return detail::to_std_string_view(name);
 		}
 
 
 	private:
 		/// \brief Get vector of references to all data
-		virtual std::vector< reference_carrier > get_references()override const{
+		virtual std::vector< reference_carrier > get_references()const override{
 			std::vector< reference_carrier > result;
 			result.reserve(data_.size());
 

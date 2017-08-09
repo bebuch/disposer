@@ -102,12 +102,10 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename MakeData >
 		input(MakeData const& m)
-			: input_base(
-				(verify_maker_data(
-						m.data.maker, m.accessory, m.data.info
-					) // precondition call
-					, m.data.info ? m.data.info->output() : nullptr),
-				m.data.info ? m.data.info->last_use() : true)
+			: input_base((
+					// precondition call
+					verify_maker_data(m.data.maker, m.accessory, m.data.info)
+				, m.data.info ? m.data.info->output() : nullptr))
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),
@@ -120,13 +118,13 @@ namespace disposer{
 
 
 		/// \brief true if any type is enabled
-		bool is_enabled()noexcept const{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
 		/// \brief true if type is enabled
 		template < typename U >
-		bool is_enabled(hana::basic_type< U > const& type)noexcept const{
+		bool is_enabled(hana::basic_type< U > const& type)const noexcept{
 			auto const is_type_valid = hana::contains(enabled_map_, type);
 			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
@@ -136,7 +134,7 @@ namespace disposer{
 		template < typename U >
 		bool is_subtype_enabled(
 			hana::basic_type< U > const& type
-		)noexcept const{
+		)const noexcept{
 			return is_enabled(type_transform(type));
 		}
 

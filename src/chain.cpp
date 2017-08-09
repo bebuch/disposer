@@ -85,8 +85,11 @@ namespace disposer{
 
 		output_map_type output_map;
 		for(auto const& module: modules_){
-			list.push_back(module.make_module_exec(chain_key(), id, output_map);
+			list.push_back(
+				module->make_module_exec(chain_key(), id, output_map));
 		}
+
+		return list;
 	}
 
 
@@ -100,18 +103,19 @@ namespace disposer{
 		// generate a new id for the exec
 		std::size_t const id = generate_id_();
 
-		auto modules = make_exec_modules(id);
-
 		// exec any module, call cleanup instead if the module throw
 		logsys::log([this, id](logsys::stdlogb& os){
 			os << "id(" << id << ") chain(" << name << ")";
-		}, [this, id, run]{
+		}, [this, id]{
+			auto modules = logsys::log([this, id](logsys::stdlogb& os){
+					os << "id(" << id << ") chain(" << name << ") prepared";
+				}, [this, id]{ return make_exec_modules(id); });
+
 			try{
-				for(std::size_t i = 0; i < modules_.size(); ++i){
-					modules_[i]->set_id(chain_key(), id);
-					process_module(i, id, [this, id](std::size_t i){
-						modules_[i]->exec(chain_key());
-						modules_[i]->cleanup(chain_key(), id);
+				for(std::size_t i = 0; i < modules.size(); ++i){
+					process_module(i, id, [this, id, &modules](std::size_t i){
+						modules[i]->exec(chain_key());
+						modules[i]->cleanup(chain_key());
 					}, "exec");
 				}
 			}catch(...){
@@ -120,8 +124,8 @@ namespace disposer{
 					// exec was successful
 					if(ready_run_[i] >= id + 1) continue;
 
-					process_module(i, id, [this, id](std::size_t i){
-						modules_[i]->cleanup(chain_key(), id);
+					process_module(i, id, [this, id, &modules](std::size_t i){
+						modules[i]->cleanup(chain_key());
 					}, "cleanup");
 				}
 
@@ -217,8 +221,8 @@ namespace disposer{
 		module_cv_.wait(lock, [this, i, id]{ return ready_run_[i] == id; });
 
 		// exec or cleanup the module
-		logsys::log([this, i, action_name](logsys::stdlogb& os){
-			os << "id(" << modules_[i]->id << ") "
+		logsys::log([this, id, i, action_name](logsys::stdlogb& os){
+			os << "id(" << id << ") "
 				<< "chain(" << modules_[i]->chain << ") module("
 				<< modules_[i]->number << ":" << modules_[i]->type_name
 				<< ") " << action_name;

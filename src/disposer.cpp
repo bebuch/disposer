@@ -13,6 +13,7 @@
 #include <disposer/config/check_semantic.hpp>
 #include <disposer/config/unused_warnings.hpp>
 #include <disposer/config/embedded_config.hpp>
+#include <disposer/config/set_output_use_count.hpp>
 
 #include <disposer/disposer.hpp>
 
@@ -210,7 +211,11 @@ namespace disposer{
 
 		auto embedded_config = logsys::log(
 			[](logsys::stdlogb& os){ os << "created embedded config"; },
-			[&config]{ return create_embedded_config(std::move(config)); });
+			[&config]{
+				auto result = create_embedded_config(std::move(config));
+				set_output_use_count(result);
+				return result;
+			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "created components"; },
 			[this, &embedded_config]{

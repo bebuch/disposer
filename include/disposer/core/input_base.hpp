@@ -43,7 +43,6 @@ namespace disposer{
 		input_base& operator=(input_base&&) = delete;
 
 
-	protected:
 		/// \brief Get connected output or nullptr
 		output_base* output_ptr()const noexcept{ return output_; }
 

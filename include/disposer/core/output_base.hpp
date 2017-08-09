@@ -18,7 +18,6 @@
 namespace disposer{
 
 
-
 	/// \brief Base for module outpus
 	///
 	/// Polymorphe base class for module outputs.
@@ -27,6 +26,10 @@ namespace disposer{
 	/// An output might have more then one data type.
 	class output_base{
 	public:
+		/// \brief Constructor
+		output_base(std::size_t use_count)noexcept
+			: use_count_(use_count) {}
+
 		/// \brief Outputs are not copyable
 		output_base(output_base const&) = delete;
 
@@ -43,6 +46,15 @@ namespace disposer{
 
 		/// \brief List of enabled output types
 		virtual std::map< type_index, bool > enabled_types()const = 0;
+
+
+		/// \brief The count of connected inputs
+		std::size_t use_count()const noexcept{ return use_count_; }
+
+
+	private:
+		/// \brief The count of connected inputs
+		std::size_t const use_count_;
 	};
 
 

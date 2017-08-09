@@ -9,7 +9,7 @@
 #ifndef _disposer__core__module_base__hpp_INCLUDED_
 #define _disposer__core__module_base__hpp_INCLUDED_
 
-#include "output_exec_base.hpp"
+#include "module_exec_base.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 #include "disposer.hpp"
@@ -32,10 +32,14 @@ namespace disposer{
 
 
 	struct chain_key;
+	struct creator_key;
 
 
 	using output_map_type
 		= std::unordered_map< output_base*, output_exec_base* >;
+
+	using output_name_to_ptr_type
+		= std::unordered_map< std::string, output_base* >;
 
 
 	/// \brief Base class for all disposer modules
@@ -83,6 +87,12 @@ namespace disposer{
 		}
 
 
+		/// \brief Call output_name_to_ptr()
+		output_name_to_ptr_type output_name_to_ptr(creator_key&&)const{
+			return output_name_to_ptr();
+		}
+
+
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
 
@@ -105,6 +115,9 @@ namespace disposer{
 		/// \brief Make a corresponding module_exec
 		virtual module_exec_ptr make_module_exec(
 			std::size_t id, output_map_type& output_map) = 0;
+
+		/// \brief Get map from output names to output_base pointers
+		virtual output_name_to_ptr_type output_name_to_ptr()const = 0;
 	};
 
 

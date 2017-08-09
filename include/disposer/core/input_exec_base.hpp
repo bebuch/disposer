@@ -48,7 +48,6 @@ namespace disposer{
 		input_exec_base(output_exec_base* output)noexcept
 			: output_(output) {}
 
-
 		/// \brief Inputs are not copyable
 		input_exec_base(input_exec_base const&) = delete;
 

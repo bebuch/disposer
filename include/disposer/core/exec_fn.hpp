@@ -41,7 +41,7 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename IOP >
-		auto const& operator()(IOP const& iop)noexcept const{
+		auto const& operator()(IOP const& iop)const noexcept{
 			return module_.data()(iop);
 		}
 

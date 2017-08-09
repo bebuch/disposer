@@ -30,26 +30,28 @@ namespace disposer{
 			output_map_type& output_map
 		)noexcept
 			: module_(module)
-			, id_(id) {}
+			, id_(id),
+			, data_(module, output_map, std::make_index_sequence<
+				detail::input_output_count_c< List > >()) {}
 
 
 		/// \brief Name of the process chain in config file section 'chain'
-		std::string const& chain()noexcept const{
+		std::string const& chain()const noexcept{
 			return module_.chain();
 		}
 
 		/// \brief Name of the module type given via class module_declarant
-		std::string const& type_name()noexcept const{
+		std::string const& type_name()const noexcept{
 			return module_.type_name();
 		}
 
 		/// \brief Position of the module in the process chain
-		std::size_t number()noexcept const{
+		std::size_t number()const noexcept{
 			return module_.number();
 		}
 
 		/// \brief Current exec id
-		std::size_t id()noexcept const{
+		std::size_t id()const noexcept{
 			return id_;
 		}
 
@@ -77,15 +79,6 @@ namespace disposer{
 				input.get().cleanup(module_base_key());
 			}
 		}
-
-// 		/// \brief Get map from output names to output_exec_base pointers
-// 		virtual output_map_type get_output_map()override const{
-// 			output_map_type map;
-// 			for(auto output: outputs_){
-// 				map.emplace(output.get().get_name(), &output.get());
-// 			}
-// 			return map;
-// 		}
 	};
 
 

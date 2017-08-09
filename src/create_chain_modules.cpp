@@ -46,9 +46,9 @@ namespace disposer{ namespace{
 			: module(module)
 			, output(output) {}
 
-		output_t(output_t const& other)noexcept
-			: module(other.module)
-			, output(other.output) {}
+// 		output_t(output_t const& other)noexcept
+// 			: module(other.module)
+// 			, output(other.output) {}
 
 		module_base const& module;
 		output_base& output;
@@ -104,19 +104,24 @@ namespace disposer{
 				// create input list
 				input_list config_inputs;
 				for(auto const& config_input: config_module.inputs){
-					bool const last_use =
-						config_input.transfer == in_transfer::move;
-					auto const output_ptr =
-						&variables.at(config_input.variable).output;
-					config_inputs.try_emplace(
-						config_input.name, output_ptr, last_use);
-					if(last_use) variables.erase(config_input.variable);
+					// find variable
+					auto const iter = variables.find(config_input.variable);
+					assert(iter != variables.end());
+
+					// emplace input with connected output
+					auto const output_ptr = &(iter->second.output);
+					config_inputs.emplace(config_input.name, output_ptr);
+
+					// remove config file variable if final use
+					if(config_input.transfer == in_transfer::move){
+						variables.erase(iter);
+					}
 				}
 
 				// create output list
 				output_list config_outputs;
 				for(auto const& config_output: config_module.outputs){
-					config_outputs.emplace(config_output.name);
+					config_outputs.emplace(config_output.name, 0);
 				}
 
 				// create module (in a unique_ptr)
@@ -132,8 +137,9 @@ namespace disposer{
 				// get a reference to the new module
 				auto& module = *modules.back();
 
-				// save output variables
-				auto const output_map = module.get_outputs(make_creator_key());
+				// get outputs and add them to variables-output-map
+				auto const output_map =
+					module.output_name_to_ptr(make_creator_key());
 				for(auto const& config_output: config_module.outputs){
 					variables.try_emplace(
 						config_output.variable,
@@ -144,20 +150,9 @@ namespace disposer{
 			});
 		}
 
-		if(variables.empty()) return modules;
+		assert(variables.empty());
 
-		std::ostringstream os;
-		os << "Some variables are never finally used: ";
-		bool first = true;
-		for(auto const& [name, data]: variables){
-			if(first){ first = false; }else{ os << ", "; }
-			os << "variable(" << name << ") from chain(" << data.module.chain
-				<< ") module(" << data.module.number << ":"
-				<< data.module.type_name << ") output("
-				<< data.output.get_name() << ")";
-		}
-
-		throw std::logic_error(os.str());
+		return modules;
 	}
 
 

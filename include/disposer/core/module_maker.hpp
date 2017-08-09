@@ -11,6 +11,8 @@
 
 #include "module.hpp"
 
+#include "../config/validate_iop.hpp"
+
 #include <atomic>
 
 
@@ -53,9 +55,12 @@ namespace disposer{
 			// parameters, warn about parameters, throw for inputs and outputs
 			auto const location = data.location();
 			{
-				auto inputs = validate_inputs(location, makers, data.inputs);
-				auto outputs = validate_outputs(location, makers, data.outputs);
-				validate_parameters(location, makers, data.parameters);
+				auto inputs = validate_iop< input_maker_tag >(
+					location, makers, data.inputs);
+				auto outputs = validate_iop< output_maker_tag >(
+					location, makers, data.outputs);
+				validate_iop< parameter_maker_tag >(
+					location, makers, data.parameters);
 
 				if(!inputs.empty() || !outputs.empty()){
 					throw std::logic_error(location + "some inputs or "

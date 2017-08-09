@@ -87,7 +87,8 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename MakeData >
 		output(MakeData const& m)
-			: enabled_map_(hana::unpack(hana::transform(subtypes,
+			: output_base(m.use_count)
+			, enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),
 						m.data.maker.enable(m.accessory, subtype));

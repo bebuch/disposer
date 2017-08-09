@@ -31,10 +31,10 @@ namespace disposer{
 		/// The first module has number 1.
 		std::size_t const number;
 
-		/// \brief Map of the input names and corresponding output pointers
+		/// \brief Map of input names to corresponding output pointers
 		input_list const inputs;
 
-		/// \brief List of the output names
+		/// \brief Map of output names to connected input count
 		output_list const outputs;
 
 		/// \brief Parameters from the config file

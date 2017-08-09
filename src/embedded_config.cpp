@@ -94,7 +94,8 @@ namespace disposer{ namespace{
 			result.push_back({
 				std::move(component.name),
 				std::move(component.type_name),
-				embedded_config_parameters(sets, std::move(component.parameters))
+				embedded_config_parameters(sets,
+					std::move(component.parameters))
 			});
 		}
 		return result;
@@ -106,18 +107,29 @@ namespace disposer{ namespace{
 	){
 		types::embedded_config::chains_config result;
 		for(auto& chain: chains){
-			auto& result_chain = result.emplace_back(types::embedded_config::chain{
-				std::move(chain.name),
-				chain.id_generator.value_or("default"),
-				{}
-			});
+			auto& result_chain = result.emplace_back(
+				types::embedded_config::chain{
+					std::move(chain.name),
+					chain.id_generator.value_or("default"),
+					{}
+				});
 
 			for(auto& module: chain.modules){
-				result_chain.modules.emplace_back(types::embedded_config::module{
+				std::vector< types::embedded_config::out > outputs;
+				outputs.reserve(module.outputs.size());
+				for(auto& output: module.outputs){
+					outputs.push_back({
+						std::move(output.name),
+						std::move(output.variable),
+						0
+					});
+				}
+
+				result_chain.modules.push_back({
 					std::move(module.type_name),
 					embedded_config_parameters(sets, std::move(module.parameters)),
 					std::move(module.inputs),
-					std::move(module.outputs)
+					std::move(outputs)
 				});
 			}
 		}

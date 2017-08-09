@@ -45,17 +45,17 @@ namespace disposer{
 
 
 		/// \brief Name of the process chain in config file section 'chain'
-		std::string const& chain()noexcept const{
+		std::string const& chain()const noexcept{
 			return module_base::chain;
 		}
 
 		/// \brief Name of the module type given via class module_declarant
-		std::string const& type_name()noexcept const{
+		std::string const& type_name()const noexcept{
 			return module_base::type_name;
 		}
 
 		/// \brief Position of the module in the process chain
-		std::size_t number()noexcept const{
+		std::size_t number()const noexcept{
 			return module_base::number;
 		}
 
@@ -64,10 +64,10 @@ namespace disposer{
 		module_data< List >& data()noexcept{ return data_; }
 
 		/// \brief Reference to the config file data
-		module_data< List > const& data()noexcept const{ return data_; }
+		module_data< List > const& data()const noexcept{ return data_; }
 
 		/// \brief Reference to the users state object
-		auto& state(exec_key&&)noexcept const{
+		auto& state(exec_key&&)const noexcept{
 			return state_.get();
 		}
 
@@ -93,6 +93,12 @@ namespace disposer{
 			return std::make_unique
 				< module_exec< List, StateMakerFn, ExecFn > >
 				(*this, id, output_map_type& output_map);
+		}
+
+
+		/// \brief Get map from output names to output_base pointers
+		virtual output_name_to_ptr_type output_name_to_ptr()const override{
+			return data_.output_name_to_ptr();
 		}
 
 

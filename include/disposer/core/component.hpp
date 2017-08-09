@@ -61,7 +61,7 @@ namespace disposer{
 
 	private:
 		/// \brief list_ as tuple of std::reference_wrapper's
-		auto ref_list()noexcept const{
+		auto ref_list()const noexcept{
 			return hana::transform(list_, detail::ref{});
 		}
 
@@ -286,7 +286,8 @@ namespace disposer{
 			// Check config file data for undefined parameters and warn about
 			// them
 			auto const location = data.location();
-			validate_parameters(location, makers, data.parameters);
+			validate_iop< parameter_maker_tag >(
+				location, makers, data.parameters);
 
 			std::string const basic_location = data.basic_location();
 

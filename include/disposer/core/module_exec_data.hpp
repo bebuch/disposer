@@ -29,7 +29,7 @@ namespace disposer::detail{
 	/// \brief std::ref as callable object
 	struct ref{
 		template < typename T >
-		constexpr auto operator()(T& name)noexcept const{
+		constexpr auto operator()(T& name)const noexcept{
 			return std::ref(name);
 		}
 	};
@@ -44,24 +44,54 @@ namespace disposer{
 	using namespace hana = boost::hana;
 
 
+	template < typename List, std::size_t I >
+	constexpr auto get_name
+		= decltype(std::declval< List >()[hana::size_c< I >].name)();
+
+	template < typename List, std::size_t I, typename Module >
+	auto io_exec_make_data(
+		Module const& module,
+		output_map_type const& output_map
+	)noexcept{
+		constexpr auto name = get_name< List, I >;
+		if constexpr(hana::is_a< input_name_tag >(name)){
+			auto const ptr = module(name).output_ptr();
+			return ptr ? output_map[ptr] : nullptr;
+		}else if constexpr(hana::is_a< output_name_tag >(name)){
+			return module(name).use_count();
+		}else{
+			static_assert(false_c< name_type >,
+				"name must be an input_name or an output_name");
+		}
+	}
+
+	template < typename List, std::size_t I, typename Module, typename Data >
+	auto add_outputs_to_map(
+		Module const& module,
+		Data const& data,
+		output_map_type& output_map
+	){
+		constexpr auto name = get_name< List, I >;
+		if constexpr(hana::is_a< output_name_tag >(name)){
+			output_map.emplace(&(module(name)), &(data(name)));
+		}
+	}
+
+
 	/// \brief Accessory of a \ref module without log
 	template < typename List >
 	class module_exec_data{
 	public:
 		/// \brief Constructor
-		template < typename MakerList, typename MakeData, std::size_t ... I >
+		template < typename Module, std::size_t ... I >
 		module_exec_data(
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
+			Module const& module,
+			output_map_type& output_map,
 			std::index_sequence< I ... >
 		)
-			: list_(iops_make_data(
-				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(ref_list()),
-				hana::size_c< I >) ...)
+			: list_(io_exec_make_data< List, I >(module, output_map) ...)
 		{
-			(void)location; // GCC bug (silance unused warning)
+			(add_output_to_map< List, I >(module, list_, output_map), ...);
 		}
 
 
@@ -75,20 +105,20 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)noexcept const{
+		auto const& operator()(Name const& name)const noexcept{
 			return get(name);
 		}
 
 
 	private:
 		/// \brief list_ as tuple of std::reference_wrapper's
-		auto ref_list()noexcept const{
+		auto ref_list()const noexcept{
 			return hana::transform(list_, detail::ref{});
 		}
 
 		/// \brief Implementation for \ref operator()
 		template < typename Name >
-		auto& get(Name const& name)noexcept const{
+		auto& get(Name const& name)const noexcept{
 			using name_t = std::remove_reference_t< Name >;
 			static_assert(
 				hana::is_a< input_name_tag, name_t > ||

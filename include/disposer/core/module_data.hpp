@@ -16,6 +16,7 @@
 #include <boost/hana/slice.hpp>
 #include <boost/hana/size.hpp>
 
+#include <unordered_map>
 #include <type_traits>
 #include <string_view>
 #include <functional>
@@ -29,7 +30,7 @@ namespace disposer::detail{
 	/// \brief std::ref as callable object
 	struct ref{
 		template < typename T >
-		constexpr auto operator()(T& name)noexcept const{
+		constexpr auto operator()(T& name)const noexcept{
 			return std::ref(name);
 		}
 	};
@@ -42,6 +43,10 @@ namespace disposer{
 
 
 	using namespace hana = boost::hana;
+
+
+	using output_name_to_ptr_type
+		= std::unordered_map< std::string, output_base* >;
 
 
 	/// \brief Accessory of a \ref module without log
@@ -75,20 +80,33 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)noexcept const{
+		auto const& operator()(Name const& name)const noexcept{
 			return get(name);
+		}
+
+
+		output_name_to_ptr_type output_name_to_ptr()const{
+			output_name_to_ptr_type map;
+			hana::for_each(ref_list(), [&map](auto ref){
+					if constexpr(hana::is_a< output_name_tag >(ref.get().name)){
+						map.emplace(
+							detail::to_std_string(ref.get().name),
+							&ref.get());
+					}
+				});
+			return map;
 		}
 
 
 	private:
 		/// \brief list_ as tuple of std::reference_wrapper's
-		auto ref_list()noexcept const{
+		auto ref_list()const noexcept{
 			return hana::transform(list_, detail::ref{});
 		}
 
 		/// \brief Implementation for \ref operator()
 		template < typename Name >
-		auto& get(Name const& name)noexcept const{
+		auto& get(Name const& name)const noexcept{
 			using name_t = std::remove_reference_t< Name >;
 			static_assert(
 				hana::is_a< input_name_tag, name_t > ||

@@ -8,7 +8,9 @@
 //-----------------------------------------------------------------------------
 #include <disposer/config/check_semantic.hpp>
 
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <sstream>
 
 
 namespace disposer{ namespace{
@@ -19,7 +21,7 @@ namespace disposer{ namespace{
 		LocationFn const& location_fn,
 		std::vector< types::parse::parameter > const& params
 	){
-		std::set< std::string > keys;
+		std::unordered_set< std::string > keys;
 		for(auto& param: params){
 			if(!keys.insert(param.key).second){
 				throw std::logic_error(
@@ -27,7 +29,7 @@ namespace disposer{ namespace{
 				);
 			}
 
-			std::set< std::string > types;
+			std::unordered_set< std::string > types;
 			for(auto& specialization: param.specialized_values){
 				if(!keys.insert(specialization.type).second){
 					throw std::logic_error(
@@ -43,10 +45,10 @@ namespace disposer{ namespace{
 	template < typename LocationFn >
 	void check_param_sets(
 		LocationFn const& location_fn,
-		std::set< std::string > const& known_sets,
+		std::unordered_set< std::string > const& known_sets,
 		std::vector< std::string > const& param_sets
 	){
-		std::set< std::string > sets;
+		std::unordered_set< std::string > sets;
 		for(auto& set: param_sets){
 			if(known_sets.find(set) == known_sets.end()){
 				throw std::logic_error(
@@ -64,6 +66,25 @@ namespace disposer{ namespace{
 	}
 
 
+	struct connected{
+		connected(
+			std::string const& chain_name,
+			std::string const& module_type_name,
+			std::size_t const& module_number,
+			std::string const& output_name
+		)
+			: chain_name(chain_name)
+			, module_type_name(module_type_name)
+			, module_number(module_number)
+			, output_name(output_name) {}
+
+		std::string const chain_name;
+		std::string const module_type_name;
+		std::size_t const module_number;
+		std::string const output_name;
+	};
+
+
 }}
 
 
@@ -71,7 +92,7 @@ namespace disposer{
 
 
 	void check_semantic(types::parse::config const& config){
-		std::set< std::string > known_sets;
+		std::unordered_set< std::string > known_sets;
 		for(auto& set: config.sets){
 			if(!known_sets.insert(set.name).second){
 				throw std::logic_error(
@@ -79,7 +100,7 @@ namespace disposer{
 				);
 			}
 
-			std::set< std::string > keys;
+			std::unordered_set< std::string > keys;
 			for(auto& param: set.parameters){
 				if(!keys.insert(param.key).second){
 					throw std::logic_error(
@@ -90,7 +111,7 @@ namespace disposer{
 			}
 		}
 
-		std::set< std::string > components;
+		std::unordered_set< std::string > components;
 		for(auto& component: config.components){
 			if(!components.insert(component.name).second){
 				throw std::logic_error(
@@ -108,7 +129,7 @@ namespace disposer{
 			check_params(location, component.parameters.parameters);
 		}
 
-		std::set< std::string > chains;
+		std::unordered_set< std::string > chains;
 		for(auto& chain: config.chains){
 			if(!chains.insert(chain.name).second){
 				throw std::logic_error(
@@ -116,8 +137,7 @@ namespace disposer{
 				);
 			}
 
-			std::set< std::string > variables;
-			std::set< std::string > chain_modules;
+			std::unordered_map< std::string, connected > variables;
 			std::size_t module_number = 1;
 			for(auto& module: chain.modules){
 				auto location = [&chain, &module, module_number]{
@@ -130,7 +150,7 @@ namespace disposer{
 					module.parameters.parameter_sets);
 				check_params(location, module.parameters.parameters);
 
-				std::set< std::string > inputs;
+				std::unordered_set< std::string > inputs;
 				for(auto& input: module.inputs){
 					if(!inputs.insert(input.name).second){
 						throw std::logic_error(
@@ -140,7 +160,8 @@ namespace disposer{
 				}
 
 				for(auto& input: module.inputs){
-					if(variables.find(input.variable) == variables.end()){
+					auto const iter = variables.find(input.variable);
+					if(iter == variables.end()){
 						throw std::logic_error(
 							location() + "unknown variable '" +
 							input.variable + "' as input of '" + input.name +
@@ -149,11 +170,11 @@ namespace disposer{
 					}
 
 					if(input.transfer == in_transfer::move){
-						variables.erase(input.variable);
+						variables.erase(iter);
 					}
 				}
 
-				std::set< std::string > outputs;
+				std::unordered_set< std::string > outputs;
 				for(auto& output: module.outputs){
 					if(!outputs.insert(output.name).second){
 						throw std::logic_error(
@@ -162,7 +183,14 @@ namespace disposer{
 						);
 					}
 
-					if(!variables.insert(output.variable).second){
+					if(!variables.try_emplace(
+							output.variable,
+							chain.name,
+							module.type_name,
+							module_number,
+							output.name
+						).second
+					){
 						throw std::logic_error(
 							location() + "duplicate use of variable '" +
 							output.variable + "' as output of '" +
@@ -172,6 +200,22 @@ namespace disposer{
 				}
 
 				++module_number;
+			}
+
+			if(!variables.empty()){
+				std::ostringstream os;
+				os << "Some variables are never finally used: ";
+				bool first = true;
+				for(auto const& [name, data]: variables){
+					if(first){ first = false; }else{ os << ", "; }
+					os << "variable(" << name << ") from chain("
+						<< data.chain_name << ") module("
+						<< data.module_number << ":"
+						<< data.module_type_name << ") output("
+						<< data.output_name << ")";
+				}
+
+				throw std::logic_error(os.str());
 			}
 		}
 	}

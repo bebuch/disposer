@@ -52,11 +52,9 @@ namespace disposer{
 		static constexpr std::size_t type_count = input_type::type_count;
 
 
-		/// \brief Inputs are not copyable
-		input_exec(input_exec const&) = delete;
-
-		/// \brief Inputs are not movable
-		input_exec(input_exec&&) = delete;
+		/// \brief Constructor
+		input_exec(output_exec_base* output)noexcept
+			: input_exec_base(output) {}
 
 
 		/// \brief If there is only one type than the type, otherwise

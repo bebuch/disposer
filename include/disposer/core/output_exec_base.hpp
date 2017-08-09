@@ -9,8 +9,12 @@
 #ifndef _disposer__core__output_exec_base__hpp_INCLUDED_
 #define _disposer__core__output_exec_base__hpp_INCLUDED_
 
+#include "../tool/type_index.hpp"
+#include "../tool/any_type.hpp"
+
 #include <utility>
 #include <vector>
+#include <atomic>
 
 
 namespace disposer{
@@ -59,7 +63,6 @@ namespace disposer{
 		/// \brief Constructor
 		output_exec_base(std::size_t use_count)noexcept
 			: remaining_use_count_(use_count) {}
-
 
 		/// \brief Outputs are not copyable
 		output_exec_base(output_exec_base const&) = delete;
@@ -113,7 +116,7 @@ namespace disposer{
 
 
 		/// \brief true if remaining_use_count_ is 1, false otherwise
-		bool is_last_use()noexcept const{ return remaining_use_count_ == 1; }
+		bool is_last_use()const noexcept{ return remaining_use_count_ == 1; }
 
 
 		/// \brief Data can only be moved to an input, if all previos

@@ -28,7 +28,7 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)noexcept const{
+		auto const& operator()(Name const& name)const noexcept{
 			return module_.data()(name);
 		}
 

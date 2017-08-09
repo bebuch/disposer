@@ -56,21 +56,12 @@ namespace disposer{
 		void cleanup(chain_key&&)noexcept{ cleanup(); }
 
 
-// 		/// \brief Call get_output_map()
-// 		output_map get_output_map(creator_key&&)const{
-// 			return get_output_map();
-// 		}
-
-
 	protected:
 		/// \brief The worker function
 		virtual void exec() = 0;
 
 		/// \brief The cleanup function
 		virtual void cleanup()noexcept = 0;
-
-// 		/// \brief Get map from output names to output_exec_base pointers
-// 		virtual output_map_type get_output_map()const = 0;
 	};
 
 

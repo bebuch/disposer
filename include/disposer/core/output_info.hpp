@@ -32,22 +32,21 @@ namespace disposer{
 	class output_info{
 	public:
 		/// \brief Constructor
-		output_info(output_base* output, bool last_use)
+		output_info(output_base* output)
 			: output_(output)
-			, last_use_(last_use)
 			, enabled_types_(output->enabled_types()) {}
 
 
 		/// \brief true if type exists and is enabled, false otherwise
-		bool is_enabled(type_index const& type)const{
-			auto iter = enabled_types_.find(type);
+		bool is_enabled(type_index const& type)const noexcept{
+			auto const iter = enabled_types_.find(type);
 			if(iter == enabled_types_.end()) return false;
 			return iter->second;
 		}
 
 		/// \brief true if type exists and is enabled, false otherwise
 		template < typename T >
-		bool is_enabled(hana::basic_type< T > const&)const{
+		bool is_enabled(hana::basic_type< T > const&)const noexcept{
 			return is_enabled(type_index::type_id< T >());
 		}
 
@@ -55,11 +54,6 @@ namespace disposer{
 		/// \brief pointer to an object in a former module
 		output_base* output()const noexcept{
 			return output_;
-		}
-
-		/// \brief true if this is the last use of the config file variable
-		bool last_use()const noexcept{
-			return last_use_;
 		}
 
 
@@ -104,9 +98,9 @@ namespace disposer{
 
 	private:
 		output_base* output_;
-		bool last_use_;
 		std::map< type_index, bool > const enabled_types_;
 	};
+
 
 	/// \brief Create output_info if an output is connected
 	std::optional< output_info > make_output_info(
@@ -117,10 +111,8 @@ namespace disposer{
 
 		// output referes to an output in a former module
 		return iter != list.end()
-			? std::optional< output_info >(std::in_place,
-				std::get< 0 >(iter->second), std::get< 1 >(iter->second))
+			? std::optional< output_info >(std::in_place, iter->second)
 			: std::optional< output_info >();
-
 	}
 
 

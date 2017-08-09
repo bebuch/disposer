@@ -62,9 +62,9 @@ namespace disposer{
 			: maker(maker)
 			, info(info){}
 
-		input_make_data(input_make_data&& other)noexcept
-			: maker(other.maker)
-			, info(std::move(other.info)) {}
+// 		input_make_data(input_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, info(std::move(other.info)) {}
 
 		InputMaker const& maker;
 		std::optional< output_info > info;
@@ -75,12 +75,15 @@ namespace disposer{
 		static constexpr auto log_name = "output"sv;
 
 		output_make_data(Maker const& maker)noexcept
-			: maker(maker) {}
+			: maker(maker)
+			, use_count(use_count) {}
 
-		output_make_data(output_make_data&& other)noexcept
-			: maker(other.maker) {}
+// 		output_make_data(output_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, use_count(other.use_count) {}
 
 		Maker const& maker;
+		std::size_t const use_count;
 	};
 
 	template < typename Maker, typename ValueMap >
@@ -94,9 +97,9 @@ namespace disposer{
 			: maker(maker)
 			, value_map(value_map) {}
 
-		parameter_make_data(parameter_make_data&& other)noexcept
-			: maker(other.maker)
-			, value_map(other.value_map) {}
+// 		parameter_make_data(parameter_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, value_map(other.value_map) {}
 
 		Maker const& maker;
 		ValueMap const value_map;
@@ -175,7 +178,8 @@ namespace disposer{
 			return input_make_data(maker, make_output_info(data.inputs,
 					detail::to_std_string(maker.name)));
 		}else if constexpr(hana::is_a< output_maker_tag >(maker)){
-			return output_make_data(maker);
+			return output_make_data(maker,
+				data.outputs); // TODO: Find the current output
 		}else if constexpr(hana::is_a< parameter_maker_tag >(maker)){
 			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));

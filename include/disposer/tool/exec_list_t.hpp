@@ -82,11 +82,19 @@ namespace disposer::detail{
 				to_exec_t< typename decltype(type)::type > ... > >;
 		};
 
+	constexpr auto input_output_type_filter = [](auto const& list){
+			return hana::filter(add_types(list), is_input_or_output);
+		};
+
 
 	template < typename List >
 	using exec_list_t = typename decltype(hana::unpack(
-		hana::filter(add_types(std::declval< List >()), is_input_or_output),
+		input_output_type_filter(std::declval< List >()),
 		type_to_exec_type))::type;
+
+	template < typename List >
+	constexpr std::size_t input_output_count_c =
+		hana::size(input_output_type_filter(std::declval< List >())).value;
 
 
 }
