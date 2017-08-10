@@ -13,6 +13,7 @@
 #include "module.hpp"
 
 #include "../tool/ct_name.hpp"
+#include "../tool/to_std_string_view.hpp"
 
 namespace disposer{
 

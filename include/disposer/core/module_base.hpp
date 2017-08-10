@@ -14,8 +14,6 @@
 #include "input_base.hpp"
 #include "disposer.hpp"
 
-#include <functional>
-
 
 namespace disposer{
 
@@ -53,7 +51,9 @@ namespace disposer{
 		)
 			: chain(chain)
 			, type_name(type_name)
-			, number(number) {}
+			, number(number)
+			, location("chain(" + chain + ") module(" + std::to_string(number)
+				+ ":" + type_name + "): "){}
 
 		/// \brief Modules are not copyable
 		module_base(module_base const&) = delete;
@@ -88,7 +88,7 @@ namespace disposer{
 
 
 		/// \brief Call output_name_to_ptr()
-		output_name_to_ptr_type output_name_to_ptr(creator_key&&)const{
+		output_name_to_ptr_type output_name_to_ptr(creator_key&&){
 			return output_name_to_ptr();
 		}
 
@@ -104,6 +104,8 @@ namespace disposer{
 		/// The first module has number 1.
 		std::size_t const number;
 
+		std::string const location;
+
 
 	protected:
 		/// \brief Enables the module for exec calls
@@ -117,7 +119,7 @@ namespace disposer{
 			std::size_t id, output_map_type& output_map) = 0;
 
 		/// \brief Get map from output names to output_base pointers
-		virtual output_name_to_ptr_type output_name_to_ptr()const = 0;
+		virtual output_name_to_ptr_type output_name_to_ptr() = 0;
 	};
 
 

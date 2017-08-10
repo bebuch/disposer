@@ -10,14 +10,15 @@
 #define _disposer__core__input__hpp_INCLUDED_
 
 #include "input_base.hpp"
-#include "output_base.hpp"
 #include "config_fn.hpp"
 #include "input_name.hpp"
 
+#include <boost/hana/set.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/traits.hpp>
+
 #include <variant>
-#include <optional>
 #include <unordered_map>
-#include <string_view>
 
 
 namespace disposer{
@@ -53,8 +54,8 @@ namespace disposer{
 		/// \brief Compile time name of the input
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types

@@ -1081,7 +1081,7 @@ CLANG_ASSISTED_PARSING = YES
 # get clang paths via:
 #     echo | clang -std=c++1z -stdlib=libc++ -v -E -x c++ -
 
-CLANG_OPTIONS = -x c++ -std=c++1z -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024  -I/home/bebuch/media/programme/llvm-4.0.0-rc1/bin/../include/c++/v1 -I/usr/local/include -I/home/bebuch/media/programme/llvm-4.0.0-rc1/bin/../lib/clang/4.0.0/include -I/usr/include/x86_64-linux-gnu -I/usr/include -I$(BOOST)
+CLANG_OPTIONS = -x c++ -std=c++1z -stdlib=libc++ -fconstexpr-depth=1024 -ftemplate-depth=1024  -I/home/bebuch/media/programme/llvm-5/bin/../include/c++/v1 -I/usr/local/include -I/home/bebuch/media/programme/llvm-5/bin/../lib/clang/5.0.0/include -I/usr/include/x86_64-linux-gnu -I/usr/include -I$(BOOST)
 
 
 #---------------------------------------------------------------------------
@@ -2209,7 +2209,7 @@ HIDE_UNDOC_RELATIONS   = YES
 # set to NO
 # The default value is: YES.
 
-HAVE_DOT               = NO
+HAVE_DOT               = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
 # to run in parallel. When set to 0 doxygen will base this on the number of

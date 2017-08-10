@@ -15,13 +15,11 @@
 #include <logsys/stdlogb.hpp>
 
 #include <boost/hana/core/is_a.hpp>
-#include <boost/hana/all_of.hpp>
+#include <boost/hana/count_if.hpp>
 #include <boost/hana/string.hpp>
+#include <boost/hana/all_of.hpp>
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/map.hpp>
-
-#include <type_traits>
-#include <optional>
 
 
 namespace disposer{
@@ -100,15 +98,15 @@ namespace disposer{
 	public:
 		using hana_tag = enable_fn_tag;
 
-		enable_fn()
+		constexpr enable_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit enable_fn(Fn const& fn)
+		constexpr explicit enable_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit enable_fn(Fn&& fn)
+		constexpr explicit enable_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -231,15 +229,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_connection_fn_tag;
 
-		verify_connection_fn()
+		constexpr verify_connection_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit verify_connection_fn(Fn const& fn)
+		constexpr explicit verify_connection_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit verify_connection_fn(Fn&& fn)
+		constexpr explicit verify_connection_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -306,15 +304,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_type_fn_tag;
 
-		verify_type_fn()
+		constexpr verify_type_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit verify_type_fn(Fn const& fn)
+		constexpr explicit verify_type_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit verify_type_fn(Fn&& fn)
+		constexpr explicit verify_type_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -381,15 +379,15 @@ namespace disposer{
 	public:
 		using hana_tag = verify_value_fn_tag;
 
-		verify_value_fn()
+		constexpr verify_value_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit verify_value_fn(Fn const& fn)
+		constexpr explicit verify_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit verify_value_fn(Fn&& fn)
+		constexpr explicit verify_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -444,15 +442,15 @@ namespace disposer{
 	public:
 		using hana_tag = parser_fn_tag;
 
-		parser_fn()
+		constexpr parser_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit parser_fn(Fn const& fn)
+		constexpr explicit parser_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit parser_fn(Fn&& fn)
+		constexpr explicit parser_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -566,15 +564,15 @@ namespace disposer{
 	public:
 		using hana_tag = default_value_fn_tag;
 
-		default_value_fn()
+		constexpr default_value_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
-		explicit default_value_fn(Fn const& fn)
+		constexpr explicit default_value_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
-		explicit default_value_fn(Fn&& fn)
+		constexpr explicit default_value_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -701,7 +699,7 @@ namespace disposer{
 
 
 	template < typename Tuple, typename Predicate, typename Default >
-	auto get_or_default(
+	constexpr auto get_or_default(
 		Tuple&& tuple,
 		Predicate&& predicate,
 		Default&& default_value

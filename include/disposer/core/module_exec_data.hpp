@@ -9,6 +9,11 @@
 #ifndef _disposer__core__module_exec_data__hpp_INCLUDED_
 #define _disposer__core__module_exec_data__hpp_INCLUDED_
 
+#include "input_exec.hpp"
+#include "output_exec.hpp"
+
+#include "../tool/false_c.hpp"
+
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/find_if.hpp>
@@ -23,25 +28,10 @@
 #include <vector>
 
 
-namespace disposer::detail{
-
-
-	/// \brief std::ref as callable object
-	struct ref{
-		template < typename T >
-		constexpr auto operator()(T& name)const noexcept{
-			return std::ref(name);
-		}
-	};
-
-
-}
-
-
 namespace disposer{
 
 
-	using namespace hana = boost::hana;
+	namespace hana = boost::hana;
 
 
 	template < typename List, std::size_t I >
@@ -60,7 +50,7 @@ namespace disposer{
 		}else if constexpr(hana::is_a< output_name_tag >(name)){
 			return module(name).use_count();
 		}else{
-			static_assert(false_c< name_type >,
+			static_assert(detail::false_c< List >,
 				"name must be an input_name or an output_name");
 		}
 	}
@@ -91,53 +81,44 @@ namespace disposer{
 		)
 			: list_(io_exec_make_data< List, I >(module, output_map) ...)
 		{
-			(add_output_to_map< List, I >(module, list_, output_map), ...);
+			(add_outputs_to_map< List, I >(module, list_, output_map), ...);
 		}
 
 
-		/// \brief Get reference to an input-, output- or parameter-object via
+		/// \brief Get reference to an input- or output-object via
 		///        its corresponding compile time name
 		template < typename Name >
 		auto& operator()(Name const& name)noexcept{
-			return get(name);
+			return extract(list_, name);
 		}
 
-		/// \brief Get reference to an input-, output- or parameter-object via
+		/// \brief Get reference to an input- or output-object via
 		///        its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			return get(name);
+			return extract(list_, name);
+		}
+
+
+		/// \brief Cleanup inputs
+		void cleanup()noexcept{
+			hana::for_each(detail::as_ref_list(list_), [](auto ref){
+					auto const is_input
+						= hana::is_a< input_name_tag >(ref.get().name);
+					if constexpr(is_input) ref.get().cleanup();
+				});
 		}
 
 
 	private:
-		/// \brief list_ as tuple of std::reference_wrapper's
-		auto ref_list()const noexcept{
-			return hana::transform(list_, detail::ref{});
-		}
-
-		/// \brief Implementation for \ref operator()
-		template < typename Name >
-		auto& get(Name const& name)const noexcept{
+		template < typename L, typename Name >
+		static auto& extract(L& list, Name const& name)noexcept{
 			using name_t = std::remove_reference_t< Name >;
 			static_assert(
 				hana::is_a< input_name_tag, name_t > ||
 				hana::is_a< output_name_tag, name_t >,
 				"parameter is not an input_name or output_name");
-
-			using name_tag = typename name_t::hana_tag;
-
-			auto ref = hana::find_if(ref_list(), [&name](auto ref){
-					using tag = typename decltype(ref)::type::name_type
-						::hana_tag;
-					return hana::type_c< name_tag > == hana::type_c< tag >
-						&& ref.get().name == name.value;
-				});
-
-			auto is_iop_valid = ref != hana::nothing;
-			static_assert(is_iop_valid, "requested name doesn't exist");
-
-			return ref->get();
+			return detail::extract(detail::as_ref_list(list), name);
 		}
 
 		/// \brief hana::tuple of the inputs and outputs

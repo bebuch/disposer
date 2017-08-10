@@ -45,7 +45,7 @@ namespace disposer{
 		typename Types,
 		typename TypeTransformFn,
 		typename EnableFn >
-	auto create_output_maker(
+	constexpr auto create_output_maker(
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
@@ -68,7 +68,11 @@ namespace disposer{
 
 	/// \brief Creates a \ref output_maker object
 	template < char ... C, typename Types, typename ... Args >
-	auto make(output_name< C ... >, Types const& types, Args&& ... args){
+	constexpr auto make(
+		output_name< C ... >,
+		Types const& types,
+		Args&& ... args
+	){
 		detail::validate_arguments<
 				type_transform_fn_tag,
 				enable_fn_tag

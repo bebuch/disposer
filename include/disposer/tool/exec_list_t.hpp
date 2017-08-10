@@ -13,10 +13,11 @@
 
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/type.hpp>
+#include <boost/hana/size.hpp>
+#include <boost/hana/tuple.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/filter.hpp>
 #include <boost/hana/unpack.hpp>
-#include <boost/hana/typeid.hpp>
 
 
 namespace disposer{
@@ -73,8 +74,10 @@ namespace disposer::detail{
 
 
 	constexpr auto is_input_or_output = [](auto const& t){
-			return hana::is_a< input_tag, decltype(hana::typeid_(t))::type >
-				|| hana::is_a< output_tag, decltype(hana::typeid_(t))::type >;
+			return hana::is_a< input_tag,
+					typename decltype(hana::typeid_(t))::type >
+				|| hana::is_a< output_tag,
+					typename decltype(hana::typeid_(t))::type >;
 		};
 
 	constexpr auto type_to_exec_type = [](auto ... type){

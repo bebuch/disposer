@@ -16,6 +16,14 @@
 #include "../tool/type_index.hpp"
 #include "../tool/to_std_string_view.hpp"
 
+#include <boost/hana/less_equal.hpp>
+#include <boost/hana/not_equal.hpp>
+#include <boost/hana/at_key.hpp>
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/traits.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/set.hpp>
+
 
 namespace disposer{
 
@@ -37,8 +45,8 @@ namespace disposer{
 		/// \brief Compile time name of the output
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -87,7 +95,7 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename MakeData >
 		output(MakeData const& m)
-			: output_base(m.use_count)
+			: output_base(m.data.use_count)
 			, enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),

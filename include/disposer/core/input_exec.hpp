@@ -10,7 +10,6 @@
 #define _disposer__core__input_exec__hpp_INCLUDED_
 
 #include "input_exec_base.hpp"
-#include "output_exec_base.hpp"
 #include "input.hpp"
 
 
@@ -35,8 +34,8 @@ namespace disposer{
 		/// \brief Compile time name of the input
 		using name_type = typename input_type::name_type;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = input_type::name;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -81,11 +80,6 @@ namespace disposer{
 		>;
 
 
-		/// \brief Constructor
-		input_base(output_exec_base* output)noexcept
-			: input_exec_base(output) {}
-
-
 		/// \brief Get all data without transferring ownership
 		std::vector< references_type > get_references(){
 			if(!output_ptr()){
@@ -93,9 +87,9 @@ namespace disposer{
 			}
 
 			std::vector< references_type > result;
-			for(auto const& carrier: output_ptr()->get_references(
-				input_exec_key(),
-			)){
+			for(auto const& carrier:
+				output_ptr()->get_references(input_exec_key())
+			){
 				result.emplace_back(
 					ref_convert_rt(carrier.type, carrier.data)
 				);
@@ -110,6 +104,7 @@ namespace disposer{
 			}
 
 			std::vector< values_type > result;
+			TODO;
 			if(is_last_use()){
 				for(auto& carrier: output_ptr()->get_values(
 					input_exec_key()

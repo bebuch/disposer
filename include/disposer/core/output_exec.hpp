@@ -43,8 +43,8 @@ namespace disposer{
 		/// \brief Compile time name of the output
 		using name_type = typename output_type::name_type;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = output_type::name;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -134,20 +134,41 @@ namespace disposer{
 			std::vector< value_carrier > result;
 			result.reserve(data_.size());
 
-			for(auto& data: data_){
-				if constexpr(type_count == 1){
-					result.emplace_back(
-						type_index::type_id< decltype(data) >(),
-						reinterpret_cast< any_type&& >(data));
-				}else{
-					result.emplace_back(
-						std::visit([](auto&& data){
-							return type_index::type_id< decltype(data) >();
-						}, std::move(data)),
-						std::visit([](auto&& data)->any_type&&{
-							return reinterpret_cast< any_type&& >(data);
-						}, std::move(data)));
+			if(is_last_use()){
+				// move data
+				for(auto& data: data_){
+					if constexpr(type_count == 1){
+						result.emplace_back(
+							type_index::type_id< decltype(data) >(),
+							reinterpret_cast< any_type&& >(data));
+					}else{
+						result.emplace_back(
+							std::visit([](auto&& data){
+								return type_index::type_id< decltype(data) >();
+							}, std::move(data)),
+							std::visit([](auto&& data)->any_type&&{
+								return reinterpret_cast< any_type&& >(data);
+							}, std::move(data)));
+					}
 				}
+			}else{
+				TODO;
+				// make a copy TODO!!!
+// 				for(auto& data: data_){
+// 					if constexpr(type_count == 1){
+// 						result.emplace_back(
+// 							type_index::type_id< decltype(data) >(),
+// 							reinterpret_cast< any_type&& >(data));
+// 					}else{
+// 						result.emplace_back(
+// 							std::visit([](auto&& data){
+// 								return type_index::type_id< decltype(data) >();
+// 							}, std::move(data)),
+// 							std::visit([](auto&& data)->any_type&&{
+// 								return reinterpret_cast< any_type&& >(data);
+// 							}, std::move(data)));
+// 					}
+// 				}
 			}
 
 			return result;

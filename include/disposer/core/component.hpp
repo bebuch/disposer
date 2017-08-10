@@ -37,8 +37,7 @@ namespace disposer{
 		)
 			: list_(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(ref_list()),
-				hana::size_c< I >) ...)
+				location, hana::slice_c< 0, I >(ref_list())) ...)
 		{
 			(void)location; // GCC bug (silance unused warning)
 		}
@@ -315,7 +314,7 @@ namespace disposer{
 
 	/// \brief Wraps all given P configurations into a hana::tuple
 	template < typename ... P_MakerList >
-	auto component_configure(P_MakerList&& ... list){
+	constexpr auto component_configure(P_MakerList&& ... list){
 		static_assert(hana::and_(hana::true_c,
 			hana::is_a< parameter_maker_tag, P_MakerList >() ...),
 			"at least one of the configure arguments is not a disposer "
@@ -326,7 +325,7 @@ namespace disposer{
 
 
 	template < typename ... ComponentModules >
-	auto component_modules(ComponentModules&& ... component_modules){
+	constexpr auto component_modules(ComponentModules&& ... component_modules){
 		static_assert(hana::and_(hana::true_c,
 			hana::is_a< component_module_maker_tag, ComponentModules >() ...),
 			"at least one of the configure arguments is not a disposer "

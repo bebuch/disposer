@@ -32,14 +32,12 @@ void check(IO& io, Type const& type, bool expected){
 
 
 struct exec_fn{
-	template < typename T >
-	constexpr void operator()(T& /*module*/, std::size_t /*id*/)const{}
+	constexpr void operator()()const{}
 };
 
 struct enable_fn{
-	template < typename T >
-	constexpr auto operator()(T const& /*module*/)const{
-		return exec_fn{};
+	constexpr auto operator()()const{
+		return 0;
 	}
 };
 
@@ -66,20 +64,21 @@ int main(){
 		{
 			auto const module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v< decltype(
 				key.copy(module_register_fn)),
 				disposer::module_maker< hana::tuple<
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
 
 			static_assert(std::is_same_v< decltype(object),
 				std::unique_ptr< disposer::module<
-					hana::tuple<>, enable_fn
+					hana::tuple<>, enable_fn, exec_fn
 				> > >);
 		}
 
@@ -89,7 +88,8 @@ int main(){
 					disposer::make("v"_in, hana::type_c< int >,
 						disposer::optional)
 				),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -101,7 +101,7 @@ int main(){
 						disposer::optional_t,
 						disposer::verify_type_always_t
 					>
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
@@ -111,7 +111,7 @@ int main(){
 					hana::tuple<
 						disposer::input< decltype("v"_in),
 							disposer::none, int >
-					>, enable_fn
+					>, enable_fn, exec_fn
 				> > >);
 		}
 
@@ -121,7 +121,8 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_out, hana::type_c< int >)
 				),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -132,7 +133,7 @@ int main(){
 							disposer::none, int >,
 						disposer::enable_always_t
 					>
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{});
@@ -142,7 +143,7 @@ int main(){
 					hana::tuple<
 						disposer::output< decltype("v"_out),
 							disposer::none, int >
-					>, enable_fn
+					>, enable_fn, exec_fn
 				> > >);
 		}
 
@@ -152,7 +153,8 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -169,7 +171,7 @@ int main(){
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
@@ -181,7 +183,7 @@ int main(){
 					hana::tuple<
 						disposer::parameter< decltype("v"_param),
 							disposer::none, int >
-					>, enable_fn
+					>, enable_fn, exec_fn
 				> > >);
 		}
 
@@ -193,7 +195,8 @@ int main(){
 					disposer::make("v"_out, hana::type_c< int >),
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -221,7 +224,7 @@ int main(){
 							hana::make_pair(hana::basic_type< int >{}, "sint32"_s)
 						))
 					>
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
@@ -237,7 +240,7 @@ int main(){
 							disposer::none, int >,
 						disposer::parameter< decltype("v"_param),
 							disposer::none, int >
-					>, enable_fn
+					>, enable_fn, exec_fn
 				> > >);
 		}
 
@@ -298,7 +301,8 @@ int main(){
 						disposer::verify_connection_fn(enable_in_c),
 						disposer::verify_type_fn(enable_in_t))
 				),
-				disposer::module_state(enable_fn())
+				disposer::state_maker_fn(enable_fn()),
+				disposer::exec_fn(exec_fn())
 			);
 
 			static_assert(std::is_same_v<
@@ -332,7 +336,7 @@ int main(){
 						std::remove_const_t< decltype(enable_in_c) >,
 						std::remove_const_t< decltype(enable_in_t) >
 					>
-				>, enable_fn > >);
+				>, enable_fn, exec_fn > >);
 
 			auto object =
 				key.ref(module_register_fn)(disposer::module_make_data{
@@ -350,7 +354,7 @@ int main(){
 							disposer::none, int >,
 						disposer::input< decltype("w"_in),
 							disposer::none, int >
-					>, enable_fn
+					>, enable_fn, exec_fn
 				> > >);
 		}
 

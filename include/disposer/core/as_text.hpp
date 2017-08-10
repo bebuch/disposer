@@ -9,11 +9,12 @@
 #ifndef _disposer__core__as_text__hpp_INCLUDED_
 #define _disposer__core__as_text__hpp_INCLUDED_
 
-#include <boost/hana.hpp>
-
 #ifdef DISPOSER_BITMAP_PIXEL_AS_TEXT
 #include <bitmap/pixel.hpp>
 #endif
+
+#include <boost/hana/map.hpp>
+#include <boost/hana/string.hpp>
 
 #include <cstdint>
 #include <string>

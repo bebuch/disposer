@@ -10,6 +10,7 @@
 #define _disposer__core__module_exec__hpp_INCLUDED_
 
 #include "module.hpp"
+#include "module_exec_data.hpp"
 
 #include "../tool/exec_list_t.hpp"
 
@@ -18,6 +19,9 @@
 
 namespace disposer{
 
+
+	template < typename List, typename StateMakerFn, typename ExecFn >
+	class module;
 
 	/// \brief The actual module_exec type
 	template < typename List, typename StateMakerFn, typename ExecFn >
@@ -30,30 +34,9 @@ namespace disposer{
 			output_map_type& output_map
 		)noexcept
 			: module_(module)
-			, id_(id),
+			, id_(id)
 			, data_(module, output_map, std::make_index_sequence<
 				detail::input_output_count_c< List > >()) {}
-
-
-		/// \brief Name of the process chain in config file section 'chain'
-		std::string const& chain()const noexcept{
-			return module_.chain();
-		}
-
-		/// \brief Name of the module type given via class module_declarant
-		std::string const& type_name()const noexcept{
-			return module_.type_name();
-		}
-
-		/// \brief Position of the module in the process chain
-		std::size_t number()const noexcept{
-			return module_.number();
-		}
-
-		/// \brief Current exec id
-		std::size_t id()const noexcept{
-			return id_;
-		}
 
 
 	private:
@@ -64,20 +47,17 @@ namespace disposer{
 		std::size_t const id_;
 
 		/// \brief List of input_exec's and output_exec's
-		module_exec_data< exec_list_t< List > > data_;
+		module_exec_data< detail::exec_list_t< List > > data_;
 
 
 		/// \brief The actual worker function called one times per trigger
 		virtual void exec()override{
-			assert(state_);
-			exec_fn_(accessory_, *state_);
+			module_.exec(id_, data_);
 		}
 
-		/// \brief The cleanup function
+		/// \brief Cleanup inputs and connected outputs if appropriate
 		virtual void cleanup()noexcept override{
-			for(auto& input: inputs_){
-				input.get().cleanup(module_base_key());
-			}
+			data_.cleanup();
 		}
 	};
 

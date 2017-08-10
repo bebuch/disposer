@@ -15,7 +15,6 @@
 
 #include <boost/hana/type.hpp>
 
-#include <map>
 #include <sstream>
 #include <stdexcept>
 

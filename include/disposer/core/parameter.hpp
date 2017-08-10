@@ -18,6 +18,13 @@
 
 #include <io_tools/make_string.hpp>
 
+#include <boost/hana/less_equal.hpp>
+#include <boost/hana/not_equal.hpp>
+#include <boost/hana/at_key.hpp>
+#include <boost/hana/traits.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/set.hpp>
+
 #include <optional>
 
 
@@ -40,8 +47,8 @@ namespace disposer{
 		/// \brief Compile time name of the parameter
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types

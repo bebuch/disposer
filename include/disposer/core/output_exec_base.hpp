@@ -101,14 +101,9 @@ namespace disposer{
 
 	protected:
 		/// \brief Get vector of references with all data
-		///
-		/// This is called, if data is refered via reference or copied from
-		/// output to input.
 		virtual std::vector< reference_carrier > get_references()const = 0;
 
 		/// \brief Get vector of values with all data
-		///
-		/// This is called, if data is moved from output to input.
 		virtual std::vector< value_carrier > get_values() = 0;
 
 		/// \brief Clean up all data
@@ -119,6 +114,7 @@ namespace disposer{
 		bool is_last_use()const noexcept{ return remaining_use_count_ == 1; }
 
 
+	private:
 		/// \brief Data can only be moved to an input, if all previos
 		///        inputs are ready
 		std::atomic< std::size_t > remaining_use_count_;

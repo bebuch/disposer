@@ -25,6 +25,10 @@ namespace disposer{
 
 	namespace hana = boost::hana;
 
+	struct input_maker_tag;
+	struct output_maker_tag;
+	struct parameter_maker_tag;
+
 
 	template < typename MakerTag, typename Makers, typename List >
 	std::set< std::string > validate_iop(
@@ -63,9 +67,9 @@ namespace disposer{
 				){
 					os << "parameter";
 				}else{
-					static_assert(false_c< MakerTag >, "MakerTag must be "
-						"input_maker_tag, output_maker_tag or "
-						"parameter_maker_tag");
+					static_assert(detail::false_c< MakerTag >,
+						"MakerTag must be input_maker_tag, output_maker_tag "
+						"or parameter_maker_tag");
 				}
 				os << "(" << name << ") doesn't exist";
 				if constexpr(std::is_same_v< MakerTag, parameter_maker_tag >){

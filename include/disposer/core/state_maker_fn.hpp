@@ -9,40 +9,48 @@
 #ifndef _disposer__core__state_maker_fn__hpp_INCLUDED_
 #define _disposer__core__state_maker_fn__hpp_INCLUDED_
 
+#include "module_data.hpp"
+
 #include "../tool/add_log.hpp"
+#include "../tool/false_c.hpp"
 
 
 namespace disposer{
 
 
 	/// \brief Accessory of a module during enable/disable calls
-	template < typename List, typename StateMakerFn, typename ExecFn >
-	class state_accessory
-		: public add_log< state_accessory< List, StateMakerFn, ExecFn > >{
+	template < typename List >
+	class state_accessory: public add_log< state_accessory< List > >{
 	public:
 		/// \brief Constructor
-		state_accessory(module< List, StateMakerFn, ExecFn > const& module)
-			: module_(module) {}
+		state_accessory(
+			module_data< List > const& data,
+			std::string_view location
+		)
+			: data_(data)
+			, location_(location) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			return module_.data()(name);
+			return data_(name);
 		}
 
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "chain(" << module_.chain() << ") module(" << module_.number()
-				<< ":" << module_.type_name() << "): ";
+			os << location_;
 		}
 
 
 	private:
 		/// \brief Reference to the module object
-		module< List, StateMakerFn, ExecFn > const& module_;
+		module_data< List > const& data_;
+
+		/// \brief Location for log messages
+		std::string_view location_;
 	};
 
 
@@ -53,16 +61,14 @@ namespace disposer{
 		state_maker_fn(StateMakerFn&& maker_fn)
 			: maker_fn_(static_cast< StateMakerFn&& >(maker_fn)) {}
 
-		template < typename List, typename ExecFn >
-		auto operator()(
-			state_accessory< List, StateMakerFn, ExecFn > const& accessory
-		)const{
+		template < typename List >
+		auto operator()(state_accessory< List > const& accessory)const{
 			if constexpr(std::is_invocable_v< StateMakerFn const,
-				state_accessory< List, StateMakerFn, ExecFn > const& >
+				state_accessory< List > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					StateMakerFn const,
-					state_accessory< List, StateMakerFn, ExecFn > const& > >,
+					state_accessory< List > const& > >,
 					"StateMakerFn must not return void");
 				return maker_fn_(accessory);
 			}else if constexpr(std::is_invocable_v< StateMakerFn const >){
@@ -87,7 +93,7 @@ namespace disposer{
 
 
 	/// \brief Holds the user defined state object of a module
-	template < typename List, typename StateMakerFn, typename ExecFn >
+	template < typename List, typename StateMakerFn >
 	class state{
 	public:
 		/// \brief Constructor
@@ -97,8 +103,9 @@ namespace disposer{
 		/// \brief Enables the module for exec calls
 		///
 		/// Build a users state object.
-		void enable(module< List, StateMakerFn, ExecFn > const& module){
-			state_.emplace(state_maker_fn_(state_accessory_type(module)));
+		void enable(module_data< List > const& data, std::string_view location){
+			state_.emplace(state_maker_fn_(
+				state_accessory< List >(data, location)));
 		}
 
 		/// \brief Disables the module for exec calls
@@ -108,14 +115,10 @@ namespace disposer{
 
 
 	private:
-		/// \brief Type for state_maker_fn
-		using state_accessory_type =
-			state_accessory< List, StateMakerFn, ExecFn >;
-
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
 			state_maker_fn< StateMakerFn >,
-			state_accessory_type&& >;
+			state_accessory< List >&& >;
 
 		static_assert(!std::is_void_v< state_type >,
 			"state_maker function must not return void");
@@ -130,14 +133,14 @@ namespace disposer{
 
 
 	/// \brief Specialization for stateless modules
-	template < typename List, typename ExecFn >
-	class state< List, void, ExecFn >{
+	template < typename List >
+	class state< List, void >{
 	public:
 		/// \brief Constructor
 		state(state_maker_fn< void > const&)noexcept{}
 
 		/// \brief Module is stateless, do nothing
-		void enable(module< List, void, ExecFn > const&)noexcept{}
+		void enable(module_data< List > const&, std::string_view)noexcept{}
 
 		/// \brief Module is stateless, do nothing
 		void disable()noexcept{}

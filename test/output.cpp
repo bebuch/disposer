@@ -43,16 +43,14 @@ constexpr auto types_set = hana::to_set(types);
 int main(){
 	using hana::type_c;
 
-	disposer::module_base_key* key = nullptr;
-
 	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
 	auto iop_list = hana::make_tuple();
 	auto make_data = [&iop_list](auto const& maker){
-		auto make_data = disposer::output_make_data(maker);
+		auto make_data = disposer::output_make_data(maker, 0);
 		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_list
 			);
 
 		return data;
@@ -76,8 +74,7 @@ int main(){
 				disposer::output< decltype("v"_out),
 					disposer::none, int > >);
 
-			object.output_base::prepare(std::move(*key), 0);
-			object.put(0);
+// 			object.put(0);
 
 			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)
@@ -107,9 +104,8 @@ int main(){
 				disposer::output< decltype("v"_out),
 					disposer::none, int, float > >);
 
-			object.output_base::prepare(std::move(*key), 0);
-			object.put(3);
-			object.put(3.f);
+// 			object.put(3);
+// 			object.put(3.f);
 
 			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)
@@ -141,9 +137,8 @@ int main(){
 				disposer::output< decltype("v"_out),
 					disposer::none, int, float > >);
 
-			object.output_base::prepare(std::move(*key), 0);
-			object.put(3);
-			object.put(3.f);
+// 			object.put(3);
+// 			object.put(3.f);
 
 			error_count = check(ct++,
 				static_cast< disposer::output_base const& >(object)

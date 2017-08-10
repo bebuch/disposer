@@ -10,9 +10,12 @@
 #define _disposer__core__module__hpp_INCLUDED_
 
 #include "module_base.hpp"
-#include "module_exec_base.hpp"
-#include "module_state.hpp"
+#include "module_data.hpp"
 #include "module_exec.hpp"
+#include "state_maker_fn.hpp"
+#include "exec_fn.hpp"
+
+#include "../tool/exec_list_t.hpp"
 
 #include <cassert>
 
@@ -35,7 +38,7 @@ namespace disposer{
 			MakeData const& data,
 			std::string_view location,
 			state_maker_fn< StateMakerFn > const& state_maker_fn,
-			module_exec< ExecFn > const& exec_fn
+			exec_fn< ExecFn > const& exec_fn
 		)
 			: module_base(data.chain, data.type_name, data.number)
 			, data_(maker_list, data, location, std::make_index_sequence<
@@ -60,15 +63,12 @@ namespace disposer{
 		}
 
 
-		/// \brief Reference to the config file data
-		module_data< List >& data()noexcept{ return data_; }
-
-		/// \brief Reference to the config file data
-		module_data< List > const& data()const noexcept{ return data_; }
-
-		/// \brief Reference to the users state object
-		auto& state(exec_key&&)const noexcept{
-			return state_.get();
+		/// \brief Calls the exec_fn
+		void exec(
+			std::size_t id,
+			module_exec_data< detail::exec_list_t< List > >& exec_data
+		)const{
+			return exec_fn_(accessory(id, exec_data, data_, state_));
 		}
 
 
@@ -77,7 +77,9 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		virtual void enable()override{
-			state_.enable(static_cast< module const& >(*this));
+			state_.enable(
+				static_cast< module_data< List > const& >(data_),
+				this->location);
 		}
 
 		/// \brief Disables the module for exec calls
@@ -89,15 +91,14 @@ namespace disposer{
 		/// \brief Make a corresponding module_exec
 		virtual module_exec_ptr make_module_exec(
 			std::size_t id, output_map_type& output_map
-		)override{
-			return std::make_unique
-				< module_exec< List, StateMakerFn, ExecFn > >
-				(*this, id, output_map_type& output_map);
+		){
+			return std::make_unique< module_exec< List, StateMakerFn, ExecFn > >
+				(*this, id, output_map);
 		}
 
 
 		/// \brief Get map from output names to output_base pointers
-		virtual output_name_to_ptr_type output_name_to_ptr()const override{
+		virtual output_name_to_ptr_type output_name_to_ptr()override{
 			return data_.output_name_to_ptr();
 		}
 
@@ -106,7 +107,10 @@ namespace disposer{
 		module_data< List > data_;
 
 		/// \brief The user defined state object
-		state< List, StateMakerFn, ExecFn > state_;
+		state< List, StateMakerFn > state_;
+
+		/// \brief The function called on exec
+		exec_fn< ExecFn > exec_fn_;
 	};
 
 
