@@ -14,8 +14,6 @@
 #include "parameter_name.hpp"
 #include "output_info.hpp"
 
-#include "../config/embedded_config.hpp"
-
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
 #include "../tool/false_c.hpp"
@@ -219,8 +217,7 @@ namespace disposer{
 				hana::is_a< input_name_tag, name_t > ||
 				hana::is_a< output_name_tag, name_t > ||
 				hana::is_a< parameter_name_tag, name_t >,
-				"parameter is not an input_name, output_name or "
-				"parameter_name");
+				"name is not an input_name, output_name or parameter_name");
 
 			return detail::extract(iop_list_, name);
 		}

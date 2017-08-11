@@ -97,7 +97,8 @@ namespace disposer::detail{
 
 	template < typename List >
 	constexpr std::size_t input_output_count_c =
-		hana::size(input_output_type_filter(std::declval< List >())).value;
+		decltype(hana::size(input_output_type_filter(
+			std::declval< List >())))::value;
 
 
 }

@@ -9,7 +9,6 @@
 #ifndef _disposer__core__module_exec__hpp_INCLUDED_
 #define _disposer__core__module_exec__hpp_INCLUDED_
 
-#include "module.hpp"
 #include "module_exec_data.hpp"
 
 #include "../tool/exec_list_t.hpp"
@@ -36,7 +35,11 @@ namespace disposer{
 			: module_(module)
 			, id_(id)
 			, data_(module, output_map, std::make_index_sequence<
-				detail::input_output_count_c< List > >()) {}
+				detail::input_output_count_c< List > >())
+			, location_("id(" + std::to_string(id_) + ") chain("
+				+ module_.chain() + ") module("
+				+ std::to_string(module_.number()) + ":"
+				+ module_.type_name() + ") exec: ") {}
 
 
 	private:
@@ -49,10 +52,13 @@ namespace disposer{
 		/// \brief List of input_exec's and output_exec's
 		module_exec_data< detail::exec_list_t< List > > data_;
 
+		/// \brief Location for log messages
+		std::string const location_;
+
 
 		/// \brief The actual worker function called one times per trigger
 		virtual void exec()override{
-			module_.exec(id_, data_);
+			module_.exec(id_, data_, location_);
 		}
 
 		/// \brief Cleanup inputs and connected outputs if appropriate

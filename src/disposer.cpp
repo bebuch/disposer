@@ -12,7 +12,6 @@
 #include <disposer/config/component_make_data.hpp>
 #include <disposer/config/check_semantic.hpp>
 #include <disposer/config/unused_warnings.hpp>
-#include <disposer/config/embedded_config.hpp>
 #include <disposer/config/set_output_use_count.hpp>
 
 #include <disposer/disposer.hpp>

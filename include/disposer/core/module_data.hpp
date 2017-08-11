@@ -11,18 +11,12 @@
 
 #include "accessory.hpp"
 
-#include "../tool/to_std_string.hpp"
-
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/unpack.hpp>
 #include <boost/hana/slice.hpp>
 
 #include <unordered_map>
-#include <type_traits>
-#include <string_view>
 #include <functional>
-#include <utility>
-#include <vector>
 
 
 namespace disposer{
@@ -96,8 +90,7 @@ namespace disposer{
 				hana::is_a< input_name_tag, name_t > ||
 				hana::is_a< output_name_tag, name_t > ||
 				hana::is_a< parameter_name_tag, name_t >,
-				"parameter is not an input_name, output_name or "
-				"parameter_name");
+				"name is not an input_name, output_name or parameter_name");
 			return detail::extract(detail::as_ref_list(list), name);
 		}
 

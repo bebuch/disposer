@@ -9,7 +9,6 @@
 #ifndef _disposer__core__module_exec_base__hpp_INCLUDED_
 #define _disposer__core__module_exec_base__hpp_INCLUDED_
 
-#include "output_exec_base.hpp"
 #include "input_exec_base.hpp"
 
 

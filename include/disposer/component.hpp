@@ -10,5 +10,9 @@
 #define _disposer__component__hpp_INCLUDED_
 
 #include "core/component.hpp"
+#include "core/module_maker.hpp"
+#include "core/input_maker.hpp"
+#include "core/output_maker.hpp"
+#include "core/parameter_maker.hpp"
 
 #endif

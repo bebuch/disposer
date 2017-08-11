@@ -99,6 +99,10 @@ namespace disposer{
 		virtual std::string_view get_name()const noexcept = 0;
 
 
+		/// \brief true if remaining_use_count_ is 1, false otherwise
+		bool is_last_use()const noexcept{ return remaining_use_count_ == 1; }
+
+
 	protected:
 		/// \brief Get vector of references with all data
 		virtual std::vector< reference_carrier > get_references()const = 0;
@@ -108,10 +112,6 @@ namespace disposer{
 
 		/// \brief Clean up all data
 		virtual void cleanup()noexcept = 0;
-
-
-		/// \brief true if remaining_use_count_ is 1, false otherwise
-		bool is_last_use()const noexcept{ return remaining_use_count_ == 1; }
 
 
 	private:

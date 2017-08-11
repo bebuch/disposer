@@ -31,7 +31,7 @@ namespace disposer::detail{
 	/// \brief std::ref as callable object
 	struct ref{
 		template < typename T >
-		constexpr auto operator()(T& name)const noexcept{
+		auto operator()(T& name)const noexcept{
 			return std::ref(name);
 		}
 	};
@@ -46,7 +46,7 @@ namespace disposer::detail{
 
 	/// \brief Implementation for \ref operator()
 	template < typename RefList, typename Name >
-	auto& extract(RefList& list, Name const& name)noexcept{
+	auto& extract(RefList&& list, Name const& name)noexcept{
 		using name_t = std::remove_reference_t< Name >;
 		using name_tag = typename name_t::hana_tag;
 

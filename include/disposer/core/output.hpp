@@ -13,7 +13,6 @@
 #include "output_name.hpp"
 #include "config_fn.hpp"
 
-#include "../tool/type_index.hpp"
 #include "../tool/to_std_string_view.hpp"
 
 #include <boost/hana/less_equal.hpp>

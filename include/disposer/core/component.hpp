@@ -13,11 +13,7 @@
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"
-
-#include "../tool/add_log.hpp"
-
-#include <type_traits>
-#include <atomic>
+#include "../config/validate_iop.hpp"
 
 
 namespace disposer{
@@ -37,52 +33,35 @@ namespace disposer{
 		)
 			: list_(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(ref_list())) ...)
+				location,
+				hana::slice_c< 0, I >(detail::as_ref_list(list_))) ...)
 		{
 			(void)location; // GCC bug (silance unused warning)
 		}
 
 
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto& operator()(P const& param)noexcept{
-			return get(param);
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto& operator()(Name const& name)noexcept{
+			return extract(list_, name);
 		}
 
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto const& operator()(P const& param)const noexcept{
-			return get(param);
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			return extract(list_, name);
 		}
 
 
 	private:
-		/// \brief list_ as tuple of std::reference_wrapper's
-		auto ref_list()const noexcept{
-			return hana::transform(list_, detail::ref{});
-		}
-
-		/// \brief Implementation for \ref operator()
-		template < typename Name >
-		auto& get(Name const& name)const noexcept{
+		template < typename L, typename Name >
+		static auto& extract(L& list, Name const& name)noexcept{
 			using name_t = std::remove_reference_t< Name >;
-			static_assert(
-				hana::is_a< parameter_name_tag, name_t >,
-				"parameter is not an parameter_name");
-
-			using name_tag = typename name_t::hana_tag;
-
-			auto ref = hana::find_if(ref_list(), [&name](auto ref){
-				return hana::is_a< name_tag >(ref.get().name)
-					&& ref.get().name == name.value;
-			});
-
-			auto is_iop_valid = ref != hana::nothing;
-			static_assert(is_iop_valid, "requested name doesn't exist");
-
-			return ref->get();
+			static_assert(hana::is_a< parameter_name_tag, name_t >,
+				"name is not a parameter_name");
+			return detail::extract(detail::as_ref_list(list), name);
 		}
 
 

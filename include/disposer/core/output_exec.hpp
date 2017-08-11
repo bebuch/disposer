@@ -10,10 +10,9 @@
 #define _disposer__core__output_exec__hpp_INCLUDED_
 
 #include "output_exec_base.hpp"
-#include "output_name.hpp"
+#include "output.hpp"
 #include "config_fn.hpp"
 
-#include "../tool/type_index.hpp"
 #include "../tool/to_std_string_view.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -84,20 +83,12 @@ namespace disposer{
 				"type V in put< V > is not an output_exec type"
 			);
 
-			if(!enabled_map_[hana::type_c< V >]){
-				using namespace std::literals::string_literals;
-				throw std::logic_error(io_tools::make_string(
-					"output_exec '", detail::to_std_string_view(name),
-					"' put disabled type [", type_name< V >(), "]"
-				));
-			}
-
 			data_.emplace_back(static_cast< V&& >(value));
 		}
 
 
 		/// \brief Returns the output name
-		virtual std::string_view get_name()noexcept const override{
+		virtual std::string_view get_name()const noexcept override{
 			return detail::to_std_string_view(name);
 		}
 
@@ -131,44 +122,25 @@ namespace disposer{
 		///
 		/// The data is moved into the vector!
 		virtual std::vector< value_carrier > get_values()override{
+			assert(is_last_use());
+
 			std::vector< value_carrier > result;
 			result.reserve(data_.size());
 
-			if(is_last_use()){
-				// move data
-				for(auto& data: data_){
-					if constexpr(type_count == 1){
-						result.emplace_back(
-							type_index::type_id< decltype(data) >(),
-							reinterpret_cast< any_type&& >(data));
-					}else{
-						result.emplace_back(
-							std::visit([](auto&& data){
-								return type_index::type_id< decltype(data) >();
-							}, std::move(data)),
-							std::visit([](auto&& data)->any_type&&{
-								return reinterpret_cast< any_type&& >(data);
-							}, std::move(data)));
-					}
+			for(auto& data: data_){
+				if constexpr(type_count == 1){
+					result.emplace_back(
+						type_index::type_id< decltype(data) >(),
+						reinterpret_cast< any_type&& >(data));
+				}else{
+					result.emplace_back(
+						std::visit([](auto&& data){
+							return type_index::type_id< decltype(data) >();
+						}, std::move(data)),
+						std::visit([](auto&& data)->any_type&&{
+							return reinterpret_cast< any_type&& >(data);
+						}, std::move(data)));
 				}
-			}else{
-				TODO;
-				// make a copy TODO!!!
-// 				for(auto& data: data_){
-// 					if constexpr(type_count == 1){
-// 						result.emplace_back(
-// 							type_index::type_id< decltype(data) >(),
-// 							reinterpret_cast< any_type&& >(data));
-// 					}else{
-// 						result.emplace_back(
-// 							std::visit([](auto&& data){
-// 								return type_index::type_id< decltype(data) >();
-// 							}, std::move(data)),
-// 							std::visit([](auto&& data)->any_type&&{
-// 								return reinterpret_cast< any_type&& >(data);
-// 							}, std::move(data)));
-// 					}
-// 				}
 			}
 
 			return result;

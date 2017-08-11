@@ -13,19 +13,12 @@
 #include "output_exec.hpp"
 
 #include "../tool/false_c.hpp"
+#include "../tool/extract.hpp"
 
-#include <boost/hana/core/is_a.hpp>
 #include <boost/hana/transform.hpp>
 #include <boost/hana/find_if.hpp>
 #include <boost/hana/unpack.hpp>
 #include <boost/hana/slice.hpp>
-#include <boost/hana/size.hpp>
-
-#include <type_traits>
-#include <string_view>
-#include <functional>
-#include <utility>
-#include <vector>
 
 
 namespace disposer{
@@ -40,13 +33,17 @@ namespace disposer{
 
 	template < typename List, std::size_t I, typename Module >
 	auto io_exec_make_data(
-		Module const& module,
+		Module& module,
 		output_map_type const& output_map
 	)noexcept{
 		constexpr auto name = get_name< List, I >;
 		if constexpr(hana::is_a< input_name_tag >(name)){
 			auto const ptr = module(name).output_ptr();
-			return ptr ? output_map[ptr] : nullptr;
+			if(!ptr) return static_cast< output_exec_base* >(nullptr);
+
+			auto const iter = output_map.find(ptr);
+			assert(iter != output_map.end());
+			return iter->second;
 		}else if constexpr(hana::is_a< output_name_tag >(name)){
 			return module(name).use_count();
 		}else{
@@ -56,9 +53,9 @@ namespace disposer{
 	}
 
 	template < typename List, std::size_t I, typename Module, typename Data >
-	auto add_outputs_to_map(
-		Module const& module,
-		Data const& data,
+	void add_outputs_to_map(
+		Module& module,
+		Data& data,
 		output_map_type& output_map
 	){
 		constexpr auto name = get_name< List, I >;
@@ -75,13 +72,13 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename Module, std::size_t ... I >
 		module_exec_data(
-			Module const& module,
+			Module& module,
 			output_map_type& output_map,
 			std::index_sequence< I ... >
 		)
 			: list_(io_exec_make_data< List, I >(module, output_map) ...)
 		{
-			(add_outputs_to_map< List, I >(module, list_, output_map), ...);
+			(add_outputs_to_map< List, I >(module, *this, output_map), ...);
 		}
 
 
@@ -117,7 +114,7 @@ namespace disposer{
 			static_assert(
 				hana::is_a< input_name_tag, name_t > ||
 				hana::is_a< output_name_tag, name_t >,
-				"parameter is not an input_name or output_name");
+				"name is not an input_name or output_name");
 			return detail::extract(detail::as_ref_list(list), name);
 		}
 

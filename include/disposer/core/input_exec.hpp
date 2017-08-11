@@ -104,8 +104,7 @@ namespace disposer{
 			}
 
 			std::vector< values_type > result;
-			TODO;
-			if(is_last_use()){
+			if(output_ptr()->is_last_use()){
 				for(auto& carrier: output_ptr()->get_values(
 					input_exec_key()
 				)){

@@ -14,8 +14,6 @@
 #include "../config/validate_iop.hpp"
 #include "../config/module_make_data.hpp"
 
-#include <boost/hana/tuple.hpp>
-
 #include <atomic>
 
 
@@ -155,6 +153,18 @@ namespace disposer{
 
 		friend struct unit_test_key;
 	};
+
+
+	template < typename MakerList, typename StateMakerFn, typename ExecFn >
+	module_register_fn(
+		MakerList&& list,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	) -> module_register_fn< MakerList, StateMakerFn, ExecFn >;
+
+	template < typename MakerList, typename ExecFn >
+	module_register_fn(MakerList&& list, exec_fn< ExecFn > const& exec)
+		-> module_register_fn< MakerList, void, ExecFn >;
 
 
 }

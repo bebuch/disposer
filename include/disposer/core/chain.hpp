@@ -16,8 +16,6 @@
 #include "../tool/module_ptr.hpp"
 
 #include <mutex>
-#include <string>
-#include <vector>
 #include <condition_variable>
 
 

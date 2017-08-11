@@ -11,9 +11,6 @@
 
 #include "module_data.hpp"
 
-#include "../tool/add_log.hpp"
-#include "../tool/false_c.hpp"
-
 
 namespace disposer{
 
@@ -55,47 +52,67 @@ namespace disposer{
 
 
 	/// \brief Wrapper for the module enable function
-	template < typename StateMakerFn >
+	template < typename Fn = void >
 	class state_maker_fn{
 	public:
-		state_maker_fn(StateMakerFn&& maker_fn)
-			: maker_fn_(static_cast< StateMakerFn&& >(maker_fn)) {}
+		constexpr state_maker_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+ 		constexpr explicit state_maker_fn(Fn const& fn)
+			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
+			: fn_(fn) {}
+
+ 		constexpr explicit state_maker_fn(Fn&& fn)
+			noexcept(std::is_nothrow_move_constructible_v< Fn >)
+			: fn_(static_cast< Fn&& >(fn)) {}
 
 		template < typename List >
 		auto operator()(state_accessory< List > const& accessory)const{
-			if constexpr(std::is_invocable_v< StateMakerFn const,
+			if constexpr(std::is_invocable_v< Fn const,
 				state_accessory< List > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					StateMakerFn const,
+					Fn const,
 					state_accessory< List > const& > >,
-					"StateMakerFn must not return void");
-				return maker_fn_(accessory);
-			}else if constexpr(std::is_invocable_v< StateMakerFn const >){
+					"Fn must not return void");
+				return fn_(accessory);
+			}else if constexpr(std::is_invocable_v< Fn const >){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					StateMakerFn const > >,
-					"StateMakerFn must not return void");
+					Fn const > >,
+					"Fn must not return void");
 				(void)accessory; // silance GCC
-				return maker_fn_();
+				return fn_();
 			}else{
-				static_assert(detail::false_c< StateMakerFn >,
-					"StateMakerFn function must be invokable with "
+				static_assert(detail::false_c< Fn >,
+					"Fn function must be invokable with "
 					"state_accessory const& or without an argument");
 			}
 		}
 
 	private:
-		StateMakerFn maker_fn_;
+		Fn fn_;
 	};
 
 	/// \brief Maker specialization for stateless modules
 	template <> class state_maker_fn< void >{};
+
+	state_maker_fn() -> state_maker_fn< void >;
 
 
 	/// \brief Holds the user defined state object of a module
 	template < typename List, typename StateMakerFn >
 	class state{
 	public:
+		/// \brief Type of the module state object
+		using state_type = std::invoke_result_t<
+			state_maker_fn< StateMakerFn >,
+			state_accessory< List >&& >;
+
+		static_assert(!std::is_void_v< state_type >,
+			"state_maker function must not return void");
+
+
 		/// \brief Constructor
 		state(state_maker_fn< StateMakerFn > const& state_maker_fn)noexcept
 			: state_maker_fn_(state_maker_fn) {}
@@ -113,17 +130,14 @@ namespace disposer{
 			state_.reset();
 		}
 
+		/// \brief Get pointer to state object
+		state_type* object()noexcept{
+			assert(state_);
+			return &*state_;
+		}
+
 
 	private:
-		/// \brief Type of the module state object
-		using state_type = std::invoke_result_t<
-			state_maker_fn< StateMakerFn >,
-			state_accessory< List >&& >;
-
-		static_assert(!std::is_void_v< state_type >,
-			"state_maker function must not return void");
-
-
 		/// \brief The function object that is called in enable()
 		state_maker_fn< StateMakerFn > state_maker_fn_;
 
@@ -136,6 +150,9 @@ namespace disposer{
 	template < typename List >
 	class state< List, void >{
 	public:
+		/// \brief Type of the module state object
+		using state_type = void;
+
 		/// \brief Constructor
 		state(state_maker_fn< void > const&)noexcept{}
 
@@ -144,6 +161,9 @@ namespace disposer{
 
 		/// \brief Module is stateless, do nothing
 		void disable()noexcept{}
+
+		/// \brief Module is stateless, return nullptr
+		void* object()noexcept{ return nullptr; }
 	};
 
 

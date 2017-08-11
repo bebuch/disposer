@@ -15,7 +15,7 @@
 namespace disposer{
 
 
-	template < typename Module >
+	template < typename StateType, typename List >
 	class exec_accessory;
 
 	/// \brief Class input_exec_key access key
@@ -24,83 +24,143 @@ namespace disposer{
 		/// \brief Constructor
 		constexpr exec_key()noexcept = default;
 
-		template < typename Module >
+		template < typename StateType, typename List >
 		friend class exec_accessory;
 	};
 
 
 	/// \brief Accessory of a module during exec calls
-	template < typename Module >
-	class exec_accessory: public add_log< exec_accessory< Module > >{
+	template < typename StateType, typename List >
+	class exec_accessory: public add_log< exec_accessory< StateType, List > >{
 	public:
 		/// \brief Constructor
-		exec_accessory(Module& module)
-			: module_(module) {}
+		exec_accessory(
+			std::size_t id,
+			module_data< List > const& data,
+			module_exec_data< detail::exec_list_t< List > >& exec_data,
+			StateType* state,
+			std::string_view location
+		)
+			: id_(id)
+			, data_(data)
+			, exec_data_(exec_data)
+			, state_(state)
+			, location_(location) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
-		template < typename IOP >
-		auto const& operator()(IOP const& iop)const noexcept{
-			return module_.data()(iop);
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			return get(*this, name);
 		}
 
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
-		template < typename IOP >
-		auto& operator()(IOP const& iop)noexcept{
-			return module_.data()(iop);
+		template < typename Name >
+		auto& operator()(Name const& name)noexcept{
+			return get(*this, name);
 		}
 
 		/// \brief Get access to the state object if one exists
 		auto& state()noexcept{
-			static_assert(!std::is_void_v< typename Module::state_type >,
-				"Module have no state.");
-			return module_.state();
+			static_assert(!std::is_void_v< StateType >,
+				"Module has no state.");
+			return *state_;
 		}
+
+		/// \brief ID of this exec
+		std::size_t id()noexcept{ return id_; }
 
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "id(" << module_.id() << ") chain("
-				<< module_.chain() << ") module(" << module_.number()
-				<< ":" << module_.type_name() << ") exec: ";
+			os << location_;
 		}
 
 
 	private:
-		/// \brief Reference to the module object
-		Module& module_;
+		template < typename This, typename Name >
+		static auto& get(This& this_, Name const& name)noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			if constexpr(hana::is_a< parameter_name_tag, name_t >()){
+				return this_.data_(name);
+			}else if constexpr(hana::is_a< input_name_tag, name_t >()){
+					return this_.exec_data_(name);
+			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
+				// TODO: Must be tested!!!
+// 				if(!this_.data_(name).is_enabled[hana::type_c< V >]){
+// 					using namespace std::literals::string_literals;
+// 					throw std::logic_error(io_tools::make_string(
+// 						"output '", detail::to_std_string_view(name),
+// 						"' with disabled type [", type_name< V >(),
+// 						"] requested"
+// 					));
+// 				}
+
+				return this_.exec_data_(name);
+			}else{
+				static_assert(detail::false_c< Name >,
+					"name is not an input_name, output_name or parameter_name");
+			}
+		}
+
+
+		/// \brief Current exec id
+		std::size_t id_;
+
+		/// \brief Data of the module
+		module_data< List > const& data_;
+
+		/// \brief Data of the exec_module
+		module_exec_data< detail::exec_list_t< List > >& exec_data_;
+
+		/// \brief Module state
+		///
+		/// nullptr-pointer to void if module is stateless.
+		StateType* state_;
+
+		/// \brief Prefix for log messages
+		std::string_view location_;
 	};
 
 
 	/// \brief Wrapper for the module exec function
-	template < typename ExecFn >
+	template < typename Fn >
 	class exec_fn{
 	public:
-		exec_fn(ExecFn&& exec_fn)
-			: exec_fn_(static_cast< ExecFn&& >(exec_fn)) {}
+		constexpr exec_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+		constexpr explicit exec_fn(Fn const& fn)
+			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
+			: fn_(fn) {}
+
+		constexpr explicit exec_fn(Fn&& fn)
+			noexcept(std::is_nothrow_move_constructible_v< Fn >)
+			: fn_(static_cast< Fn&& >(fn)) {}
 
 
-		template < typename Module >
-		void operator()(exec_accessory< Module >& accessory){
-			if constexpr(std::is_invocable_v< ExecFn,
-				exec_accessory< Module >& >
+		template < typename StateType, typename List >
+		void operator()(exec_accessory< StateType, List >& accessory){
+			if constexpr(std::is_invocable_v< Fn,
+				exec_accessory< StateType, List >& >
 			){
-				exec_fn_(accessory);
-			}else if constexpr(std::is_invocable_v< ExecFn >){
+				fn_(accessory);
+			}else if constexpr(std::is_invocable_v< Fn >){
 				(void)accessory; // silance GCC
-				exec_fn_();
+				fn_();
 			}else{
-				static_assert(detail::false_c< Module >,
-					"ExecFn must be invokable with exec_accessory& or "
+				static_assert(detail::false_c< StateType >,
+					"Fn must be invokable with exec_accessory& or "
 					"without arguments");
 			}
 		}
 
 
 	private:
-		ExecFn exec_fn_;
+		Fn fn_;
 	};
 
 

@@ -16,6 +16,7 @@
 #include <boost/hana/set.hpp>
 #include <boost/hana/any.hpp>
 #include <boost/hana/traits.hpp>
+#include <boost/hana/for_each.hpp>
 
 #include <variant>
 #include <unordered_map>

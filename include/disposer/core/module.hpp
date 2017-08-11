@@ -10,14 +10,9 @@
 #define _disposer__core__module__hpp_INCLUDED_
 
 #include "module_base.hpp"
-#include "module_data.hpp"
 #include "module_exec.hpp"
 #include "state_maker_fn.hpp"
 #include "exec_fn.hpp"
-
-#include "../tool/exec_list_t.hpp"
-
-#include <cassert>
 
 
 namespace disposer{
@@ -29,6 +24,9 @@ namespace disposer{
 	public:
 		/// \brief State maker function or void for stateless modules
 		using state_maker_fn_type = StateMakerFn;
+
+		/// \brief Type of the module state object
+		using state_type = typename state< List, StateMakerFn >::state_type;
 
 
 		/// \brief Constructor
@@ -63,12 +61,23 @@ namespace disposer{
 		}
 
 
+		/// \brief Get reference to an input-, output- or parameter-object via
+		///        its corresponding compile time name
+		template < typename Name >
+		auto& operator()(Name const& name)noexcept{
+			return data_(name);
+		}
+
+
 		/// \brief Calls the exec_fn
 		void exec(
 			std::size_t id,
-			module_exec_data< detail::exec_list_t< List > >& exec_data
-		)const{
-			return exec_fn_(accessory(id, exec_data, data_, state_));
+			module_exec_data< detail::exec_list_t< List > >& exec_data,
+			std::string_view location
+		){
+			exec_accessory< state_type, List >
+				accessory(id, data_, exec_data, state_.object(), location);
+			return exec_fn_(accessory);
 		}
 
 

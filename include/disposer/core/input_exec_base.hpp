@@ -33,9 +33,6 @@ namespace disposer{
 	};
 
 
-	struct module_base_key;
-
-
 	/// \brief Base for module inputs
 	///
 	/// Polymorphe base class for module inputs.
@@ -63,7 +60,7 @@ namespace disposer{
 
 
 		/// \brief Tell the connected output that this input finished
-		void cleanup(module_base_key&&)noexcept{
+		void cleanup()noexcept{
 			if(output_) output_->cleanup(input_exec_key());
 		}
 

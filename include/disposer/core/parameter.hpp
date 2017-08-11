@@ -12,7 +12,6 @@
 #include "config_fn.hpp"
 #include "parameter_name.hpp"
 
-#include "../tool/type_index.hpp"
 #include "../tool/to_std_string.hpp"
 #include "../tool/to_std_string_view.hpp"
 
@@ -24,8 +23,6 @@
 #include <boost/hana/traits.hpp>
 #include <boost/hana/any.hpp>
 #include <boost/hana/set.hpp>
-
-#include <optional>
 
 
 namespace disposer{
