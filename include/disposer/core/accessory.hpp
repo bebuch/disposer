@@ -182,13 +182,13 @@ namespace disposer{
 	){
 		(void)location; // Silance GCC ...
 
-		if constexpr(hana::is_a< input_maker_tag >(maker)){
+		if constexpr(hana::is_a< input_maker_tag, Maker >()){
 			return input_make_data(maker, make_output_info(data.inputs,
 				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< output_maker_tag >(maker)){
+		}else if constexpr(hana::is_a< output_maker_tag, Maker >()){
 			return output_make_data(maker, get_use_count(data.outputs,
 				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< parameter_maker_tag >(maker)){
+		}else if constexpr(hana::is_a< parameter_maker_tag, Maker >()){
 			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));
 		}else{

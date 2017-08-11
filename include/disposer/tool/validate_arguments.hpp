@@ -35,7 +35,7 @@ namespace disposer::detail{
 
 		template < typename ... Args >
 		constexpr void operator()(Args const& ... args)const{
-			(validate(args), ...);
+			(validate(args), ..., (void)0);
 		}
 	};
 
