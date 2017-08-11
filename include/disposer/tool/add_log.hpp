@@ -38,21 +38,11 @@ namespace disposer{
 
 	template < typename LogF >
 	constexpr bool is_simple_log_fn =
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		std::is_callable_v< LogF(logsys::stdlogb&) >;
-#else
 		std::is_invocable_v< LogF, logsys::stdlogb& >;
-#endif
 
 	template < typename LogF, typename T >
 	constexpr bool is_extended_log_fn =
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		std::is_callable_v< LogF(logsys::stdlogb&, T) >;
-#else
 		std::is_invocable_v< LogF, logsys::stdlogb&, T >;
-#endif
 
 
 	template < typename Derived >
@@ -130,7 +120,7 @@ namespace disposer{
 		}
 
 	protected:
-		constexpr add_log()noexcept{
+		add_log()noexcept{
 			static_assert(std::is_base_of_v< add_log, Derived >);
 
 			auto log_prefix_implemented =

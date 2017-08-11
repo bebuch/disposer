@@ -16,8 +16,6 @@
 #include "../tool/module_ptr.hpp"
 
 #include <mutex>
-#include <string>
-#include <vector>
 #include <condition_variable>
 
 
@@ -95,10 +93,12 @@ namespace disposer{
 		template < typename F >
 		void process_module(
 			std::size_t const i,
-			std::size_t const run,
+			std::size_t const id,
 			F const& action,
 			std::string_view action_name
 		);
+
+		std::vector< module_exec_ptr > make_exec_modules(std::size_t id);
 
 
 		/// \brief List of modules

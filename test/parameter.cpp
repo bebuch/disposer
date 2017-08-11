@@ -57,7 +57,7 @@ int main(){
 	auto make_data = [&iop_list](auto const& maker, auto const& value_map){
 		auto make_data = disposer::parameter_make_data(maker, value_map);
 		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_list
 			);
 
 		return data;

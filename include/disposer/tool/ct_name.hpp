@@ -9,7 +9,7 @@
 #ifndef _disposer__tool__ct_name__hpp_INCLUDED_
 #define _disposer__tool__ct_name__hpp_INCLUDED_
 
-#include <boost/hana.hpp>
+#include <boost/hana/string.hpp>
 
 #include <array>
 #include <type_traits>

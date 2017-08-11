@@ -13,10 +13,7 @@
 
 #include "../tool/component_ptr.hpp"
 
-#include <unordered_map>
 #include <unordered_set>
-#include <functional>
-#include <vector>
 
 
 namespace disposer{

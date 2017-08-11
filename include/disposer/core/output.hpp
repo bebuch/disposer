@@ -10,16 +10,18 @@
 #define _disposer__core__output__hpp_INCLUDED_
 
 #include "output_base.hpp"
-#include "config_fn.hpp"
 #include "output_name.hpp"
+#include "config_fn.hpp"
 
-#include "../tool/type_index.hpp"
 #include "../tool/to_std_string_view.hpp"
 
-#include <io_tools/make_string.hpp>
-
-#include <functional>
-#include <variant>
+#include <boost/hana/less_equal.hpp>
+#include <boost/hana/not_equal.hpp>
+#include <boost/hana/at_key.hpp>
+#include <boost/hana/for_each.hpp>
+#include <boost/hana/traits.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/set.hpp>
 
 
 namespace disposer{
@@ -28,6 +30,7 @@ namespace disposer{
 	/// \brief Hana Tag for output
 	struct output_tag{};
 
+	/// \brief The actual output type
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	class output: public output_base{
 	public:
@@ -41,8 +44,8 @@ namespace disposer{
 		/// \brief Compile time name of the output
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -88,61 +91,25 @@ namespace disposer{
 			"disposer::output types must not be references");
 
 
-		/// \brief If there is only one type than the type, otherwise
-		///        a std::variant of all types
-		using value_type = std::conditional_t<
-			type_count == 1,
-			typename decltype(+types[hana::int_c< 0 >])::type,
-			typename decltype(
-				hana::unpack(types, hana::template_< std::variant >))::type
-		>;
-
-
 		/// \brief Constructor
 		template < typename MakeData >
-		constexpr output(MakeData const& m)
-			: enabled_map_(hana::unpack(hana::transform(subtypes,
+		output(MakeData const& m)
+			: output_base(m.data.use_count)
+			, enabled_map_(hana::unpack(hana::transform(subtypes,
 				[&](auto subtype){
 					return hana::make_pair(type_transform(subtype),
 						m.data.maker.enable(m.accessory, subtype));
 				}), hana::make_map)) {}
 
-		/// \brief Outputs are not copyable
-		output(output const&) = delete;
-
-		/// \brief Outputs are not movable
-		output(output&&) = delete;
-
-
-
-		/// \brief Add given data with the current id to \ref data_
-		template < typename V >
-		void put(V&& value){
-			static_assert(
-				hana::contains(types, hana::type_c< V >),
-				"type V in put< V > is not an output type"
-			);
-
-			if(!enabled_map_[hana::type_c< V >]){
-				using namespace std::literals::string_literals;
-				throw std::logic_error(io_tools::make_string(
-					"output '", detail::to_std_string_view(name),
-					"' put disabled type [", type_name< V >(), "]"
-				));
-			}
-
-			data_.at(current_id()).emplace_back(static_cast< V&& >(value));
-		}
 
 		/// \brief true if any type is enabled
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
 		/// \brief true if type is enabled
 		template < typename U >
-		constexpr bool
-		is_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_enabled(hana::basic_type< U > const& type)const noexcept{
 			auto const is_type_valid = hana::contains(enabled_map_, type);
 			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
@@ -150,15 +117,10 @@ namespace disposer{
 
 		/// \brief true if subtype is enabled
 		template < typename U >
-		constexpr bool
-		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_subtype_enabled(
+			hana::basic_type< U > const& type
+		)const noexcept{
 			return is_enabled(type_transform(type));
-		}
-
-
-		/// \brief Returns the output name
-		virtual std::string_view get_name()const noexcept override{
-			return detail::to_std_string_view(name);
 		}
 
 
@@ -177,80 +139,8 @@ namespace disposer{
 
 
 	private:
-		/// \brief Get vector of references to all data with id
-		virtual std::vector< reference_carrier >
-		get_references(std::size_t id)const override{
-			std::vector< reference_carrier > result;
-			result.reserve(data_.size());
-
-			for(auto const& data: data_.at(id)){
-				if constexpr(type_count == 1){
-					result.emplace_back(
-						type_index::type_id< decltype(data) >(),
-						reinterpret_cast< any_type const& >(data));
-				}else{
-					result.emplace_back(
-						std::visit([](auto const& data){
-							return type_index::type_id< decltype(data) >();
-						}, data),
-						std::visit([](auto const& data)->any_type const&{
-							return reinterpret_cast< any_type const& >(data);
-						}, data));
-				}
-			}
-
-			return result;
-		}
-
-		/// \brief Get vector of values with all data with id
-		///
-		/// The data is moved into the vector!
-		virtual std::vector< value_carrier >
-		get_values(std::size_t id) override{
-			std::vector< value_carrier > result;
-			result.reserve(data_.size());
-
-			for(auto& data: data_.at(id)){
-				if constexpr(type_count == 1){
-					result.emplace_back(
-						type_index::type_id< decltype(data) >(),
-						reinterpret_cast< any_type&& >(data));
-				}else{
-					result.emplace_back(
-						std::visit([](auto&& data){
-							return type_index::type_id< decltype(data) >();
-						}, std::move(data)),
-						std::visit([](auto&& data)->any_type&&{
-							return reinterpret_cast< any_type&& >(data);
-						}, std::move(data)));
-				}
-			}
-
-			return result;
-		}
-
-		/// \brief Remove all data until the given id
-		virtual void prepare()noexcept override{
-			data_.try_emplace(data_.end(), current_id());
-		}
-
-		/// \brief Remove all data until the given id
-		virtual void cleanup(std::size_t id)noexcept override{
-			data_.erase(id);
-		}
-
-
 		/// \brief hana::map from type to bool, bool is true if type is enabled
 		enabled_map_type enabled_map_;
-
-
-		/// \brief Map from exec id to data vector
-		///
-		/// Since emplace and erase of map don't affect existing elements and
-		/// these operations can't be called while get_references and
-		/// transfer_values are running on the same exec id, all 4 operations
-		/// are naturally thread safe.
-		std::map< std::size_t, std::vector< value_type > > data_;
 	};
 
 

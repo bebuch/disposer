@@ -9,6 +9,9 @@
 #ifndef _disposer__module__hpp_INCLUDED_
 #define _disposer__module__hpp_INCLUDED_
 
-#include "core/module_name.hpp"
+#include "core/module_maker.hpp"
+#include "core/input_maker.hpp"
+#include "core/output_maker.hpp"
+#include "core/parameter_maker.hpp"
 
 #endif

@@ -46,9 +46,9 @@ int main(){
 
 	auto iop_list = hana::make_tuple();
 	auto output_make_data = [&iop_list](auto const& maker){
-		auto make_data = disposer::output_make_data(maker);
+		auto make_data = disposer::output_make_data(maker, 1);
 		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_list
 			);
 
 		return data;
@@ -59,9 +59,9 @@ int main(){
 
 	auto make_data = [&iop_list, &output](auto const& maker){
 		auto make_data = disposer::input_make_data(
-			maker, disposer::output_info(&output, true));
+			maker, disposer::output_info(&output));
 		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_list, hana::size_c< 0 >
+				std::move(make_data), "location"sv, iop_list
 			);
 
 		return data;

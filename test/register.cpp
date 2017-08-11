@@ -76,11 +76,12 @@ int main(){
 					"cm1"_module([](auto& /*component*/){
 						return disposer::module_register_fn(
 							disposer::module_configure(),
-							disposer::module_enable([](auto const& module){
+							disposer::state_maker_fn([](auto const& module){
 								module.log([](logsys::stdlogb&){});
-								return [](auto& module, std::size_t){
-									module.log([](logsys::stdlogb&){});
-								};
+								return 0;
+							}),
+							disposer::exec_fn([](auto& module){
+								module.log([](logsys::stdlogb&){});
 							})
 						);
 					})
@@ -92,11 +93,12 @@ int main(){
 		{
 			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::module_enable([](auto const& module){
+				disposer::state_maker_fn([](auto const& module){
 					module.log([](logsys::stdlogb&){});
-					return [](auto& module, std::size_t){
-						module.log([](logsys::stdlogb&){});
-					};
+					return 0;
+				}),
+				disposer::exec_fn([](auto& module){
+					module.log([](logsys::stdlogb&){});
 				})
 			);
 			module_register_fn("m1", mdeclarant);
@@ -107,38 +109,41 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_in, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const& config){
+				disposer::state_maker_fn([](auto const& config){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
 							disposer::none, int > const& >;
 					static_assert(valid_type);
 
-					return [](auto& module, std::size_t){
-						auto valid_type =
-							hana::type_c< decltype(module("v"_in)) >
-							== hana::type_c< disposer::input< decltype("v"_in),
-								disposer::none, int >& >;
-						static_assert(valid_type);
+					return 0;
+				}),
+				disposer::exec_fn([](auto& module){
+					auto valid_type =
+						hana::type_c< decltype(module("v"_in)) >
+						== hana::type_c< disposer::input_exec<
+							decltype("v"_in), disposer::none, int >& >;
+					static_assert(valid_type);
 
-						auto const& const_module = module;
-						auto valid_const_type =
-							hana::type_c< decltype(const_module("v"_in)) >
-							== hana::type_c< disposer::input< decltype("v"_in),
-								disposer::none, int > const& >;
-						static_assert(valid_const_type);
+					auto const& const_module = module;
+					auto valid_const_type =
+						hana::type_c< decltype(const_module("v"_in)) >
+						== hana::type_c< disposer::input_exec<
+							decltype("v"_in), disposer::none, int > const& >;
+					static_assert(valid_const_type);
 
-						auto valid_value_type =  hana::type_c<
-							decltype(module("v"_in).get_values()) > ==
-							hana::type_c< std::vector< int > >;
-						static_assert(valid_value_type );
+					auto valid_value_type =
+						hana::type_c< decltype(
+							module("v"_in).get_values()) >
+						== hana::type_c< std::vector< int > >;
+					static_assert(valid_value_type );
 
-						auto valid_ref_type =  hana::type_c<
-							decltype(module("v"_in).get_references()) > ==
-							hana::type_c< std::vector<
-								std::reference_wrapper< int const > > >;
-						static_assert(valid_ref_type);
-					};
+					auto valid_ref_type =
+						hana::type_c< decltype(
+							module("v"_in).get_references()) >
+						== hana::type_c< std::vector<
+							std::reference_wrapper< int const > > >;
+					static_assert(valid_ref_type);
 				})
 			);
 			module_register_fn("m2", mdeclarant);
@@ -150,11 +155,10 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_out, hana::type_c< int >)
 				),
-				disposer::module_enable([]{
-					return [](auto& module){
-						auto& out = module("v"_out);
-						(void) out;
-					};
+				disposer::state_maker_fn([]{ return 0; }),
+				disposer::exec_fn([](auto& module){
+					auto& out = module("v"_out);
+					(void) out;
 				})
 			);
 			module_register_fn("m3", mdeclarant);
@@ -166,9 +170,8 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const&){
-					return [](auto&, std::size_t){};
-				})
+				disposer::state_maker_fn([]{ return 0; }),
+				disposer::exec_fn([]{})
 			);
 			module_register_fn("m4", mdeclarant);
 		}
@@ -180,9 +183,8 @@ int main(){
 					disposer::make("v"_out, hana::type_c< int >),
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::module_enable([](auto const&){
-					return [](auto&, std::size_t){};
-				})
+				disposer::state_maker_fn{},
+				disposer::exec_fn([]{})
 			);
 			module_register_fn("m5", mdeclarant);
 		}
@@ -233,9 +235,7 @@ int main(){
 								assert(!active1 && !active2 && !active3);
 							}))
 				),
-				disposer::module_enable([](auto const&){
-					return [](auto&, std::size_t){};
-				})
+				disposer::exec_fn([]{})
 			);
 			module_register_fn("m6", mdeclarant);
 		}

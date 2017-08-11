@@ -13,11 +13,7 @@
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"
-
-#include "../tool/add_log.hpp"
-
-#include <type_traits>
-#include <atomic>
+#include "../config/validate_iop.hpp"
 
 
 namespace disposer{
@@ -35,65 +31,42 @@ namespace disposer{
 			std::string_view location,
 			std::index_sequence< I ... >
 		)
-			: // iop_list_ can be referenced before initialization
-				iop_ref_list_(hana::transform(iop_list_, ref{}))
-			, iop_list_(iops_make_data(
+			: list_(iops_make_data(
 				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location, hana::slice_c< 0, I >(iop_ref_list_),
-				hana::size_c< I >) ...)
+				location,
+				hana::slice_c< 0, I >(detail::as_ref_list(list_))) ...)
 		{
 			(void)location; // GCC bug (silance unused warning)
 		}
 
 
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto& operator()(P const& param)noexcept{
-			return get(param);
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto& operator()(Name const& name)noexcept{
+			return extract(list_, name);
 		}
 
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto const& operator()(P const& param)const noexcept{
-			return get(param);
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			return extract(list_, name);
 		}
 
 
 	private:
-		/// \brief Implementation for \ref operator()
-		template < typename IOP >
-		auto& get(IOP const& iop)const noexcept{
-			using iop_t = std::remove_reference_t< IOP >;
-			static_assert(
-				hana::is_a< parameter_name_tag, iop_t >,
-				"parameter is not an parameter_name");
-
-			using iop_tag = typename iop_t::hana_tag;
-
-			auto iop_ref = hana::find_if(iop_ref_list_, [&iop](auto ref){
-				using tag = typename decltype(ref)::type::name_type::hana_tag;
-				return hana::type_c< iop_tag > == hana::type_c< tag >
-					&& ref.get().name == iop.value;
-			});
-
-			auto is_iop_valid = iop_ref != hana::nothing;
-			static_assert(is_iop_valid, "requested iop doesn't exist");
-
-			return iop_ref->get();
+		template < typename L, typename Name >
+		static auto& extract(L& list, Name const& name)noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			static_assert(hana::is_a< parameter_name_tag, name_t >,
+				"name is not a parameter_name");
+			return detail::extract(detail::as_ref_list(list), name);
 		}
 
 
-		/// \brief Like List but with elements in std::reference_wrapper
-		using iop_ref_list_type =
-			decltype(hana::transform(std::declval< List& >(), ref{}));
-
-		/// \brief hana::tuple of references to inputs, outputs and parameters
-		iop_ref_list_type iop_ref_list_;
-
 		/// \brief hana::tuple of the inputs, outputs and parameters
-		List iop_list_;
+		List list_;
 	};
 
 
@@ -147,18 +120,6 @@ namespace disposer{
 
 		template < typename Accessory >
 		auto operator()(Accessory& accessory)const{
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-			if constexpr(std::is_callable_v< ComponentFn const(Accessory&) >){
-				return component_fn_(accessory);
-			}else if constexpr(std::is_callable_v< ComponentFn const() >){
-				return component_fn_();
-			}else{
-				static_assert(detail::false_c< Accessory >,
-					"component_init function must be invokable with component& "
-					"or without an argument");
-			}
-	#else
 			if constexpr(std::is_invocable_v< ComponentFn const, Accessory& >){
 				return component_fn_(accessory);
 			}else if constexpr(std::is_invocable_v< ComponentFn const >){
@@ -169,11 +130,10 @@ namespace disposer{
 					"component_init function must be invokable with component& "
 					"or without an argument");
 			}
-#endif
 		}
 
 	private:
-		ComponentFn const component_fn_;
+		ComponentFn component_fn_;
 	};
 
 
@@ -185,14 +145,8 @@ namespace disposer{
 		using accessory_type = component_accessory< List >;
 
 
-// TODO: remove result_of-version as soon as libc++ supports invoke_result_t
-#if __clang__
-		using component_t = std::result_of_t<
-			component_init< ComponentFn >(accessory_type&) >;
-#else
 		using component_t = std::invoke_result_t<
 			component_init< ComponentFn >, accessory_type& >;
-#endif
 
 		static_assert(!std::is_same_v< component_t, void >,
 			"ComponentFn must return an object");
@@ -222,15 +176,15 @@ namespace disposer{
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
 		template < typename P >
-		decltype(auto) operator()(P&& param)noexcept{
-			return accessory_(static_cast< P&& >(param));
+		auto& operator()(P const& param)noexcept{
+			return accessory_(param);
 		}
 
 		/// \brief Get reference to an parameter-object via
 		///        its corresponding compile time name
 		template < typename P >
-		decltype(auto) operator()(P&& param)const noexcept{
-			return accessory_(static_cast< P&& >(param));
+		auto const& operator()(P const& param)const noexcept{
+			return accessory_(param);
 		}
 
 
@@ -273,14 +227,14 @@ namespace disposer{
 		std::string_view location,
 		component_init< ComponentFn > const& component_fn
 	){
-		auto list_type = hana::unpack(maker_list, [](auto const& ... maker){
+		auto type = hana::unpack(maker_list, [](auto const& ... maker){
 			return hana::type_c< hana::tuple<
 				typename decltype(hana::typeid_(maker))::type::type ... > >;
 		});
 
-		using iop_list_type = typename decltype(list_type)::type;
+		using list_type = typename decltype(type)::type;
 
-		return std::make_unique< component< iop_list_type, ComponentFn > >(
+		return std::make_unique< component< list_type, ComponentFn > >(
 			disposer, maker_list, data, location, component_fn);
 
 	}
@@ -310,7 +264,8 @@ namespace disposer{
 			// Check config file data for undefined parameters and warn about
 			// them
 			auto const location = data.location();
-			validate_parameters(location, makers, data.parameters);
+			validate_iop< parameter_maker_tag >(
+				location, makers, data.parameters);
 
 			std::string const basic_location = data.basic_location();
 
@@ -349,7 +304,7 @@ namespace disposer{
 
 
 	template < typename ... ComponentModules >
-	auto component_modules(ComponentModules&& ... component_modules){
+	constexpr auto component_modules(ComponentModules&& ... component_modules){
 		static_assert(hana::and_(hana::true_c,
 			hana::is_a< component_module_maker_tag, ComponentModules >() ...),
 			"at least one of the configure arguments is not a disposer "
@@ -370,7 +325,7 @@ namespace disposer{
 	class component_register_fn{
 	public:
 		/// \brief Constructor
-		constexpr component_register_fn(
+		component_register_fn(
 			P_MakerList&& list,
 			component_init< ComponentFn >&& component_fn,
 			ComponentModules&& component_modules
@@ -379,6 +334,20 @@ namespace disposer{
 			, maker_{
 				static_cast< P_MakerList&& >(list),
 				std::move(component_fn),
+				static_cast< ComponentModules&& >(component_modules)
+			}
+			{}
+
+		/// \brief Constructor
+		component_register_fn(
+			P_MakerList&& list,
+			component_init< ComponentFn > const& component_fn,
+			ComponentModules&& component_modules
+		)
+			: called_flag_(false)
+			, maker_{
+				static_cast< P_MakerList&& >(list),
+				component_fn,
 				static_cast< ComponentModules&& >(component_modules)
 			}
 			{}

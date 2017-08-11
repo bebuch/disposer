@@ -22,11 +22,10 @@ namespace disposer{
 	class output_base;
 
 	/// \brief Map from input names to output pointers
-	using input_list =
-		std::map< std::string, std::tuple< output_base*, bool > >;
+	using input_list = std::map< std::string, output_base* >;
 
-	/// \brief Output name lists
-	using output_list = std::set< std::string >;
+	/// \brief Map from output names to count of connected inputs
+	using output_list = std::map< std::string, std::size_t >;
 
 
 	struct parameter_data{
@@ -51,7 +50,12 @@ namespace disposer{
 
 
 		using in = parse::in;
-		using out = parse::out;
+
+		struct out{
+			std::string name;
+			std::string variable;
+			std::size_t use_count = 0;
+		};
 
 		struct module{
 			std::string type_name;

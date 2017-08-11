@@ -10,7 +10,6 @@
 #define _disposer__core__input_maker__hpp_INCLUDED_
 
 #include "input.hpp"
-#include "config_fn.hpp"
 
 #include "../tool/validate_arguments.hpp"
 

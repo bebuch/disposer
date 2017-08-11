@@ -12,13 +12,17 @@
 #include "config_fn.hpp"
 #include "parameter_name.hpp"
 
-#include "../tool/type_index.hpp"
 #include "../tool/to_std_string.hpp"
 #include "../tool/to_std_string_view.hpp"
 
 #include <io_tools/make_string.hpp>
 
-#include <optional>
+#include <boost/hana/less_equal.hpp>
+#include <boost/hana/not_equal.hpp>
+#include <boost/hana/at_key.hpp>
+#include <boost/hana/traits.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/set.hpp>
 
 
 namespace disposer{
@@ -40,8 +44,8 @@ namespace disposer{
 		/// \brief Compile time name of the parameter
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -139,7 +143,7 @@ namespace disposer{
 
 
 		/// \brief true if any type is enabled, otherwise false
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(type_value_map_));
 		}
 
@@ -177,20 +181,6 @@ namespace disposer{
 		/// \brief Map of parameter types to values
 		type_value_map_t type_value_map_;
 	};
-
-
-	struct default_value_type_impl{
-		template < typename ... T >
-		constexpr auto operator()(T ... v)const noexcept{
-			return hana::type_c< std::optional< decltype(hana::make_map(
-				hana::make_pair(v, std::declval< typename T::type >()) ...
-			)) > >;
-		}
-	};
-
-	template < typename Types >
-	using default_value_type = typename decltype(
-		hana::unpack(Types{}, default_value_type_impl{}))::type;
 
 
 }

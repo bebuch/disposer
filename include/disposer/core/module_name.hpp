@@ -9,10 +9,8 @@
 #ifndef _disposer__core__module_name__hpp_INCLUDED_
 #define _disposer__core__module_name__hpp_INCLUDED_
 
-#include "config_fn.hpp"
 #include "module.hpp"
 
-#include "../tool/ct_name.hpp"
 
 namespace disposer{
 

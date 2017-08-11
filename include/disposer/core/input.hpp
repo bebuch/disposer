@@ -10,14 +10,16 @@
 #define _disposer__core__input__hpp_INCLUDED_
 
 #include "input_base.hpp"
-#include "output_base.hpp"
 #include "config_fn.hpp"
 #include "input_name.hpp"
 
+#include <boost/hana/set.hpp>
+#include <boost/hana/any.hpp>
+#include <boost/hana/traits.hpp>
+#include <boost/hana/for_each.hpp>
+
 #include <variant>
-#include <optional>
 #include <unordered_map>
-#include <string_view>
 
 
 namespace disposer{
@@ -53,8 +55,8 @@ namespace disposer{
 		/// \brief Compile time name of the input
 		using name_type = Name;
 
-		/// \brief Name as hana::string
-		static constexpr auto name = Name::value;
+		/// \brief Name object
+		static constexpr auto name = name_type{};
 
 
 		/// \brief Meta function to transfrom subtypes to the actual types
@@ -99,39 +101,13 @@ namespace disposer{
 			"disposer::input types must not be references");
 
 
-		/// \brief If there is only one type than the type, otherwise
-		///        a std::variant of all types
-		using values_type = std::conditional_t<
-			type_count == 1,
-			typename decltype(+types[hana::int_c< 0 >])::type,
-			typename decltype(hana::unpack(
-				types, hana::template_< std::variant >))::type
-		>;
-
-		/// \brief If there is only one type than a std::reference_wrapper of
-		///        the type, otherwise a std::variant of
-		///        std::reference_wrapper's of all types
-		using references_type = std::conditional_t<
-			type_count == 1,
-			std::reference_wrapper<
-				typename decltype(+types[hana::int_c< 0 >])::type const >,
-			typename decltype(hana::unpack(
-				hana::transform(
-					hana::transform(types, hana::traits::add_const),
-					hana::template_< std::reference_wrapper >),
-				hana::template_< std::variant >))::type
-		>;
-
-
 		/// \brief Constructor
 		template < typename MakeData >
-		constexpr input(MakeData const& m)
-			: input_base(
-				(verify_maker_data(
-						m.data.maker, m.accessory, m.data.info
-					) // precondition call
-					, m.data.info ? m.data.info->output() : nullptr),
-				m.data.info ? m.data.info->last_use() : true)
+		input(MakeData const& m)
+			: input_base((
+					// precondition call
+					verify_maker_data(m.data.maker, m.accessory, m.data.info)
+				, m.data.info ? m.data.info->output() : nullptr))
 			, enabled_map_(
 				hana::make_map(hana::make_pair(
 					type_transform(hana::type_c< T >),
@@ -142,80 +118,15 @@ namespace disposer{
 				) ...)
 			) {}
 
-		/// \brief Inputs are not copyable
-		input(input const&) = delete;
-
-		/// \brief Inputs are not movable
-		input(input&&) = delete;
-
-
-		/// \brief Get all data until the current id without transferring
-		///        ownership
-		std::vector< references_type > get_references(){
-			if(!output_ptr()){
-				throw std::logic_error("input is not linked to an output");
-			}
-
-			std::vector< references_type > result;
-			for(auto const& carrier: output_ptr()->get_references(
-				input_key(), current_id()
-			)){
-				result.emplace_back(
-					ref_convert_rt(carrier.type, carrier.data)
-				);
-			}
-			return result;
-		}
-
-		/// \brief Get all data until the current id with transferring
-		///        ownership
-		std::vector< values_type > get_values(){
-			if(!output_ptr()){
-				throw std::logic_error("input is not linked to an output");
-			}
-
-			std::vector< values_type > result;
-			if(last_use()){
-				for(auto& carrier: output_ptr()->get_values(
-					input_key(), current_id()
-				)){
-					result.emplace_back(
-						val_convert_rt(carrier.type, std::move(carrier.data))
-					);
-				};
-			}else{
-				for(auto const& carrier: output_ptr()->get_references(
-					input_key(), current_id()
-				)){
-					// copy from std::reference_wrapper wrapper needs condition
-					if constexpr(type_count == 1){
-						result.emplace_back(
-							ref_convert_rt(carrier.type, carrier.data).get()
-						);
-					}else{
-						result.emplace_back(
-							std::visit([](auto const& ref)->values_type{
-									return ref.get();
-								},
-								ref_convert_rt(carrier.type, carrier.data)
-							)
-						);
-					}
-				}
-			}
-			return result;
-		}
-
 
 		/// \brief true if any type is enabled
-		constexpr bool is_enabled()const noexcept{
+		bool is_enabled()const noexcept{
 			return hana::any(hana::values(enabled_map_));
 		}
 
 		/// \brief true if type is enabled
 		template < typename U >
-		constexpr bool
-		is_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_enabled(hana::basic_type< U > const& type)const noexcept{
 			auto const is_type_valid = hana::contains(enabled_map_, type);
 			static_assert(is_type_valid, "type in not an input type");
 			return enabled_map_[type];
@@ -223,8 +134,9 @@ namespace disposer{
 
 		/// \brief true if subtype is enabled
 		template < typename U >
-		constexpr bool
-		is_subtype_enabled(hana::basic_type< U > const& type)const noexcept{
+		bool is_subtype_enabled(
+			hana::basic_type< U > const& type
+		)const noexcept{
 			return is_enabled(type_transform(type));
 		}
 
@@ -232,7 +144,7 @@ namespace disposer{
 	private:
 		/// \brief Checks to make before object initialization
 		template < typename InputMaker, typename Accessory >
-		static constexpr void verify_maker_data(
+		static void verify_maker_data(
 			InputMaker const& maker,
 			Accessory const& accessory,
 			std::optional< output_info > const& info
@@ -255,93 +167,9 @@ namespace disposer{
 		}
 
 
-		/// \brief Pointer to function to convert \ref any_type to
-		///        \ref references_type
-		using ref_convert_fn = references_type(*)(any_type const& data);
-
-		/// \brief Pointer to function to convert \ref any_type to
-		///        \ref values_type
-		using val_convert_fn = values_type(*)(any_type&& data);
-
-
-		/// \brief Map from runtime_type to conversion function
-		///        (\ref any_type to \ref references_type)
-		static std::unordered_map< type_index, ref_convert_fn > const ref_map_;
-
-		/// \brief Map from runtime_type to conversion function
-		///        (\ref any_type to \ref values_type)
-		static std::unordered_map< type_index, val_convert_fn > const val_map_;
-
-
-		/// \brief Conversion function from \ref any_type to
-		///        \ref references_type
-		template < typename U >
-		static references_type ref_convert(any_type const& data)noexcept{
-			return std::cref(reinterpret_cast< U const& >(data));
-		}
-
-		/// \brief Conversion function from \ref any_type to \ref values_type
-		template < typename U >
-		static values_type val_convert(any_type&& data){
-			return reinterpret_cast< U&& >(data);
-		}
-
-
-		/// \brief Conversion function from runtime type to
-		///        \ref references_type
-		static references_type ref_convert_rt(
-			type_index const& type,
-			any_type const& data
-		)noexcept{
-			auto iter = ref_map_.find(type);
-			assert(iter != ref_map_.end());
-			return (iter->second)(data);
-		}
-
-		/// \brief Conversion function from runtime type to
-		///        \ref values_type
-		static values_type val_convert_rt(
-			type_index const& type,
-			any_type&& data
-		){
-			auto iter = val_map_.find(type);
-			assert(iter != val_map_.end());
-			return (iter->second)(std::move(data));
-		}
-
-
 		/// \brief hana::map from type to bool, bool is true if type is enabled
 		enabled_map_type enabled_map_;
 	};
-
-
-	template < typename Name, typename TypeTransformFn, typename ... T >
-	std::unordered_map< type_index,
-		typename input< Name, TypeTransformFn, T ... >::ref_convert_fn > const
-		input< Name, TypeTransformFn, T ... >::ref_map_ = {
-			{
-				type_index::type_id_with_cvr<
-					typename type_transform_fn< TypeTransformFn >
-						::template apply< T >::type >(),
-				&input< Name, TypeTransformFn, T ... >::ref_convert<
-					typename type_transform_fn< TypeTransformFn >
-						::template apply< T >::type >
-			} ...
-		};
-
-	template < typename Name, typename TypeTransformFn, typename ... T >
-	std::unordered_map< type_index,
-		typename input< Name, TypeTransformFn, T ... >::val_convert_fn > const
-		input< Name, TypeTransformFn, T ... >::val_map_ = {
-			{
-				type_index::type_id_with_cvr<
-					typename type_transform_fn< TypeTransformFn >::
-						template apply< T >::type >(),
-				&input< Name, TypeTransformFn, T ... >::val_convert<
-					typename type_transform_fn< TypeTransformFn >::
-						template apply< T >::type >
-			} ...
-		};
 
 
 }

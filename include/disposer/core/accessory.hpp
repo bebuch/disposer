@@ -14,13 +14,13 @@
 #include "parameter_name.hpp"
 #include "output_info.hpp"
 
-#include "../config/embedded_config.hpp"
-
 #include "../tool/add_log.hpp"
+#include "../tool/extract.hpp"
 #include "../tool/false_c.hpp"
 #include "../tool/to_std_string.hpp"
 #include "../tool/to_std_string_view.hpp"
 
+#include <boost/hana/map.hpp>
 
 
 namespace disposer{
@@ -55,16 +55,16 @@ namespace disposer{
 	struct input_make_data{
 		static constexpr auto log_name = "input"sv;
 
-		constexpr input_make_data(
+		input_make_data(
 			InputMaker const& maker,
 			std::optional< output_info > const& info
 		)noexcept
 			: maker(maker)
 			, info(info){}
 
-		constexpr input_make_data(input_make_data&& other)noexcept
-			: maker(other.maker)
-			, info(std::move(other.info)) {}
+// 		input_make_data(input_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, info(std::move(other.info)) {}
 
 		InputMaker const& maker;
 		std::optional< output_info > info;
@@ -74,34 +74,45 @@ namespace disposer{
 	struct output_make_data{
 		static constexpr auto log_name = "output"sv;
 
-		constexpr output_make_data(Maker const& maker)noexcept
-			: maker(maker) {}
+		output_make_data(Maker const& maker, std::size_t use_count)noexcept
+			: maker(maker)
+			, use_count(use_count) {}
 
-		constexpr output_make_data(output_make_data&& other)noexcept
-			: maker(other.maker) {}
+// 		output_make_data(output_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, use_count(other.use_count) {}
 
 		Maker const& maker;
+		std::size_t const use_count;
 	};
 
 	template < typename Maker, typename ValueMap >
 	struct parameter_make_data{
 		static constexpr auto log_name = "parameter"sv;
 
-		constexpr parameter_make_data(
+		parameter_make_data(
 			Maker const& maker,
 			ValueMap const& value_map
 		)noexcept
 			: maker(maker)
 			, value_map(value_map) {}
 
-		constexpr parameter_make_data(parameter_make_data&& other)noexcept
-			: maker(other.maker)
-			, value_map(other.value_map) {}
+// 		parameter_make_data(parameter_make_data&& other)noexcept
+// 			: maker(other.maker)
+// 			, value_map(other.value_map) {}
 
 		Maker const& maker;
 		ValueMap const value_map;
 	};
 
+
+	auto inline get_use_count(
+		output_list const& outputs,
+		std::string const& name
+	){
+		auto const iter = outputs.find(name);
+		return iter != outputs.end() ? iter->second : 0;
+	}
 
 	template < typename Maker >
 	auto make_parameter_value_map(
@@ -173,40 +184,42 @@ namespace disposer{
 
 		if constexpr(hana::is_a< input_maker_tag >(maker)){
 			return input_make_data(maker, make_output_info(data.inputs,
-					detail::to_std_string(maker.name)));
+				detail::to_std_string(maker.name)));
 		}else if constexpr(hana::is_a< output_maker_tag >(maker)){
-			return output_make_data(maker);
+			return output_make_data(maker, get_use_count(data.outputs,
+				detail::to_std_string(maker.name)));
 		}else if constexpr(hana::is_a< parameter_maker_tag >(maker)){
 			return parameter_make_data(maker,
 				make_parameter_value_map(location, maker, data.parameters));
 		}else{
-			static_assert(detail::false_c< decltype(maker) >,
+			static_assert(detail::false_c< Maker >,
 				"maker is not an iop (this is a bug in disposer!)");
 		}
 	}
 
-	template < typename IOP_RefList, std::size_t I >
-	class iops_accessory: public add_log< iops_accessory< IOP_RefList, I > >{
+	template < typename IOP_RefList >
+	class iops_accessory: public add_log< iops_accessory< IOP_RefList > >{
 	public:
-		constexpr iops_accessory(
+		iops_accessory(
 			IOP_RefList const& iop_list,
 			iop_log&& log_fn
 		)noexcept
 			: iop_list_(iop_list)
 			, log_fn_(std::move(log_fn)) {}
 
-		/// \brief Get reference to an input-, output- or parameter-object
-		///        via its corresponding compile time name
-		template < typename IOP >
-		auto& operator()(IOP const& iop)noexcept{
-			return get(iop);
-		}
 
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
-		template < typename IOP >
-		auto const& operator()(IOP const& iop)const noexcept{
-			return get(iop);
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			static_assert(
+				hana::is_a< input_name_tag, name_t > ||
+				hana::is_a< output_name_tag, name_t > ||
+				hana::is_a< parameter_name_tag, name_t >,
+				"name is not an input_name, output_name or parameter_name");
+
+			return detail::extract(iop_list_, name);
 		}
 
 
@@ -215,46 +228,20 @@ namespace disposer{
 			log_fn_(os);
 		}
 
+
 	private:
-		template < typename IOP >
-		auto& get(IOP const& iop)const noexcept{
-			using iop_t = std::remove_reference_t< IOP >;
-			static_assert(
-				hana::is_a< input_name_tag, iop_t > ||
-				hana::is_a< output_name_tag, iop_t > ||
-				hana::is_a< parameter_name_tag, iop_t >,
-				"parameter is not an input_name, output_name or "
-				"parameter_name");
-
-			using iop_tag = typename iop_t::hana_tag;
-
-			auto iop_ref = hana::find_if(iop_list_, [&iop](auto ref){
-				using tag = typename decltype(ref)::type::name_type::hana_tag;
-				return hana::type_c< iop_tag > == hana::type_c< tag >
-					&& ref.get().name == iop.value;
-			});
-
-			auto is_iop_valid = iop_ref != hana::nothing;
-			static_assert(is_iop_valid,
-				"requested iop doesn't exist (yet)");
-
-			return iop_ref->get();
-		}
-
-
 		IOP_RefList iop_list_;
 
 		/// \brief Reference to an iop_log object
 		iop_log log_fn_;
 	};
 
-	template < typename IOP_RefList, typename MakeData, std::size_t I >
+	template < typename IOP_RefList, typename MakeData >
 	struct iops_make_data{
-		constexpr iops_make_data(
+		iops_make_data(
 			MakeData&& make_data,
 			std::string_view location,
-			IOP_RefList const& iop_list,
-			hana::size_t< I >
+			IOP_RefList const& iop_list
 		)noexcept
 			: data(static_cast< MakeData&& >(make_data))
 			, accessory(iop_list, iop_log{
@@ -262,7 +249,7 @@ namespace disposer{
 				detail::to_std_string_view(make_data.maker.name)}) {}
 
 		MakeData data;
-		iops_accessory< IOP_RefList, I > accessory;
+		iops_accessory< IOP_RefList > accessory;
 	};
 
 

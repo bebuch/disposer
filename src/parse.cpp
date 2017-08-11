@@ -12,7 +12,6 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include <fstream>
-#include <string>
 #include <map>
 
 
