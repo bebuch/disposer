@@ -112,7 +112,7 @@ namespace disposer{
 
 			try{
 				for(std::size_t i = 0; i < modules.size(); ++i){
-					process_module(i, id, [this, id, &modules](std::size_t i){
+					process_module(i, id, [&modules](std::size_t i){
 						modules[i]->exec(chain_key());
 						modules[i]->cleanup(chain_key());
 					}, "exec");
@@ -123,7 +123,7 @@ namespace disposer{
 					// exec was successful
 					if(ready_run_[i] >= id + 1) continue;
 
-					process_module(i, id, [this, id, &modules](std::size_t i){
+					process_module(i, id, [&modules](std::size_t i){
 						modules[i]->cleanup(chain_key());
 					}, "cleanup");
 				}
