@@ -28,8 +28,8 @@ namespace disposer{
 
 
 	template < typename List, std::size_t I >
-	constexpr auto get_name
-		= decltype(std::declval< List >()[hana::size_c< I >].name)();
+	constexpr auto get_name = std::remove_reference_t<
+		decltype(std::declval< List >()[hana::size_c< I >].name) >();
 
 	template < typename List, std::size_t I, typename Module >
 	auto io_exec_make_data(

@@ -602,9 +602,9 @@ namespace disposer{
 			Accessory const&, hana::basic_type< T >
 		)noexcept{
 			if constexpr(is_void_r_v< Accessory, T >()){
-				return std::true_type{};
+				return hana::true_c;
 			}else{
-				return std::false_type{};
+				return hana::false_c;
 			}
 		}
 

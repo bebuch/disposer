@@ -100,7 +100,7 @@ namespace disposer{
 		/// \brief Make a corresponding module_exec
 		virtual module_exec_ptr make_module_exec(
 			std::size_t id, output_map_type& output_map
-		){
+		)override{
 			return std::make_unique< module_exec< List, StateMakerFn, ExecFn > >
 				(*this, id, output_map);
 		}
