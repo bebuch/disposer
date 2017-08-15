@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__tool__input_date__hpp_INCLUDED_
-#define _disposer__tool__input_date__hpp_INCLUDED_
+#ifndef _disposer__tool__input_data__hpp_INCLUDED_
+#define _disposer__tool__input_data__hpp_INCLUDED_
 
 #include <vector>
 
@@ -16,12 +16,12 @@ namespace disposer{
 
 
 	template < typename T, bool ReadOnly >
-	class input_date;
+	class input_data;
 
 
 	/// \brief Read and move out view to input data
 	template < typename T >
-	class input_date< T, false >{
+	class input_data< T, false >{
 		using container_type = std::vector< T >;
 	public:
 		/// \brief Move random access iterator
@@ -41,14 +41,14 @@ namespace disposer{
 			typename container_type::const_reverse_iterator;
 
 
-		input_date(container_type&& data)
+		input_data(container_type&& data)
 			: data_(std::move(data)) {}
 
-		/// \brief input_date is nighter copy nor movable
-		input_date(input_date const&) = delete;
+		/// \brief input_data is nighter copy nor movable
+		input_data(input_data const&) = delete;
 
-		/// \brief input_date is nighter copy- nor move- assignable
-		input_date& operator=(input_date const&) = delete;
+		/// \brief input_data is nighter copy- nor move- assignable
+		input_data& operator=(input_data const&) = delete;
 
 
 		/// \brief Access specified element with bounds checking
@@ -162,7 +162,7 @@ namespace disposer{
 
 	/// \brief Read only view to input data
 	template < typename T >
-	class input_date< T, true >{
+	class input_data< T, true >{
 		using container_type = std::vector< T >;
 	public:
 		/// \brief Move random access iterator
@@ -180,14 +180,14 @@ namespace disposer{
 		using const_reverse_iterator = reverse_iterator;
 
 
-		input_date(container_type const& data)
+		input_data(container_type const& data)
 			: data_(data) {}
 
-		/// \brief input_date is nighter copy nor movable
-		input_date(input_date const&) = delete;
+		/// \brief input_data is nighter copy nor movable
+		input_data(input_data const&) = delete;
 
-		/// \brief input_date is nighter copy- nor move- assignable
-		input_date& operator=(input_date const&) = delete;
+		/// \brief input_data is nighter copy- nor move- assignable
+		input_data& operator=(input_data const&) = delete;
 
 
 		/// \brief Access specified element with bounds checking
@@ -259,10 +259,10 @@ namespace disposer{
 
 
 	template < typename T >
-	using input_date_v = input_date< T, false >;
+	using input_data_v = input_data< T, false >;
 
 	template < typename T >
-	using input_date_r = input_date< T, true >;
+	using input_data_r = input_data< T, true >;
 
 
 }
