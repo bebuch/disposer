@@ -24,6 +24,7 @@ project disposer_tests
 	<warnings>all
 	<c++-template-depth>1024
 
+	<define>DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 	<define>BOOST_HANA_CONFIG_ENABLE_STRING_UDL
 	<define>BOOST_ASIO_HAS_STD_CHRONO
 

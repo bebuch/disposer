@@ -37,9 +37,6 @@ namespace disposer{
 
 		/// \brief Function which verifies the connection with an output
 		verify_connection_fn< ConnectionVerifyFn > verify_connection;
-
-		/// \brief Function which verifies the active types
-		verify_type_fn< TypeVerifyFn > verify_type;
 	};
 
 
@@ -54,8 +51,6 @@ namespace disposer{
 		Name const&,
 		Types const&,
 		type_transform_fn< TypeTransformFn >&&,
-		verify_connection_fn< ConnectionVerifyFn >&& verify_connection,
-		verify_type_fn< TypeVerifyFn >&& verify_type
 	){
 		constexpr auto typelist = to_typelist(Types{});
 

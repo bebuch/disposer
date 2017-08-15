@@ -59,12 +59,6 @@ namespace disposer{
 		input_exec_base& operator=(input_exec_base&&) = delete;
 
 
-		/// \brief Tell the connected output that this input finished
-		void cleanup()noexcept{
-			if(output_) output_->cleanup(input_exec_key());
-		}
-
-
 	protected:
 		/// \brief Get connected output or nullptr
 		output_exec_base* output_ptr()const noexcept{ return output_; }
