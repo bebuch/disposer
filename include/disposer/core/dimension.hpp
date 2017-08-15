@@ -99,19 +99,17 @@ namespace disposer{
 	/// \param D Index of a dimension_list between 0 and N - 1, where N is the
 	///          number of Dimension's in a dimension_list
 	template < template < typename ... > typename Template, std::size_t ... D >
-	struct wrapped_type_ref{
-		static_assert(sizeof...(D) > 0,
-			"At least one type list must be referenced. (need at least one D)");
-
+	struct dimension_converter{
 		/// \brief Calculate the type by a given dimension_list and the indices
 		///        of it's active types.
 		template < typename ... Dimension, std::size_t ... I >
-		static auto target_type(
+		static auto convert(
 			dimension_list< Dimension ... >,
 			hana::tuple< hana::size_t< I > ... >
 		){
-			// disposer assert, disable in production code
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 			static_assert(sizeof...(Dimension) == sizeof...(I));
+#endif
 
 			static_assert(hana::all_of(hana::tuple_c< std::size_t, D ... >,
 				hana::curry< 2 >(hana::greater)(
@@ -129,17 +127,44 @@ namespace disposer{
 	template < typename T >
 	using self_t = T;
 
+	template < typename T >
+	struct free_t{
+		template < typename ...
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+			Args
+#endif
+		> struct impl{
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+			static_assert(sizeof...(Args) == 0, "Args must be empty");
+#endif
+
+			using type = T;
+		};
+
+		template < typename ... Args >
+		using type = typename impl< Args ... >::type;
+	};
+
+
 	/// \brief Wrap the active types of the given dimension's D in Template
 	template < template < typename ... > typename Template, std::size_t ... D >
-	constexpr wrapped_type_ref< Template, D ... > wrapped_type_ref_c{};
+	constexpr dimension_converter< Template, D ... > wrapped_type_ref_c{};
 
 	/// \brief Defines a type by a module dimension
 	template < std::size_t D >
-	using type_ref = wrapped_type_ref< self_t, D >;
+	using type_ref = dimension_converter< self_t, D >;
 
 	/// \brief Refers to the active type of the given dimension D
 	template < std::size_t D >
 	constexpr type_ref< D > type_ref_c{};
+
+	/// \brief Defines a type
+	template < typename T >
+	using free_type = dimension_converter< free_t< T >::template type >;
+
+	/// \brief Refers to type T
+	template < typename T >
+	constexpr free_type< T > free_type_c{};
 
 
 }
