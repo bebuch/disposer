@@ -67,6 +67,13 @@ exe parse_check
 	/disposer//disposer
 	;
 
+exe dimension
+	:
+	dimension.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
 exe output
 	:
 	output.cpp
