@@ -38,9 +38,7 @@ namespace disposer{
 	){
 		auto names = hana::transform(
 			hana::filter(makers, hana::is_a< MakerTag >),
-			[](auto const& maker){
-				return maker.name;
-			});
+			[](auto const& maker){ return maker.name; });
 
 		std::set< std::string > name_list;
 		std::transform(list.begin(), list.end(),
