@@ -19,24 +19,12 @@ namespace disposer{
 
 	/// \brief Provids types for constructing an input
 	template <
-		typename InputType,
-		typename ConnectionVerifyFn,
-		typename TypeVerifyFn >
+		typename Name,
+		typename DimensionConverter,
+		bool IsRequired >
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
-
-		/// \brief Input name as compile time string
-		using name_type = typename InputType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::input
-		using type = InputType;
-
-		/// \brief Function which verifies the connection with an output
-		verify_connection_fn< ConnectionVerifyFn > verify_connection;
 	};
 
 

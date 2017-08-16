@@ -19,23 +19,11 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an output
 	template <
-		typename OutputType,
-		typename EnableFn >
+		typename Name,
+		typename DimensionConverter >
 	struct output_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = output_maker_tag;
-
-		/// \brief Output name as compile time string
-		using name_type = typename OutputType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::output
-		using type = OutputType;
-
-		/// \brief Enable function
-		enable_fn< EnableFn > enable;
 	};
 
 

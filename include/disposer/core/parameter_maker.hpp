@@ -21,42 +21,18 @@ namespace disposer{
 
 	/// \brief Provid types for constructing an parameter
 	template <
-		typename ParameterType,
-		typename ValueVerifyFn,
-		typename EnableFn,
-		typename ParserFn,
-		typename DefaultValueFn,
-		typename TypeToText >
+		typename Name,
+		typename DimensionConverter,
+		bool IsRequired >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = parameter_maker_tag;
-
-		/// \brief Parameter name as compile time string
-		using name_type = typename ParameterType::name_type;
-
-		/// \brief Name as hana::string
-		static constexpr auto name = name_type::value;
-
-		/// \brief Type of a disposer::parameter
-		using type = ParameterType;
-
-		/// \brief Possible types of the parameter value
-		static constexpr auto types = type::types;
-
-		/// \brief Function to verify the parameter value
-		verify_value_fn< ValueVerifyFn > verify_value;
-
-		/// \brief Enable function
-		enable_fn< EnableFn > enable;
 
 		/// \brief Parameter parser function
 		parser_fn< ParserFn > parser;
 
 		/// \brief Default value function
 		default_value_fn< DefaultValueFn > default_value_generator;
-
-		/// \brief hana::map from hana::type to hana::string
-		TypeToText to_text;
 	};
 
 

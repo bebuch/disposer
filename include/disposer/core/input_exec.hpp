@@ -20,17 +20,10 @@ namespace disposer{
 
 	struct module_exec_key;
 
-	/// \brief Hana Tag for input_exec
-	struct input_exec_tag{};
-
 	/// \brief The actual input_exec type
 	template < typename Name, typename T, bool IsRequired >
 	class input_exec: public input_exec_base{
 	public:
-		/// \brief Hana tag to identify input_execs
-		using hana_tag = input_exec_tag;
-
-
 		/// \brief Compile time name of the input
 		using name_type = Name;
 

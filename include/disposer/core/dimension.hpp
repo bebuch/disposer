@@ -9,6 +9,8 @@
 #ifndef _disposer__core__dimension__hpp_INCLUDED_
 #define _disposer__core__dimension__hpp_INCLUDED_
 
+#include "../tool/type_index.hpp"
+
 #include <boost/hana/functional/arg.hpp>
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/type.hpp>
@@ -20,6 +22,9 @@
 #include <boost/hana/greater.hpp>
 #include <boost/hana/size.hpp>
 #include <boost/hana/set.hpp>
+
+#include <string>
+#include <sstream>
 
 
 namespace disposer{
@@ -92,6 +97,21 @@ namespace disposer{
 	};
 
 
+	template < template < typename ... > typename >
+	struct tmpwrap{};
+
+	template < template < typename ... > typename Template >
+	std::string_view pretty_template_name(){
+		auto const& name = type_index< tmpwrap< Template > >.pretty_name();
+		return name.substr(19, name.size() - 20);
+	}
+
+	template < typename T >
+	std::string_view pretty_type_name(){
+		return type_index< T >.pretty_name();
+	}
+
+
 	/// \brief Defines a type by modules dimensions
 	///
 	/// \param Template A template that must be instantiable with the same
@@ -99,7 +119,8 @@ namespace disposer{
 	/// \param D Index of a dimension_list between 0 and N - 1, where N is the
 	///          number of Dimension's in a dimension_list
 	template < template < typename ... > typename Template, std::size_t ... D >
-	struct dimension_converter{
+	class dimension_converter{
+	public:
 		/// \brief Calculate the type by a given dimension_list and the indices
 		///        of it's active types.
 		template < typename ... Dimension, std::size_t ... I >
@@ -121,6 +142,30 @@ namespace disposer{
 				typename decltype(+hana::arg< D + 1 >(
 					Dimension::types[hana::size_c< I >] ...))::type ... > >;
 		}
+
+		template < typename String, typename ... Strings >
+		std::string name(
+			String const& type_name,
+			Strings const& ... type_names
+		){
+			std::ostringstream os;
+			os << template_name_ << '<';
+			os << type_name;
+			(os << ... << ", " << type_names);
+			os << '>';
+			return os.str();
+		}
+
+
+		constexpr dimension_converter()noexcept
+			: template_name_{template_name< Template >()} {}
+
+		constexpr dimension_converter(std::string_view template_name)noexcept
+			: template_name_{template_name} {}
+
+
+	private:
+		std::string_view template_name_;
 	};
 
 	/// \brief Alias definition without effect

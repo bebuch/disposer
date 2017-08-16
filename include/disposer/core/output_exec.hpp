@@ -24,17 +24,10 @@
 namespace disposer{
 
 
-	/// \brief Hana Tag for output_exec
-	struct output_exec_tag{};
-
 	/// \brief The output type while exec
 	template < typename Name, typename T >
 	class output_exec: public output_exec_base{
 	public:
-		/// \brief Hana tag to identify output_execs
-		using hana_tag = output_exec_tag;
-
-
 		/// \brief Compile time name of the output
 		using name_type = typename output_type::name_type;
 

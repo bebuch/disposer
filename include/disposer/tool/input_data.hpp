@@ -19,7 +19,7 @@ namespace disposer{
 	class input_data;
 
 
-	/// \brief Read and move out view to input data
+	/// \brief Read and move out range view to input data
 	template < typename T >
 	class input_data< T, false >{
 		using container_type = std::vector< T >;
@@ -160,7 +160,7 @@ namespace disposer{
 	};
 
 
-	/// \brief Read only view to input data
+	/// \brief Read only range view to input data
 	template < typename T >
 	class input_data< T, true >{
 		using container_type = std::vector< T >;
@@ -258,9 +258,11 @@ namespace disposer{
 	};
 
 
+	/// \brief Range like interface owning the data
 	template < typename T >
 	using input_data_v = input_data< T, false >;
 
+	/// \brief Range like interface refering to the data
 	template < typename T >
 	using input_data_r = input_data< T, true >;
 

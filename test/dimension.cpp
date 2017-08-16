@@ -83,6 +83,7 @@ int main(){
 		auto type_f_21 =
 			list_f.convert(list, hana::tuple_c< std::size_t, 2, 1 >);
 		static_assert(type_f_21 == hana::type_c< long >);
+		std::cout << "free_type_c template name: " << type_f_00
 
 		auto list_0 = type_ref_c< 0 >;
 		auto type_0_00 =
