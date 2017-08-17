@@ -6,12 +6,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__input_maker__hpp_INCLUDED_
-#define _disposer__core__input_maker__hpp_INCLUDED_
+#ifndef _disposer__core__make_input__hpp_INCLUDED_
+#define _disposer__core__make_input__hpp_INCLUDED_
 
-#include "input.hpp"
-
-#include "../tool/validate_arguments.hpp"
+#include "input_name.hpp"
+#include "dimension.hpp"
 
 
 namespace disposer{
@@ -28,62 +27,32 @@ namespace disposer{
 	};
 
 
-	/// \brief Helper function for \ref input_name::operator()
-	template <
-		typename Name,
-		typename Types,
-		typename TypeTransformFn,
-		typename ConnectionVerifyFn,
-		typename TypeVerifyFn >
-	constexpr auto create_input_maker(
-		Name const&,
-		Types const&,
-		type_transform_fn< TypeTransformFn >&&,
-	){
-		constexpr auto typelist = to_typelist(Types{});
+	/// \brief Configuration class for inputs
+	template < bool IsRequired >
+	struct is_required: std::bool_constant< IsRequired >{};
 
-		constexpr auto unpack_types =
-			hana::concat(hana::tuple_t< Name, TypeTransformFn >, typelist);
+	/// \brief Used as make-function argument of inputs
+	constexpr auto required = is_required< true >{};
 
-		constexpr auto type_input =
-			hana::unpack(unpack_types, hana::template_< input >);
-
-		return input_maker< typename decltype(type_input)::type,
-			ConnectionVerifyFn, TypeVerifyFn >{
-				std::move(verify_connection),
-				std::move(verify_type)
-			};
-	}
+	/// \brief Used as make-function argument of inputs
+	constexpr auto not_required = is_required< false >{};
 
 
 	/// \brief Creates a \ref input_maker object
-	template < char ... C, typename Types, typename ... Args >
+	template <
+		char ... C
+		template < typename ... > typename Template,
+		std::size_t ... D,
+		bool IsRequired = true >
 	constexpr auto make(
-		input_name< C ... >,
-		Types const& types,
-		Args&& ... args
+		input_name< C ... > const&,
+		dimension_converter< Template, D ... > const&,
+		is_required< IsRequired > = required
 	){
-		detail::validate_arguments<
-				type_transform_fn_tag,
-				verify_connection_fn_tag,
-				verify_type_fn_tag
-			>(args ...);
-
-		auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
-
-		return create_input_maker(
-			input_name< C ... >{},
-			types,
-			get_or_default(std::move(arg_tuple),
-				hana::is_a< type_transform_fn_tag >,
-				no_type_transform),
-			get_or_default(std::move(arg_tuple),
-				hana::is_a< verify_connection_fn_tag >,
-				required),
-			get_or_default(std::move(arg_tuple),
-				hana::is_a< verify_type_fn_tag >,
-				verify_type_always)
-		);
+		return input_maker<
+			input_name< C ... >,
+			dimension_converter< Template, D ... >,
+			IsRequired >{};
 	}
 
 

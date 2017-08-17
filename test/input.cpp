@@ -69,7 +69,7 @@ int main(){
 
 	try{
 		{
-			constexpr auto maker = make("v"_in, hana::type_c< int >);
+			constexpr auto maker = make("v"_in, free_type_c< int >);
 
 			static_assert(std::is_same_v< decltype(maker),
 				disposer::input_maker<

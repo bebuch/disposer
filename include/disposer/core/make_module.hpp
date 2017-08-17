@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__module_maker__hpp_INCLUDED_
-#define _disposer__core__module_maker__hpp_INCLUDED_
+#ifndef _disposer__core__make_module__hpp_INCLUDED_
+#define _disposer__core__make_module__hpp_INCLUDED_
 
 #include "module.hpp"
 
@@ -43,10 +43,17 @@ namespace disposer{
 
 
 	/// \brief Provids types for constructing an module
-	template < typename MakerList, typename StateMakerFn, typename ExecFn >
+	template <
+		typename Dimensions,
+		typename Configuration,
+		typename StateMakerFn,
+		typename ExecFn >
 	struct module_maker{
+		/// \brief An dimension_list object
+		Dimensions dimensions;
+
 		/// \brief Tuple of input/output/parameter-maker objects
-		MakerList makers;
+		Configuration configuration;
 
 		/// \brief The function object that is called in enable()
 		state_maker_fn< StateMakerFn > state_maker;
@@ -62,11 +69,11 @@ namespace disposer{
 			auto const location = data.location();
 			{
 				auto inputs = validate_iop< input_maker_tag >(
-					location, makers, data.inputs);
+					location, configuration, data.inputs);
 				auto outputs = validate_iop< output_maker_tag >(
-					location, makers, data.outputs);
+					location, configuration, data.outputs);
 				validate_iop< parameter_maker_tag >(
-					location, makers, data.parameters);
+					location, configuration, data.parameters);
 
 				if(!inputs.empty() || !outputs.empty()){
 					throw std::logic_error(location + "some inputs or "
@@ -79,22 +86,22 @@ namespace disposer{
 
 			// Create the module
 			return make_module_ptr(
-				makers, data, basic_location, state_maker, exec);
+				configuration, data, basic_location, state_maker, exec);
 		}
 	};
 
 
 	/// \brief Wraps all given IOP configurations into a hana::tuple
-	template < typename ... IOP_Makers >
-	constexpr auto module_configure(IOP_Makers&& ... list){
+	template < typename ... Config >
+	constexpr auto module_configure(Config&& ... list){
 		static_assert(hana::and_(hana::true_c, hana::or_(
-			hana::is_a< input_maker_tag, IOP_Makers >(),
-			hana::is_a< output_maker_tag, IOP_Makers >(),
-			hana::is_a< parameter_maker_tag, IOP_Makers >()) ...),
-			"at least one of the module configure arguments is not a disposer "
+			hana::is_a< input_maker_tag, Config >(),
+			hana::is_a< output_maker_tag, Config >(),
+			hana::is_a< parameter_maker_tag, Config >()) ...),
+			"at least one of the module configure arguments is not a "
 			"input, output or parameter maker");
 
-		return hana::make_tuple(static_cast< IOP_Makers&& >(list) ...);
+		return hana::make_tuple(static_cast< Config&& >(list) ...);
 	}
 
 	struct unit_test_key;
