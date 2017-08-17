@@ -18,7 +18,7 @@ namespace disposer{
 	template < typename StateType, typename List >
 	class exec_accessory;
 
-	/// \brief Class input_exec_key access key
+	/// \brief Class exec_input_key access key
 	struct exec_key{
 	private:
 		/// \brief Constructor
@@ -37,7 +37,7 @@ namespace disposer{
 		exec_accessory(
 			std::size_t id,
 			module_data< List > const& data,
-			module_exec_data< detail::exec_list_t< List > >& exec_data,
+			exec_module_data< detail::exec_list_t< List > >& exec_data,
 			StateType* state,
 			std::string_view location
 		)
@@ -113,7 +113,7 @@ namespace disposer{
 		module_data< List > const& data_;
 
 		/// \brief Data of the exec_module
-		module_exec_data< detail::exec_list_t< List > >& exec_data_;
+		exec_module_data< detail::exec_list_t< List > >& exec_data_;
 
 		/// \brief Module state
 		///

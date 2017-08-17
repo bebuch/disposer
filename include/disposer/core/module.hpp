@@ -10,7 +10,7 @@
 #define _disposer__core__module__hpp_INCLUDED_
 
 #include "module_base.hpp"
-#include "module_exec.hpp"
+#include "exec_module.hpp"
 #include "state_maker_fn.hpp"
 #include "exec_fn.hpp"
 
@@ -72,7 +72,7 @@ namespace disposer{
 		/// \brief Calls the exec_fn
 		void exec(
 			std::size_t id,
-			module_exec_data< detail::exec_list_t< List > >& exec_data,
+			exec_module_data< detail::exec_list_t< List > >& exec_data,
 			std::string_view location
 		){
 			exec_accessory< state_type, List >
@@ -97,11 +97,11 @@ namespace disposer{
 		}
 
 
-		/// \brief Make a corresponding module_exec
-		virtual module_exec_ptr make_module_exec(
+		/// \brief Make a corresponding exec_module
+		virtual exec_module_ptr make_exec_module(
 			std::size_t id, output_map_type& output_map
 		)override{
-			return std::make_unique< module_exec< List, StateMakerFn, ExecFn > >
+			return std::make_unique< exec_module< List, StateMakerFn, ExecFn > >
 				(*this, id, output_map);
 		}
 

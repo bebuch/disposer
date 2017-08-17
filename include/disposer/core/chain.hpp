@@ -98,7 +98,7 @@ namespace disposer{
 			std::string_view action_name
 		);
 
-		std::vector< module_exec_ptr > make_exec_modules(std::size_t id);
+		std::vector< exec_module_ptr > make_exec_modules(std::size_t id);
 
 
 		/// \brief List of modules

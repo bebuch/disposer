@@ -23,10 +23,10 @@ namespace disposer{
 	using module_ptr = std::unique_ptr< module_base >;
 
 
-	class module_exec_base;
+	class exec_module_base;
 
-	/// \brief unique_ptr of classes derived from module_exec_base
-	using module_exec_ptr = std::unique_ptr< module_exec_base >;
+	/// \brief unique_ptr of classes derived from exec_module_base
+	using exec_module_ptr = std::unique_ptr< exec_module_base >;
 
 
 	struct module_make_data;

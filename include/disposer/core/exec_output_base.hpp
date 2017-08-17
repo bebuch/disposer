@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__output_exec_base__hpp_INCLUDED_
-#define _disposer__core__output_exec_base__hpp_INCLUDED_
+#ifndef _disposer__core__exec_output_base__hpp_INCLUDED_
+#define _disposer__core__exec_output_base__hpp_INCLUDED_
 
 #include "../tool/type_index.hpp"
 #include "../tool/any_type.hpp"
@@ -20,7 +20,7 @@
 namespace disposer{
 
 
-	struct input_exec_key;
+	struct exec_input_key;
 
 
 	/// \brief Base for module outpus
@@ -29,24 +29,24 @@ namespace disposer{
 	///
 	/// A disposer module output must have at least one output data type.
 	/// An output might have more then one data type.
-	class output_exec_base{
+	class exec_output_base{
 	public:
 		/// \brief Constructor
-		output_exec_base(std::size_t use_count)noexcept
+		exec_output_base(std::size_t use_count)noexcept
 			: remaining_use_count_(use_count) {}
 
 		/// \brief Outputs are not copyable
-		output_exec_base(output_exec_base const&) = delete;
+		exec_output_base(exec_output_base const&) = delete;
 
 		/// \brief Outputs are not movable
-		output_exec_base(output_exec_base&&) = delete;
+		exec_output_base(exec_output_base&&) = delete;
 
 
 		/// \brief Outputs are not copy-assignable
-		output_exec_base& operator=(output_exec_base const&) = delete;
+		exec_output_base& operator=(exec_output_base const&) = delete;
 
 		/// \brief Outputs are not move-assignable
-		output_exec_base& operator=(output_exec_base&&) = delete;
+		exec_output_base& operator=(exec_output_base&&) = delete;
 
 
 	protected:

@@ -6,30 +6,30 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__input_exec_base__hpp_INCLUDED_
-#define _disposer__core__input_exec_base__hpp_INCLUDED_
+#ifndef _disposer__core__exec_input_base__hpp_INCLUDED_
+#define _disposer__core__exec_input_base__hpp_INCLUDED_
 
-#include "output_exec_base.hpp"
+#include "exec_output_base.hpp"
 
 
 namespace disposer{
 
 
-	class input_exec_base;
+	class exec_input_base;
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
-	class input_exec;
+	class exec_input;
 
-	/// \brief Class input_exec_key access key
-	struct input_exec_key{
+	/// \brief Class exec_input_key access key
+	struct exec_input_key{
 	private:
 		/// \brief Constructor
-		constexpr input_exec_key()noexcept = default;
+		constexpr exec_input_key()noexcept = default;
 
-		friend class input_exec_base;
+		friend class exec_input_base;
 
 		template < typename Name, typename TypeTransformFn, typename ... T >
-		friend class input_exec;
+		friend class exec_input;
 	};
 
 
@@ -39,34 +39,34 @@ namespace disposer{
 	///
 	/// A disposer module input must have at least one input data type.
 	/// An input might have more then one data type.
-	class input_exec_base{
+	class exec_input_base{
 	public:
 		/// \brief Constructor
-		input_exec_base(output_exec_base* output)noexcept
+		exec_input_base(exec_output_base* output)noexcept
 			: output_(output) {}
 
 		/// \brief Inputs are not copyable
-		input_exec_base(input_exec_base const&) = delete;
+		exec_input_base(exec_input_base const&) = delete;
 
 		/// \brief Inputs are not movable
-		input_exec_base(input_exec_base&&) = delete;
+		exec_input_base(exec_input_base&&) = delete;
 
 
 		/// \brief Inputs are not copy-assingable
-		input_exec_base& operator=(input_exec_base const&) = delete;
+		exec_input_base& operator=(exec_input_base const&) = delete;
 
 		/// \brief Inputs are not move-assingble
-		input_exec_base& operator=(input_exec_base&&) = delete;
+		exec_input_base& operator=(exec_input_base&&) = delete;
 
 
 	protected:
 		/// \brief Get connected output or nullptr
-		output_exec_base* output_ptr()const noexcept{ return output_; }
+		exec_output_base* output_ptr()const noexcept{ return output_; }
 
 
 	private:
 		/// \brief Pointer to the linked output
-		output_exec_base* const output_;
+		exec_output_base* const output_;
 	};
 
 

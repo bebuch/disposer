@@ -77,15 +77,15 @@ namespace disposer{
 	}
 
 
-	std::vector< module_exec_ptr >
+	std::vector< exec_module_ptr >
 	chain::make_exec_modules(std::size_t const id){
-		std::vector< module_exec_ptr > list;
+		std::vector< exec_module_ptr > list;
 		list.reserve(modules_.size());
 
 		output_map_type output_map;
 		for(auto const& module: modules_){
 			list.push_back(
-				module->make_module_exec(chain_key(), id, output_map));
+				module->make_exec_module(chain_key(), id, output_map));
 		}
 
 		return list;

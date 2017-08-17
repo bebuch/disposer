@@ -32,7 +32,7 @@ namespace disposer{
 	class input;
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
-	class input_exec;
+	class exec_input;
 
 
 	struct output_tag;
@@ -41,7 +41,7 @@ namespace disposer{
 	class output;
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
-	class output_exec;
+	class exec_output;
 
 
 }
@@ -61,12 +61,12 @@ namespace disposer::detail{
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	struct to_exec< input< Name, TypeTransformFn, T ... > >{
-		using type = input_exec< Name, TypeTransformFn, T ... >;
+		using type = exec_input< Name, TypeTransformFn, T ... >;
 	};
 
 	template < typename Name, typename TypeTransformFn, typename ... T >
 	struct to_exec< output< Name, TypeTransformFn, T ... > >{
-		using type = output_exec< Name, TypeTransformFn, T ... >;
+		using type = exec_output< Name, TypeTransformFn, T ... >;
 	};
 
 	template < typename IO >

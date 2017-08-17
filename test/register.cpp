@@ -121,14 +121,14 @@ int main(){
 				disposer::exec_fn([](auto& module){
 					auto valid_type =
 						hana::type_c< decltype(module("v"_in)) >
-						== hana::type_c< disposer::input_exec<
+						== hana::type_c< disposer::exec_input<
 							decltype("v"_in), disposer::none, int >& >;
 					static_assert(valid_type);
 
 					auto const& const_module = module;
 					auto valid_const_type =
 						hana::type_c< decltype(const_module("v"_in)) >
-						== hana::type_c< disposer::input_exec<
+						== hana::type_c< disposer::exec_input<
 							decltype("v"_in), disposer::none, int > const& >;
 					static_assert(valid_const_type);
 

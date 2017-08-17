@@ -6,11 +6,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__module_exec_data__hpp_INCLUDED_
-#define _disposer__core__module_exec_data__hpp_INCLUDED_
+#ifndef _disposer__core__exec_module_data__hpp_INCLUDED_
+#define _disposer__core__exec_module_data__hpp_INCLUDED_
 
-#include "input_exec.hpp"
-#include "output_exec.hpp"
+#include "exec_input.hpp"
+#include "exec_output.hpp"
 
 #include "../tool/false_c.hpp"
 #include "../tool/extract.hpp"
@@ -39,7 +39,7 @@ namespace disposer{
 		constexpr auto name = get_name< List, I >;
 		if constexpr(hana::is_a< input_name_tag >(name)){
 			auto const ptr = module(name).output_ptr();
-			if(!ptr) return static_cast< output_exec_base* >(nullptr);
+			if(!ptr) return static_cast< exec_output_base* >(nullptr);
 
 			auto const iter = output_map.find(ptr);
 			assert(iter != output_map.end());
@@ -67,11 +67,11 @@ namespace disposer{
 
 	/// \brief Accessory of a \ref module without log
 	template < typename List >
-	class module_exec_data{
+	class exec_module_data{
 	public:
 		/// \brief Constructor
 		template < typename Module, std::size_t ... I >
-		module_exec_data(
+		exec_module_data(
 			Module& module,
 			output_map_type& output_map,
 			std::index_sequence< I ... >
