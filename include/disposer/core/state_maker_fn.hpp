@@ -69,6 +69,7 @@ namespace disposer{
 
 		template < typename List >
 		auto operator()(state_accessory< List > const& accessory)const{
+			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
 				state_accessory< List > const& >
 			){
@@ -76,13 +77,13 @@ namespace disposer{
 					Fn const,
 					state_accessory< List > const& > >,
 					"Fn must not return void");
-				return fn_(accessory);
+				return std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn const >){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const > >,
 					"Fn must not return void");
 				(void)accessory; // silance GCC
-				return fn_();
+				return std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be invokable with "

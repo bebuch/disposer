@@ -62,11 +62,8 @@ namespace disposer{
 				"hana::basic_type< T > type)"
 			);
 
-			return noexcept(std::declval< Fn const >()(
-				std::declval< Accessory const >(),
-				std::declval< std::string_view >(),
-				std::declval< hana::basic_type< T > >()
-			));
+			return std::is_nothrow_invocable_v< Fn const, Accessory const&,
+				std::string_view, hana::basic_type< T > >;
 		}
 
 		template < typename Accessory, typename T >
@@ -84,7 +81,7 @@ namespace disposer{
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				}, [&]()->T{
+				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
 					return std::invoke(fn_, accessory, value, type);
 				});
 		}
@@ -216,10 +213,8 @@ namespace disposer{
 				"void f(auto const& iop, hana::basic_type< T > type)"
 			);
 
-			return noexcept(std::declval< Fn const >()(
-				std::declval< Accessory const >(),
-				std::declval< hana::basic_type< T > const >()
-			));
+			return std::is_nothrow_invocable_v< Fn const,
+				Accessory const&, hana::basic_type< T > >;
 		}
 
 		/// \brief Operator for outputs
@@ -237,7 +232,7 @@ namespace disposer{
 					}
 					os << " [" << type_index::type_id< T >().pretty_name()
 						<< "]";
-				}, [&]()->T{
+				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
 					return std::invoke(fn_, accessory, type);
 				});
 		}

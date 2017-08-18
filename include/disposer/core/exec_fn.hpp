@@ -86,18 +86,8 @@ namespace disposer{
 			if constexpr(hana::is_a< parameter_name_tag, name_t >()){
 				return this_.data_(name);
 			}else if constexpr(hana::is_a< input_name_tag, name_t >()){
-					return this_.exec_data_(name);
+				return this_.exec_data_(name);
 			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
-				// TODO: Must be tested!!!
-// 				if(!this_.data_(name).is_enabled[hana::type_c< V >]){
-// 					using namespace std::literals::string_literals;
-// 					throw std::logic_error(io_tools::make_string(
-// 						"output '", detail::to_std_string_view(name),
-// 						"' with disabled type [", type_name< V >(),
-// 						"] requested"
-// 					));
-// 				}
-
 				return this_.exec_data_(name);
 			}else{
 				static_assert(detail::false_c< Name >,
@@ -144,13 +134,14 @@ namespace disposer{
 
 		template < typename StateType, typename List >
 		void operator()(exec_accessory< StateType, List >& accessory){
+			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn,
 				exec_accessory< StateType, List >& >
 			){
-				fn_(accessory);
+				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){
 				(void)accessory; // silance GCC
-				fn_();
+				std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< StateType >,
 					"Fn must be invokable with exec_accessory& or "

@@ -38,7 +38,9 @@ namespace disposer{
 	/// \brief Type list of a module
 	template < typename ... T >
 	struct dimension{
-		static_assert(sizeof...(T) > 1,
+		static constexpr std::size_t type_count = sizeof...(T);
+
+		static_assert(type_count > 1,
 			"dimension's must contain at least 2 different types");
 
 		/// \brief Types as hana::tuple_t
@@ -77,7 +79,8 @@ namespace disposer{
 	/// \brief List of type lists of a module
 	template < typename ... Dimension >
 	struct dimension_list{
-		static_assert(hana::all_of(hana::make_tuple(Dimension() ...),
+		static_assert(hana::all_of(
+			std::declval< hana::basic_tuple< Dimension ... > >()),
 			hana::is_a< dimension_tag >),
 			"Dimension must be a disposer::dimension< ... >");
 
