@@ -38,6 +38,7 @@ namespace disposer{
 	/// \brief Type list of a module
 	template < typename ... T >
 	struct dimension{
+		/// \brief Count of types
 		static constexpr std::size_t type_count = sizeof...(T);
 
 		static_assert(type_count > 1,
@@ -108,9 +109,8 @@ namespace disposer{
 	/// \param D Index of a dimension_list between 0 and N - 1, where N is the
 	///          number of Dimension's in a dimension_list
 	template < template < typename ... > typename Template, std::size_t ... D >
-	class dimension_converter{
-	public:
-		/// \brief Calculate the type by a given dimension_list and the indices
+	struct dimension_converter{
+		/// \brief Calculate the type by a given dimension_list and the indexes
 		///        of it's active types.
 		template < typename ... Dimension, std::size_t ... I >
 		static auto convert(
@@ -175,6 +175,98 @@ namespace disposer{
 	/// \brief Refers to type T
 	template < typename T >
 	constexpr free_type< T > free_type_c{};
+
+
+	/// \brief Pair of a dimension number and the index of its active type
+	template < std::size_t D >
+	struct dimension_index{
+		/// \brief Dimension number
+		static constexpr std::size_t d = D;
+
+		/// \brief Index of the active type of the dimension
+		std::size_t i;
+	};
+
+	/// \brief Compile time pair of a dimension number and the index of its
+	///        active type
+	template < std::size_t D, std::size_t I >
+	struct ct_dimension_index{
+		/// \brief Dimension number
+		static constexpr std::size_t d = D;
+
+		/// \brief Index of the active type of the dimension
+		static constexpr std::size_t i = I;
+	};
+
+	template < bool EvaluationSucceed >
+	struct solved_dimensions: std::false_type{};
+
+	template <>
+	struct solved_dimensions< true >: std::false_type{
+		std::size_t index;
+	};
+
+	/// \brief Tool to evaluate active dimension of inputs if possible
+	template < template < typename ... > typename Template, std::size_t ... D >
+	struct dimension_solver{
+		///  \brief Dimension numbers as hana::tuple
+		static constexpr ds = tuple_c< std::size_t, D ... >;
+
+		/// \brief Tuple of the cartesian product of all dimension type indexes
+		template < typename DimensionList >
+		static constexpr auto key = hana::cartesian_product(hana::make_range(
+			hana::size_c< 0 >, DimensionList< D >::type_count ...));
+
+		/// \brief Map all possible keys to its value types
+		template < typename DimensionList >
+		static constexpr auto map = hana::transform(keys< DimensionList >,
+			[](auto key){
+				return hana::make_pair(key, hana::unpack(key,
+					[](auto ... index){
+						return hana::basic_type< Template< typename decltype(
+							DimensionList::dimensions[hana::size_c< D >]
+								::types[index])::type ... > >;
+					});
+			});
+
+		template <
+			typename DimensionList,
+			typename ValueType,
+			std::size_t ... KD, std::size_t KI >
+		static constexpr auto solve(
+			hana::basic_type< ValueType > value_type,
+			hana::tuple< ct_dimension_index< KD, KI > ... > known_indexes
+		){
+
+			// get all keys that nighter disagree with the value_type nor with
+			// a known index
+			auto keys = hana::keys(hana::remove_if(map,
+				[](auto const& p){
+					constexpr auto index_sequence = hana::make_range(
+						hana::size_c< 0 >, hana::size_c< sizeof...(KnownD) >);
+					auto const& key = hana::second(p);
+					return key != value_type
+						|| hana::apply(index_sequence, [&key](auto ... pos){
+							return (key[hana::size_c< KD >]
+								!= known_indexes[pos].i || ...);
+						});
+				}));
+
+			constexpr auto unknown_indexes = hana::remove_if(ds, [](auto d){
+				return hana::contains(hana::tuple_c< KnownD >, d);
+			});
+
+			constexpr auto index_sequence = hana::make_range(
+				hana::size_c< 0 >, hana::size(unknown_indexes));
+			hana::transform(index_sequence, [](auto pos){
+					auto is_unique = unknown_indexes[pos];
+					if constexpr()
+				});
+			hana::nothing
+			return possible_keys;
+		}
+	};
+
 
 
 }

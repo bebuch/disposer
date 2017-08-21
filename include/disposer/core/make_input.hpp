@@ -56,6 +56,16 @@ namespace disposer{
 	}
 
 
+	/// \brief Make data for a required input with known type
+	template < typename Name, typename T >
+	struct final_input_make_data{
+		output_make_data* output;
+
+		template < std::size_t D >
+		get_dimension()
+	};
+
+
 
 }
 

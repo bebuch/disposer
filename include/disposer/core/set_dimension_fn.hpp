@@ -107,19 +107,19 @@ namespace disposer{
 			Dimensions const& ... dims
 		)const{
 			return accessory.log(
-				[](logsys::stdlogb& os, result_type* indices){
+				[](logsys::stdlogb& os, result_type* indexes){
 					os << "set dimension number";
 					if constexpr(sizeof...(D) == 1) os << "s";
 					os << " ";
 
-					if(!indices){
+					if(!indexes){
 						detail::comma_separated_output(os, D ...);
 						return;
 					}
 
 					std::apply(*indices, [](std::size_t ... i){
 						detail::comma_separated_output(os, std::tuple(
-							D, " to ", get_type_name(Dimensions, i)));
+							D, " to ", get_type_name(i, Dimensions{})) ...);
 					});
 				}, [&]{
 					result_type indices = std::invoke(fn_, accessory);
