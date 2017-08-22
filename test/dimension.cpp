@@ -83,7 +83,6 @@ int main(){
 		auto type_f_21 =
 			list_f.convert(list, hana::tuple_c< std::size_t, 2, 1 >);
 		static_assert(type_f_21 == hana::type_c< long >);
-		std::cout << "free_type_c template name: " << type_f_00
 
 		auto list_0 = type_ref_c< 0 >;
 		auto type_0_00 =
@@ -212,5 +211,132 @@ int main(){
 
 // 		auto invalid_type = wrapped_type_ref_c< morph, 2 >
 // 			.convert(list, hana::tuple_c< std::size_t, 0, 0 >);
+	}
+
+	{
+		using namespace hana::literals;
+
+		// wrap_type_ref_in_t
+		auto list = dimension_list{
+				dimension_c< double, char, float >,
+				dimension_c< int, bool >,
+				dimension_c< short, unsigned, long, long long >
+			};
+
+		auto index_10_0 = dimension_solver< morph, 0 >::solve(list,
+			hana::type_c< morph< double > >, hana::make_tuple());
+		static_assert(index_10_0);
+		static_assert(index_312100_10133.index_count == 1);
+		static_assert(index_10_0.indexes[0_c].d == 0);
+		static_assert(index_10_0.indexes[0_c].i == 0);
+
+// 		auto index_10_1 = dimension_solver< morph, 0 >::solve(list,
+// 			hana::type_c< morph< char > >, hana::make_tuple());
+// 		static_assert(index_10_1);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_10_1.indexes[0_c].d == 0);
+// 		static_assert(index_10_1.indexes[0_c].i == 1);
+//
+// 		auto index_10_2 = dimension_solver< morph, 0 >::solve(list,
+// 			hana::type_c< morph< float > >, hana::make_tuple());
+// 		static_assert(index_10_2);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_10_2.indexes[0_c].d == 0);
+// 		static_assert(index_10_2.indexes[0_c].i == 2);
+//
+// 		auto index_11_0 = dimension_solver< morph, 1 >::solve(list,
+// 			hana::type_c< morph< int > >, hana::make_tuple());
+// 		static_assert(index_11_0);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_11_0.indexes[0_c].d == 1);
+// 		static_assert(index_11_0.indexes[0_c].i == 0);
+//
+// 		auto index_11_1 = dimension_solver< morph, 1 >::solve(list,
+// 			hana::type_c< morph< bool > >, hana::make_tuple());
+// 		static_assert(index_11_1);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_11_1.indexes[0_c].d == 1);
+// 		static_assert(index_11_1.indexes[0_c].i == 1);
+//
+// 		auto index_12_0 = dimension_solver< morph, 2 >::solve(list,
+// 			hana::type_c< morph< short > >, hana::make_tuple());
+// 		static_assert(index_12_0);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_12_0.indexes[0_c].d == 2);
+// 		static_assert(index_12_0.indexes[0_c].i == 0);
+//
+// 		auto index_12_1 = dimension_solver< morph, 2 >::solve(list,
+// 			hana::type_c< morph< unsigned > >, hana::make_tuple());
+// 		static_assert(index_12_1);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_12_1.indexes[0_c].d == 2);
+// 		static_assert(index_12_1.indexes[0_c].i == 1);
+//
+// 		auto index_12_2 = dimension_solver< morph, 2 >::solve(list,
+// 			hana::type_c< morph< long > >, hana::make_tuple());
+// 		static_assert(index_12_2);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_12_2.indexes[0_c].d == 2);
+// 		static_assert(index_12_2.indexes[0_c].i == 2);
+//
+// 		auto index_12_3 = dimension_solver< morph, 2 >::solve(list,
+// 			hana::type_c< morph< long long > >, hana::make_tuple());
+// 		static_assert(index_12_3);
+// 		static_assert(index_312100_10133.index_count == 1);
+// 		static_assert(index_12_3.indexes[0_c].d == 2);
+// 		static_assert(index_12_3.indexes[0_c].i == 3);
+//
+//
+// 		auto index_201_00 = dimension_solver< morph, 0, 1 >::solve(list,
+// 			hana::type_c< morph< double, int > >, hana::make_tuple());
+// 		static_assert(index_201_00);
+// 		static_assert(index_312100_10133.index_count == 2);
+// 		static_assert(index_201_00.indexes[0_c].d == 0);
+// 		static_assert(index_201_00.indexes[0_c].i == 0);
+// 		static_assert(index_201_00.indexes[1_c].d == 1);
+// 		static_assert(index_201_00.indexes[1_c].i == 0);
+//
+// 		auto index_201_11 = dimension_solver< morph, 0, 1 >::solve(list,
+// 			hana::type_c< morph< char, bool > >, hana::make_tuple());
+// 		static_assert(index_201_11);
+// 		static_assert(index_312100_10133.index_count == 2);
+// 		static_assert(index_201_11.indexes[0_c].d == 0);
+// 		static_assert(index_201_11.indexes[0_c].i == 1);
+// 		static_assert(index_201_11.indexes[1_c].d == 1);
+// 		static_assert(index_201_11.indexes[1_c].i == 1);
+//
+// 		auto index_202_13 = dimension_solver< morph, 0, 2 >::solve(list,
+// 			hana::type_c< morph< char, long long > >, hana::make_tuple());
+// 		static_assert(index_202_13);
+// 		static_assert(index_312100_10133.index_count == 2);
+// 		static_assert(index_202_13.indexes[0_c].d == 0);
+// 		static_assert(index_202_13.indexes[0_c].i == 1);
+// 		static_assert(index_202_13.indexes[1_c].d == 2);
+// 		static_assert(index_202_13.indexes[1_c].i == 3);
+//
+// 		auto index_3120_103 = dimension_solver< morph, 1, 2, 0 >::solve(list,
+// 			hana::type_c< morph< int, long long, char > >, hana::make_tuple());
+// 		static_assert(index_3120_103);
+// 		static_assert(index_312100_10133.index_count == 3);
+// 		static_assert(index_3120_103.indexes[0_c].d == 1);
+// 		static_assert(index_3120_103.indexes[0_c].i == 0);
+// 		static_assert(index_3120_103.indexes[1_c].d == 2);
+// 		static_assert(index_3120_103.indexes[1_c].i == 3);
+// 		static_assert(index_3120_103.indexes[2_c].d == 0);
+// 		static_assert(index_3120_103.indexes[2_c].i == 1);
+//
+// 		auto index_312100_10133 = dimension_solver< morph, 1, 2, 1, 0, 0 >
+// 			::solve(list,
+// 			hana::type_c< morph< int, long long, int, char, char > >,
+// 			hana::make_tuple());
+// 		*index_312100_10133;
+// 		static_assert(index_312100_10133);
+// 		static_assert(index_312100_10133.index_count == 3);
+// 		static_assert(index_312100_10133.indexes[0_c].d == 1);
+// 		static_assert(index_312100_10133.indexes[0_c].i == 0);
+// 		static_assert(index_312100_10133.indexes[1_c].d == 2);
+// 		static_assert(index_312100_10133.indexes[1_c].i == 3);
+// 		static_assert(index_312100_10133.indexes[2_c].d == 0);
+// 		static_assert(index_312100_10133.indexes[2_c].i == 1);
 	}
 }
