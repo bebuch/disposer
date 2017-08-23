@@ -220,49 +220,34 @@ namespace disposer{
 	};
 
 
-	namespace detail{
-
-
-		template < std::size_t D >
-		static constexpr auto equal_to(hana::size_t< D >){
-			return [](auto i){ return i == hana::size_c< D >; };
-		}
-
-		template < std::size_t D, std::size_t ... V >
-		static constexpr auto index_of(
-			hana::tuple< hana::size_t< V > ... >,
-			hana::size_t< D >
-		){
-			return hana::index_if(
-				hana::tuple_c< std::size_t, V ... >,
-				equal_to(hana::size_c< D >)).value();
-		}
-
-
-	}
-
-
 	/// \brief Tool to evaluate active dimension of inputs if possible
 	template <
 		typename DimensionList,
 		template < typename ... > typename Template,
-		std::size_t ... D >
+		std::size_t ... Ds >
 	struct dimension_solver{
 		/// \brief Dimension list as hana::tuple of dimensions
 		static constexpr auto dimensions = DimensionList::dimensions;
 
 		/// \brief Sorted and summarized dimension numbers
-		static constexpr auto ds = hana::unique(hana::sort(
-				hana::tuple_c< std::size_t, D ... >));
+		static constexpr auto key_ds = hana::unique(hana::sort(
+				hana::tuple_c< std::size_t, Ds ... >));
+
+		/// \brief Position of a dimension number in key_ds
+		template < std::size_t D >
+		static constexpr auto key_pos(hana::size_t< D >){
+			return hana::index_if(key_ds,
+				[](auto i){ return i == hana::size_c< D >; }).value();
+		}
 
 		template <
 			typename ValueType,
-			std::size_t ... KD, std::size_t ... KI >
+			std::size_t ... KDs, std::size_t ... KIs >
 		static constexpr auto solve(
 			hana::basic_type< ValueType > known_value_type,
-			hana::tuple< ct_dimension_index< KD, KI > ... > known_indexes
+			hana::tuple< ct_dimension_index< KDs, KIs > ... > known_indexes
 		){
-			constexpr auto keys = hana::unpack(ds, [](auto ... d){
+			constexpr auto keys = hana::unpack(key_ds, [](auto ... d){
 					return hana::cartesian_product(
 						hana::make_tuple(hana::make_range(
 							hana::size_c< 0 >,
@@ -276,19 +261,18 @@ namespace disposer{
 				[known_value_type, known_indexes](auto const key){
 					auto const value_type =
 						hana::type_c< Template< typename decltype(
-								+dimensions[hana::size_c< D >][key[
-									detail::index_of(ds, hana::size_c< D >)]]
+								+dimensions[hana::size_c< Ds >][key[
+									key_pos(hana::size_c< Ds >)]]
 							)::type ... > >;
 					constexpr auto known_index_positions = hana::make_range(
-						hana::size_c< 0 >, hana::size_c< sizeof...(KD) >);
+						hana::size_c< 0 >, hana::size_c< sizeof...(KDs) >);
 					return value_type != known_value_type
 						|| hana::unpack(known_index_positions,
 							[known_indexes, key](auto ... pos){
 								return (hana::false_c || ... ||
-									(known_indexes[pos].i != key[hana::index_if(
-										hana::tuple_c< std::size_t, D ... >,
-										detail::equal_to(known_indexes[pos].d)
-									).value()]));
+									(known_indexes[pos].i != key[
+										key_pos(known_indexes[pos].d)
+									]));
 							});
 				});
 
@@ -297,21 +281,16 @@ namespace disposer{
 #endif
 
 			constexpr auto unknown_indexes = hana::remove_if(
-				ds, [](auto d){
+				key_ds, [](auto d){
 					return hana::contains(
-						hana::tuple_c< std::size_t, KD ... >, d);
+						hana::tuple_c< std::size_t, KDs ... >, d);
 				});
 
 			constexpr auto remaining_indexes =
 				[remaining_keys](auto d){
-					auto const key_pos =
-						hana::index_if(ds, detail::equal_to(d));
-#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
-					static_assert(!hana::is_nothing(key_pos));
-#endif
 					return hana::unique(hana::transform(
-						remaining_keys, [key_pos](auto key){
-							return key[key_pos.value()];
+						remaining_keys, [d](auto key){
+							return key[key_pos(d)];
 						}));
 				};
 
