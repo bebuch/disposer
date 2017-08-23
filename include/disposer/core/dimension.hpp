@@ -222,6 +222,10 @@ namespace disposer{
 	/// \brief Tool to evaluate active dimension of inputs if possible
 	template < template < typename ... > typename Template, std::size_t ... D >
 	struct dimension_solver{
+		static constexpr auto equal_to = [](auto d){
+				return [d](auto i){ return i == d; };
+			};
+
 		template <
 			typename DimensionList,
 			typename ValueType,
@@ -233,25 +237,22 @@ namespace disposer{
 		){
 			constexpr auto ds = hana::unique(hana::sort(
 				hana::tuple_c< std::size_t, D ... >));
-			constexpr auto ds_pos = [ds](auto pos){
-				constexpr auto equal_to = [ds](auto pos){
-						return [ds, pos](auto i){ return i == ds[pos]; };
-					};
-				return hana::index_if(ds, equal_to(pos)).value();
+			constexpr auto ds_pos = [ds](auto d){
+				return hana::index_if(ds, equal_to(d)).value();
 			};
 			constexpr auto dimensions = DimensionList::dimensions;
-			constexpr auto keys =
-				hana::cartesian_product(hana::make_tuple(hana::make_range(
-					hana::size_c< 0 >,
-					hana::size(hana::unpack(ds, [](auto ... d){
-						return dimensions[d];
-					}))
-				)));
+			constexpr auto keys = hana::unpack(ds, [dimensions](auto ... d){
+					return hana::cartesian_product(
+						hana::make_tuple(hana::make_range(
+							hana::size_c< 0 >,
+							hana::size(dimensions[d])
+						) ...));
+				});
 
 			// get all keys that nighter disagree with the known value_type nor
 			// with a known index
 			constexpr auto remaining_keys = hana::remove_if(keys,
-				[known_value_type, known_indexes, dimensions](auto const key){
+				[known_value_type, known_indexes](auto const key){
 					auto const value_type =
 						hana::type_c< Template< typename decltype(
 								+dimensions[hana::size_c< D >]
@@ -263,16 +264,11 @@ namespace disposer{
 					return value_type != known_value_type
 						|| hana::unpack(index_sequence,
 							[known_indexes, key](auto ... pos){
-								auto const equal_to = [known_indexes](auto pos){
-										return [known_indexes, pos](auto i){
-											return i == known_indexes[pos].d;
-										};
-								};
-								(void)equal_to; // Silance GCC
 								return (hana::false_c || ... ||
 									(known_indexes[pos].i != key[hana::index_if(
 										hana::tuple_c< std::size_t, D ... >,
-										equal_to(pos)).value()]));
+										equal_to(known_indexes[pos].d)
+									).value()]));
 							});
 				});
 
@@ -281,22 +277,14 @@ namespace disposer{
 #endif
 
 			constexpr auto unknown_indexes = hana::remove_if(
-				hana::tuple_c< std::size_t, D ... >, [](auto d){
+				ds, [](auto d){
 					return hana::contains(
 						hana::tuple_c< std::size_t, KD ... >, d);
 				});
 
 			constexpr auto remaining_indexes =
-				[remaining_keys, unknown_indexes](auto pos){
-					auto const equal_to =
-						[unknown_indexes](auto pos){
-							return [unknown_indexes, pos](auto i){
-								return i == unknown_indexes[pos];
-							};
-					};
-					auto const key_pos = hana::index_if(
-						hana::tuple_c< std::size_t, D ... >,
-						equal_to(pos));
+				[remaining_keys](auto d){
+					auto const key_pos = hana::index_if(ds, equal_to(d));
 #ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 					static_assert(!hana::is_nothing(key_pos));
 #endif
@@ -308,7 +296,7 @@ namespace disposer{
 
 			auto const solve_dimension =
 				[remaining_indexes, unknown_indexes](auto pos){
-					auto const indexes = remaining_indexes(pos);
+					auto const indexes = remaining_indexes(unknown_indexes[pos]);
 					auto const key = unknown_indexes[pos];
 					constexpr auto index = indexes[hana::size_c< 0 >];
 					return hana::if_(hana::size(indexes) == hana::size_c< 1 >,
