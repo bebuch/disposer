@@ -10,6 +10,7 @@
 #define _disposer__core__dimension__hpp_INCLUDED_
 
 #include "../tool/type_index.hpp"
+#include "../tool/depended_t.hpp"
 
 #include <boost/hana/functional/arg.hpp>
 #include <boost/hana/core/is_a.hpp>
@@ -30,6 +31,7 @@
 #include <boost/hana/unique.hpp>
 #include <boost/hana/not_equal.hpp>
 #include <boost/hana/sort.hpp>
+#include <boost/hana/all.hpp>
 
 #include <string>
 #include <sstream>
@@ -194,126 +196,139 @@ namespace disposer{
 		std::size_t i;
 	};
 
-	/// \brief Compile time pair of a dimension number and the index of its
-	///        active type
-	template < std::size_t D, std::size_t I >
-	struct ct_dimension_index{
-		/// \brief Dimension number
-		static constexpr std::size_t d = D;
 
-		/// \brief Index of the active type of the dimension
-		static constexpr std::size_t i = I;
+	template < std::size_t ... Ds >
+	struct solved_dimensions:
+		std::conditional_t< (sizeof...(Ds) > 0), hana::true_, hana::false_ >
+	{
+		static constexpr std::size_t index_count = sizeof...(Ds);
+
+		constexpr solved_dimensions(dimension_index< Ds > ... is)
+			: indexes(is ...) {}
+
+		hana::tuple< dimension_index< Ds > ... > indexes;
 	};
 
-	template < bool EvaluationSucceed, typename ... CtDimensionIndex >
-	struct solved_dimensions;
 
-	template <>
-	struct solved_dimensions< false >: std::false_type{};
+	/// \brief List of dimension numbers
+	template < std::size_t ... Ds >
+	struct dimension_numbers{
+		/// \brief List of dimension numbers
+		static constexpr auto values = hana::tuple_c< std::size_t, Ds ... >;
 
-	template < typename ... CtDimensionIndex >
-	struct solved_dimensions< true, CtDimensionIndex ... >: std::true_type{
-		static constexpr std::size_t index_count = sizeof...(CtDimensionIndex);
-
-		static constexpr auto indexes =
-			hana::make_tuple(CtDimensionIndex{} ...);
+		/// \brief Position of a dimension number in values
+		template < std::size_t D >
+		static constexpr auto pos(hana::size_t< D >){
+			return hana::index_if(values,
+				[](auto i){ return i == hana::size_c< D >; }).value();
+		}
 	};
 
+	/// \brief A dimension_numbers object with sorted and
+	///        summarized dimension numbers
+	template < std::size_t ... Ds >
+	constexpr auto dimension_numbers_c = hana::unpack(
+		hana::unique(hana::sort(hana::tuple_c< std::size_t, Ds ... >)),
+		[](auto ... d){
+			return dimension_numbers< decltype(d)::value ... >{};
+		});
+
+	/// \brief Get dimension_numbers with sorted and
+	///        summarized dimension numbers
+	template < std::size_t ... Ds >
+	using dimension_numbers_t =
+		decltype(dimension_numbers_c< Ds ... >);
 
 	/// \brief Tool to evaluate active dimension of inputs if possible
 	template <
 		typename DimensionList,
 		template < typename ... > typename Template,
 		std::size_t ... Ds >
-	struct dimension_solver{
-		/// \brief Dimension list as hana::tuple of dimensions
-		static constexpr auto dimensions = DimensionList::dimensions;
-
+	class dimension_solver{
+	private:
 		/// \brief Sorted and summarized dimension numbers
-		static constexpr auto key_ds = hana::unique(hana::sort(
-				hana::tuple_c< std::size_t, Ds ... >));
+		using numbers = dimension_numbers_t< Ds ... >;
 
-		/// \brief Position of a dimension number in key_ds
-		template < std::size_t D >
-		static constexpr auto key_pos(hana::size_t< D >){
-			return hana::index_if(key_ds,
-				[](auto i){ return i == hana::size_c< D >; }).value();
+		/// \brief Cartesian product of all dimension numbers
+		static constexpr auto indexes = hana::unpack(numbers::values,
+			[](auto ... d){
+				return hana::cartesian_product(
+					hana::make_tuple(hana::make_range(
+						hana::size_c< 0 >,
+						hana::size(DimensionList::dimensions[d])
+					) ...));
+			});
+
+		/// \brief Get the value_type of a given numbers index
+		template < std::size_t ... Is >
+		static constexpr auto value_type_of(
+			hana::tuple< hana::size_t< Is > ... > index
+		){
+			return hana::type_c< Template< typename decltype(
+					+DimensionList::dimensions[hana::size_c< Ds >]
+						[index[numbers::pos(hana::size_c< Ds >)]]
+				)::type ... > >;
 		}
 
-		template <
-			typename ValueType,
-			std::size_t ... KDs, std::size_t ... KIs >
-		static constexpr auto solve(
-			hana::basic_type< ValueType > known_value_type,
-			hana::tuple< ct_dimension_index< KDs, KIs > ... > known_indexes
+		/// \brief hana::true_c if index of dimension D is deducible if indexes
+		///        of the dimensions KDs are known, hana::false_c otherwise
+		template < std::size_t D, std::size_t ... KDs, typename Indexes >
+		static constexpr auto is_deducible_from(Indexes indexes){
+			return hana::all(hana::transform(hana::to_tuple(hana::make_range(
+					hana::size_c< 0 >,
+					hana::size(DimensionList::dimensions[hana::size_c< D >])
+				)), [indexes](auto di){
+					auto const i_indexes = hana::remove_if(indexes,
+						[di](auto index){
+							return index[numbers::pos(hana::size_c< D >)] != di;
+						});
+					if constexpr(sizeof...(KDs) == 0){
+						return hana::size_c< 1 > == hana::size(
+							hana::unique(hana::transform(i_indexes,
+							[](auto index){ return value_type_of(index); })));
+					}else{
+						return is_deducible_from< KDs ... >(i_indexes);
+					}
+				}));
+		}
+
+		/// \brief hana::true_c if index of dimension D is deducible if indexes
+		///        of the dimensions KDs are known, hana::false_c otherwise
+		template < std::size_t D, std::size_t ... KDs >
+		static constexpr auto is_deducible
+			= is_deducible_from< D, KDs ... >(indexes);
+
+
+		/// \brief Get index of dimension D when dimensions KDs are known
+		template < std::size_t D, std::size_t ... KDs >
+		static constexpr dimension_index< D > deduce_index(
+			hana::size_t< D >,
+			type_index const& /*type_index*/,
+			hana::tuple< dimension_index< KDs > ... > const& /*known_indexes*/
 		){
-			constexpr auto keys = hana::unpack(key_ds, [](auto ... d){
-					return hana::cartesian_product(
-						hana::make_tuple(hana::make_range(
-							hana::size_c< 0 >,
-							hana::size(dimensions[d])
-						) ...));
+			return {};
+		}
+
+	public:
+		/// \brief Get all deducible dimensions when dimension KDs are already
+		///        known
+		template < std::size_t ... KDs >
+		static constexpr auto solve(
+			type_index const& type_index,
+			hana::tuple< dimension_index< KDs > ... > const& known_indexes
+		){
+			constexpr auto deducible_dims = hana::remove_if(numbers::values,
+				[](auto d){
+					constexpr auto kds = hana::tuple_c< std::size_t, KDs ... >;
+					return hana::contains(kds, d)
+						|| !is_deducible< decltype(d)::value, KDs ... >;
 				});
 
-			// get all keys that nighter disagree with the known value_type nor
-			// with a known index
-			constexpr auto remaining_keys = hana::remove_if(keys,
-				[known_value_type, known_indexes](auto const key){
-					auto const value_type =
-						hana::type_c< Template< typename decltype(
-								+dimensions[hana::size_c< Ds >][key[
-									key_pos(hana::size_c< Ds >)]]
-							)::type ... > >;
-					constexpr auto known_index_positions = hana::make_range(
-						hana::size_c< 0 >, hana::size_c< sizeof...(KDs) >);
-					return value_type != known_value_type
-						|| hana::unpack(known_index_positions,
-							[known_indexes, key](auto ... pos){
-								return (hana::false_c || ... ||
-									(known_indexes[pos].i != key[
-										key_pos(known_indexes[pos].d)
-									]));
-							});
-				});
-
-#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
-			static_assert(!hana::is_empty(remaining_keys));
-#endif
-
-			constexpr auto unknown_indexes = hana::remove_if(
-				key_ds, [](auto d){
-					return hana::contains(
-						hana::tuple_c< std::size_t, KDs ... >, d);
-				});
-
-			constexpr auto remaining_indexes =
-				[remaining_keys](auto d){
-					return hana::unique(hana::transform(
-						remaining_keys, [d](auto key){
-							return key[key_pos(d)];
-						}));
-				};
-
-			auto const solve_dimension =
-				[remaining_indexes, unknown_indexes](auto pos){
-					auto const indexes = remaining_indexes(unknown_indexes[pos]);
-					auto const key = unknown_indexes[pos];
-					constexpr auto index = indexes[hana::size_c< 0 >];
-					return hana::if_(hana::size(indexes) == hana::size_c< 1 >,
-						ct_dimension_index< key, index >{}, hana::nothing);
-				};
-
-			constexpr auto unknown_index_positions = hana::make_range(
-				hana::size_c< 0 >, hana::size(unknown_indexes));
-			auto const solved_indexes = hana::unpack(unknown_index_positions,
-				[solve_dimension](auto ... pos){
-					return hana::remove(
-						hana::make_tuple(solve_dimension(pos) ...),
-						hana::nothing);
-				});
-			return hana::unpack(solved_indexes, [](auto ... index){
-					return solved_dimensions< sizeof...(index) != 0,
-						decltype(index) ... >{};
+			return hana::unpack(deducible_dims,
+				[type_index, known_indexes](auto ... ds){
+					return solved_dimensions< decltype(ds)::value ... >(
+							deduce_index(ds, type_index, known_indexes) ...
+						);
 				});
 		}
 	};
