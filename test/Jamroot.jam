@@ -75,6 +75,20 @@ exe dimension
 	/disposer//disposer
 	;
 
+exe dimension_converter
+	:
+	dimension_converter.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
+exe dimension_solve
+	:
+	dimension_solve.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
 exe output
 	:
 	output.cpp
