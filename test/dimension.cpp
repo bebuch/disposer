@@ -1,3 +1,4 @@
+#include <disposer/core/dimension.hpp>
 
 
 template < typename ... T > struct morph{};
@@ -8,7 +9,6 @@ using ambiguous_31 = morph< T1, T2, long >;
 template < typename T1, typename, typename >
 using ambiguous_32 = morph< T1, bool, long >;
 
-#include <disposer/core/dimension.hpp>
 
 int main(){
 	using namespace disposer;

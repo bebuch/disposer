@@ -10,7 +10,6 @@
 #define _disposer__core__dimension__hpp_INCLUDED_
 
 #include "../tool/type_index.hpp"
-#include "../tool/depended_t.hpp"
 
 #include <boost/hana/functional/arg.hpp>
 #include <boost/hana/core/is_a.hpp>
@@ -23,22 +22,13 @@
 #include <boost/hana/greater.hpp>
 #include <boost/hana/size.hpp>
 #include <boost/hana/set.hpp>
-#include <boost/hana/cartesian_product.hpp>
-#include <boost/hana/range.hpp>
-#include <boost/hana/keys.hpp>
-#include <boost/hana/remove_if.hpp>
-#include <boost/hana/is_empty.hpp>
 #include <boost/hana/unique.hpp>
-#include <boost/hana/not_equal.hpp>
 #include <boost/hana/sort.hpp>
-#include <boost/hana/all.hpp>
+#include <boost/hana/range.hpp>
 #include <boost/hana/remove_at.hpp>
-#include <boost/hana/insert.hpp>
-#include <boost/hana/functional/iterate.hpp>
-
-#include <string>
-#include <iostream>
-#include <sstream>
+#include <boost/hana/remove_if.hpp>
+#include <boost/hana/all.hpp>
+#include <boost/hana/cartesian_product.hpp>
 
 
 namespace disposer{
@@ -350,6 +340,7 @@ namespace disposer{
 
 			template < std::size_t ... KDs >
 			struct known_dimensions{
+				/// \brief Get the index of dimension D
 				template < typename ... SubRanges >
 				static constexpr std::size_t fn(
 					type_index ti,
@@ -396,6 +387,7 @@ namespace disposer{
 					}
 				}
 
+				/// \brief Get the address the corresponding fn
 				template < typename Ranges >
 				static constexpr auto fn_address(){
 					if constexpr(sizeof...(KDs) > 0){
