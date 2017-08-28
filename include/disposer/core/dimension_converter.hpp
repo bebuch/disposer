@@ -93,6 +93,16 @@ namespace disposer{
 	constexpr free_type< T > free_type_c{};
 
 
+	/// \brief Hana tag for dimension_dependancy
+	struct dimension_dependancy_tag{};
+
+	/// \brief Parameter value depends on the named module dimensions
+	template < std::size_t ... VD >
+	struct dimension_dependancy{
+		using hana_tag = dimension_dependancy_tag;
+	};
+
+
 }
 
 

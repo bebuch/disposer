@@ -10,7 +10,7 @@
 #define _disposer__core__make_input__hpp_INCLUDED_
 
 #include "input_name.hpp"
-#include "dimension.hpp"
+#include "dimension_converter.hpp"
 
 
 namespace disposer{
