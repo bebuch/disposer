@@ -192,9 +192,7 @@ namespace disposer{
 					decltype(KDs) ... kis
 				){
 					if constexpr(sizeof...(KDs) > 0){
-						return [](
-								type_index ti, std::size_t ki, auto ... kis
-							){
+						return [](type_index ti, std::size_t ki, auto ... kis){
 								constexpr std::array<
 									typename reduced_fn_ptr< KDs ... >::type,
 									sizeof...(SubRanges)
@@ -224,11 +222,13 @@ namespace disposer{
 							++i;
 						}
 
-						// TODO: Use the throw as soon as GCC BUG is fixed
+						// TODO: Remove the if as soon as GCC BUG is fixed
+						if(i == types.size()){
+							throw std::out_of_range(
+								"type deduction failed; THIS IS A "
+								"SERIOUS DISPOSER BUG!");
+						}
 						return i;
-// 						throw std::out_of_range(
-// 							"type deduction failed; THIS IS A "
-// 							"SERIOUS DISPOSER BUG!");
 					}
 				}
 
@@ -284,18 +284,20 @@ namespace disposer{
 			type_index const& type_index,
 			hana::tuple< dimension_index< KDs > ... > const& known_indexes
 		){
-			constexpr auto deducible_dims = hana::remove_if(numbers::values,
-				[](auto d){
-					constexpr auto kds = hana::tuple_c< std::size_t, KDs ... >;
-					return hana::contains(kds, d) || !is_deducible< KDs ... >;
-				});
+			if constexpr(is_deducible< KDs ... >){
+				constexpr auto kds = hana::tuple_c< std::size_t, KDs ... >;
+				constexpr auto unknown_dims = hana::remove_if(numbers::values,
+					[kds](auto d){ return hana::contains(kds, d); });
 
-			return hana::unpack(deducible_dims,
-				[type_index, known_indexes](auto ... ds){
-					return solved_dimensions{
-							deduce_index(ds, type_index, known_indexes) ...
-						};
-				});
+				return hana::unpack(unknown_dims,
+					[type_index, known_indexes](auto ... ds){
+						return solved_dimensions{
+								deduce_index(ds, type_index, known_indexes) ...
+							};
+					});
+			}else{
+				return solved_dimensions{};
+			}
 		}
 	};
 
