@@ -57,13 +57,13 @@ namespace disposer{
 
 		input_make_data(
 			InputMaker const& maker,
-			std::optional< output_info > const& info
+			output_base* const output
 		)noexcept
 			: maker(maker)
-			, info(info){}
+			, output(output){}
 
 		InputMaker const& maker;
-		std::optional< output_info > info;
+		output_base* const output;
 	};
 
 	template < typename Maker >
