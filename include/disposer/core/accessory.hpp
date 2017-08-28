@@ -51,46 +51,34 @@ namespace disposer{
 
 	using namespace std::literals::string_view_literals;
 
-	template < typename InputMaker >
+	template < typename Name, typename Type, bool IsRequired >
 	struct input_make_data{
 		static constexpr auto log_name = "input"sv;
 
-		input_make_data(
-			InputMaker const& maker,
-			output_base* const output
-		)noexcept
-			: maker(maker)
-			, output(output){}
+		input_make_data(output_base* const output)noexcept
+			: output(output){}
 
-		InputMaker const& maker;
 		output_base* const output;
 	};
 
-	template < typename Maker >
+	template < typename Name, typename Type >
 	struct output_make_data{
 		static constexpr auto log_name = "output"sv;
 
-		output_make_data(Maker const& maker, std::size_t use_count)noexcept
-			: maker(maker)
-			, use_count(use_count) {}
+		output_make_data(std::size_t use_count)noexcept
+			: use_count(use_count) {}
 
-		Maker const& maker;
 		std::size_t const use_count;
 	};
 
-	template < typename Maker, typename ValueMap >
+	template < typename Name, typename Type >
 	struct parameter_make_data{
 		static constexpr auto log_name = "parameter"sv;
 
-		parameter_make_data(
-			Maker const& maker,
-			ValueMap const& value_map
-		)noexcept
-			: maker(maker)
-			, value_map(value_map) {}
+		parameter_make_data(Type&& value)noexcept
+			: value(std::move(value)) {}
 
-		Maker const& maker;
-		ValueMap const value_map;
+		Type value;
 	};
 
 
