@@ -6,29 +6,19 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__config_fn__hpp_INCLUDED_
-#define _disposer__core__config_fn__hpp_INCLUDED_
+#ifndef _disposer__core__parser_fn__hpp_INCLUDED_
+#define _disposer__core__parser_fn__hpp_INCLUDED_
+
+#include "../tool/print_if_supported.hpp"
 
 #include <logsys/log.hpp>
 #include <logsys/stdlogb.hpp>
 
-#include <boost/hana/core/is_a.hpp>
-#include <boost/hana/count_if.hpp>
+#include <boost/hana/type.hpp>
 
 
 namespace disposer{
 
-
-	template < typename LogStream, typename T >
-	void print_if_supported(LogStream& os, T const& v){
-		auto const is_printable = hana::is_valid([](auto& x)
-			->decltype((void)(std::declval< std::ostream& >() << x)){})(v);
-		if constexpr(is_printable){
-			os << v;
-		}else{
-			os << "value output on std::ostream& is not supported by type";
-		}
-	}
 
 
 
@@ -276,25 +266,6 @@ namespace disposer{
 	}
 
 
-
-	template < typename Tuple, typename Predicate, typename Default >
-	constexpr auto get_or_default(
-		Tuple&& tuple,
-		Predicate&& predicate,
-		Default&& default_value
-	){
-		auto const count = hana::count_if(tuple, predicate);
-		static_assert(count <= hana::size_c< 1 >,
-			"more than one argument with this tag");
-
-		auto result = hana::find_if(static_cast< Tuple&& >(tuple),
-			static_cast< Predicate&& >(predicate));
-		if constexpr(auto const found = result != hana::nothing; found){
-			return *static_cast< decltype(result)&& >(result);
-		}else{
-			return static_cast< Default&& >(default_value);
-		}
-	}
 
 
 }
