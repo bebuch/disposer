@@ -9,75 +9,16 @@
 #ifndef _disposer__core__dimension_solve__hpp_INCLUDED_
 #define _disposer__core__dimension_solve__hpp_INCLUDED_
 
-#include "dimension.hpp"
+#include "dimension_numbers.hpp"
 
 #include "../tool/type_index.hpp"
 
-#include <boost/hana/unique.hpp>
-#include <boost/hana/sort.hpp>
-#include <boost/hana/range.hpp>
 #include <boost/hana/remove_at.hpp>
 #include <boost/hana/remove_if.hpp>
 #include <boost/hana/all.hpp>
-#include <boost/hana/cartesian_product.hpp>
 
 
 namespace disposer{
-
-
-	/// \brief Pair of a dimension number and the index of its active type
-	template < std::size_t D >
-	struct dimension_index{
-		/// \brief Dimension number
-		static constexpr std::size_t d = D;
-
-		/// \brief Index of the active type of the dimension
-		std::size_t i;
-	};
-
-
-	template < std::size_t ... Ds >
-	struct solved_dimensions:
-		std::conditional_t< (sizeof...(Ds) > 0), hana::true_, hana::false_ >
-	{
-		static constexpr std::size_t index_count = sizeof...(Ds);
-
-		constexpr solved_dimensions(dimension_index< Ds > ... is)
-			: indexes(is ...) {}
-
-		hana::tuple< dimension_index< Ds > ... > indexes;
-	};
-
-
-	/// \brief List of dimension numbers
-	template < std::size_t ... Ds >
-	struct dimension_numbers{
-		/// \brief List of dimension numbers
-		static constexpr auto values = hana::tuple_c< std::size_t, Ds ... >;
-
-		/// \brief Position of a dimension number in values
-		template < std::size_t D >
-		static constexpr auto pos(hana::size_t< D >){
-			return hana::index_if(values,
-				hana::equal.to(hana::size_c< D >)).value();
-		}
-	};
-
-	/// \brief A dimension_numbers object with sorted and
-	///        summarized dimension numbers
-	template < std::size_t ... Ds >
-	constexpr auto dimension_numbers_c = hana::unpack(
-		hana::unique(hana::sort(hana::tuple_c< std::size_t, Ds ... >)),
-		[](auto ... d){
-			return dimension_numbers< decltype(d)::value ... >{};
-		});
-
-	/// \brief Get dimension_numbers with sorted and
-	///        summarized dimension numbers
-	template < std::size_t ... Ds >
-	using dimension_numbers_t =
-		decltype(dimension_numbers_c< Ds ... >);
-
 
 
 	/// \brief Tool to evaluate active dimension of inputs if possible
@@ -90,25 +31,8 @@ namespace disposer{
 		/// \brief Sorted and summarized dimension numbers
 		using numbers = dimension_numbers_t< Ds ... >;
 
-		/// \brief Tuple of ranges of all indexes
-		static constexpr auto ranges = hana::unpack(numbers::values,
-			[](auto ... d){
-				return hana::make_tuple(hana::to_tuple(hana::make_range(
-					hana::size_c< 0 >,
-					hana::size(DimensionList::dimensions[d])
-				)) ...);
-			});
-
-		/// \brief Get the value_type of a given numbers index
-		template < std::size_t ... Is >
-		static constexpr auto value_type_of(
-			hana::tuple< hana::size_t< Is > ... > index
-		){
-			return hana::type_c< Template< typename decltype(
-					+DimensionList::dimensions[hana::size_c< Ds >]
-						[index[numbers::pos(hana::size_c< Ds >)]]
-				)::type ... > >;
-		}
+		/// \brief Converts between dimension_indexes and corresponding types
+		using convert = dimension_converter< DimensionList, Template, Ds ... >;
 
 		/// \brief Use ranges as is since there are no more known dimensions
 		template < typename Ranges >
@@ -132,7 +56,8 @@ namespace disposer{
 
 		/// \brief Create subranges by known dimensions KDs
 		template < std::size_t ... KDs >
-		static auto constexpr sub_ranges = sub_ranges_from< KDs ... >(ranges);
+		static auto constexpr sub_ranges
+			= sub_ranges_from< KDs ... >(convert::ranges);
 
 		/// \brief hana::true_c if indexs are deducible by ranges,
 		///        hana::false_c otherwise
@@ -141,7 +66,7 @@ namespace disposer{
 			auto const indexes = hana::cartesian_product(ranges);
 			auto types = hana::transform(indexes,
 				[](auto index){
-					return value_type_of(index);
+					return convert::value_type_of(index);
 				});
 			auto const unique_size =
 				hana::size(hana::to_set(types));
@@ -210,7 +135,8 @@ namespace disposer{
 						> types{{
 							std::pair(
 								type_index::type_id< typename decltype(
-									value_type_of(SubRanges{}))::type >(),
+										convert::value_type_of(SubRanges{})
+									)::type >(),
 								decltype(+SubRanges{}[numbers::pos(
 									hana::size_c< D >)])::value
 							) ...

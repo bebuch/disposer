@@ -45,22 +45,6 @@ namespace disposer{
 			, exec_fn_(exec_fn) {}
 
 
-		/// \brief Name of the process chain in config file section 'chain'
-		std::string const& chain()const noexcept{
-			return module_base::chain;
-		}
-
-		/// \brief Name of the module type given via class module_declarant
-		std::string const& type_name()const noexcept{
-			return module_base::type_name;
-		}
-
-		/// \brief Position of the module in the process chain
-		std::size_t number()const noexcept{
-			return module_base::number;
-		}
-
-
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >

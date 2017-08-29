@@ -9,10 +9,9 @@
 #ifndef _disposer__core__accessory__hpp_INCLUDED_
 #define _disposer__core__accessory__hpp_INCLUDED_
 
-#include "input_name.hpp"
-#include "output_name.hpp"
-#include "parameter_name.hpp"
-#include "output_info.hpp"
+#include "make_input.hpp"
+#include "make_output.hpp"
+#include "make_parameter.hpp"
 
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
@@ -36,16 +35,6 @@ namespace disposer{
 			os << location << " " << maker_type_name
 				<< "(" << maker_name << ") ";
 		}
-	};
-
-
-	/// \brief Converts a IOP hana::tuple into a hana::map
-	constexpr auto as_iop_map = [](auto&& xs){
-		return hana::to_map(hana::transform(
-			static_cast< decltype(xs)&& >(xs),
-			[](auto&& x){
-				return hana::make_pair(x.name, static_cast< decltype(x)&& >(x));
-			}));
 	};
 
 
@@ -226,6 +215,20 @@ namespace disposer{
 
 		MakeData data;
 		iops_accessory< IOP_RefList > accessory;
+	};
+
+
+	template <
+		typename ... Dimension,
+		typename ... Config >
+	auto make_module_make_data(
+		dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
+		module_make_data const& data
+	){
+		return hana::transform(configs, [](auto const& config){
+
+			});
 	};
 
 

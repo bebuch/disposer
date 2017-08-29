@@ -75,9 +75,9 @@ exe dimension
 	/disposer//disposer
 	;
 
-exe dimension_converter
+exe dimension_referrer
 	:
-	dimension_converter.cpp
+	dimension_referrer.cpp
 	/logsys//logsys
 	/disposer//disposer
 	;

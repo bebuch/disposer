@@ -6,10 +6,10 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__dimension_converter__hpp_INCLUDED_
-#define _disposer__core__dimension_converter__hpp_INCLUDED_
+#ifndef _disposer__core__dimension_referrer__hpp_INCLUDED_
+#define _disposer__core__dimension_referrer__hpp_INCLUDED_
 
-#include "dimension.hpp"
+#include "dimension_numbers.hpp"
 
 #include <boost/hana/functional/arg.hpp>
 #include <boost/hana/greater.hpp>
@@ -21,32 +21,14 @@ namespace disposer{
 	/// \brief Defines a type by modules dimensions
 	///
 	/// \param Template A template that must be instantiable with the same
-	///                 number of types as the number of D's
-	/// \param D Index of a dimension_list between 0 and N - 1, where N is the
-	///          number of Dimension's in a dimension_list
-	template < template < typename ... > typename Template, std::size_t ... D >
-	struct dimension_converter{
-		/// \brief Calculate the type by a given dimension_list and the indexes
-		///        of it's active types.
-		template < typename ... Dimension, std::size_t ... I >
-		static auto convert(
-			dimension_list< Dimension ... >,
-			hana::tuple< hana::size_t< I > ... >
-		){
-#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
-			static_assert(sizeof...(Dimension) == sizeof...(I));
-#endif
-
-			static_assert(hana::all_of(hana::tuple_c< std::size_t, D ... >,
-				hana::curry< 2 >(hana::greater)(
-					hana::size_c< sizeof...(Dimension) >)),
-				"At least one wrapped_type_ref index D is greater or equal "
-				"as the module dimension count. (first index is 0)");
-
-			return hana::type_c< Template<
-				typename decltype(+hana::arg< D + 1 >(
-					Dimension::types[hana::size_c< I >] ...))::type ... > >;
-		}
+	///                 number of types as the number of Ds
+	/// \param Ds Index of a dimension_list between 0 and N - 1, where N is the
+	///           number of Dimension's in a dimension_list
+	template < template < typename ... > typename Template, std::size_t ... Ds >
+	struct dimension_referrer{
+		/// \brief Converts between dimension_indexes and corresponding types
+		template < typename DimensionList >
+		using convert = dimension_converter< DimensionList, Template, Ds ... >;
 	};
 
 	/// \brief Alias definition without effect
@@ -72,13 +54,13 @@ namespace disposer{
 	};
 
 
-	/// \brief Wrap the active types of the given dimension's D in Template
-	template < template < typename ... > typename Template, std::size_t ... D >
-	constexpr dimension_converter< Template, D ... > wrapped_type_ref_c{};
+	/// \brief Wrap the active types of the given dimension's Ds in Template
+	template < template < typename ... > typename Template, std::size_t ... Ds >
+	constexpr dimension_referrer< Template, Ds ... > wrapped_type_ref_c{};
 
 	/// \brief Defines a type by a module dimension
 	template < std::size_t D >
-	using type_ref = dimension_converter< self_t, D >;
+	using type_ref = dimension_referrer< self_t, D >;
 
 	/// \brief Refers to the active type of the given dimension D
 	template < std::size_t D >
@@ -86,7 +68,7 @@ namespace disposer{
 
 	/// \brief Defines a type
 	template < typename T >
-	using free_type = dimension_converter< free_t< T >::template type >;
+	using free_type = dimension_referrer< free_t< T >::template type >;
 
 	/// \brief Refers to type T
 	template < typename T >
@@ -97,7 +79,7 @@ namespace disposer{
 	struct dimension_dependancy_tag{};
 
 	/// \brief Parameter value depends on the named module dimensions
-	template < std::size_t ... VD >
+	template < std::size_t ... VDs >
 	struct dimension_dependancy{
 		using hana_tag = dimension_dependancy_tag;
 	};

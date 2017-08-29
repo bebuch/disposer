@@ -20,6 +20,33 @@
 namespace disposer{
 
 
+	/// \brief The list of module configuration items
+	template < typename ... Config >
+	struct module_configure{
+		static_assert(hana::and_(hana::true_c, hana::or_(
+			hana::is_a< input_maker_tag, Config >(),
+			hana::is_a< output_maker_tag, Config >(),
+			hana::is_a< parameter_maker_tag, Config >(),
+			hana::is_a< set_dimension_fn_tag, Config >()) ...),
+			"at least one of the module configure arguments is not "
+			"an input maker, an output maker, a parameter maker or "
+			"a set_dimension_fn");
+
+		/// \brief The data
+		hana::tuple< Config ... > config_list;
+
+		/// \brief Constructor
+		constexpr auto module_configure(Config&& ... list)
+			: config_list(static_cast< Config&& >(list) ...) {}
+	};
+
+
+	/// \brief Deduction guide to store all config items as values
+	template < typename ... Config >
+	module_configure(Config&& ...) -> module_configure
+		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
+
+
 	/// \brief Maker function for \ref module in a std::unique_ptr
 	template <
 		typename ... Dimension,
@@ -27,27 +54,27 @@ namespace disposer{
 		typename StateMakerFn,
 		typename ExecFn >
 	auto make_module_ptr(
-		dimension_list< Dimension ... > const& dims
-		module_configure< Config ... > const& config,
+		dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
 		module_make_data const& data,
 		std::string_view location,
 		state_maker_fn< StateMakerFn > const& state_maker,
 		exec_fn< ExecFn > const& exec
 	){
 		return std::make_unique< module< list_type, StateMakerFn, ExecFn > >(
-			dims, config, data, location, state_maker, exec);
+			dims, configs, data, location, state_maker, exec);
 	}
 
 
 	/// \brief Provids types for constructing an module
 	template <
-		typename Dimensions,
+		typename DimensionList,
 		typename Configuration,
 		typename StateMakerFn,
 		typename ExecFn >
 	struct module_maker{
 		/// \brief An dimension_list object
-		Dimensions dimensions;
+		DimensionList dimensions;
 
 		/// \brief Tuple of input/output/parameter-maker objects
 		Configuration configuration;
@@ -86,33 +113,6 @@ namespace disposer{
 				configuration, data, basic_location, state_maker, exec);
 		}
 	};
-
-
-	/// \brief The list of module configuration items
-	template < typename ... Config >
-	struct module_configure{
-		static_assert(hana::and_(hana::true_c, hana::or_(
-			hana::is_a< input_maker_tag, Config >(),
-			hana::is_a< output_maker_tag, Config >(),
-			hana::is_a< parameter_maker_tag, Config >(),
-			hana::is_a< set_dimension_fn_tag, Config >()) ...),
-			"at least one of the module configure arguments is not "
-			"an input maker, an output maker, a parameter maker or "
-			"a set_dimension_fn");
-
-		/// \brief The data
-		hana::tuple< Config > config_list;
-
-		/// \brief Constructor
-		constexpr auto module_configure(Config&& ... list)
-			: config_list(static_cast< Config&& >(list) ...) {}
-	};
-
-
-	/// \brief Deduction guide to store all config items as values
-	template < typename ... Config >
-	module_configure(Config&& ...) -> module_configure
-		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 	struct unit_test_key;
 
