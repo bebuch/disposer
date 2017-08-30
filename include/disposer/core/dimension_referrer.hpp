@@ -28,7 +28,8 @@ namespace disposer{
 	struct dimension_referrer{
 		/// \brief Converts between dimension_indexes and corresponding types
 		template < typename DimensionList >
-		using convert = dimension_converter< DimensionList, Template, Ds ... >;
+		static constexpr auto convert
+			= dimension_converter< DimensionList, Template, Ds ... >{};
 	};
 
 	/// \brief Alias definition without effect
