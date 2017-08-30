@@ -29,10 +29,11 @@ namespace disposer{
 	class dimension_solver{
 	private:
 		/// \brief Sorted and summarized dimension numbers
-		using numbers = dimension_numbers_t< Ds ... >;
+		static constexpr auto numbers = dimension_numbers< Ds ... >{};
 
-		/// \brief Converts between dimension_indexes and corresponding types
-		using convert = dimension_converter< DimensionList, Template, Ds ... >;
+		/// \brief Converts between packed indexes and corresponding types
+		static constexpr auto convert
+			= dimension_converter< DimensionList, Template, Ds ... >{};
 
 		/// \brief Use ranges as is since there are no more known dimensions
 		template < typename Ranges >
@@ -44,7 +45,7 @@ namespace disposer{
 		///        index of the known dimension KD
 		template < std::size_t KD, std::size_t ... KDs, typename Ranges >
 		static auto constexpr sub_ranges_from(Ranges ranges){
-			auto const index_pos = numbers::pos(hana::size_c< KD >);
+			auto const index_pos = numbers.pos(hana::size_c< KD >);
 			auto const range = ranges[index_pos];
 			auto const ranges_rest = hana::remove_at(ranges, index_pos);
 			return hana::unpack(range, [=](auto ... ki){
@@ -57,7 +58,7 @@ namespace disposer{
 		/// \brief Create subranges by known dimensions KDs
 		template < std::size_t ... KDs >
 		static auto constexpr sub_ranges
-			= sub_ranges_from< KDs ... >(convert::ranges);
+			= sub_ranges_from< KDs ... >(convert.ranges);
 
 		/// \brief hana::true_c if indexs are deducible by ranges,
 		///        hana::false_c otherwise
@@ -66,7 +67,7 @@ namespace disposer{
 			auto const indexes = hana::cartesian_product(ranges);
 			auto types = hana::transform(indexes,
 				[](auto index){
-					return convert::value_type_of(index);
+					return convert.value_type_of(index);
 				});
 			auto const unique_size =
 				hana::size(hana::to_set(types));
@@ -135,9 +136,9 @@ namespace disposer{
 						> types{{
 							std::pair(
 								type_index::type_id< typename decltype(
-										convert::value_type_of(SubRanges{})
+										convert.value_type_of(SubRanges{})
 									)::type >(),
-								decltype(+SubRanges{}[numbers::pos(
+								decltype(+SubRanges{}[numbers.pos(
 									hana::size_c< D >)])::value
 							) ...
 						}};
@@ -189,14 +190,14 @@ namespace disposer{
 		template <
 			std::size_t D,
 			std::size_t ... KDs >
-		static constexpr dimension_index< D > deduce_index(
+		static constexpr index_component< D > deduce_index(
 			hana::size_t< D >,
 			type_index const& type_index,
-			hana::tuple< dimension_index< KDs > ... > const& known_indexes
+			hana::tuple< index_component< KDs > ... > const& known_indexes
 		){
 			return hana::unpack(known_indexes,
 				[&type_index](auto const& ... known_index){
-					return dimension_index< D >{index_fn< D, KDs ... >(
+					return index_component< D >{index_fn< D, KDs ... >(
 						type_index, known_index.i ...)};
 				});
 		}
@@ -208,11 +209,11 @@ namespace disposer{
 		template < std::size_t ... KDs >
 		static constexpr auto solve(
 			type_index const& type_index,
-			hana::tuple< dimension_index< KDs > ... > const& known_indexes
+			hana::tuple< index_component< KDs > ... > const& known_indexes
 		){
 			if constexpr(is_deducible< KDs ... >){
 				constexpr auto kds = hana::tuple_c< std::size_t, KDs ... >;
-				constexpr auto unknown_dims = hana::remove_if(numbers::values,
+				constexpr auto unknown_dims = hana::remove_if(numbers.packed,
 					[kds](auto d){ return hana::contains(kds, d); });
 
 				return hana::unpack(unknown_dims,

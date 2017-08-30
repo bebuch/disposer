@@ -174,7 +174,7 @@ int main(){
 	constexpr auto index_210_12_k2 =
 		dimension_solver< dims, ambiguous_31, 1, 0, 2 >::solve(
 			type_index::type_id< morph< bool, float, long > >(),
-			hana::make_tuple(dimension_index< 2 >{3}));
+			hana::make_tuple(index_component< 2 >{3}));
 	static_assert(index_210_12_k2);
 	static_assert(index_210_12_k2.index_count == 2);
 	static_assert(index_210_12_k2.indexes[0_c].d == 0);
@@ -186,7 +186,7 @@ int main(){
 	constexpr auto index_210_12_a32 =
 		dimension_solver< dims, ambiguous_32, 1, 0, 2 >::solve(
 			type_index::type_id< morph< bool, float, long > >(),
-			hana::make_tuple(dimension_index< 2 >{3}));
+			hana::make_tuple(index_component< 2 >{3}));
 	static_assert(!index_210_12_a32);
 	static_assert(index_210_12_a32.index_count == 0);
 
@@ -195,7 +195,7 @@ int main(){
 		dimension_solver< dims, ambiguous_32, 1, 0, 2 >::solve(
 			type_index::type_id< morph< bool, some_type, some_type > >(),
 			hana::make_tuple(
-				dimension_index< 2 >{2}, dimension_index< 0 >{2}));
+				index_component< 2 >{2}, index_component< 0 >{2}));
 	static_assert(index_210_12_k12);
 	static_assert(index_210_12_k12.index_count == 1);
 	static_assert(index_210_12_k12.indexes[0_c].d == 1);

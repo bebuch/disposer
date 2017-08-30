@@ -26,7 +26,7 @@ namespace disposer{
 	///           number of Dimension's in a dimension_list
 	template < template < typename ... > typename Template, std::size_t ... Ds >
 	struct dimension_referrer{
-		/// \brief Converts between dimension_indexes and corresponding types
+		/// \brief Converts between packed indexes and corresponding types
 		template < typename DimensionList >
 		static constexpr auto convert
 			= dimension_converter< DimensionList, Template, Ds ... >{};

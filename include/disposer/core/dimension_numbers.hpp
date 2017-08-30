@@ -171,7 +171,7 @@ namespace disposer{
 	) -> packed_index< sizeof...(Ds) >;
 
 
-	/// \brief Converts between dimension_indexes and corresponding types
+	/// \brief Converts between packed indexes and corresponding types
 	template <
 		typename DimensionList,
 		template < typename ... > typename Template,
