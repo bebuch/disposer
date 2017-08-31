@@ -15,6 +15,7 @@
 #include <boost/hana/cartesian_product.hpp>
 #include <boost/hana/unpack.hpp>
 #include <boost/hana/unique.hpp>
+#include <boost/hana/zip.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/replicate.hpp>
 
@@ -71,59 +72,89 @@ namespace disposer{
 	};
 
 	/// \brief Optional index components in the same order as in a DimensionList
-	template < bool ... DimensionsKnown >
+	template < bool ... DKs >
 	struct partial_deduced_list_index{
-		hana::tuple< std::conditional_t< DimensionsKnown,
+		/// \brief List which says if a dimension is known
+		static constexpr auto is_dim_known = hana::tuple_c< bool, DKs ... >;
+
+		/// \brief All dimension numbers
+		static constexpr auto ds =
+			hana::to_tuple(hana::range_c< std::size_t, 0, sizeof...(DKs) >);
+
+		/// \brief List of known dimensions
+		static constexpr auto known_dims =
+			hana::filter(ds, [](auto d){ return is_dim_known[d]; });
+
+		/// \brief List of unknown dimensions
+		static constexpr auto unknown_dims =
+			hana::filter(ds, [](auto d){ return !is_dim_known[d]; });
+
+
+		/// \brief List of indexes
+		hana::tuple< std::conditional_t< DKs,
 			hana::optional< std::size_t >, hana::optional<> > ... > index;
+
 
 		/// \brief Construct without any known dimensions
 		constexpr partial_deduced_list_index(): index{} {}
 
 		/// \brief Helper constructor
-		template <
-			std::size_t ... Is,
-			bool ... OldDimensionsKnown,
-			std::size_t ... Ds >
+		template < std::size_t ... KDs, bool ... ODKs, std::size_t ... Ds >
 		constexpr partial_deduced_list_index(
-			std::index_sequence< Is ... >,
-			partial_deduced_list_index< OldDimensionsKnown ... > const& old,
+			std::index_sequence< KDs ... >,
+			partial_deduced_list_index< ODKs ... > const& old,
 			solved_dimensions< Ds ... > const& solved
 		): index{
-				[&old, &solved](auto i, auto known){
+				[](auto const& old, auto const& solved, auto i, auto known){
 					if constexpr(known){
 						return old.index[i];
 					}else{
 						// return the deduced dimension or hana::nothing
-						return hana::find_if(solved, [i](auto const& v){
+						auto optional =
+							hana::find_if(solved.indexes, [](auto const& v){
 								return hana::typeid_(v) == hana::type_c<
 									index_component< decltype(i)::value > >;
 							});
+						if constexpr(optional == hana::nothing){
+							return hana::nothing;
+						}else{
+							return hana::just(optional.value().i);
+						}
 					}
-				}(hana::size_c< Is >, hana::bool_c< OldDimensionsKnown >) ...
-			} {}
-
-		/// \brief Construct by the old state and some solved dimensions
-		template < bool ... OldDimensionsKnown, std::size_t ... Ds >
-		constexpr partial_deduced_list_index(
-			partial_deduced_list_index< OldDimensionsKnown ... > const& old,
-			solved_dimensions< Ds ... > const& solved
-		): partial_deduced_list_index(
-			std::make_index_sequence< sizeof...(OldDimensionsKnown) >(),
-			old, solved)
+				}(old, solved, hana::size_c< KDs >, hana::bool_c< ODKs >) ...
+			}
 		{
 #ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 			static_assert(
-				sizeof...(DimensionsKnown) == sizeof...(OldDimensionsKnown));
+				sizeof...(KDs) == sizeof...(ODKs));
 			static_assert(hana::all_of(hana::tuple_c< std::size_t, Ds ... >,
-				hana::less.than(hana::size_c< sizeof...(DimensionsKnown) >)));
+				hana::less.than(hana::size_c< sizeof...(KDs) >)));
 
-			constexpr auto already_known
-				= hana::tuple_c< bool, OldDimensionsKnown ... >;
 			static_assert(hana::all_of(hana::tuple_c< std::size_t, Ds ... >,
-				[](auto ds){ return !already_known[ds]; }));
+				[](auto ds){ return !hana::tuple_c< bool, ODKs ... >[ds]; }));
 #endif
 		}
+
+// 		/// \brief Construct by the old state and some solved dimensions
+// 		template < bool ... ODKs, std::size_t ... Ds >
+// 		constexpr partial_deduced_list_index(
+// 			partial_deduced_list_index< ODKs ... > const& old,
+// 			solved_dimensions< Ds ... > const& solved
+// 		): partial_deduced_list_index{
+// 			std::make_index_sequence< sizeof...(ODKs) >(), old, solved} {}
+
 	};
+
+
+	template < std::size_t ... KDs, bool ... ODKs, std::size_t ... Ds >
+	partial_deduced_list_index(
+		std::index_sequence< KDs ... >,
+		partial_deduced_list_index< ODKs ... > const& old,
+		solved_dimensions< Ds ... > const& solved
+	) -> partial_deduced_list_index<
+			(ODKs || hana::contains(
+				hana::tuple_c< std::size_t, Ds ... >, hana::size_c< KDs >)) ...
+		>;
 
 	/// \brief Constructs a partial_deduced_list_index with DimensionCount
 	///        unknown index components
@@ -135,15 +166,24 @@ namespace disposer{
 			return partial_deduced_list_index< decltype(false_)::value ... >{};
 		});
 
+	/// \brief Creates a partial_deduced_list_index for unit tests
+	template < std::size_t DimensionCount, std::size_t ... KDs >
+	constexpr auto make_list_index(index_component< KDs > ... is){
+		return partial_deduced_list_index{
+			std::make_index_sequence< DimensionCount >(),
+			undeduced_list_index_c< DimensionCount >,
+			solved_dimensions{is ...}};
+	}
+
 	/// \brief Index components in the same order as dimension_numbers::packed
 	///        dimensions
 	template < std::size_t PackedDimCount >
 	struct packed_index: std::array< std::size_t, PackedDimCount >{
 		/// \brief Get index component number D from list_index if it is already
 		///        deduced, static_assert otherwise
-		template < bool ... DimensionsKnown, std::size_t D >
+		template < bool ... DKs, std::size_t D >
 		static constexpr std::size_t get(
-			partial_deduced_list_index< DimensionsKnown ... > const& list_index,
+			partial_deduced_list_index< DKs ... > const& list_index,
 			hana::size_t< D > d
 		){
 			auto const& i = list_index[d];
@@ -155,9 +195,9 @@ namespace disposer{
 		/// \brief Construction by a undeduced_list_index object
 		///
 		/// Requirement:  Ds must be sorted and unique
-		template < bool ... DimensionsKnown, std::size_t ... Ds >
+		template < bool ... DKs, std::size_t ... Ds >
 		constexpr packed_index(
-			partial_deduced_list_index< DimensionsKnown ... > list_index,
+			partial_deduced_list_index< DKs ... > list_index,
 			hana::tuple< hana::size_t< Ds > ... >)
 		: std::array< std::size_t, PackedDimCount >{{
 				get(list_index, hana::size_c< Ds >) ...
@@ -165,8 +205,8 @@ namespace disposer{
 	};
 
 	/// \brief Template duduction guide
-	template < bool ... DimensionsKnown, std::size_t ... Ds >
-	packed_index(partial_deduced_list_index< DimensionsKnown ... >,
+	template < bool ... DKs, std::size_t ... Ds >
+	packed_index(partial_deduced_list_index< DKs ... >,
 		hana::tuple< hana::size_t< Ds > ... >
 	) -> packed_index< sizeof...(Ds) >;
 

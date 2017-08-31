@@ -28,7 +28,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 0 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< double > >(), hana::make_tuple());
+			type_index::type_id< morph< double > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 0);
@@ -39,7 +39,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 0 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< char > >(), hana::make_tuple());
+			type_index::type_id< morph< char > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 0);
@@ -50,7 +50,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 0 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< float > >(), hana::make_tuple());
+			type_index::type_id< morph< float > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 0);
@@ -61,7 +61,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 1 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< int > >(), hana::make_tuple());
+			type_index::type_id< morph< int > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 1);
@@ -72,7 +72,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 1 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< bool > >(), hana::make_tuple());
+			type_index::type_id< morph< bool > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 1);
@@ -83,7 +83,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 2 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< short > >(), hana::make_tuple());
+			type_index::type_id< morph< short > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 2);
@@ -94,7 +94,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 2 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< unsigned > >(), hana::make_tuple());
+			type_index::type_id< morph< unsigned > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 2);
@@ -105,7 +105,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 2 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< long > >(), hana::make_tuple());
+			type_index::type_id< morph< long > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 2);
@@ -116,7 +116,7 @@ int main(){
 		constexpr dimension_solver solver{
 			list, wrapped_type_ref_c< morph, 2 >};
 		constexpr auto index = solver.solve(
-			type_index::type_id< morph< long long > >(), hana::make_tuple());
+			type_index::type_id< morph< long long > >(), make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 1);
 		static_assert(index.indexes[0_c].d == 2);
@@ -128,7 +128,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 0, 1 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< double, int > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 0);
@@ -142,7 +142,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 0, 1 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< char, bool > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 0);
@@ -156,7 +156,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 0, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< char, long long > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 0);
@@ -170,7 +170,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 1, 0 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, float > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 0);
@@ -184,7 +184,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 1, 2, 0 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< int, long long, char > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 3);
 		static_assert(index.indexes[0_c].d == 0);
@@ -201,7 +201,7 @@ int main(){
 		constexpr auto index = solver.solve(
 				type_index::type_id<
 					morph< int, long long, int, char, char > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(index);
 		static_assert(index.index_count == 3);
 		static_assert(index.indexes[0_c].d == 0);
@@ -217,7 +217,7 @@ int main(){
 			list, wrapped_type_ref_c< ambiguous_31, 1, 0, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, float, long > >(),
-				hana::make_tuple());
+				make_list_index< 3 >());
 		static_assert(!index);
 		static_assert(index.index_count == 0);
 	}
@@ -227,7 +227,7 @@ int main(){
 			list, wrapped_type_ref_c< ambiguous_31, 1, 0, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, float, long > >(),
-				hana::make_tuple(index_component< 2 >{3}));
+				make_list_index< 3 >(index_component< 2 >{3}));
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 0);
@@ -241,7 +241,7 @@ int main(){
 			list, wrapped_type_ref_c< ambiguous_32, 1, 0, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, float, long > >(),
-				hana::make_tuple(index_component< 2 >{3}));
+				make_list_index< 3 >(index_component< 2 >{3}));
 		static_assert(!index);
 		static_assert(index.index_count == 0);
 	}
@@ -251,7 +251,7 @@ int main(){
 			list, wrapped_type_ref_c< ambiguous_32, 1, 0, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, some_type, some_type > >(),
-				hana::make_tuple(
+				make_list_index< 3 >(
 					index_component< 2 >{2}, index_component< 0 >{2}));
 		static_assert(index);
 		static_assert(index.index_count == 1);
@@ -264,7 +264,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 1, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, long > >(),
-				hana::make_tuple(index_component< 0 >{0}));
+				make_list_index< 3 >(index_component< 0 >{0}));
 		static_assert(index);
 		static_assert(index.index_count == 2);
 		static_assert(index.indexes[0_c].d == 1);
@@ -278,7 +278,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 1, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, long > >(),
-				hana::make_tuple(
+				make_list_index< 3 >(
 					index_component< 0 >{0}, index_component< 2 >{2}));
 		static_assert(index);
 		static_assert(index.index_count == 1);
@@ -291,7 +291,7 @@ int main(){
 			list, wrapped_type_ref_c< morph, 1, 2 >};
 		constexpr auto index = solver.solve(
 				type_index::type_id< morph< bool, long > >(),
-				hana::make_tuple(
+				make_list_index< 3 >(
 					index_component< 0 >{0},
 					index_component< 1 >{0},
 					index_component< 2 >{0}));

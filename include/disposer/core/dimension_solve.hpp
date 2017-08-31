@@ -214,14 +214,25 @@ namespace disposer{
 
 		/// \brief Get all deducible dimensions when dimension KDs are already
 		///        known
-		template < std::size_t ... KDs >
+		template < bool ... KDs >
 		static constexpr auto solve(
 			type_index const& type_index,
-			hana::tuple< index_component< KDs > ... > const& known_indexes
+			partial_deduced_list_index< KDs ... > const& known_indexes
 		){
-			auto const kds = hana::filter(known_indexes, [](auto kd){
-					return hana::contains(
-						numbers.numbers, hana::size_c< kd.d >);
+			auto const kds = hana::transform(hana::filter(
+				hana::zip(known_indexes.ds, known_indexes.index),
+				[](auto const& pair){
+					auto const known = pair[hana::size_c< 1 >] == hana::nothing;
+					if constexpr(known){
+						return hana::false_c;
+					}else{
+						return hana::contains(numbers.numbers,
+							pair[hana::size_c< 0 >]);
+					}
+				}), [](auto const& pair){
+					auto const d = pair[hana::size_c< 0 >];
+					return index_component< std::size_t(d) >{
+						pair[hana::size_c< 1 >].value()};
 				});
 
 			auto const known_dims = hana::transform(kds,
