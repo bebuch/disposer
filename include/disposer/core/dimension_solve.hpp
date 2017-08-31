@@ -9,12 +9,13 @@
 #ifndef _disposer__core__dimension_solve__hpp_INCLUDED_
 #define _disposer__core__dimension_solve__hpp_INCLUDED_
 
-#include "dimension_numbers.hpp"
+#include "dimension_referrer.hpp"
 
 #include "../tool/type_index.hpp"
 
 #include <boost/hana/remove_at.hpp>
 #include <boost/hana/remove_if.hpp>
+#include <boost/hana/not_equal.hpp>
 #include <boost/hana/all.hpp>
 
 
@@ -204,6 +205,13 @@ namespace disposer{
 
 
 	public:
+		/// \brief Constructor
+		template < typename ... Dimension >
+		constexpr dimension_solver(
+			dimension_list< Dimension ... >,
+			dimension_referrer< Template, Ds ... >
+		) {}
+
 		/// \brief Get all deducible dimensions when dimension KDs are already
 		///        known
 		template < std::size_t ... KDs >
@@ -211,15 +219,27 @@ namespace disposer{
 			type_index const& type_index,
 			hana::tuple< index_component< KDs > ... > const& known_indexes
 		){
-			if constexpr(is_deducible< KDs ... >){
-				constexpr auto kds = hana::tuple_c< std::size_t, KDs ... >;
-				constexpr auto unknown_dims = hana::remove_if(numbers.packed,
-					[kds](auto d){ return hana::contains(kds, d); });
+			auto const kds = hana::filter(known_indexes, [](auto kd){
+					return hana::contains(
+						numbers.numbers, hana::size_c< kd.d >);
+				});
 
+			auto const known_dims = hana::transform(kds,
+				[](auto kd){ return hana::size_c< kd.d >; });
+
+			auto const unknown_dims = hana::filter(numbers.packed,
+				[known_dims](auto d){ return !hana::contains(known_dims, d); });
+
+			auto const has_unknown_dims = !hana::is_empty(unknown_dims);
+
+			auto const is_deducible_c = hana::unpack(known_dims,
+				[](auto ... kd){ return is_deducible< std::size_t(kd) ... >; });
+
+			if constexpr(has_unknown_dims && is_deducible_c){
 				return hana::unpack(unknown_dims,
-					[type_index, known_indexes](auto ... ds){
+					[type_index, &kds](auto ... ds){
 						return solved_dimensions{
-								deduce_index(ds, type_index, known_indexes) ...
+								deduce_index(ds, type_index, kds) ...
 							};
 					});
 			}else{
@@ -228,6 +248,15 @@ namespace disposer{
 		}
 	};
 
+
+	template <
+		typename ... Dimension,
+		template < typename ... > typename Template,
+		std::size_t ... Ds >
+	dimension_solver(
+		dimension_list< Dimension ... >,
+		dimension_referrer< Template, Ds ... >
+	) -> dimension_solver< dimension_list< Dimension ... >, Template, Ds ... >;
 
 
 }

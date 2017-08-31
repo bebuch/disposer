@@ -219,6 +219,34 @@ namespace disposer{
 
 
 	template <
+		typename Name,
+		typename DimensionConverter,
+		bool IsRequired,
+		typename ... Ds,
+		bool ... KDs,
+		typename State >
+	auto make_data(
+		input_maker< Name, DimensionConverter, IsRequired >,
+		dimension_list< Ds ... >,
+		partial_deduced_list_index< KDs ... > const& old_dims,
+		State&& state
+	){
+		auto const dims = [&old_dims](){
+				if constexpr(IsRequired){
+					constexpr dimension_solver solver(
+						dimension_list< Ds ... >{}, DimensionConverter{});
+					return partial_deduced_list_index(
+						old_dims, solver::solve());
+				}else{
+					return old_dims;
+				}
+			}();
+
+
+	}
+
+
+	template <
 		typename ... Dimension,
 		typename ... Config >
 	auto make_module_make_data(
@@ -226,8 +254,11 @@ namespace disposer{
 		module_configure< Config ... > const& configs,
 		module_make_data const& data
 	){
-		return hana::transform(configs, [](auto const& config){
-
+		return hana::fold(configs,
+			undeduced_list_index_c< sizeof...(Dimension) >,
+			[](auto&& state, auto const& config){
+				return make_data(config,
+					static_cast< decltype(state)&& >(state));
 			});
 	};
 
