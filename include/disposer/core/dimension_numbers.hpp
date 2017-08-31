@@ -23,6 +23,8 @@
 namespace disposer{
 
 
+	/// \brief Converts between a list of dimension numbers an its packed index
+	///        correspondence
 	template < std::size_t ... Ds >
 	struct dimension_numbers{
 		/// \brief All dimension numbers in the defined order
@@ -59,15 +61,21 @@ namespace disposer{
 	};
 
 
+	/// \brief Contains deduced dimension index components, derived from
+	///        hana::true_ if at least one dimension is deduced, otherwise
+	///        hana::false_
 	template < std::size_t ... Ds >
 	struct solved_dimensions:
 		std::conditional_t< (sizeof...(Ds) > 0), hana::true_, hana::false_ >
 	{
+		/// \brief Count of deduced dimension index components
 		static constexpr std::size_t index_count = sizeof...(Ds);
 
+		/// \brief Constructor
 		constexpr solved_dimensions(index_component< Ds > ... is)
 			: indexes(is ...) {}
 
+		/// \brief Tuple of the deduced index components
 		hana::tuple< index_component< Ds > ... > indexes;
 	};
 
@@ -134,15 +142,6 @@ namespace disposer{
 				[](auto ds){ return !hana::tuple_c< bool, ODKs ... >[ds]; }));
 #endif
 		}
-
-// 		/// \brief Construct by the old state and some solved dimensions
-// 		template < bool ... ODKs, std::size_t ... Ds >
-// 		constexpr partial_deduced_list_index(
-// 			partial_deduced_list_index< ODKs ... > const& old,
-// 			solved_dimensions< Ds ... > const& solved
-// 		): partial_deduced_list_index{
-// 			std::make_index_sequence< sizeof...(ODKs) >(), old, solved} {}
-
 	};
 
 
