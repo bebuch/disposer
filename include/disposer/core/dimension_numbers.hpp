@@ -18,6 +18,7 @@
 #include <boost/hana/zip.hpp>
 #include <boost/hana/sort.hpp>
 #include <boost/hana/replicate.hpp>
+#include <boost/hana/not_equal.hpp>
 
 #include <unordered_set>
 
@@ -187,7 +188,7 @@ namespace disposer{
 			partial_deduced_list_index< DKs ... > const& list_index,
 			hana::size_t< D > d
 		){
-			auto const& i = list_index[d];
+			auto const& i = list_index.index[d];
 			auto const is_deduced = i != hana::nothing;
 			static_assert(is_deduced, "dimension number D is not deduced yet");
 			return i.value();
@@ -200,9 +201,16 @@ namespace disposer{
 		constexpr packed_index(
 			partial_deduced_list_index< DKs ... > list_index,
 			hana::tuple< hana::size_t< Ds > ... >)
-		: std::array< std::size_t, PackedDimCount >{{
-				get(list_index, hana::size_c< Ds >) ...
-			}} {}
+			: std::array< std::size_t, PackedDimCount >{{
+					get(list_index, hana::size_c< Ds >) ...
+				}} {}
+
+		/// \brief Construction by a indexes
+		///
+		/// Requirement:  Ds must be sorted and unique
+		template < std::size_t ... Is >
+		constexpr packed_index(hana::tuple< hana::size_t< Is > ... >)
+			: std::array< std::size_t, PackedDimCount >{{Is ...}} {}
 	};
 
 	/// \brief Template duduction guide
@@ -210,6 +218,10 @@ namespace disposer{
 	packed_index(partial_deduced_list_index< DKs ... >,
 		hana::tuple< hana::size_t< Ds > ... >
 	) -> packed_index< sizeof...(Ds) >;
+
+	template < std::size_t ... Is >
+	packed_index(hana::tuple< hana::size_t< Is > ... >)
+		-> packed_index< sizeof...(Is) >;
 
 
 	/// \brief Converts between packed indexes and corresponding types
@@ -283,8 +295,10 @@ namespace disposer{
 					return hana::make_pair(index, type_index::type_id<
 						typename decltype(value_type_of(index))::type >());
 				}), [](auto&& ... entry){
-					return std::map{
-						{hana::first(entry), hana::second(entry)} ...};
+					return std::map< packed_index<
+							dimension_numbers< Ds ... >::packed_count >,
+							type_index
+						>{{hana::first(entry), hana::second(entry)} ...};
 				});
 
 

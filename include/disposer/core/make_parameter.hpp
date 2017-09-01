@@ -10,68 +10,17 @@
 #define _disposer__core__make_parameter__hpp_INCLUDED_
 
 #include "parameter_name.hpp"
-#include "dimension_converter.hpp"
+#include "dimension_referrer.hpp"
+
+#include "../config/module_make_data.hpp"
+
+#include <variant>
 
 
 namespace disposer{
 
 
-	template < typename Name, typename Type >
-	struct parameter_construct_data{
-		static constexpr auto log_name = "parameter"sv;
-
-		parameter_construct_data(Type&& value)noexcept
-			: value(std::move(value)) {}
-
-		Type value;
-	};
-
-
-	template < typename ... Ts >
-	constexpr auto parameter_variant_type(hana::tuple< Ts ... >)noexcept{
-		return hana::type_c< std::variant< parameter_construct_data<
-			Name, typename Ts::type > ... > >;
-	}
-
-	template < typename Name, typename Types >
-	using parameter_variant = typename
-		decltype(parameter_variant_type< Name >(Types{}))::type;
-
-	template <
-		typename Name,
-		typename DimensionConverter,
-		typename ... Ds,
-		bool ... KDs,
-		typename ... Ts >
-	auto make_data(
-		output_maker< Name, DimensionConverter >,
-		dimension_list< Ds ... >,
-		module_make_data const& data,
-		partial_deduced_list_index< KDs ... > const& dims,
-		hana::tuple< Ts ... >&& previous_makers
-	){
-		using result_type =
-			parameter_variant< Name, DimensionConverter::types >;
-
-		auto const active_type =
-			DimensionConverter::packed_index_to_type_index.at(dims);
-
-		auto const use_count = get_use_count(data.outputs,
-			to_std_string_view(Name));
-
-		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
-			[](auto ... t){
-				return std::unordered_map{{
-					type_index::type_id(type),
-					[](std::size_t use_count){
-						return output_construct_data< Name, typename
-							decltype(t)::type >{use_count};
-					}} ...};
-			});
-
-		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
-			result_type(type_to_data[active_type](use_count))));
-	}
+	using namespace std::literals::string_view_literals;
 
 
 	/// \brief Provid types for constructing an parameter
@@ -102,23 +51,23 @@ namespace disposer{
 		typename DefaultValueFn >
 	constexpr auto create_parameter_maker(
 		parameter_name< C ... >,
-		dimension_converter< Template, D ... > const&,
+		dimension_referrer< Template, D ... > const&,
 		dimension_dependancy< VD ... > const&,
 		parser_fn< ParserFn >&& parser,
 		default_value_fn< DefaultValueFn >&& default_value_generator
 	){
-		// Check that dimension_converter and dimension_dependancy are
+		// Check that dimension_referrer and dimension_dependancy are
 		// independent
 		constexpr auto ds = hana::tuple_c< D ... >;
 		auto const is_independent = hana::all_of(hana::tuple_c< VD ... >,
 			[](auto vd){ return !hana::contains(ds, vd); });
 		static_assert(is_independent,
 			"dimension_dependancy must not contain any dimension which is "
-			"already contained in the dimension_converter");
+			"already contained in the dimension_referrer");
 
 		return parameter_maker<
 				output_name< C ... >,
-				dimension_converter< Template, D ... >,
+				dimension_referrer< Template, D ... >,
 				dimension_dependancy< VD ... >,
 				ParserFn,
 				DefaultValueFn
@@ -137,7 +86,7 @@ namespace disposer{
 		typename ... Args >
 	constexpr auto make(
 		parameter_name< C ... >,
-		dimension_converter< Template, D ... > const&,
+		dimension_referrer< Template, D ... > const&,
 		Args&& ... args
 	){
 		detail::validate_arguments< dimension_dependancy_tag, parser_fn_tag,
@@ -158,6 +107,64 @@ namespace disposer{
 				hana::is_a< default_value_fn_tag >,
 				auto_default))
 		);
+	}
+
+
+	template < typename Name, typename Type >
+	struct parameter_construct_data{
+		static constexpr auto log_name = "parameter"sv;
+
+		parameter_construct_data(Type&& value)noexcept
+			: value(std::move(value)) {}
+
+		Type value;
+	};
+
+
+	template < typename ... Ts >
+	constexpr auto parameter_variant_type(hana::tuple< Ts ... >)noexcept{
+		return hana::type_c< std::variant< parameter_construct_data<
+			Name, typename Ts::type > ... > >;
+	}
+
+	template < typename Name, typename Types >
+	using parameter_variant = typename
+		decltype(parameter_variant_type< Name >(Types{}))::type;
+
+	template <
+		typename Name,
+		typename DimensionConverter,
+		typename ... Ds,
+		bool ... KDs,
+		typename ... Ts >
+	auto make_construct_data(
+		output_maker< Name, DimensionConverter >,
+		dimension_list< Ds ... >,
+		module_make_data const& data,
+		partial_deduced_list_index< KDs ... > const& dims,
+		hana::tuple< Ts ... >&& previous_makers
+	){
+		using result_type =
+			parameter_variant< Name, decltype(DimensionConverter::types) >;
+
+		auto const active_type =
+			DimensionConverter::packed_index_to_type_index.at(dims);
+
+		auto const use_count = get_use_count(data.outputs,
+			to_std_string_view(Name{}));
+
+		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
+			[](auto ... t){
+				return std::unordered_map{{
+					type_index::type_id< typename decltype(t)::type >(),
+					[](std::size_t use_count){
+						return output_construct_data< Name, typename
+							decltype(t)::type >{use_count};
+					}} ...};
+			});
+
+		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
+			result_type(type_to_data[active_type](use_count))));
 	}
 
 

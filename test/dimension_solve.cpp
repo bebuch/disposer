@@ -19,7 +19,6 @@ int main(){
 	using namespace disposer;
 	using namespace hana::literals;
 
-	// wrap_type_ref_in_t
 	auto list = dimension_list{
 			dimension_c< double, char, float >,
 			dimension_c< int, bool >,

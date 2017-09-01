@@ -9,11 +9,46 @@
 #ifndef _disposer__core__make_output__hpp_INCLUDED_
 #define _disposer__core__make_output__hpp_INCLUDED_
 
-#include "input_name.hpp"
-#include "dimension_converter.hpp"
+#include "output_name.hpp"
+#include "dimension_referrer.hpp"
+
+#include "../config/module_make_data.hpp"
+
+#include "../tool/to_std_string_view.hpp"
+
+#include <variant>
+#include <unordered_map>
 
 
 namespace disposer{
+
+
+	using namespace std::literals::string_view_literals;
+
+
+	/// \brief Provid types for constructing an output
+	template <
+		typename Name,
+		typename DimensionConverter >
+	struct output_maker{
+		/// \brief Tag for boost::hana
+		using hana_tag = output_maker_tag;
+	};
+
+
+	/// \brief Creates a \ref output_maker object
+	template <
+		char ... C,
+		template < typename ... > typename Template,
+		std::size_t ... D >
+	constexpr auto make(
+		output_name< C ... > const&,
+		dimension_referrer< Template, D ... > const&
+	){
+		return output_maker<
+			output_name< C ... >,
+			dimension_referrer< Template, D ... > >{};
+	}
 
 
 	inline std::size_t get_use_count(
@@ -51,58 +86,42 @@ namespace disposer{
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
-	auto make_data(
+	auto make_construct_data(
 		output_maker< Name, DimensionConverter >,
 		dimension_list< Ds ... >,
 		module_make_data const& data,
 		partial_deduced_list_index< KDs ... > const& dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
-		using result_type = output_variant< Name, DimensionConverter::types >;
+		auto constexpr converter =
+			DimensionConverter::template convert< dimension_list< Ds ... > >;
+		using result_type = output_variant< Name, decltype(converter.types) >;
 
-		auto const active_type =
-			DimensionConverter::packed_index_to_type_index.at(dims);
+		auto const active_type = converter.packed_index_to_type_index.at(
+			packed_index{dims, converter.numbers.numbers});
 
 		auto const use_count = get_use_count(data.outputs,
-			to_std_string_view(Name));
+			detail::to_std_string_view(Name{}));
 
-		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
-			[](auto ... t){
-				return std::unordered_map{{
-					type_index::type_id(type),
-					[](std::size_t use_count){
-						return output_construct_data< Name, typename
-							decltype(t)::type >{use_count};
-					}} ...};
+		auto const make_fn = [](auto t){
+				return [](std::size_t use_count)->result_type{
+					return output_construct_data< Name, typename
+						decltype(t)::type >{use_count};
+				};
+			};
+
+		auto const type_to_data = hana::unpack(converter.types,
+			[make_fn](auto ... t){
+				return std::unordered_map<
+						type_index, result_type(*)(std::size_t)
+					>{{
+						type_index::type_id< typename decltype(t)::type >(),
+						make_fn(t)
+					} ...};
 			});
 
-		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
-			result_type(type_to_data[active_type](use_count))));
-	}
-
-
-	/// \brief Provid types for constructing an output
-	template <
-		typename Name,
-		typename DimensionConverter >
-	struct output_maker{
-		/// \brief Tag for boost::hana
-		using hana_tag = output_maker_tag;
-	};
-
-
-	/// \brief Creates a \ref output_maker object
-	template <
-		char ... C,
-		template < typename ... > typename Template,
-		std::size_t ... D >
-	constexpr auto make(
-		output_name< C ... > const&,
-		dimension_converter< Template, D ... > const&
-	){
-		return output_maker<
-			output_name< C ... >,
-			dimension_converter< Template, D ... > >{};
+		return hana::append(std::move(previous_makers), hana::make_pair(dims,
+			type_to_data.at(active_type)(use_count)));
 	}
 
 

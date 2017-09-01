@@ -1,6 +1,6 @@
-#include <disposer/core/output_maker.hpp>
-#include <disposer/core/accessory.hpp>
+#include <disposer/core/make_output.hpp>
 
+#include <iostream>
 #include <iomanip>
 
 
@@ -36,121 +36,29 @@ using namespace std::literals::string_view_literals;
 
 using disposer::make;
 
-constexpr auto types = hana::tuple_t< int, float >;
-constexpr auto types_set = hana::to_set(types);
-
 
 int main(){
+	using namespace disposer;
 	using hana::type_c;
 
-	std::size_t ct = 0;
+// 	std::size_t ct = 0;
 	std::size_t error_count = 0;
 
-	auto iop_list = hana::make_tuple();
-	auto make_data = [&iop_list](auto const& maker){
-		auto make_data = disposer::output_make_data(maker, 0);
-		disposer::iops_make_data data(
-				std::move(make_data), "location"sv, iop_list
-			);
+	auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >,
+			dimension_c< short, unsigned, long, long long >
+		};
 
-		return data;
-	};
+	auto const data = module_make_data{};
 
 	try{
 		{
-			constexpr auto maker = make("v"_out, hana::type_c< int >);
-
-			static_assert(std::is_same_v< decltype(maker),
-				disposer::output_maker<
-					disposer::output< decltype("v"_out),
-						disposer::none, int >,
-					disposer::enable_always_t
-				> const >);
-
-			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(make_data(maker));
-
-			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out),
-					disposer::none, int > >);
-
-// 			object.put(0);
-
-			error_count = check(ct++,
-				static_cast< disposer::output_base const& >(object)
-					.enabled_types(),
-				{
-					{ type_index::type_id< int >(), true }
-				});
-
-			error_count = check(ct++, object.is_enabled(), true);
-			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-		}
-
-		{
-			constexpr auto maker = make("v"_out, types);
-
-			static_assert(std::is_same_v< decltype(maker),
-				disposer::output_maker<
-					disposer::output< decltype("v"_out),
-						disposer::none, int, float >,
-					disposer::enable_always_t
-				> const >);
-
-			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(make_data(maker));
-
-			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out),
-					disposer::none, int, float > >);
-
-// 			object.put(3);
-// 			object.put(3.f);
-
-			error_count = check(ct++,
-				static_cast< disposer::output_base const& >(object)
-					.enabled_types(),
-				{
-					{ type_index::type_id< int >(), true },
-					{ type_index::type_id< float >(), true }
-				});
-
-			error_count = check(ct++, object.is_enabled(), true);
-			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-			error_count = check(ct++, object.is_enabled(type_c< float >), true);
-		}
-
-		{
-			constexpr auto maker = make("v"_out, types_set);
-
-			static_assert(std::is_same_v< decltype(maker),
-				disposer::output_maker<
-					disposer::output< decltype("v"_out),
-						disposer::none, int, float >,
-					disposer::enable_always_t
-				> const >);
-
-			using type = decltype(hana::typeid_(maker))::type::type;
-			type object(make_data(maker));
-
-			static_assert(std::is_same_v< decltype(object),
-				disposer::output< decltype("v"_out),
-					disposer::none, int, float > >);
-
-// 			object.put(3);
-// 			object.put(3.f);
-
-			error_count = check(ct++,
-				static_cast< disposer::output_base const& >(object)
-					.enabled_types(),
-				{
-					{ type_index::type_id< int >(), true },
-					{ type_index::type_id< float >(), true }
-				});
-
-			error_count = check(ct++, object.is_enabled(), true);
-			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-			error_count = check(ct++, object.is_enabled(type_c< float >), true);
+			constexpr auto maker = make("v"_out, type_ref_c< 0 >);
+			auto construct_data = make_construct_data(maker, list, data,
+				make_list_index< 3 >(index_component< 0 >{0}),
+				hana::make_tuple());
+			(void)construct_data;
 		}
 
 		if(error_count == 0){

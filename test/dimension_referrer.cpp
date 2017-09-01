@@ -7,7 +7,6 @@ template < typename ... T > struct morph{};
 int main(){
 	using namespace disposer;
 
-	// wrap_type_ref_in_t
 	auto list = dimension_list{
 			dimension_c< double, char, float >,
 			dimension_c< int, bool >

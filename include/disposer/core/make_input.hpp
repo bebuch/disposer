@@ -10,10 +10,67 @@
 #define _disposer__core__make_input__hpp_INCLUDED_
 
 #include "input_name.hpp"
-#include "dimension_converter.hpp"
+#include "dimension_referrer.hpp"
+
+#include "../config/module_make_data.hpp"
+
+#include <variant>
 
 
 namespace disposer{
+
+
+	using namespace std::literals::string_view_literals;
+
+
+	/// \brief Provids types for constructing an input
+	template <
+		typename Name,
+		typename DimensionConverter,
+		bool IsRequired >
+	struct input_maker{
+		/// \brief Tag for boost::hana
+		using hana_tag = input_maker_tag;
+	};
+
+
+	/// \brief Configuration class for inputs
+	template < bool IsRequired >
+	struct is_required: std::bool_constant< IsRequired >{};
+
+	/// \brief Used as make-function argument of inputs
+	constexpr auto required = is_required< true >{};
+
+	/// \brief Used as make-function argument of inputs
+	constexpr auto not_required = is_required< false >{};
+
+
+	/// \brief Creates a \ref input_maker object
+	template <
+		char ... C
+		template < typename ... > typename Template,
+		std::size_t ... D,
+		bool IsRequired = true >
+	constexpr auto make(
+		input_name< C ... > const&,
+		dimension_referrer< Template, D ... > const&,
+		is_required< IsRequired > = required
+	){
+		return input_maker<
+			input_name< C ... >,
+			dimension_referrer< Template, D ... >,
+			IsRequired >{};
+	}
+
+
+	/// \brief Make data for a required input with known type
+	template < typename Name, typename T >
+	struct final_input_make_data{
+		output_make_data* output;
+
+		template < std::size_t D >
+		get_dimension()
+	};
 
 
 	inline output_base* get_output_ptr(
@@ -59,18 +116,18 @@ namespace disposer{
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
-	auto make_data(
+	auto make_construct_data(
 		input_maker< Name, DimensionConverter, IsRequired >,
 		dimension_list< Ds ... >,
 		module_make_data const& data,
 		partial_deduced_list_index< KDs ... > const& old_dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
-		using result_type =
-			input_variant< Name, IsRequired, DimensionConverter::types >;
+		using result_type = input_variant< Name, IsRequired,
+			decltype(DimensionConverter::types) >;
 
 		auto const output_ptr = get_output_ptr(data.inputs,
-			to_std_string_view(Name));
+			to_std_string_view(Name{}));
 
 		if(IsRequired || output_ptr != nullptr){
 			auto const iter = DimensionConverter::type_indexes.find(
@@ -99,7 +156,7 @@ namespace disposer{
 		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
 			[](auto ... t){
 				return std::unordered_map{{
-					type_index::type_id(type),
+					type_index::type_id< typename decltype(t)::type >(),
 					[](output_base* output_ptr){
 						return input_construct_data< Name, typename
 							decltype(t)::type, IsRequired >{output_ptr};
@@ -109,58 +166,6 @@ namespace disposer{
 		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
 			result_type(type_to_data[output_ptr->type()](output_ptr))));
 	}
-
-
-
-	/// \brief Provids types for constructing an input
-	template <
-		typename Name,
-		typename DimensionConverter,
-		bool IsRequired >
-	struct input_maker{
-		/// \brief Tag for boost::hana
-		using hana_tag = input_maker_tag;
-	};
-
-
-	/// \brief Configuration class for inputs
-	template < bool IsRequired >
-	struct is_required: std::bool_constant< IsRequired >{};
-
-	/// \brief Used as make-function argument of inputs
-	constexpr auto required = is_required< true >{};
-
-	/// \brief Used as make-function argument of inputs
-	constexpr auto not_required = is_required< false >{};
-
-
-	/// \brief Creates a \ref input_maker object
-	template <
-		char ... C
-		template < typename ... > typename Template,
-		std::size_t ... D,
-		bool IsRequired = true >
-	constexpr auto make(
-		input_name< C ... > const&,
-		dimension_converter< Template, D ... > const&,
-		is_required< IsRequired > = required
-	){
-		return input_maker<
-			input_name< C ... >,
-			dimension_converter< Template, D ... >,
-			IsRequired >{};
-	}
-
-
-	/// \brief Make data for a required input with known type
-	template < typename Name, typename T >
-	struct final_input_make_data{
-		output_make_data* output;
-
-		template < std::size_t D >
-		get_dimension()
-	};
-
 
 
 }
