@@ -19,6 +19,8 @@
 #include <boost/hana/sort.hpp>
 #include <boost/hana/replicate.hpp>
 
+#include <unordered_set>
+
 
 namespace disposer{
 
@@ -246,12 +248,26 @@ namespace disposer{
 				hana::cartesian_product(ranges),
 				[](auto index){ return value_type_of(index); })));
 
+		/// \brief Unique list of all possible type indexes
+		static std::unordered_set< type_index > const type_indexes;
+
 		/// \brief Map from packed index to index in types
 		static std::map<
 			packed_index< dimension_numbers< Ds ... >::packed_count >,
-			std::size_t > const packed_index_to_types_index;
+			type_index > const packed_index_to_type_index;
 	};
 
+	template <
+		typename DimensionList,
+		template < typename ... > typename Template,
+		std::size_t ... Ds >
+	std::unordered_set< type_index > const
+		dimension_converter< DimensionList, Template, Ds ... >::type_indexes =
+			hana::unpack(types, [](auto ... type){
+					return std::unordered_set{
+						type_index::type_id< typename decltype(type)::type >()
+						...};
+				});
 
 	template <
 		typename DimensionList,
@@ -259,13 +275,13 @@ namespace disposer{
 		std::size_t ... Ds >
 	std::map<
 			packed_index< dimension_numbers< Ds ... >::packed_count >,
-			std::size_t
+			type_index
 		> const dimension_converter< DimensionList, Template, Ds ... >
-		::packed_index_to_types_index =
+		::packed_index_to_type_index =
 			hana::unpack(hana::transform(hana::cartesian_product(ranges),
 				[](auto index){
-					return hana::make_pair(index, hana::index_if(types,
-						hana::equal.to(value_type_of(index)))).value();
+					return hana::make_pair(index, type_index::type_id<
+						typename decltype(value_type_of(index))::type >());
 				}), [](auto&& ... entry){
 					return std::map{
 						{hana::first(entry), hana::second(entry)} ...};

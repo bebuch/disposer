@@ -40,127 +40,6 @@ namespace disposer{
 
 	using namespace std::literals::string_view_literals;
 
-	template < typename Name, typename Type, bool IsRequired >
-	struct input_make_data{
-		static constexpr auto log_name = "input"sv;
-
-		input_make_data(output_base* const output)noexcept
-			: output(output){}
-
-		output_base* const output;
-	};
-
-	template < typename Name, typename Type >
-	struct output_make_data{
-		static constexpr auto log_name = "output"sv;
-
-		output_make_data(std::size_t use_count)noexcept
-			: use_count(use_count) {}
-
-		std::size_t const use_count;
-	};
-
-	template < typename Name, typename Type >
-	struct parameter_make_data{
-		static constexpr auto log_name = "parameter"sv;
-
-		parameter_make_data(Type&& value)noexcept
-			: value(std::move(value)) {}
-
-		Type value;
-	};
-
-
-	auto inline get_use_count(
-		output_list const& outputs,
-		std::string const& name
-	){
-		auto const iter = outputs.find(name);
-		return iter != outputs.end() ? iter->second : 0;
-	}
-
-	template < typename Maker >
-	auto make_parameter_value_map(
-		std::string_view location,
-		Maker const& maker,
-		parameter_list const& params
-	){
-		auto const name = detail::to_std_string(maker.name);
-		auto const iter = params.find(name);
-		auto const found = iter != params.end();
-
-		bool all_specialized = true;
-
-		auto get_value =
-			[&location, &all_specialized, &maker, found, name, iter](auto type)
-			-> std::optional< std::string_view >
-		{
-			if(!found) return {};
-
-			auto const specialization = iter->second
-				.specialized_values.find(
-					detail::to_std_string(maker.to_text[type]));
-			auto const end =
-				iter->second.specialized_values.end();
-			if(specialization == end){
-				all_specialized = false;
-				if(!iter->second.generic_value){
-					throw std::logic_error(
-						std::string(location) + "parameter("
-						+ name + ") has neither a "
-						"generic value but a specialization "
-						"for type '" + specialization->first
-						+ "'"
-					);
-				}else{
-					return {*iter->second.generic_value};
-				}
-			}else{
-				return {specialization->second};
-			}
-		};
-
-		auto result = hana::to_map(hana::transform(
-			maker.types,
-			[&get_value](auto type){
-				return hana::make_pair(type, get_value(type));
-			}));
-
-		if(found && all_specialized && iter->second.generic_value){
-			logsys::log([&location, name](logsys::stdlogb& os){
-				os << location << "parameter("
-					<< name << ") has specialized values for "
-					"all its types, the also given generic "
-					"value will never be used (WARNING)";
-			});
-		}
-
-		return result;
-	}
-
-
-	template < typename Maker, typename MakeData >
-	auto iop_make_data(
-		Maker const& maker,
-		MakeData const& data,
-		std::string_view location
-	){
-		(void)location; // Silance GCC ...
-
-		if constexpr(hana::is_a< input_maker_tag, Maker >()){
-			return input_make_data(maker, make_output_info(data.inputs,
-				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< output_maker_tag, Maker >()){
-			return output_make_data(maker, get_use_count(data.outputs,
-				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< parameter_maker_tag, Maker >()){
-			return parameter_make_data(maker,
-				make_parameter_value_map(location, maker, data.parameters));
-		}else{
-			static_assert(detail::false_c< Maker >,
-				"maker is not an iop (this is a bug in disposer!)");
-		}
-	}
 
 	template < typename IOP_RefList >
 	class iops_accessory: public add_log< iops_accessory< IOP_RefList > >{
@@ -218,48 +97,21 @@ namespace disposer{
 	};
 
 
-	template <
-		typename Name,
-		typename DimensionConverter,
-		bool IsRequired,
-		typename ... Ds,
-		bool ... KDs,
-		typename State >
-	auto make_data(
-		input_maker< Name, DimensionConverter, IsRequired >,
-		dimension_list< Ds ... >,
-		partial_deduced_list_index< KDs ... > const& old_dims,
-		State&& state
-	){
-		auto const dims = [&old_dims](){
-				if constexpr(IsRequired){
-					constexpr dimension_solver solver(
-						dimension_list< Ds ... >{}, DimensionConverter{});
-					return partial_deduced_list_index(
-						old_dims, solver::solve());
-				}else{
-					return old_dims;
-				}
-			}();
-
-		return
-	}
-
-
-	template <
-		typename ... Dimension,
-		typename ... Config >
+	template < typename ... Dimension, typename ... Config >
 	auto make_module_make_data(
-		dimension_list< Dimension ... > const& dims,
+		dimension_list< Dimension ... >,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data
 	){
-		return hana::fold(configs,
-			undeduced_list_index_c< sizeof...(Dimension) >,
+		return hana::fold(configs, hana::make_pair(
+				undeduced_list_index_c< sizeof...(Dimension) >,
+				hana::make_tuple()),
 			[](auto&& state, auto const& config){
-				return make_data(config,
-					static_cast< decltype(state)&& >(state));
-			});
+				return make_data(config, dimension_list< Dimension ... >{},
+					data,
+					hana::first(static_cast< decltype(state)&& >(state))
+					hana::second(static_cast< decltype(state)&& >(state)));
+			})
 	};
 
 

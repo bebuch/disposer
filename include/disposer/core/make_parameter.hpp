@@ -16,6 +16,64 @@
 namespace disposer{
 
 
+	template < typename Name, typename Type >
+	struct parameter_construct_data{
+		static constexpr auto log_name = "parameter"sv;
+
+		parameter_construct_data(Type&& value)noexcept
+			: value(std::move(value)) {}
+
+		Type value;
+	};
+
+
+	template < typename ... Ts >
+	constexpr auto parameter_variant_type(hana::tuple< Ts ... >)noexcept{
+		return hana::type_c< std::variant< parameter_construct_data<
+			Name, typename Ts::type > ... > >;
+	}
+
+	template < typename Name, typename Types >
+	using parameter_variant = typename
+		decltype(parameter_variant_type< Name >(Types{}))::type;
+
+	template <
+		typename Name,
+		typename DimensionConverter,
+		typename ... Ds,
+		bool ... KDs,
+		typename ... Ts >
+	auto make_data(
+		output_maker< Name, DimensionConverter >,
+		dimension_list< Ds ... >,
+		module_make_data const& data,
+		partial_deduced_list_index< KDs ... > const& dims,
+		hana::tuple< Ts ... >&& previous_makers
+	){
+		using result_type =
+			parameter_variant< Name, DimensionConverter::types >;
+
+		auto const active_type =
+			DimensionConverter::packed_index_to_type_index.at(dims);
+
+		auto const use_count = get_use_count(data.outputs,
+			to_std_string_view(Name));
+
+		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
+			[](auto ... t){
+				return std::unordered_map{{
+					type_index::type_id(type),
+					[](std::size_t use_count){
+						return output_construct_data< Name, typename
+							decltype(t)::type >{use_count};
+					}} ...};
+			});
+
+		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
+			result_type(type_to_data[active_type](use_count))));
+	}
+
+
 	/// \brief Provid types for constructing an parameter
 	template <
 		typename Name,
