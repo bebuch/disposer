@@ -203,6 +203,16 @@ namespace disposer{
 				});
 		}
 
+		/// \brief Provided to print a compile time error with the relevant
+		///        information
+		template < typename Name, std::size_t ... KDs >
+		static constexpr void can_not_deduce_dimensions(){
+			static_assert(sizeof...(KDs) == 0,
+				"Unknown dimensions KDs can't be deduced by input. Please "
+				"provide a set_dimension_fn before the input to provide them "
+				"manuelly.");
+		}
+
 
 	public:
 		/// \brief Constructor
@@ -214,8 +224,9 @@ namespace disposer{
 
 		/// \brief Get all deducible dimensions when dimension KDs are already
 		///        known
-		template < bool ... KDs >
+		template < typename Name, bool ... KDs >
 		static constexpr auto solve(
+			Name const&,
 			type_index const& type_index,
 			partial_deduced_list_index< KDs ... > const& known_indexes
 		){
@@ -243,18 +254,27 @@ namespace disposer{
 
 			auto const has_unknown_dims = !hana::is_empty(unknown_dims);
 
-			auto const is_deducible_c = hana::unpack(known_dims,
-				[](auto ... kd){ return is_deducible< std::size_t(kd) ... >; });
-
-			if constexpr(has_unknown_dims && is_deducible_c){
-				return hana::unpack(unknown_dims,
-					[type_index, &kds](auto ... ds){
-						return solved_dimensions{
-								deduce_index(ds, type_index, kds) ...
-							};
-					});
-			}else{
+			if constexpr(!has_unknown_dims){
 				return solved_dimensions{};
+			}else{
+				auto const is_deducible_c = hana::unpack(known_dims,
+					[](auto ... kd){
+						return is_deducible< std::size_t(kd) ... >;
+					});
+
+				if constexpr(is_deducible_c){
+					return hana::unpack(unknown_dims,
+						[type_index, &kds](auto ... ds){
+							return solved_dimensions{
+									deduce_index(ds, type_index, kds) ...
+								};
+						});
+				}else{
+					hana::unpack(unknown_dims, [](auto ... ds){
+							can_not_deduce_dimensions
+								< Name, std::size_t(ds) ... >();
+						});
+				}
 			}
 		}
 	};
