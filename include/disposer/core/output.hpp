@@ -43,9 +43,9 @@ namespace disposer{
 
 
 	private:
-		/// \brief Get a type_index of type T
-		type_index type()const override{
-			return type_index< T >;
+		/// \brief Type index of the output type
+		virtual type_index get_type()const override{
+			return type_index::type_id< T >();
 		}
 	};
 

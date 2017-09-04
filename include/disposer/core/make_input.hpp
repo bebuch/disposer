@@ -10,11 +10,15 @@
 #define _disposer__core__make_input__hpp_INCLUDED_
 
 #include "input_name.hpp"
-#include "dimension_referrer.hpp"
+#include "dimension_solve.hpp"
+#include "output_base.hpp"
 
 #include "../config/module_make_data.hpp"
 
+#include "../tool/to_std_string_view.hpp"
+
 #include <variant>
+#include <unordered_map>
 
 
 namespace disposer{
@@ -47,7 +51,7 @@ namespace disposer{
 
 	/// \brief Creates a \ref input_maker object
 	template <
-		char ... C
+		char ... C,
 		template < typename ... > typename Template,
 		std::size_t ... D,
 		bool IsRequired = true >
@@ -61,16 +65,6 @@ namespace disposer{
 			dimension_referrer< Template, D ... >,
 			IsRequired >{};
 	}
-
-
-	/// \brief Make data for a required input with known type
-	template < typename Name, typename T >
-	struct final_input_make_data{
-		output_make_data* output;
-
-		template < std::size_t D >
-		get_dimension()
-	};
 
 
 	inline output_base* get_output_ptr(
@@ -123,48 +117,65 @@ namespace disposer{
 		partial_deduced_list_index< KDs ... > const& old_dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
-		using result_type = input_variant< Name, IsRequired,
-			decltype(DimensionConverter::types) >;
+		auto constexpr converter =
+			DimensionConverter::template convert< dimension_list< Ds ... > >;
+		using result_type =
+			input_variant< Name, IsRequired, decltype(converter.types) >;
 
 		auto const output_ptr = get_output_ptr(data.inputs,
-			to_std_string_view(Name{}));
+			detail::to_std_string_view(Name{}));
 
-		if(IsRequired || output_ptr != nullptr){
-			auto const iter = DimensionConverter::type_indexes.find(
-				output_ptr->type());
-			if(iter == DimensionConverter::type_indexes.end()){
-				throw std::logic_error("Type of connected output which is ["
-					+ iter->pretty_name() + "] is not compatible with input");
-			}
-		}
-
-		auto const dims = [&old_dims](){
+		auto const dims = [&old_dims, output_ptr](){
 				if constexpr(IsRequired){
 					constexpr dimension_solver solver(
 						dimension_list< Ds ... >{}, DimensionConverter{});
 					return partial_deduced_list_index(old_dims,
-						solver::solve(Name{}, output_ptr->type(), old_dims));
+						solver.solve(Name{}, output_ptr->get_type(), old_dims));
 				}else{
+					(void)output_ptr; // Silance GCC
 					return old_dims;
 				}
 			}();
 
-		if constexpr(!IsRequired){
-			if(output_ptr == nullptr) return result_type();
+		if(IsRequired || output_ptr != nullptr){
+			auto const type = output_ptr->get_type();
+			auto const iter = converter.type_indexes.find(type);
+			if(iter == converter.type_indexes.end()){
+				throw std::logic_error("Type of connected output which is ["
+					+ type.pretty_name() + "] is not compatible with input");
+			}
 		}
 
-		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
-			[](auto ... t){
-				return std::unordered_map{{
-					type_index::type_id< typename decltype(t)::type >(),
-					[](output_base* output_ptr){
-						return input_construct_data< Name, typename
-							decltype(t)::type, IsRequired >{output_ptr};
-					}} ...};
+		if constexpr(!IsRequired){
+			if(output_ptr == nullptr){
+				return hana::append(std::move(previous_makers),
+					hana::make_pair(dims, result_type()));
+			}
+		}
+
+		auto const make_fn = [](auto t){
+				return [](output_base* output_ptr)->result_type{
+					return input_construct_data< Name, typename
+						decltype(t)::type, IsRequired >{output_ptr};
+				};
+			};
+
+		auto const type_to_data = hana::unpack(converter.types,
+			[make_fn](auto ... t){
+				return std::unordered_map<
+						type_index, result_type(*)(output_base*)
+					>{{
+						type_index::type_id< typename decltype(t)::type >(),
+						make_fn(t)
+					} ...};
 			});
 
-		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
-			result_type(type_to_data[output_ptr->type()](output_ptr))));
+		auto const active_type = converter.packed_index_to_type_index.at(
+			packed_index{dims, converter.numbers.packed});
+
+		return hana::append(std::move(previous_makers), hana::make_pair(dims,
+			type_to_data.at(active_type)(output_ptr)));
+
 	}
 
 

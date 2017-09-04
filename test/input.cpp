@@ -1,8 +1,17 @@
-#include <disposer/core/output_maker.hpp>
-#include <disposer/core/input_maker.hpp>
-#include <disposer/core/accessory.hpp>
+#include <disposer/core/make_input.hpp>
+#include <disposer/core/output.hpp>
 
+#include <iostream>
 #include <iomanip>
+
+
+namespace hana = boost::hana;
+
+using namespace disposer;
+
+using namespace hana::literals;
+using namespace disposer::literals;
+using namespace std::literals::string_view_literals;
 
 
 int success(std::size_t i){
@@ -16,134 +25,126 @@ int fail(std::size_t i){
 }
 
 
-template < typename T >
-int check(std::size_t i, T const& test, T const& ref){
-	if(test == ref){
+using type_index = boost::typeindex::ctti_type_index;
+
+
+template < typename Data, typename T >
+int check(std::size_t i, Data const& data, hana::basic_type< T >){
+	if(std::holds_alternative< input_construct_data<
+		decltype("v"_in), T, false > >(hana::second(data[0_c]))
+	){
 		return success(i);
 	}else{
 		return fail(i);
 	}
 }
 
+template < std::size_t D >
+using ic = index_component< D >;
 
-namespace hana = boost::hana;
-
-using namespace hana::literals;
-using namespace disposer::literals;
-using namespace std::literals::string_view_literals;
-
-using disposer::make;
-
-constexpr auto types = hana::tuple_t< int, float >;
-constexpr auto types_set = hana::to_set(types);
+template < typename ... T > struct morph{};
 
 
 int main(){
 	using hana::type_c;
 
 	std::size_t ct = 0;
-	std::size_t error_count = 0;
+	std::size_t ec = 0;
 
-// 	auto iop_list = hana::make_tuple();
-// 	auto output_make_data = [&iop_list](auto const& maker){
-// 		auto make_data = disposer::output_make_data(maker, 1);
-// 		disposer::iops_make_data data(
-// 				std::move(make_data), "location"sv, iop_list
-// 			);
-//
-// 		return data;
-// 	};
-// 	constexpr auto output_maker = make("v"_out, hana::type_c< int >);
-// 	using output_type = decltype(hana::typeid_(output_maker))::type::type;
-// 	output_type output(output_make_data(output_maker));
-//
-// 	auto make_data = [&iop_list, &output](auto const& maker){
-// 		auto make_data = disposer::input_make_data(
-// 			maker, disposer::output_info(&output));
-// 		disposer::iops_make_data data(
-// 				std::move(make_data), "location"sv, iop_list
-// 			);
-//
-// 		return data;
-// 	};
-//
-// 	try{
-// 		{
-// 			constexpr auto maker = make("v"_in, free_type_c< int >);
-//
-// 			static_assert(std::is_same_v< decltype(maker),
-// 				disposer::input_maker<
-// 					disposer::input< decltype("v"_in),
-// 						disposer::none, int >,
-// 					disposer::required_t,
-// 					disposer::verify_type_always_t
-// 				> const >);
-//
-// 			using type = decltype(hana::typeid_(maker))::type::type;
-// 			type object(make_data(maker));
-//
-// 			static_assert(std::is_same_v< decltype(object),
-// 				disposer::input< decltype("v"_in),
-// 					disposer::none, int > >);
-//
-// 			error_count = check(ct++, object.is_enabled(), true);
-// 			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-// 		}
-//
-// 		{
-// 			constexpr auto maker = make("v"_in, types);
-//
-// 			static_assert(std::is_same_v< decltype(maker),
-// 				disposer::input_maker<
-// 					disposer::input< decltype("v"_in),
-// 						disposer::none, int, float >,
-// 					disposer::required_t,
-// 					disposer::verify_type_always_t
-// 				> const >);
-//
-// 			using type = decltype(hana::typeid_(maker))::type::type;
-// 			type object(make_data(maker));
-//
-// 			static_assert(std::is_same_v< decltype(object),
-// 				disposer::input< decltype("v"_in),
-// 					disposer::none, int, float > >);
-//
-// 			error_count = check(ct++, object.is_enabled(), true);
-// 			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-// 		}
-//
-// 		{
-// 			constexpr auto maker = make("v"_in, types_set);
-//
-// 			static_assert(std::is_same_v< decltype(maker),
-// 				disposer::input_maker<
-// 					disposer::input< decltype("v"_in),
-// 						disposer::none, int, float >,
-// 					disposer::required_t,
-// 					disposer::verify_type_always_t
-// 				> const >);
-//
-// 			using type = decltype(hana::typeid_(maker))::type::type;
-// 			type object(make_data(maker));
-//
-// 			static_assert(std::is_same_v< decltype(object),
-// 				disposer::input< decltype("v"_in),
-// 					disposer::none, int, float > >);
-//
-// 			error_count = check(ct++, object.is_enabled(), true);
-// 			error_count = check(ct++, object.is_enabled(type_c< int >), true);
-// 		}
-//
-// 		if(error_count == 0){
-// 			std::cout << "\033[0;32mSUCCESS\033[0m\n";
-// 		}else{
-// 			std::cout << "\033[0;31mFAILS:\033[0m " << error_count << '\n';
-// 		}
-// 	}catch(std::exception const& e){
-// 		std::cerr << "Unexpected exception: " << e.what() << '\n';
-// 	}catch(...){
-// 		std::cerr << "Unexpected unknown exception\n";
-// 	}
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >,
+			dimension_c< short, unsigned, long, long long >
+		};
 
-	return error_count;
+	auto const m = [list](auto const& maker, auto const& ... ics){
+			output< decltype("v"_out), double > out(1);
+
+			module_make_data data{{}, {}, {}, {{"v", &out}}, {}, {}};
+
+			return make_construct_data(maker, list, data,
+				make_list_index< decltype(hana::size(list.dimensions))::value >
+					(ics ...), hana::make_tuple());
+		};
+
+	try{
+		{
+			constexpr auto maker = make("v"_in, type_ref_c< 0 >, not_required);
+			ec = check(ct++, m(maker, ic< 0 >{0}), type_c< double >);
+			ec = check(ct++, m(maker, ic< 0 >{1}), type_c< char >);
+			ec = check(ct++, m(maker, ic< 0 >{2}), type_c< float >);
+		}
+
+		{
+			constexpr auto maker = make("v"_in, type_ref_c< 1 >, not_required);
+			ec = check(ct++, m(maker, ic< 1 >{0}), type_c< int >);
+			ec = check(ct++, m(maker, ic< 1 >{1}), type_c< bool >);
+		}
+
+		{
+			constexpr auto maker = make("v"_in, type_ref_c< 2 >, not_required);
+			ec = check(ct++, m(maker, ic< 2 >{0}), type_c< short >);
+			ec = check(ct++, m(maker, ic< 2 >{1}), type_c< unsigned >);
+			ec = check(ct++, m(maker, ic< 2 >{2}), type_c< long >);
+			ec = check(ct++, m(maker, ic< 2 >{3}), type_c< long long >);
+		}
+
+		{
+			constexpr auto maker = make("v"_in,
+				wrapped_type_ref_c< morph, 0, 1 >, not_required);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 1 >{0}),
+				type_c< morph< double, int > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 1 >{0}),
+				type_c< morph< char, int > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 1 >{0}),
+				type_c< morph< float, int > >);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 1 >{1}),
+				type_c< morph< double, bool > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 1 >{1}),
+				type_c< morph< char, bool > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 1 >{1}),
+				type_c< morph< float, bool > >);
+		}
+
+		{
+			constexpr auto maker = make("v"_in,
+				wrapped_type_ref_c< morph, 2, 0 >, not_required);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 2 >{0}),
+				type_c< morph< short, double > >);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 2 >{1}),
+				type_c< morph< unsigned, double > >);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 2 >{2}),
+				type_c< morph< long, double > >);
+			ec = check(ct++, m(maker, ic< 0 >{0}, ic< 2 >{3}),
+				type_c< morph< long long, double > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 2 >{0}),
+				type_c< morph< short, char > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 2 >{1}),
+				type_c< morph< unsigned, char > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 2 >{2}),
+				type_c< morph< long, char > >);
+			ec = check(ct++, m(maker, ic< 0 >{1}, ic< 2 >{3}),
+				type_c< morph< long long, char > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 2 >{0}),
+				type_c< morph< short, float > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 2 >{1}),
+				type_c< morph< unsigned, float > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 2 >{2}),
+				type_c< morph< long, float > >);
+			ec = check(ct++, m(maker, ic< 0 >{2}, ic< 2 >{3}),
+				type_c< morph< long long, float > >);
+		}
+
+		if(ec == 0){
+			std::cout << "\033[0;32mSUCCESS\033[0m\n";
+		}else{
+			std::cout << "\033[0;31mFAILS:\033[0m " << ec << '\n';
+		}
+	}catch(std::exception const& e){
+		std::cerr << "Unexpected exception: " << e.what() << '\n';
+	}catch(...){
+		std::cerr << "Unexpected unknown exception\n";
+	}
+
+	return ec;
 }

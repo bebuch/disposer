@@ -284,7 +284,7 @@ namespace disposer{
 	std::unordered_set< type_index > const
 		dimension_converter< DimensionList, Template, Ds ... >::type_indexes =
 			hana::unpack(types, [](auto ... type){
-					return std::unordered_set{
+					return std::unordered_set< type_index >{
 						type_index::type_id< typename decltype(type)::type >()
 						...};
 				});

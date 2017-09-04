@@ -44,8 +44,8 @@ namespace disposer{
 		output_base& operator=(output_base&&) = delete;
 
 
-		/// \brief List of enabled output types
-		virtual std::map< type_index, bool > enabled_types()const = 0;
+		/// \brief Type index of the output type
+		virtual type_index get_type()const = 0;
 
 
 		/// \brief The count of connected inputs
