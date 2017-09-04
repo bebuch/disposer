@@ -254,10 +254,18 @@ namespace disposer{
 				)) ...);
 			});
 
+		/// \brief Tuple of all indexes
+		static constexpr auto indexes = []{
+				if constexpr(hana::is_empty(ranges)){
+					return hana::make_tuple(hana::make_tuple());
+				}else{
+					return hana::cartesian_product(ranges);
+				}
+			}();
+
 		/// \brief Unique list of all possible types
 		static constexpr auto types =
-			hana::to_tuple(hana::to_set(hana::transform(
-				hana::cartesian_product(ranges),
+			hana::to_tuple(hana::to_set(hana::transform(indexes,
 				[](auto index){ return value_type_of(index); })));
 
 		/// \brief Unique list of all possible type indexes
@@ -290,7 +298,7 @@ namespace disposer{
 			type_index
 		> const dimension_converter< DimensionList, Template, Ds ... >
 		::packed_index_to_type_index =
-			hana::unpack(hana::transform(hana::cartesian_product(ranges),
+			hana::unpack(hana::transform(indexes,
 				[](auto index){
 					return hana::make_pair(index, type_index::type_id<
 						typename decltype(value_type_of(index))::type >());
