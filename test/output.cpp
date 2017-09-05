@@ -4,15 +4,6 @@
 #include <iomanip>
 
 
-namespace hana = boost::hana;
-
-using namespace disposer;
-
-using namespace hana::literals;
-using namespace disposer::literals;
-using namespace std::literals::string_view_literals;
-
-
 int success(std::size_t i){
 	std::cout << std::setw(3) << i << " \033[0;32msuccess\033[0m\n";
 	return 0;
@@ -24,7 +15,13 @@ int fail(std::size_t i){
 }
 
 
-using type_index = boost::typeindex::ctti_type_index;
+namespace hana = boost::hana;
+
+using namespace disposer;
+
+using namespace hana::literals;
+using namespace disposer::literals;
+using namespace std::literals::string_view_literals;
 
 
 template < typename Data, typename T >
