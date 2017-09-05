@@ -16,6 +16,7 @@
 #include "../config/module_make_data.hpp"
 
 #include "../tool/to_std_string_view.hpp"
+#include "../tool/type_list_as_string.hpp"
 
 #include <variant>
 #include <unordered_map>
@@ -89,14 +90,8 @@ namespace disposer{
 
 	template < typename Name, bool IsRequired, typename ... Ts >
 	constexpr auto input_variant_type(hana::tuple< Ts ... >)noexcept{
-		if constexpr(IsRequired){
-			return hana::type_c< std::variant< input_construct_data<
-				Name, typename Ts::type, IsRequired > ... > >;
-		}else{
-			return hana::type_c< std::variant<
-				hana::false_, input_construct_data<
-					Name, typename Ts::type, IsRequired > ... > >;
-		}
+		return hana::type_c< std::variant< input_construct_data<
+			Name, typename Ts::type, IsRequired > ... > >;
 	}
 
 	template < typename Name, bool IsRequired, typename Types >
@@ -125,12 +120,20 @@ namespace disposer{
 		auto const output_ptr = get_output_ptr(data.inputs,
 			detail::to_std_string_view(Name{}));
 
+		if constexpr(IsRequired){
+			if(output_ptr == nullptr){
+				throw std::logic_error("input is required but not set");
+			}
+		}
+
 		auto const dims = [&old_dims, output_ptr](){
 				if constexpr(IsRequired){
 					constexpr dimension_solver solver(
 						dimension_list< Ds ... >{}, DimensionConverter{});
-					return partial_deduced_list_index(old_dims,
-						solver.solve(Name{}, output_ptr->get_type(), old_dims));
+					return partial_deduced_list_index(
+						std::make_index_sequence< sizeof...(KDs) >(),
+						old_dims, solver.solve(
+							Name{}, output_ptr->get_type(), old_dims));
 				}else{
 					(void)output_ptr; // Silance GCC
 					return old_dims;
@@ -139,17 +142,24 @@ namespace disposer{
 
 		if(IsRequired || output_ptr != nullptr){
 			auto const type = output_ptr->get_type();
-			auto const iter = converter.type_indexes.find(type);
-			if(iter == converter.type_indexes.end()){
-				throw std::logic_error("Type of connected output which is ["
-					+ type.pretty_name() + "] is not compatible with input");
+			if(
+				auto const iter = converter.type_indexes.find(type);
+				iter == converter.type_indexes.end()
+			){
+				throw std::logic_error("type of connected output which is ["
+					+ type.pretty_name()
+					+ "] is not compatible with input, valid types are: "
+					+ type_list_as_string(converter.type_indexes));
 			}
-		}
 
-		if constexpr(!IsRequired){
-			if(output_ptr == nullptr){
-				return hana::append(std::move(previous_makers),
-					hana::make_pair(dims, result_type()));
+			auto const active_type = converter.packed_index_to_type_index.at(
+				packed_index{dims, converter.numbers.packed});
+
+			if(type != active_type){
+				throw std::logic_error("type of input is ["
+					+ active_type.pretty_name()
+					+ "] but connected output is of type ["
+					+ type.pretty_name() + "]");
 			}
 		}
 
