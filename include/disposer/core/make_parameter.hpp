@@ -26,7 +26,7 @@ namespace disposer{
 	/// \brief Provid types for constructing an parameter
 	template <
 		typename Name,
-		typename DimensionConverter,
+		typename DimensionReferrer,
 		typename DimensionDependancy,
 		typename ParserFn,
 		typename DefaultValueFn >
@@ -110,6 +110,15 @@ namespace disposer{
 	}
 
 
+	inline parameter_data const* get_parameter_data(
+		parameter_list const& parameters,
+		std::string_view const& name
+	){
+		auto const iter = parameters.find(name);
+		return iter != parameters.end() ? &iter->second : nullptr;
+	}
+
+
 	template < typename Name, typename Type >
 	struct parameter_construct_data{
 		static constexpr auto log_name = "parameter"sv;
@@ -132,40 +141,125 @@ namespace disposer{
 		decltype(parameter_variant_type< Name >(Types{}))::type;
 
 	template <
+		typename ResultType,
 		typename Name,
-		typename DimensionConverter,
+		typename DimensionReferrer,
+		std::size_t ... VTs,
+		typename ParserFn,
+		typename DefaultValueFn,
+		typename T >
+	ResultType parameter_make_fn(){
+		hana::basic_type< ResultType >,
+		parameter_maker<
+			Name,
+			DimensionReferrer,
+			dimension_dependancy< VTs ... >,
+			ParserFn,
+			DefaultValueFn > const& maker,
+		parameter_data const* param_data_ptr,
+		hana::basic_type< T > type
+	){
+		T value = [&maker, param_data_ptr, type](){
+				if(param_data_ptr != nullptr){
+					// TODO: Parse specialized values
+
+					if(param_data_ptr->generic_value){
+						return maker.parser(
+							accessory,
+							*param_data_ptr->generic_value,
+							type);
+					}
+
+					return hana::unpack(
+						dimension_dependancy< VTs ... >::dimension_numbers,
+						 [](auto ... vts){
+							if constexpr(
+								maker.default_value_generator.is_void_r(
+									accessory, type,
+									dimension_list< Ds ... >::dimensions[vts])
+							){
+								throw std::runtime_error("");
+							}else{
+
+							}
+						});
+
+				}
+
+				if constexpr()
+			}();
+
+		return output_construct_data< Name, type >{param_data_ptr};
+	}
+
+	template <
+		typename Name,
+		typename DimensionReferrer,
+		typename DimensionDependancy,
+		typename ParserFn,
+		typename DefaultValueFn,
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
 	auto make_construct_data(
-		output_maker< Name, DimensionConverter >,
+		parameter_maker<
+			Name,
+			DimensionReferrer,
+			DimensionDependancy,
+			ParserFn,
+			DefaultValueFn > const& maker,
 		dimension_list< Ds ... >,
 		module_make_data const& data,
 		partial_deduced_list_index< KDs ... > const& dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
+		auto constexpr converter =
+			DimensionReferrer::template convert< dimension_list< Ds ... > >;
 		using result_type =
-			parameter_variant< Name, decltype(DimensionConverter::types) >;
+			parameter_variant< Name, decltype(converter.types) >;
 
-		auto const active_type =
-			DimensionConverter::packed_index_to_type_index.at(dims);
+		auto const active_type = converter.packed_index_to_type_index.at(
+			packed_index{dims, converter.numbers.packed});
 
-		auto const use_count = get_use_count(data.outputs,
-			to_std_string_view(Name{}));
+		auto const param_data_ptr = get_parameter_data(data.parameters,
+			detail::to_std_string_view(Name{}));
 
-		constexpr auto type_to_data = hana::unpack(DimensionConverter::types,
-			[](auto ... t){
-				return std::unordered_map{{
-					type_index::type_id< typename decltype(t)::type >(),
-					[](std::size_t use_count){
-						return output_construct_data< Name, typename
-							decltype(t)::type >{use_count};
-					}} ...};
+		auto const make_fn = [](auto t){
+				return [](
+					parameter_maker< Name, DimensionReferrer > const& maker,
+					parameter_data const* param_data_ptr
+				)->result_type{
+					using type = typename decltype(t)::type;
+
+					if(param_data_ptr != nullptr){
+						if(param_data_ptr->generic_value){
+							maker.parser(*param_data_ptr->generic_value);
+						}
+					}else{
+
+					}
+
+
+					return output_construct_data< Name, type >{param_data_ptr};
+				};
+			};
+
+		auto const type_to_data = hana::unpack(converter.types,
+			[make_fn](auto ... t){
+				return std::unordered_map<
+						type_index, result_type(*)(
+							parameter_maker< Name, DimensionReferrer > const&,
+							parameter_data const*)
+					>{{
+						type_index::type_id< typename decltype(t)::type >(),
+						make_fn(t)
+					} ...};
 			});
 
-		return hana::concat(std::move(previous_makers), hana::make_pair(dims,
-			result_type(type_to_data[active_type](use_count))));
+		return hana::append(std::move(previous_makers), hana::make_pair(dims,
+			type_to_data.at(active_type)(maker, param_data_ptr)));
 	}
+
 
 
 }
