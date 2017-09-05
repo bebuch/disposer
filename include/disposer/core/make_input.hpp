@@ -31,7 +31,7 @@ namespace disposer{
 	/// \brief Provids types for constructing an input
 	template <
 		typename Name,
-		typename DimensionConverter,
+		typename DimensionReferrer,
 		bool IsRequired >
 	struct input_maker{
 		/// \brief Tag for boost::hana
@@ -100,20 +100,20 @@ namespace disposer{
 
 	template <
 		typename Name,
-		typename DimensionConverter,
+		typename DimensionReferrer,
 		bool IsRequired,
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
 	auto make_construct_data(
-		input_maker< Name, DimensionConverter, IsRequired >,
+		input_maker< Name, DimensionReferrer, IsRequired >,
 		dimension_list< Ds ... >,
 		module_make_data const& data,
 		partial_deduced_list_index< KDs ... > const& old_dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
 		auto constexpr converter =
-			DimensionConverter::template convert< dimension_list< Ds ... > >;
+			DimensionReferrer::template convert< dimension_list< Ds ... > >;
 		using result_type =
 			input_variant< Name, IsRequired, decltype(converter.types) >;
 
@@ -129,7 +129,7 @@ namespace disposer{
 		auto const dims = [&old_dims, output_ptr](){
 				if constexpr(IsRequired){
 					constexpr dimension_solver solver(
-						dimension_list< Ds ... >{}, DimensionConverter{});
+						dimension_list< Ds ... >{}, DimensionReferrer{});
 					return partial_deduced_list_index(
 						std::make_index_sequence< sizeof...(KDs) >(),
 						old_dims, solver.solve(

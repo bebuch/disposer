@@ -83,6 +83,13 @@ namespace disposer{
 	template < std::size_t ... VDs >
 	struct dimension_dependancy{
 		using hana_tag = dimension_dependancy_tag;
+
+		/// \brief List of the dimension dependency numbers
+		static constexpr auto dimension_numbers = hana::tuple_c< VDs ... >;
+
+		static_assert(hana::size(dimension_numbers)
+			== hana::size(hana::to_set(dimension_numbers)),
+			"dimension_dependancy must not have duplicates");
 	};
 
 

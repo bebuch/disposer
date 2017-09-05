@@ -29,7 +29,7 @@ namespace disposer{
 	/// \brief Provid types for constructing an output
 	template <
 		typename Name,
-		typename DimensionConverter >
+		typename DimensionReferrer >
 	struct output_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = output_maker_tag;
@@ -82,19 +82,19 @@ namespace disposer{
 
 	template <
 		typename Name,
-		typename DimensionConverter,
+		typename DimensionReferrer,
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
 	auto make_construct_data(
-		output_maker< Name, DimensionConverter >,
+		output_maker< Name, DimensionReferrer >,
 		dimension_list< Ds ... >,
 		module_make_data const& data,
 		partial_deduced_list_index< KDs ... > const& dims,
 		hana::tuple< Ts ... >&& previous_makers
 	){
 		auto constexpr converter =
-			DimensionConverter::template convert< dimension_list< Ds ... > >;
+			DimensionReferrer::template convert< dimension_list< Ds ... > >;
 		using result_type = output_variant< Name, decltype(converter.types) >;
 
 		auto const active_type = converter.packed_index_to_type_index.at(
