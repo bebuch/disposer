@@ -26,33 +26,6 @@
 namespace disposer{
 
 
-	/// \brief Converts between a list of dimension numbers an its packed index
-	///        correspondence
-	template < std::size_t ... Ds >
-	struct dimension_numbers{
-		/// \brief All dimension numbers in the defined order
-		static constexpr auto numbers = hana::tuple_c< std::size_t, Ds ... >;
-
-		/// \brief Count of dimensions
-		static constexpr auto numbers_count = sizeof...(Ds);
-
-		/// \brief Dimension number in sorted order and without duplicates
-		static constexpr auto packed = hana::unpack(
-			hana::unique(hana::sort(numbers)),
-			[](auto ... d){ return hana::make_tuple(d ...); });
-
-		/// \brief Count of dimensions in packed
-		static constexpr auto packed_count = hana::size(packed).value;
-
-
-		/// \brief Position of a dimension number D in packed
-		template < std::size_t D >
-		static constexpr auto pos(hana::size_t< D >){
-			return hana::index_if(packed,
-				hana::equal.to(hana::size_c< D >)).value();
-		}
-	};
-
 	/// \brief Pair of a dimension number and the index of its active type
 	template < std::size_t D >
 	struct index_component{
@@ -226,29 +199,42 @@ namespace disposer{
 		-> packed_index< sizeof...(Is) >;
 
 
+	/// \brief Converts between a list of dimension numbers an its packed index
+	///        correspondence
+	template < std::size_t ... Ds >
+	struct dimension_numbers{
+		/// \brief All dimension numbers in the defined order
+		static constexpr auto numbers = hana::tuple_c< std::size_t, Ds ... >;
+
+		/// \brief Count of dimensions
+		static constexpr auto numbers_count = sizeof...(Ds);
+
+		/// \brief Dimension number in sorted order and without duplicates
+		static constexpr auto packed = hana::unpack(
+			hana::unique(hana::sort(numbers)),
+			[](auto ... d){ return hana::make_tuple(d ...); });
+
+		/// \brief Count of dimensions in packed
+		static constexpr auto packed_count = hana::size(packed).value;
+
+
+		/// \brief Position of a dimension number D in packed
+		template < std::size_t D >
+		static constexpr auto pos(hana::size_t< D >){
+			return hana::index_if(packed,
+				hana::equal.to(hana::size_c< D >)).value();
+		}
+	};
+
 	/// \brief Converts between packed indexes and corresponding types
 	template <
 		typename DimensionList,
-		template < typename ... > typename Template,
 		std::size_t ... Ds >
-	struct dimension_converter{
-		/// \brief Sorted and summarized dimension numbers
-		static constexpr auto numbers = dimension_numbers< Ds ... >{};
-
-
-		/// \brief Get the value_type of a given numbers index
-		template < std::size_t ... Is >
-		static constexpr auto value_type_of(
-			hana::tuple< hana::size_t< Is > ... > index
-		)noexcept{
-			return hana::type_c< Template< typename decltype(
-					+DimensionList::dimensions[hana::size_c< Ds >]
-						[index[numbers.pos(hana::size_c< Ds >)]]
-				)::type ... > >;
-		}
+	struct dimension_ranges: dimension_numbers< Ds ... >{
+		using dimension_numbers< Ds ... >::packed;
 
 		/// \brief Tuple of ranges of all indexes
-		static constexpr auto ranges = hana::unpack(numbers.packed,
+		static constexpr auto ranges = hana::unpack(packed,
 			[](auto ... d){
 				return hana::make_tuple(hana::to_tuple(hana::make_range(
 					hana::size_c< 0 >,
@@ -264,6 +250,30 @@ namespace disposer{
 					return hana::cartesian_product(ranges);
 				}
 			}();
+	};
+
+
+	/// \brief Converts between packed indexes and corresponding types
+	template <
+		typename DimensionList,
+		template < typename ... > typename Template,
+		std::size_t ... Ds >
+	struct dimension_converter: dimension_ranges< DimensionList, Ds ... >{
+		using base = dimension_ranges< DimensionList, Ds ... >;
+		using base::packed_count;
+		using base::indexes;
+		using base::pos;
+
+		/// \brief Get the value_type of a given numbers index
+		template < std::size_t ... Is >
+		static constexpr auto value_type_of(
+			hana::tuple< hana::size_t< Is > ... > index
+		)noexcept{
+			return hana::type_c< Template< typename decltype(
+					+DimensionList::dimensions[hana::size_c< Ds >]
+						[index[pos(hana::size_c< Ds >)]]
+				)::type ... > >;
+		}
 
 		/// \brief Unique list of all possible types
 		static constexpr auto types =
@@ -285,10 +295,6 @@ namespace disposer{
 			static auto const type_indexes = get_type_indexes();
 			return type_indexes.find(ti) != type_indexes.end();
 		}
-
-		/// \brief Count of index components of packed_index
-		static constexpr std::size_t packed_count =
-			dimension_numbers< Ds ... >::packed_count;
 
 		/// \brief Get the type index of the given packed index,
 		///        throws if index dosn't exist

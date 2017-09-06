@@ -219,7 +219,7 @@ namespace disposer{
 			parameter_variant< Name, decltype(converter.types) >;
 
 		auto const active_type = converter.to_type_index(
-			packed_index{dims, converter.numbers.packed});
+			packed_index{dims, converter.packed});
 
 		auto const param_data_ptr = get_parameter_data(data.parameters,
 			detail::to_std_string_view(Name{}));

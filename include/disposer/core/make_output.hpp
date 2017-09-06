@@ -98,7 +98,7 @@ namespace disposer{
 		using result_type = output_variant< Name, decltype(converter.types) >;
 
 		auto const active_type = converter.to_type_index(
-			packed_index{dims, converter.numbers.packed});
+			packed_index{dims, converter.packed});
 
 		auto const use_count = get_use_count(data.outputs,
 			detail::to_std_string_view(Name{}));

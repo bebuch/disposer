@@ -150,7 +150,7 @@ namespace disposer{
 			}
 
 			auto const active_type = converter.to_type_index(
-				packed_index{dims, converter.numbers.packed});
+				packed_index{dims, converter.packed});
 
 			if(type != active_type){
 				throw std::logic_error("type of input is ["
@@ -178,7 +178,7 @@ namespace disposer{
 			});
 
 		auto const active_type = converter.to_type_index(
-			packed_index{dims, converter.numbers.packed});
+			packed_index{dims, converter.packed});
 
 		return hana::append(std::move(previous_makers), hana::make_pair(dims,
 			type_to_data.at(active_type)(output_ptr)));
