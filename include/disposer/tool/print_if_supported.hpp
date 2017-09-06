@@ -12,7 +12,7 @@
 #include <ostream>
 #include <utility>
 
-#include <boost/hana/is_valid.hpp>
+#include <boost/hana/type.hpp>
 
 
 namespace disposer{

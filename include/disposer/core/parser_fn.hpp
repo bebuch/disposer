@@ -20,8 +20,6 @@
 namespace disposer{
 
 
-
-
 	struct parser_fn_tag;
 
 	template < typename Fn >
@@ -42,26 +40,27 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(
 				std::is_invocable_r_v< T, Fn const, Accessory const&,
-					std::string_view, hana::basic_type< T > >,
+					std::string_view, hana::basic_type< T >, TypeIndexes ... >,
 				"Wrong function signature, expected: "
 				"T f(auto const& iop, std::string_view value, "
-				"hana::basic_type< T > type)"
+				"hana::basic_type< T > type, type_index ... type_dependancies)"
 			);
 
 			return std::is_nothrow_invocable_v< Fn const, Accessory const&,
-				std::string_view, hana::basic_type< T > >;
+				std::string_view, hana::basic_type< T >, TypeIndexes ... >;
 		}
 
-		template < typename Accessory, typename T >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		T operator()(
 			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< Accessory, T >()){
+			hana::basic_type< T > type,
+			TypeIndexes const& ... type_dependancies
+		)const noexcept(calc_noexcept< Accessory, T, TypeIndexes ... >()){
 			return accessory.log(
 				[](logsys::stdlogb& os, T const* value){
 					os << "parsed value";
@@ -71,8 +70,11 @@ namespace disposer{
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
-					return std::invoke(fn_, accessory, value, type);
+				}, [&]()noexcept(
+					calc_noexcept< Accessory, T, TypeIndexes ... >()
+				)->T{
+					return std::invoke(fn_, accessory, value, type,
+						type_dependancies ...);
 				});
 		}
 
@@ -95,11 +97,12 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		T operator()(
 			Accessory const& /*accessory*/,
 			std::string_view value,
-			hana::basic_type< T > type
+			hana::basic_type< T > type,
+			TypeIndexes const& ... /*type_dependancies*/
 		)const{
 			if constexpr(type == hana::type_c< std::string >){
 				return std::string(value);
@@ -127,145 +130,19 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		std::optional< T > operator()(
 			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< std::optional< T > >
+			hana::basic_type< std::optional< T > >,
+			TypeIndexes const& ... type_dependancies
 		)const{
-			return (*this)(accessory, value, hana::type_c< T >);
+			return (*this)(accessory, value, hana::type_c< T >,
+				type_dependancies ...);
 		}
 	};
 
 	constexpr auto stream_parser = parser_fn< stream_parser_t >{};
-
-
-
-	struct default_value_fn_tag;
-
-	template < typename Fn >
-	class default_value_fn{
-	public:
-		using hana_tag = default_value_fn_tag;
-
-		constexpr default_value_fn()
-			noexcept(std::is_nothrow_default_constructible_v< Fn >)
-			: fn_() {}
-
-		constexpr explicit default_value_fn(Fn const& fn)
-			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
-			: fn_(fn) {}
-
-		constexpr explicit default_value_fn(Fn&& fn)
-			noexcept(std::is_nothrow_move_constructible_v< Fn >)
-			: fn_(std::move(fn)) {}
-
-
-		template < typename Accessory, typename T, typename ... VT >
-		static constexpr bool is_invocable_v()noexcept{
-			return std::is_invocable_v< Fn const, Accessory const&,
-				hana::basic_type< T >, hana::basic_type< VT > ... >;
-		}
-
-		/// \brief true if correctly invocable and return type void,
-		///        false otherwise
-		template < typename Accessory, typename T, typename ... VT >
-		static constexpr bool is_void_r_v()noexcept{
-			if constexpr(is_invocable_v< Accessory, T, VT ... >()){
-				return std::is_void_v< std::invoke_result_t< Fn const,
-					Accessory const&, hana::basic_type< T >,
-					hana::basic_type< VT > ... > >;
-			}else{
-				return false;
-			}
-		}
-
-		/// \brief true if correctly invocable and return type void,
-		///        false otherwise
-		template < typename Accessory, typename T, typename ... VT >
-		static constexpr auto is_void_r(
-			Accessory const&, hana::basic_type< T >, hana::basic_type< VT > ...
-		)noexcept{
-			if constexpr(is_void_r_v< Accessory, T, VT ... >()){
-				return hana::true_c;
-			}else{
-				return hana::false_c;
-			}
-		}
-
-		template < typename Accessory, typename T, typename ... VT >
-		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_r_v< T, Fn const,
-				Accessory const&, hana::basic_type< T >,
-				hana::basic_type< VT > ... >
-				|| is_void_r_v< Accessory, T, VT ... >(),
-				"Wrong function signature, expected: "
-				"U f(auto const& iop, hana::basic_type< T > type, "
-				"hana::basic_type< VT > ... type_dependancies) where U is "
-				"void or convertible to T"
-			);
-
-			return std::is_nothrow_invocable_v< Fn const,
-				Accessory const&, hana::basic_type< T >,
-				hana::basic_type< VT > ... >;
-		}
-
-		/// \brief Operator for outputs
-		template < typename Accessory, typename T, typename ... VT >
-		T operator()(
-			Accessory const& accessory,
-			hana::basic_type< T > type,
-			hana::basic_type< VT > ... type_dependancies
-		)const noexcept(calc_noexcept< Accessory, T, VT ... >()){
-			return accessory.log([](logsys::stdlogb& os, T const* value){
-					if(value){
-						os << "generated default value: ";
-						print_if_supported(os, *value);
-					}else{
-						os << "no default value generated";
-					}
-					os << " [" << type_index::type_id< T >().pretty_name()
-						<< "]";
-				}, [&]()noexcept(calc_noexcept< Accessory, T, VT >())->T{
-					return std::invoke(fn_, accessory, type,
-						type_dependancies ...);
-				});
-		}
-
-
-	private:
-		Fn fn_;
-	};
-
-
-	struct auto_default_t{
-		template < typename Accessory, typename T, typename ... VT >
-		void operator()(
-			Accessory const&,
-			hana::basic_type< T >,
-			hana::basic_type< VT > ...
-		)const noexcept{}
-
-		template < typename Accessory, typename T, typename ... VT >
-		std::optional< T > operator()(
-			Accessory const&,
-			hana::basic_type< std::optional< T > >,
-			hana::basic_type< VT > ...
-		)const noexcept{ return {}; }
-	};
-
-	constexpr auto auto_default = default_value_fn(auto_default_t{});
-
-	template < typename T >
-	auto default_value(T&& value)
-	noexcept(std::is_nothrow_move_constructible_v< T >){
-		return default_value_fn(
-			[value = std::move(value)](auto const&, auto, auto ...)
-			noexcept(std::is_nothrow_copy_constructible_v< T >)
-			{ return value; });
-	}
-
-
 
 
 }

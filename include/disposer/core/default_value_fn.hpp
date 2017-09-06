@@ -42,20 +42,20 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		static constexpr bool is_invocable_v()noexcept{
 			return std::is_invocable_v< Fn const, Accessory const&,
-				hana::basic_type< T >, hana::basic_type< VT > ... >;
+				hana::basic_type< T >, TypeIndexes const& ... >;
 		}
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		static constexpr bool is_void_r_v()noexcept{
-			if constexpr(is_invocable_v< Accessory, T, VT ... >()){
+			if constexpr(is_invocable_v< Accessory, T, TypeIndexes ... >()){
 				return std::is_void_v< std::invoke_result_t< Fn const,
 					Accessory const&, hana::basic_type< T >,
-					hana::basic_type< VT > ... > >;
+					TypeIndexes const& ... > >;
 			}else{
 				return false;
 			}
@@ -63,41 +63,41 @@ namespace disposer{
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		static constexpr auto is_void_r(
-			Accessory const&, hana::basic_type< T >, hana::basic_type< VT > ...
+			Accessory const&, hana::basic_type< T >, TypeIndexes ...
 		)noexcept{
-			if constexpr(is_void_r_v< Accessory, T, VT ... >()){
+			if constexpr(is_void_r_v< Accessory, T, TypeIndexes ... >()){
 				return hana::true_c;
 			}else{
 				return hana::false_c;
 			}
 		}
 
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(std::is_invocable_r_v< T, Fn const,
 				Accessory const&, hana::basic_type< T >,
-				hana::basic_type< VT > ... >
-				|| is_void_r_v< Accessory, T, VT ... >(),
+				TypeIndexes ... >
+				|| is_void_r_v< Accessory, T, TypeIndexes ... >(),
 				"Wrong function signature, expected: "
 				"U f(auto const& iop, hana::basic_type< T > type, "
-				"hana::basic_type< VT > ... type_dependancies) where U is "
+				"type_index const& ... type_dependancies) where U is "
 				"void or convertible to T"
 			);
 
 			return std::is_nothrow_invocable_v< Fn const,
 				Accessory const&, hana::basic_type< T >,
-				hana::basic_type< VT > ... >;
+				TypeIndexes const& ... >;
 		}
 
 		/// \brief Operator for outputs
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		T operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type,
-			hana::basic_type< VT > ... type_dependancies
-		)const noexcept(calc_noexcept< Accessory, T, VT ... >()){
+			TypeIndexes ... type_dependancies
+		)const noexcept(calc_noexcept< Accessory, T, TypeIndexes ... >()){
 			return accessory.log([](logsys::stdlogb& os, T const* value){
 					if(value){
 						os << "generated default value: ";
@@ -107,7 +107,9 @@ namespace disposer{
 					}
 					os << " [" << type_index::type_id< T >().pretty_name()
 						<< "]";
-				}, [&]()noexcept(calc_noexcept< Accessory, T, VT >())->T{
+				}, [&]()noexcept(
+					calc_noexcept< Accessory, T, TypeIndexes ... >()
+				)->T{
 					return std::invoke(fn_, accessory, type,
 						type_dependancies ...);
 				});
@@ -120,18 +122,18 @@ namespace disposer{
 
 
 	struct auto_default_t{
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		void operator()(
 			Accessory const&,
 			hana::basic_type< T >,
-			hana::basic_type< VT > ...
+			TypeIndexes const& ...
 		)const noexcept{}
 
-		template < typename Accessory, typename T, typename ... VT >
+		template < typename Accessory, typename T, typename ... TypeIndexes >
 		std::optional< T > operator()(
 			Accessory const&,
 			hana::basic_type< std::optional< T > >,
-			hana::basic_type< VT > ...
+			TypeIndexes const& ...
 		)const noexcept{ return {}; }
 	};
 

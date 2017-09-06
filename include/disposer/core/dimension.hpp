@@ -30,16 +30,16 @@ namespace disposer{
 	struct dimension_tag{};
 
 	/// \brief Type list of a module
-	template < typename ... T >
+	template < typename ... Ts >
 	struct dimension{
 		/// \brief Count of types
-		static constexpr std::size_t type_count = sizeof...(T);
+		static constexpr std::size_t type_count = sizeof...(Ts);
 
 		static_assert(type_count > 1,
 			"dimension's must contain at least 2 different types");
 
 		/// \brief Types as hana::tuple_t
-		static constexpr auto types = hana::tuple_t< T ... >;
+		static constexpr auto types = hana::tuple_t< Ts ... >;
 
 		static_assert(hana::size(types) == hana::size(hana::to_set(types)),
 			"dimension types must not contain duplicates");
@@ -63,12 +63,17 @@ namespace disposer{
 
 		/// \brief Assign is forbidden
 		dimension& operator=(dimension const&) = delete;
+
+
+		/// \brief Array of the type indexes of the Ts
+		static constexpr type_index ti[sizeof...(Ts)] =
+			{ type_index::type_id< Ts >() ... };
 	};
 
 
 	/// \brief Creates a dimension object
-	template < typename ... T >
-	constexpr dimension< T ... > dimension_c{};
+	template < typename ... Ts >
+	constexpr dimension< Ts ... > dimension_c{};
 
 
 	/// \brief List of type lists of a module

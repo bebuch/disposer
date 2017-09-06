@@ -226,6 +226,22 @@ namespace disposer{
 		}
 	};
 
+
+	/// \brief Make tuple of ranges of all indexes
+	template < typename ... Dimensions, std::size_t ... Ds >
+	constexpr auto make_ranges(
+		dimension_list< Dimensions ... >,
+		hana::tuple< hana::size_t< Ds > ... > const& numbers
+	)noexcept{
+		return hana::unpack(numbers,
+			[](auto ... d){
+				return hana::make_tuple(hana::to_tuple(hana::make_range(
+					hana::size_c< 0 >,
+					hana::size(dimension_list< Dimensions ... >::dimensions[d])
+				)) ...);
+			});
+	}
+
 	/// \brief Converts between packed indexes and corresponding types
 	template <
 		typename DimensionList,
@@ -234,13 +250,7 @@ namespace disposer{
 		using dimension_numbers< Ds ... >::packed;
 
 		/// \brief Tuple of ranges of all indexes
-		static constexpr auto ranges = hana::unpack(packed,
-			[](auto ... d){
-				return hana::make_tuple(hana::to_tuple(hana::make_range(
-					hana::size_c< 0 >,
-					hana::size(DimensionList::dimensions[d])
-				)) ...);
-			});
+		static constexpr auto ranges = make_ranges(DimensionList{}, packed);
 
 		/// \brief Tuple of all indexes
 		static constexpr auto indexes = []{
