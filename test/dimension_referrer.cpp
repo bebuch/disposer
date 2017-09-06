@@ -69,7 +69,7 @@ int exec()try{
 
 		static_assert(hana::to_set(c.types) == hana::to_set(tuple_t< long >));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index()), type_index::type_id< long >());
 	}
 
@@ -89,11 +89,11 @@ int exec()try{
 		static_assert(hana::to_set(c.types) == hana::to_set(
 			tuple_t< double, char, float >));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0})), type_index::type_id< double >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1})), type_index::type_id< char >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2})), type_index::type_id< float >());
 	}
 
@@ -110,9 +110,9 @@ int exec()try{
 		static_assert(hana::to_set(c.types) == hana::to_set(
 			tuple_t< int, bool >));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 1 >{0})), type_index::type_id< int >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 1 >{1})), type_index::type_id< bool >());
 	}
 
@@ -132,11 +132,11 @@ int exec()try{
 		static_assert(hana::to_set(c.types) == hana::to_set(
 			tuple_t< morph< double >, morph< char >, morph< float > >));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0})), type_index::type_id< morph< double > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1})), type_index::type_id< morph< char > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2})), type_index::type_id< morph< float > >());
 	}
 
@@ -153,9 +153,9 @@ int exec()try{
 		static_assert(hana::to_set(c.types) == hana::to_set(
 			tuple_t< morph< int >, morph< bool > >));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 1 >{0})), type_index::type_id< morph< int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 1 >{1})), type_index::type_id< morph< bool > >());
 	}
 
@@ -190,22 +190,22 @@ int exec()try{
 				morph< float, bool >
 			>));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 1 >{0})),
 			type_index::type_id< morph< double, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 1 >{0})),
 			type_index::type_id< morph< char, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 1 >{0})),
 			type_index::type_id< morph< float, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 1 >{1})),
 			type_index::type_id< morph< double, bool > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 1 >{1})),
 			type_index::type_id< morph< char, bool > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 1 >{1})),
 			type_index::type_id< morph< float, bool > >());
 	}
@@ -241,22 +241,22 @@ int exec()try{
 				morph< bool, float, bool >
 			>));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 1 >{0})),
 			type_index::type_id< morph< int, double, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 1 >{0})),
 			type_index::type_id< morph< int, char, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 1 >{0})),
 			type_index::type_id< morph< int, float, int > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 1 >{1})),
 			type_index::type_id< morph< bool, double, bool > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 1 >{1})),
 			type_index::type_id< morph< bool, char, bool > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 1 >{1})),
 			type_index::type_id< morph< bool, float, bool > >());
 	}
@@ -316,40 +316,40 @@ int exec()try{
 				morph< long long, float >
 			>));
 
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 2 >{0})),
 			type_index::type_id< morph< short, double > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 2 >{0})),
 			type_index::type_id< morph< short, char > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 2 >{0})),
 			type_index::type_id< morph< short, float > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 2 >{1})),
 			type_index::type_id< morph< unsigned, double > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 2 >{1})),
 			type_index::type_id< morph< unsigned, char > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 2 >{1})),
 			type_index::type_id< morph< unsigned, float > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 2 >{2})),
 			type_index::type_id< morph< long, double > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 2 >{2})),
 			type_index::type_id< morph< long, char > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 2 >{2})),
 			type_index::type_id< morph< long, float > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{0}, ic< 2 >{3})),
 			type_index::type_id< morph< long long, double > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{1}, ic< 2 >{3})),
 			type_index::type_id< morph< long long, char > >());
-		ec = check(ct++, c.packed_index_to_type_index.at(
+		ec = check(ct++, c.to_type_index(
 			index(ic< 0 >{2}, ic< 2 >{3})),
 			type_index::type_id< morph< long long, float > >());
 	}

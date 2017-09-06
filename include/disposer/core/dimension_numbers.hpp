@@ -203,7 +203,9 @@ namespace disposer{
 			hana::tuple< hana::size_t< Ds > ... >)
 			: std::array< std::size_t, PackedDimCount >{{
 					get(list_index, hana::size_c< Ds >) ...
-				}} {}
+				}} {
+					(void)list_index; // Silance GCC
+				}
 
 		/// \brief Construction by a indexes
 		///
@@ -268,47 +270,49 @@ namespace disposer{
 			hana::to_tuple(hana::to_set(hana::transform(indexes,
 				[](auto index){ return value_type_of(index); })));
 
-		/// \brief Unique list of all possible type indexes
-		static std::unordered_set< type_index > const type_indexes;
-
-		/// \brief Map from packed index to index in types
-		static std::map<
-			packed_index< dimension_numbers< Ds ... >::packed_count >,
-			type_index > const packed_index_to_type_index;
-	};
-
-	template <
-		typename DimensionList,
-		template < typename ... > typename Template,
-		std::size_t ... Ds >
-	std::unordered_set< type_index > const
-		dimension_converter< DimensionList, Template, Ds ... >::type_indexes =
-			hana::unpack(types, [](auto ... type){
+		/// \brief Get a list of all valid type indexes
+		static auto get_type_indexes(){
+			return hana::unpack(types, [](auto ... type){
 					return std::unordered_set< type_index >{
-						type_index::type_id< typename decltype(type)::type >()
-						...};
+						type_index::type_id<
+							typename decltype(type)::type >() ...};
 				});
+		}
 
-	template <
-		typename DimensionList,
-		template < typename ... > typename Template,
-		std::size_t ... Ds >
-	std::map<
-			packed_index< dimension_numbers< Ds ... >::packed_count >,
-			type_index
-		> const dimension_converter< DimensionList, Template, Ds ... >
-		::packed_index_to_type_index =
-			hana::unpack(hana::transform(indexes,
-				[](auto index){
-					return hana::make_pair(index, type_index::type_id<
-						typename decltype(value_type_of(index))::type >());
-				}), [](auto&& ... entry){
-					return std::map< packed_index<
-							dimension_numbers< Ds ... >::packed_count >,
-							type_index
-						>{{hana::first(entry), hana::second(entry)} ...};
-				});
+		/// \brief true if type index belongs to one of the types,
+		///        false otherwise
+		static bool is_valid(type_index const& ti){
+			static auto const type_indexes = get_type_indexes();
+			return type_indexes.find(ti) != type_indexes.end();
+		}
 
+		/// \brief Count of index components of packed_index
+		static constexpr std::size_t packed_count =
+			dimension_numbers< Ds ... >::packed_count;
+
+		/// \brief Get the type index of the given packed index,
+		///        throws if index dosn't exist
+		///
+		/// TODO: Don't throw, just crash. Wrong index should never appear.
+		static type_index to_type_index(
+			packed_index< packed_count > const& index
+		){
+			static auto const map =
+				hana::unpack(hana::transform(indexes,
+					[](auto index){
+						return hana::make_pair(index,
+							type_index::type_id< typename
+							decltype(value_type_of(index))::type >());
+					}), [](auto&& ... entry){
+						return std::map<
+								packed_index< packed_count >,
+								type_index >
+							{{hana::first(entry), hana::second(entry)} ...};
+					});
+
+			return map.at(index);
+		}
+	};
 
 
 }

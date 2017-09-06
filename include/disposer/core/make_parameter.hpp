@@ -218,7 +218,7 @@ namespace disposer{
 		using result_type =
 			parameter_variant< Name, decltype(converter.types) >;
 
-		auto const active_type = converter.packed_index_to_type_index.at(
+		auto const active_type = converter.to_type_index(
 			packed_index{dims, converter.numbers.packed});
 
 		auto const param_data_ptr = get_parameter_data(data.parameters,

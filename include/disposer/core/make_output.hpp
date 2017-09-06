@@ -97,7 +97,7 @@ namespace disposer{
 			DimensionReferrer::template convert< dimension_list< Ds ... > >;
 		using result_type = output_variant< Name, decltype(converter.types) >;
 
-		auto const active_type = converter.packed_index_to_type_index.at(
+		auto const active_type = converter.to_type_index(
 			packed_index{dims, converter.numbers.packed});
 
 		auto const use_count = get_use_count(data.outputs,

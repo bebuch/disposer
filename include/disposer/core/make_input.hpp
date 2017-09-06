@@ -142,17 +142,14 @@ namespace disposer{
 
 		if(IsRequired || output_ptr != nullptr){
 			auto const type = output_ptr->get_type();
-			if(
-				auto const iter = converter.type_indexes.find(type);
-				iter == converter.type_indexes.end()
-			){
+			if(converter.is_valid(type)){
 				throw std::logic_error("type of connected output which is ["
 					+ type.pretty_name()
 					+ "] is not compatible with input, valid types are: "
-					+ type_list_as_string(converter.type_indexes));
+					+ type_list_as_string(converter.get_type_indexes()));
 			}
 
-			auto const active_type = converter.packed_index_to_type_index.at(
+			auto const active_type = converter.to_type_index(
 				packed_index{dims, converter.numbers.packed});
 
 			if(type != active_type){
@@ -180,7 +177,7 @@ namespace disposer{
 					} ...};
 			});
 
-		auto const active_type = converter.packed_index_to_type_index.at(
+		auto const active_type = converter.to_type_index(
 			packed_index{dims, converter.numbers.packed});
 
 		return hana::append(std::move(previous_makers), hana::make_pair(dims,
