@@ -18,6 +18,7 @@
 #include <boost/hana/any_of.hpp>
 #include <boost/hana/all_of.hpp>
 #include <boost/hana/size.hpp>
+#include <boost/hana/range.hpp>
 #include <boost/hana/set.hpp>
 
 
@@ -97,6 +98,73 @@ namespace disposer{
 		/// \brief Constructor
 		constexpr dimension_list(Dimension const& ...)noexcept{}
 	};
+
+
+	/// \brief Pair of a dimension number and the index of its active type
+	template < std::size_t D, std::size_t I >
+	struct ct_index_component{
+		/// \brief Dimension number
+		static constexpr auto d = hana::size_c< D >;
+
+		/// \brief Index of the active type of the dimension
+		static constexpr auto i = hana::size_c< I >;
+	};
+
+	/// \brief List of type lists of a module
+	template < typename ... Dimension >
+	struct partial_deduced_dimension_list{
+		static_assert(hana::all_of(
+			hana::make_tuple(Dimension{} ...), [](auto const& dim){
+				return hana::is_a< dimension_tag >(dim)
+					|| hana::is_a< hana::type_tag >(dim);
+			}),
+			"Dimension must be a disposer::dimension< ... > or a hana::type");
+
+		/// \brief Tuple of type lists, Dimension is always a \ref dimension
+		static constexpr auto dimensions = hana::make_tuple([](auto dim){
+				if constexpr(hana::is_a< dimension_tag >(dim)){
+					return dim.types;
+				}else{
+					return dim;
+				}
+			}(Dimension{}) ...);
+
+		/// \brief Constructor
+		constexpr partial_deduced_dimension_list(
+			dimension_list< Dimension ... >
+		)noexcept{}
+
+		/// \brief Constructor
+		constexpr partial_deduced_dimension_list()noexcept = default;
+	};
+
+	template < typename ... DLs, std::size_t ... Ds, std::size_t ... Is >
+	auto make_partial_deduced_dimension_list(
+		partial_deduced_dimension_list< DLs ... >,
+		hana::tuple< ct_index_component< Ds, Is > ... > solved_ds
+	){
+		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(DLs) >,
+			[solved_ds](auto ... n){
+				auto const calc = [solved_ds](auto n, auto dim){
+						if constexpr(hana::is_a< dimension_tag >(dim)){
+							auto const ic = hana::find_if(solved_ds,
+								[n](auto ic){
+									return n == ic.d;
+								});
+							if constexpr(ic == hana::nothing){
+								return dim;
+							}else{
+								return hana::basic_type(dim.types[ic->i]);
+							}
+						}else{
+							return dim;
+						}
+					};
+
+				return partial_deduced_dimension_list<
+					decltype(calc(n, DLs{})) ... >{};
+			});
+	}
 
 
 }
