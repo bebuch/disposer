@@ -138,24 +138,16 @@ namespace disposer{
 		constexpr partial_deduced_dimension_list()noexcept = default;
 	};
 
-	template < typename ... DLs, std::size_t ... Ds, std::size_t ... Is >
+	template < typename ... DLs, std::size_t D, std::size_t I >
 	auto make_partial_deduced_dimension_list(
 		partial_deduced_dimension_list< DLs ... >,
-		hana::tuple< ct_index_component< Ds, Is > ... > solved_ds
+		ct_index_component< D, I >
 	){
 		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(DLs) >,
-			[solved_ds](auto ... n){
-				auto const calc = [solved_ds](auto n, auto dim){
-						if constexpr(hana::is_a< dimension_tag >(dim)){
-							auto const ic = hana::find_if(solved_ds,
-								[n](auto ic){
-									return n == ic.d;
-								});
-							if constexpr(ic == hana::nothing){
-								return dim;
-							}else{
-								return hana::basic_type(dim.types[ic->i]);
-							}
+			[](auto ... n){
+				auto const calc = [](auto n, auto dim){
+						if constexpr(n.value == Ds){
+							return hana::basic_type(dim.types[ic->i]);
 						}else{
 							return dim;
 						}

@@ -77,23 +77,6 @@ namespace disposer{
 	}
 
 
-	template < typename Name, typename Type, bool IsRequired >
-	struct input_construct_data{
-		static constexpr auto log_name = "input"sv;
-
-		input_construct_data(output_base* const output)noexcept
-			: output(output){}
-
-		output_base* const output;
-	};
-
-
-	template < typename Name, bool IsRequired, typename ... Ts >
-	constexpr auto input_variant_type(hana::tuple< Ts ... >)noexcept{
-		return hana::type_c< std::variant< input_construct_data<
-			Name, typename Ts::type, IsRequired > ... > >;
-	}
-
 	template < typename Name, bool IsRequired, typename Types >
 	using input_variant = typename
 		decltype(input_variant_type< Name, IsRequired >(Types{}))::type;
@@ -105,84 +88,163 @@ namespace disposer{
 		typename ... Ds,
 		bool ... KDs,
 		typename ... Ts >
-	auto make_construct_data(
+	auto deduce_dimensions_by_input(
 		input_maker< Name, DimensionReferrer, IsRequired >,
-		dimension_list< Ds ... >,
-		module_make_data const& data,
-		partial_deduced_list_index< KDs ... > const& old_dims,
-		hana::tuple< Ts ... >&& previous_makers
+		partial_deduced_dimension_list< Ds ... >,
+		output_base* const output_ptr
 	){
-		auto constexpr converter =
-			DimensionReferrer::template convert< dimension_list< Ds ... > >;
-		using result_type =
-			input_variant< Name, IsRequired, decltype(converter.types) >;
-
-		auto const output_ptr = get_output_ptr(data.inputs,
-			detail::to_std_string_view(Name{}));
-
 		if constexpr(IsRequired){
 			if(output_ptr == nullptr){
 				throw std::logic_error("input is required but not set");
 			}
-		}
 
-		auto const dims = [&old_dims, output_ptr](){
-				if constexpr(IsRequired){
-					constexpr dimension_solver solver(
-						dimension_list< Ds ... >{}, DimensionReferrer{});
-					return partial_deduced_list_index(
-						std::make_index_sequence< sizeof...(KDs) >(),
-						old_dims, solver.solve(
-							Name{}, output_ptr->get_type(), old_dims));
-				}else{
-					(void)output_ptr; // Silance GCC
-					return old_dims;
+			constexpr dimension_solver solver(
+				partial_deduced_dimension_list< Ds ... >{},
+				DimensionReferrer{});
+			return solver.solve(Name{}, output_ptr->get_type()));
+		}else{
+			(void)output_ptr; (void)dims; // Silance GCC
+			return solved_dimensions{};
+		}
+	}
+
+
+	template < typename PartialDeducedDimensionList >
+	struct input_construction{
+		template <
+			typename Name,
+			typename DimensionReferrer,
+			bool IsRequired,
+			typename ... Config,
+			typename ... IOPs,
+			typename StateMakerFn,
+			typename ExecFn,
+			std::size_t ... SDs >
+		static std::unique_ptr< module_base > make(
+			input_maker< Name, DimensionReferrer, IsRequired > const& maker,
+			module_configure< Config ... > const& configs,
+			accessory< IOPs ... >&& iops,
+			module_make_data const& data,
+			std::string_view location,
+			state_maker_fn< StateMakerFn > const& state_maker,
+			exec_fn< ExecFn > const& exec,
+			solved_dimensions< SDs ... > const& solved_dims,
+			output_base* const output_ptr
+		){
+			if constexpr(solved_dims){
+				using make_fn_type = std::unique_ptr< module_base >(*)(
+						input_maker< Name, DimensionReferrer, IsRequired > const&,
+						module_configure< Config ... > const&,
+						accessory< IOPs ... >&&,
+						module_make_data const&,
+						std::string_view,
+						state_maker_fn< StateMakerFn > const&,
+						exec_fn< ExecFn > const&,
+						decltype(solved_dims.rest()) const&,
+						output_base* const
+					);
+
+				auto solved_d = solved_dims.dimension_number();
+
+				constexpr auto tc = PartialDeducedDimensionList
+					::dimensions[solved_d].type_count;
+
+				// TODO: make array and call by solved_dims
+				static_cast< make_fn_type >(&input_construction< Ds ... >::call_construct_input)
+
+				hana::unpack(hana::range_c< std::size_c, 0, tc >,
+					[](auto ... i){
+						template < std::size_t I >
+						using next_list_type =
+							decltype(make_partial_deduced_dimension_list(
+								PartialDeducedDimensionList{},
+								ct_index_component< solved_d.value, I >{}
+							));
+
+						constexpr make_fn_type call[sizeof...(i)] = {
+								&input_construction< next_list_type
+									< decltype(i)::value > >::make ...
+							};
+
+
+					});
+			}else{
+				auto constexpr converter = DimensionReferrer::
+					template convert< PartialDeducedDimensionList >;
+
+				if(IsRequired || output_ptr != nullptr){
+					auto const type = output_ptr->get_type();
+					if(converter.is_valid(type)){
+						throw std::logic_error("type of connected output which is ["
+							+ type.pretty_name()
+							+ "] is not compatible with input, valid types are: "
+							+ type_list_as_string(converter.get_type_indexes()));
+					}
+
+					auto const active_type = converter.to_type_index(
+						packed_index{dims, converter.packed});
+
+					if(type != active_type){
+						throw std::logic_error("type of input is ["
+							+ active_type.pretty_name()
+							+ "] but connected output is of type ["
+							+ type.pretty_name() + "]");
+					}
 				}
-			}();
 
-		if(IsRequired || output_ptr != nullptr){
-			auto const type = output_ptr->get_type();
-			if(converter.is_valid(type)){
-				throw std::logic_error("type of connected output which is ["
-					+ type.pretty_name()
-					+ "] is not compatible with input, valid types are: "
-					+ type_list_as_string(converter.get_type_indexes()));
-			}
+				auto const make_fn = [](auto t){
+						return [](output_base* output_ptr)->result_type{
+							return input_construct_data< input_name< Cs ... >, typename
+								decltype(t)::type, IsRequired >{output_ptr};
+						};
+					};
 
-			auto const active_type = converter.to_type_index(
-				packed_index{dims, converter.packed});
+				auto const type_to_data = hana::unpack(converter.types,
+					[make_fn](auto ... t){
+						return std::unordered_map<
+								type_index, result_type(*)(output_base*)
+							>{{
+								type_index::type_id< typename decltype(t)::type >(),
+								make_fn(t)
+							} ...};
+					});
 
-			if(type != active_type){
-				throw std::logic_error("type of input is ["
-					+ active_type.pretty_name()
-					+ "] but connected output is of type ["
-					+ type.pretty_name() + "]");
+				auto const active_type = converter.to_type_index(
+					packed_index{dims, converter.packed});
+
+				input< input_name< Cs ... >, Type, IsRequired > input{output_ptr};
+
+				return make_module(/* TODO subcall */);
 			}
 		}
+	};
 
-		auto const make_fn = [](auto t){
-				return [](output_base* output_ptr)->result_type{
-					return input_construct_data< Name, typename
-						decltype(t)::type, IsRequired >{output_ptr};
-				};
-			};
+	template <
+		typename Name,
+		typename DimensionReferrer,
+		bool IsRequired,
+		typename ... Ds,
+		typename ... Config,
+		typename ... IOPs,
+		typename StateMakerFn,
+		typename ExecFn >
+	std::unique_ptr< module_base > exec_make_input(
+		input_maker< Name, DimensionReferrer, IsRequired > const& maker,
+		partial_deduced_dimension_list< Ds ... > const& dims,
+		module_configure< Config ... > const& configs,
+		accessory< IOPs ... >&& iops,
+		module_make_data const& data,
+		std::string_view location,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	){
+		auto const output_ptr = get_output_ptr(data.inputs,
+			detail::to_std_string_view(Name{}));
 
-		auto const type_to_data = hana::unpack(converter.types,
-			[make_fn](auto ... t){
-				return std::unordered_map<
-						type_index, result_type(*)(output_base*)
-					>{{
-						type_index::type_id< typename decltype(t)::type >(),
-						make_fn(t)
-					} ...};
-			});
-
-		auto const active_type = converter.to_type_index(
-			packed_index{dims, converter.packed});
-
-		return hana::append(std::move(previous_makers), hana::make_pair(dims,
-			type_to_data.at(active_type)(output_ptr)));
-
+		return input_construction< partial_deduced_dimension_list< Ds ... > >
+			::call_construct_input(maker, configs, std::move(iops), data,
+				location, state_maker, exec, deduce_dimensions_by_input(
+					maker, dims, output_ptr), output_ptr);
 	}
 
 

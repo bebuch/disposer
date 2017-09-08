@@ -51,9 +51,35 @@ namespace disposer{
 		constexpr solved_dimensions(index_component< Ds > ... is)
 			: indexes(is ...) {}
 
+		/// \brief Construct without the first dimension
+		template < std::size_t ... D, std::size_t ... DsRest >
+		constexpr solved_dimensions(
+			hana::tuple< index_component< D >, index_component< Ds > ... > idx
+		): indexes(hana::remove_at(idx, hana::size_c< 0 >)) {}
+
 		/// \brief Tuple of the deduced index components
 		hana::tuple< index_component< Ds > ... > indexes;
+
+		/// \brief Get the solved dimensions without the first dimension
+		constexpr auto rest()const noexcept{
+			return solved_dimensions{indexes};
+		}
+
+		/// \brief Get the solved dimensions without the first dimension
+		constexpr auto dimension_number()const noexcept{
+			return hana::size_c< indexes[hana::size_c< 0 >].d >;
+		}
+
+		/// \brief Get index if the first dimension
+		constexpr std::size_t value_number()const noexcept{
+			return indexes[hana::size_c< 0 >].i;
+		}
 	};
+
+	template < std::size_t ... D, std::size_t ... DsRest >
+	solved_dimensions(
+		hana::tuple< index_component< D >, index_component< Ds > ... > is
+	) -> solved_dimensions< Ds ... >;
 
 	/// \brief Optional index components in the same order as in a DimensionList
 	template < bool ... DKs >
@@ -329,6 +355,8 @@ namespace disposer{
 			return map.at(index);
 		}
 	};
+
+	update_dims();
 
 
 }

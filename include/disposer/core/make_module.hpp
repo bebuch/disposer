@@ -47,13 +47,109 @@ namespace disposer{
 		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 
+
+	template <
+		typename Maker,
+		typename ... Dimension,
+		typename ... Config,
+		typename ... IOPs,
+		typename StateMakerFn,
+		typename ExecFn >
+	std::unique_ptr< module_base > exec_make_output(
+		Maker const& maker,
+		partial_deduced_dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
+		accessory< IOPs ... >&& iops,
+		module_make_data const& data,
+		std::string_view location,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	){
+
+	}
+
+	template <
+		typename Maker,
+		typename ... Dimension,
+		typename ... Config,
+		typename ... IOPs,
+		typename StateMakerFn,
+		typename ExecFn >
+	std::unique_ptr< module_base > exec_make_parameter(
+		Maker const& maker,
+		partial_deduced_dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
+		accessory< IOPs ... >&& iops,
+		module_make_data const& data,
+		std::string_view location,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	){
+
+	}
+
+	template <
+		typename Maker,
+		typename ... Dimension,
+		typename ... Config,
+		typename ... IOPs,
+		typename StateMakerFn,
+		typename ExecFn >
+	std::unique_ptr< module_base > exec_make_input(
+		Maker const& maker,
+		partial_deduced_dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
+		accessory< IOPs ... >&& iops,
+		module_make_data const& data,
+		std::string_view location,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	){
+
+	}
+
+	template <
+		typename ... Dimension,
+		typename ... Config,
+		typename ... IOPs,
+		typename StateMakerFn,
+		typename ExecFn >
+	std::unique_ptr< module_base > exec_set_dimension_fn(
+		partial_deduced_dimension_list< Dimension ... > const& dims,
+		module_configure< Config ... > const& configs,
+		accessory< IOPs ... >&& iops,
+		module_make_data const& data,
+		std::string_view location,
+		state_maker_fn< StateMakerFn > const& state_maker,
+		exec_fn< ExecFn > const& exec
+	){
+		auto const& config = configs.first();
+		using hana::is_a;
+
+		if constexpr(auto c = is_a< input_maker_tag >(config); c){
+			return exec_make_input(config, dims, configs.next(),
+				std::move(iops), data, location, state_maker, exec);
+		}else if constexpr(auto c = is_a< output_maker_tag >(config); c){
+			return exec_make_output(config, dims, configs.next(),
+				std::move(iops), data, location, state_maker, exec);
+		}else if constexpr(auto c = is_a< parameter_maker_tag >(config); c){
+			return exec_make_parameter(config, dims, configs.next(),
+				std::move(iops), data, location, state_maker, exec);
+		}else{
+			auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
+			static_assert(is_set_dimension_fn);
+			return exec_set_dimension_fn(config, dims, configs.next(),
+				std::move(iops), data, location, state_maker, exec);
+		}
+	}
+
 	/// \brief Maker function for \ref module in a std::unique_ptr
 	template <
 		typename ... Dimension,
 		typename ... Config,
 		typename StateMakerFn,
 		typename ExecFn >
-	auto make_module_ptr(
+	std::unique_ptr< module_base > make_module_ptr(
 		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
@@ -61,8 +157,10 @@ namespace disposer{
 		state_maker_fn< StateMakerFn > const& state_maker,
 		exec_fn< ExecFn > const& exec
 	){
-		return std::make_unique< module< list_type, StateMakerFn, ExecFn > >(
-			dims, configs, data, location, state_maker, exec);
+		return deduce_dimensions(
+			partial_deduced_dimension_list(dims),
+			config_queue(configs.config_list),
+			accessory{}, data, location, state_maker, exec);
 	}
 
 
@@ -87,7 +185,9 @@ namespace disposer{
 
 
 		/// \brief Create an module object
-		auto operator()(module_make_data const& data)const{
+		std::unique_ptr< module_base > operator()(
+			module_make_data const& data
+		)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
 			auto const location = data.location();
