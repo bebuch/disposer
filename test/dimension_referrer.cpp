@@ -59,7 +59,6 @@ std::size_t ct = 0;
 std::size_t ec = 0;
 
 int exec()try{
-
 	{
 		auto c = free_type_c< long >.convert< list_t >;
 		static_assert(c.indexes == make_tuple(make_tuple()));

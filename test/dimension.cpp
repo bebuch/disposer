@@ -1,6 +1,10 @@
 #include <disposer/core/dimension.hpp>
 
 
+template < std::size_t DI, std::size_t I >
+using ic = disposer::ct_index_component< DI, I >;
+
+
 int main(){
 	using namespace disposer;
 
@@ -19,49 +23,34 @@ int main(){
 	}
 
 	// dimension_list construction by dimension_c and
-	// partial_deduced_dimension_list
+	// dimension_list
 	{
 		auto list = dimension_list{};
 		static_assert(std::is_same_v< decltype(list), dimension_list<> >);
 
-		partial_deduced_dimension_list plist{list};
-		static_assert(std::is_same_v< decltype(plist),
-			partial_deduced_dimension_list<> >);
+		dimension_list plist{list};
+		static_assert(std::is_same_v< decltype(plist), dimension_list<> >);
 	}
 	{
-		auto list = dimension_list{
-				dimension_c< int, char, float >
-			};
-		static_assert(std::is_same_v< decltype(list), dimension_list<
-				dimension< int, char, float >
-			> >);
+		auto list = dimension_list{dimension_c< int, char, float >};
+		static_assert(std::is_same_v< decltype(list),
+			dimension_list< dimension< int, char, float > > >);
 
-		partial_deduced_dimension_list plist{list};
+		dimension_list plist{list};
 		static_assert(std::is_same_v< decltype(plist),
-			partial_deduced_dimension_list<
-				dimension< int, char, float >
-			> >);
+			dimension_list< dimension< int, char, float > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 0 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< int >
-			> >);
+			decltype(reduce_dimension_list(plist, ic< 0, 0 >{})),
+			dimension_list< dimension< int > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 1 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< char >
-			> >);
+			decltype(reduce_dimension_list(plist, ic< 0, 1 >{})),
+			dimension_list< dimension< char > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 2 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< float >
-			> >);
+			decltype(reduce_dimension_list(plist, ic< 0, 2 >{})),
+			dimension_list< dimension< float > > >);
 	}
 	{
 		auto list = dimension_list{
@@ -73,101 +62,66 @@ int main(){
 				dimension< double, bool >
 			> >);
 
-		partial_deduced_dimension_list plist{list};
+		dimension_list plist{list};
 		static_assert(std::is_same_v< decltype(plist),
-			partial_deduced_dimension_list<
+			dimension_list<
 				dimension< int, char, float >,
 				dimension< double, bool >
 			> >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 0 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< int >, dimension< double, bool >
+			decltype(reduce_dimension_list(plist, ic< 0, 0 >{})),
+			dimension_list< dimension< int >, dimension< double, bool > > >);
+
+		static_assert(std::is_same_v<
+			decltype(reduce_dimension_list(plist, ic< 0, 1 >{})),
+			dimension_list< dimension< char >, dimension< double, bool > > >);
+
+		static_assert(std::is_same_v<
+			decltype(reduce_dimension_list(plist, ic< 0, 2 >{})),
+			dimension_list< dimension< float >, dimension< double, bool > > >);
+
+		static_assert(std::is_same_v<
+			decltype(reduce_dimension_list(plist, ic< 1, 0 >{})),
+			dimension_list<
+				dimension< int, char, float >, dimension< double >
 			> >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 1 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< char >, dimension< double, bool >
+			decltype(reduce_dimension_list(plist, ic< 1, 1 >{})),
+			dimension_list<
+				dimension< int, char, float >, dimension< bool >
 			> >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 0, 2 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< float >, dimension< double, bool >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 0 >{}), ic< 1, 0 >{})),
+			dimension_list< dimension< int >, dimension< double > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 1, 0 >{}))),
-			partial_deduced_dimension_list<
-				dimension< int, char, float >, hana::basic_type< double >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 1 >{}), ic< 1, 0 >{})),
+			dimension_list< dimension< char >, dimension< double > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(ct_index_component< 1, 1 >{}))),
-			partial_deduced_dimension_list<
-				dimension< int, char, float >, hana::basic_type< bool >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 2 >{}), ic< 1, 0 >{})),
+			dimension_list< dimension< float >, dimension< double > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 0 >{},
-					ct_index_component< 1, 0 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< int >, hana::basic_type< double >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 0 >{}), ic< 1, 1 >{})),
+			dimension_list< dimension< int >, dimension< bool > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 1 >{},
-					ct_index_component< 1, 0 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< char >, hana::basic_type< double >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 1 >{}), ic< 1, 1 >{})),
+			dimension_list< dimension< char >, dimension< bool > > >);
 
 		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 2 >{},
-					ct_index_component< 1, 0 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< float >, hana::basic_type< double >
-			> >);
-
-		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 0 >{},
-					ct_index_component< 1, 1 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< int >, hana::basic_type< bool >
-			> >);
-
-		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 1 >{},
-					ct_index_component< 1, 1 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< char >, hana::basic_type< bool >
-			> >);
-
-		static_assert(std::is_same_v<
-			decltype(make_partial_deduced_dimension_list(plist,
-				hana::make_tuple(
-					ct_index_component< 0, 2 >{},
-					ct_index_component< 1, 1 >{}))),
-			partial_deduced_dimension_list<
-				hana::basic_type< float >, hana::basic_type< bool >
-			> >);
+			decltype(reduce_dimension_list(
+				reduce_dimension_list(plist, ic< 0, 2 >{}), ic< 1, 1 >{})),
+			dimension_list< dimension< float >, dimension< bool > > >);
 	}
 
 	// direct dimension_list construction
@@ -176,9 +130,7 @@ int main(){
 		(void)list;
 	}
 	{
-		auto list = dimension_list<
-				dimension< int, char, float >
-			>{};
+		auto list = dimension_list< dimension< int, char, float > >{};
 		(void)list;
 	}
 	{

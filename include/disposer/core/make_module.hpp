@@ -57,7 +57,7 @@ namespace disposer{
 		typename ExecFn >
 	std::unique_ptr< module_base > exec_make_output(
 		Maker const& maker,
-		partial_deduced_dimension_list< Dimension ... > const& dims,
+		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		accessory< IOPs ... >&& iops,
 		module_make_data const& data,
@@ -77,7 +77,7 @@ namespace disposer{
 		typename ExecFn >
 	std::unique_ptr< module_base > exec_make_parameter(
 		Maker const& maker,
-		partial_deduced_dimension_list< Dimension ... > const& dims,
+		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		accessory< IOPs ... >&& iops,
 		module_make_data const& data,
@@ -97,7 +97,7 @@ namespace disposer{
 		typename ExecFn >
 	std::unique_ptr< module_base > exec_make_input(
 		Maker const& maker,
-		partial_deduced_dimension_list< Dimension ... > const& dims,
+		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		accessory< IOPs ... >&& iops,
 		module_make_data const& data,
@@ -115,7 +115,7 @@ namespace disposer{
 		typename StateMakerFn,
 		typename ExecFn >
 	std::unique_ptr< module_base > exec_set_dimension_fn(
-		partial_deduced_dimension_list< Dimension ... > const& dims,
+		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		accessory< IOPs ... >&& iops,
 		module_make_data const& data,
@@ -158,7 +158,7 @@ namespace disposer{
 		exec_fn< ExecFn > const& exec
 	){
 		return deduce_dimensions(
-			partial_deduced_dimension_list(dims),
+			dimension_list(dims),
 			config_queue(configs.config_list),
 			accessory{}, data, location, state_maker, exec);
 	}

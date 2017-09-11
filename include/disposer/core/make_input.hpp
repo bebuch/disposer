@@ -18,6 +18,7 @@
 #include "../tool/to_std_string_view.hpp"
 #include "../tool/type_list_as_string.hpp"
 
+#include <array>
 #include <variant>
 #include <unordered_map>
 
@@ -90,16 +91,12 @@ namespace disposer{
 		typename ... Ts >
 	auto deduce_dimensions_by_input(
 		input_maker< Name, DimensionReferrer, IsRequired >,
-		partial_deduced_dimension_list< Ds ... >,
+		dimension_list< Ds ... >,
 		output_base* const output_ptr
 	){
 		if constexpr(IsRequired){
-			if(output_ptr == nullptr){
-				throw std::logic_error("input is required but not set");
-			}
-
 			constexpr dimension_solver solver(
-				partial_deduced_dimension_list< Ds ... >{},
+				dimension_list< Ds ... >{},
 				DimensionReferrer{});
 			return solver.solve(Name{}, output_ptr->get_type()));
 		}else{
@@ -133,7 +130,8 @@ namespace disposer{
 		){
 			if constexpr(solved_dims){
 				using make_fn_type = std::unique_ptr< module_base >(*)(
-						input_maker< Name, DimensionReferrer, IsRequired > const&,
+						input_maker< Name, DimensionReferrer, IsRequired >
+							const&,
 						module_configure< Config ... > const&,
 						accessory< IOPs ... >&&,
 						module_make_data const&,
@@ -144,30 +142,38 @@ namespace disposer{
 						output_base* const
 					);
 
-				auto solved_d = solved_dims.dimension_number();
+				auto const solved_d = solved_dims.dimension_number();
 
 				constexpr auto tc = PartialDeducedDimensionList
 					::dimensions[solved_d].type_count;
 
-				// TODO: make array and call by solved_dims
-				static_cast< make_fn_type >(&input_construction< Ds ... >::call_construct_input)
-
-				hana::unpack(hana::range_c< std::size_c, 0, tc >,
+				constexpr auto call = hana::unpack(
+					hana::range_c< std::size_c, 0, tc >,
 					[](auto ... i){
 						template < std::size_t I >
 						using next_list_type =
-							decltype(make_partial_deduced_dimension_list(
+							decltype(reduce_dimension_list(
 								PartialDeducedDimensionList{},
 								ct_index_component< solved_d.value, I >{}
 							));
 
-						constexpr make_fn_type call[sizeof...(i)] = {
+						return std::array< make_fn_type, sizeof...(i) >{{
 								&input_construction< next_list_type
 									< decltype(i)::value > >::make ...
-							};
-
-
+							}};
 					});
+
+				call[solved_dims.index_number()](
+						maker,
+						configs,
+						std::move(iops),
+						data,
+						location,
+						state_maker,
+						exec,
+						solved_dims.rest(),
+						output_ptr
+					);
 			}else{
 				auto constexpr converter = DimensionReferrer::
 					template convert< PartialDeducedDimensionList >;
@@ -230,7 +236,7 @@ namespace disposer{
 		typename ExecFn >
 	std::unique_ptr< module_base > exec_make_input(
 		input_maker< Name, DimensionReferrer, IsRequired > const& maker,
-		partial_deduced_dimension_list< Ds ... > const& dims,
+		dimension_list< Ds ... > const& dims,
 		module_configure< Config ... > const& configs,
 		accessory< IOPs ... >&& iops,
 		module_make_data const& data,
@@ -241,7 +247,13 @@ namespace disposer{
 		auto const output_ptr = get_output_ptr(data.inputs,
 			detail::to_std_string_view(Name{}));
 
-		return input_construction< partial_deduced_dimension_list< Ds ... > >
+		if constexpr(IsRequired){
+			if(output_ptr == nullptr){
+				throw std::logic_error("input is required but not set");
+			}
+		}
+
+		return input_construction< dimension_list< Ds ... > >
 			::call_construct_input(maker, configs, std::move(iops), data,
 				location, state_maker, exec, deduce_dimensions_by_input(
 					maker, dims, output_ptr), output_ptr);

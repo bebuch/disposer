@@ -19,6 +19,7 @@
 #include <boost/hana/sort.hpp>
 #include <boost/hana/replicate.hpp>
 #include <boost/hana/not_equal.hpp>
+#include <boost/hana/remove_at.hpp>
 
 #include <unordered_set>
 
@@ -52,9 +53,9 @@ namespace disposer{
 			: indexes(is ...) {}
 
 		/// \brief Construct without the first dimension
-		template < std::size_t ... D, std::size_t ... DsRest >
+		template < std::size_t D, std::size_t ... DsRest >
 		constexpr solved_dimensions(
-			hana::tuple< index_component< D >, index_component< Ds > ... > idx
+			hana::tuple< index_component< D >, index_component< DsRest > ... > idx
 		): indexes(hana::remove_at(idx, hana::size_c< 0 >)) {}
 
 		/// \brief Tuple of the deduced index components
@@ -71,15 +72,15 @@ namespace disposer{
 		}
 
 		/// \brief Get index if the first dimension
-		constexpr std::size_t value_number()const noexcept{
+		constexpr std::size_t index_number()const noexcept{
 			return indexes[hana::size_c< 0 >].i;
 		}
 	};
 
-	template < std::size_t ... D, std::size_t ... DsRest >
+	template < std::size_t D, std::size_t ... DsRest >
 	solved_dimensions(
-		hana::tuple< index_component< D >, index_component< Ds > ... > is
-	) -> solved_dimensions< Ds ... >;
+		hana::tuple< index_component< D >, index_component< DsRest > ... > is
+	) -> solved_dimensions< DsRest ... >;
 
 	/// \brief Optional index components in the same order as in a DimensionList
 	template < bool ... DKs >
@@ -355,8 +356,6 @@ namespace disposer{
 			return map.at(index);
 		}
 	};
-
-	update_dims();
 
 
 }

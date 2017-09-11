@@ -36,8 +36,8 @@ namespace disposer{
 		/// \brief Count of types
 		static constexpr std::size_t type_count = sizeof...(Ts);
 
-		static_assert(type_count > 1,
-			"dimension's must contain at least 2 different types");
+		static_assert(type_count > 0,
+			"dimension's must contain at least 1 type");
 
 		/// \brief Types as hana::tuple_t
 		static constexpr auto types = hana::tuple_t< Ts ... >;
@@ -78,83 +78,57 @@ namespace disposer{
 
 
 	/// \brief List of type lists of a module
-	template < typename ... Dimension >
+	template < typename ... Ds >
 	struct dimension_list{
 		static_assert(hana::all_of(
-			hana::make_tuple(Dimension{} ...), hana::is_a< dimension_tag >),
-			"Dimension must be a disposer::dimension< ... >");
+			hana::make_tuple(Ds{} ...), hana::is_a< dimension_tag >),
+			"Ds must be a disposer::dimension< ... >");
 
-		/// \brief Tuple of type lists, Dimension is always a \ref dimension
-		static constexpr auto dimensions =
-			hana::make_tuple(Dimension::types ...);
+		/// \brief Tuple of type lists, Ds is always a \ref dimension
+		static constexpr auto dimensions = hana::make_tuple(Ds::types ...);
 
 		/// \brief Default constructor
 		///
-		/// Disabled if Dimension is empty to resolve ambiguity.
+		/// Disabled if Ds is empty to resolve ambiguity.
 		template < typename Dummy = void, typename = std::enable_if_t<
-			(sizeof...(Dimension) > 0), Dummy > >
+			(sizeof...(Ds) > 0), Dummy > >
 		constexpr dimension_list()noexcept{}
 
 		/// \brief Constructor
-		constexpr dimension_list(Dimension const& ...)noexcept{}
+		constexpr dimension_list(Ds const& ...)noexcept{}
 	};
 
 
 	/// \brief Pair of a dimension number and the index of its active type
-	template < std::size_t D, std::size_t I >
+	template < std::size_t DI, std::size_t I >
 	struct ct_index_component{
 		/// \brief Dimension number
-		static constexpr auto d = hana::size_c< D >;
+		static constexpr auto d = hana::size_c< DI >;
 
 		/// \brief Index of the active type of the dimension
 		static constexpr auto i = hana::size_c< I >;
 	};
 
-	/// \brief List of type lists of a module
-	template < typename ... Dimension >
-	struct partial_deduced_dimension_list{
-		static_assert(hana::all_of(
-			hana::make_tuple(Dimension{} ...), [](auto const& dim){
-				return hana::is_a< dimension_tag >(dim)
-					|| hana::is_a< hana::type_tag >(dim);
-			}),
-			"Dimension must be a disposer::dimension< ... > or a hana::type");
 
-		/// \brief Tuple of type lists, Dimension is always a \ref dimension
-		static constexpr auto dimensions = hana::make_tuple([](auto dim){
-				if constexpr(hana::is_a< dimension_tag >(dim)){
-					return dim.types;
-				}else{
-					return dim;
-				}
-			}(Dimension{}) ...);
-
-		/// \brief Constructor
-		constexpr partial_deduced_dimension_list(
-			dimension_list< Dimension ... >
-		)noexcept{}
-
-		/// \brief Constructor
-		constexpr partial_deduced_dimension_list()noexcept = default;
-	};
-
-	template < typename ... DLs, std::size_t D, std::size_t I >
-	auto make_partial_deduced_dimension_list(
-		partial_deduced_dimension_list< DLs ... >,
-		ct_index_component< D, I >
-	){
-		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(DLs) >,
+	/// \brief Create a new dimension list, where the given dimension has
+	///        the indexed type
+	template < typename ... Ds, std::size_t DI, std::size_t I >
+	constexpr auto reduce_dimension_list(
+		dimension_list< Ds ... >,
+		ct_index_component< DI, I >
+	)noexcept{
+		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(Ds) >,
 			[](auto ... n){
 				auto const calc = [](auto n, auto dim){
-						if constexpr(n.value == Ds){
-							return hana::basic_type(dim.types[ic->i]);
+						if constexpr(n.value == DI){
+							return dimension< typename decltype(
+								+dim.types[hana::size_c< I >])::type >{};
 						}else{
 							return dim;
 						}
 					};
 
-				return partial_deduced_dimension_list<
-					decltype(calc(n, DLs{})) ... >{};
+				return dimension_list< decltype(calc(n, Ds{})) ... >{};
 			});
 	}
 
