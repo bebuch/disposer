@@ -16,7 +16,6 @@
 #include "../config/module_make_data.hpp"
 
 #include "../tool/to_std_string_view.hpp"
-#include "../tool/type_list_as_string.hpp"
 
 #include <array>
 #include <variant>
@@ -180,13 +179,6 @@ namespace disposer{
 
 				if(IsRequired || output_ptr != nullptr){
 					auto const type = output_ptr->get_type();
-					if(converter.is_valid(type)){
-						throw std::logic_error("type of connected output which is ["
-							+ type.pretty_name()
-							+ "] is not compatible with input, valid types are: "
-							+ type_list_as_string(converter.get_type_indexes()));
-					}
-
 					auto const active_type = converter.to_type_index(
 						packed_index{dims, converter.packed});
 

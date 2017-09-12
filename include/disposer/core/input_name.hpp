@@ -23,10 +23,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for inputs
 	template < char ... C >
-	struct input_name: ct_name< C ... >{
-		/// \brief Hana tag to identify input names
-		using hana_tag = input_name_tag;
-	};
+	struct input_name: ct_name< input_name_tag, C ... >{};
 
 	/// \brief Make a \ref input_name object
 	template < char ... C >

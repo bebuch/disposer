@@ -55,7 +55,8 @@ namespace disposer{
 		/// \brief Construct without the first dimension
 		template < std::size_t D, std::size_t ... DsRest >
 		constexpr solved_dimensions(
-			hana::tuple< index_component< D >, index_component< DsRest > ... > idx
+			hana::tuple< index_component< D >,
+			index_component< DsRest > ... > idx
 		): indexes(hana::remove_at(idx, hana::size_c< 0 >)) {}
 
 		/// \brief Tuple of the deduced index components
