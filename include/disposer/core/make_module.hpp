@@ -47,101 +47,159 @@ namespace disposer{
 		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 
+	template < typename StateMakerFn, typename ExecFn >
+	struct module_construction{
+		std::string_view location;
+		module_make_data const& data;
+		state_maker_fn< StateMakerFn > const& state_maker;
+		exec_fn< ExecFn > const& exec;
 
-	template <
-		typename Maker,
-		typename ... Dimension,
-		typename ... Config,
-		typename ... IOPs,
-		typename StateMakerFn,
-		typename ExecFn >
-	std::unique_ptr< module_base > exec_make_output(
-		Maker const& maker,
-		dimension_list< Dimension ... > const& dims,
-		module_configure< Config ... > const& configs,
-		accessory< IOPs ... >&& iops,
-		module_make_data const& data,
-		std::string_view location,
-		state_maker_fn< StateMakerFn > const& state_maker,
-		exec_fn< ExecFn > const& exec
-	){
+		template < typename DimensionList >
+		struct input_construction{
+			module_construction< StateMakerFn, ExecFn > const& base;
 
-	}
+			template <
+				typename Name,
+				typename DimensionReferrer,
+				bool IsRequired,
+				typename ... Config,
+				typename ... IOPs,
+				std::size_t ... SDs >
+			std::unique_ptr< module_base > make(
+				input_maker< Name, DimensionReferrer, IsRequired > const& maker,
+				config_queue< Config ... > const& configs,
+				iops_ref< IOPs ... >&& iops,
+				solved_dimensions< SDs ... > const& solved_dims,
+				output_base* const output_ptr
+			)const{
+				if constexpr(!solved_dims.is_empty()){
+					using next_input_construction_type = input_construction<
+						next_list_type< decltype(i)::value > >;
 
-	template <
-		typename Maker,
-		typename ... Dimension,
-		typename ... Config,
-		typename ... IOPs,
-		typename StateMakerFn,
-		typename ExecFn >
-	std::unique_ptr< module_base > exec_make_parameter(
-		Maker const& maker,
-		dimension_list< Dimension ... > const& dims,
-		module_configure< Config ... > const& configs,
-		accessory< IOPs ... >&& iops,
-		module_make_data const& data,
-		std::string_view location,
-		state_maker_fn< StateMakerFn > const& state_maker,
-		exec_fn< ExecFn > const& exec
-	){
+					using make_fn_type =
+						std::unique_ptr< module_base >(
+							next_input_construction_type::*
+						)(
+							input_maker< Name, DimensionReferrer, IsRequired >
+								const&,
+							config_queue< Config ... > const&,
+							iops_ref< IOPs ... >&&,
+							decltype(solved_dims.rest()) const&,
+							output_base* const
+						);
 
-	}
+					auto const solved_d = solved_dims.dimension_number();
 
-	template <
-		typename Maker,
-		typename ... Dimension,
-		typename ... Config,
-		typename ... IOPs,
-		typename StateMakerFn,
-		typename ExecFn >
-	std::unique_ptr< module_base > exec_make_input(
-		Maker const& maker,
-		dimension_list< Dimension ... > const& dims,
-		module_configure< Config ... > const& configs,
-		accessory< IOPs ... >&& iops,
-		module_make_data const& data,
-		std::string_view location,
-		state_maker_fn< StateMakerFn > const& state_maker,
-		exec_fn< ExecFn > const& exec
-	){
+					constexpr auto tc = DimensionList
+						::dimensions[solved_d].type_count;
 
-	}
+					constexpr auto call = hana::unpack(
+						hana::range_c< std::size_c, 0, tc >,
+						[](auto ... i){
+							template < std::size_t I >
+							using next_list_type =
+								decltype(reduce_dimension_list(
+									DimensionList{},
+									ct_index_component< solved_d.value, I >{}
+								));
 
-	template <
-		typename ... Dimension,
-		typename ... Config,
-		typename ... IOPs,
-		typename StateMakerFn,
-		typename ExecFn >
-	std::unique_ptr< module_base > exec_set_dimension_fn(
-		dimension_list< Dimension ... > const& dims,
-		module_configure< Config ... > const& configs,
-		accessory< IOPs ... >&& iops,
-		module_make_data const& data,
-		std::string_view location,
-		state_maker_fn< StateMakerFn > const& state_maker,
-		exec_fn< ExecFn > const& exec
-	){
-		auto const& config = configs.first();
-		using hana::is_a;
+							return std::array< make_fn_type, sizeof...(i) >{{
+									&next_input_construction_type::make ...
+								}};
+						});
 
-		if constexpr(auto c = is_a< input_maker_tag >(config); c){
-			return exec_make_input(config, dims, configs.next(),
-				std::move(iops), data, location, state_maker, exec);
-		}else if constexpr(auto c = is_a< output_maker_tag >(config); c){
-			return exec_make_output(config, dims, configs.next(),
-				std::move(iops), data, location, state_maker, exec);
-		}else if constexpr(auto c = is_a< parameter_maker_tag >(config); c){
-			return exec_make_parameter(config, dims, configs.next(),
-				std::move(iops), data, location, state_maker, exec);
-		}else{
-			auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
-			static_assert(is_set_dimension_fn);
-			return exec_set_dimension_fn(config, dims, configs.next(),
-				std::move(iops), data, location, state_maker, exec);
+					next_input_construction_type next{base};
+
+					return (next.*call)[solved_dims.index_number()](
+							maker,
+							configs,
+							std::move(iops),
+							solved_dims.rest(),
+							output_ptr
+						);
+				}else{
+					using type = typename DimensionReferrer::type;
+
+					if(IsRequired || output_ptr != nullptr){
+						constexpr auto active_ti
+							= type_index::type_id< type >();
+						auto const output_ti = output_ptr->get_type();
+
+						if(output_ti != active_ti){
+							throw std::logic_error("type of input is ["
+								+ active_ti.pretty_name()
+								+ "] but connected output is of type ["
+								+ output_ti.pretty_name() + "]");
+						}
+					}
+
+					input< Name, typename decltype(type)::type, IsRequired >
+						input{output_ptr};
+
+					return make_module(dims, configs, iops_ref(iops, input));
+				}
+			}
+		};
+
+		template <
+			typename Name,
+			typename DimensionReferrer,
+			bool IsRequired,
+			typename ... Ds,
+			typename ... Config,
+			typename ... IOPs >
+		std::unique_ptr< module_base > exec_make_input(
+			input_maker< Name, DimensionReferrer, IsRequired > const& maker,
+			dimension_list< Ds ... > const& dims,
+			config_queue< Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			auto const output_ptr = get_output_ptr(data.inputs,
+				detail::to_std_string_view(Name{}));
+
+			if constexpr(IsRequired){
+				if(output_ptr == nullptr){
+					throw std::logic_error("input is required but not set");
+				}
+			}
+
+			input_construction< dimension_list< Ds ... > > base{*this};
+
+			return base.make(maker, configs, std::move(iops),
+				deduce_dimensions_by_input(maker, dims, output_ptr),
+				output_ptr);
 		}
-	}
+
+
+		template <
+			typename ... Dimension,
+			typename ... Config,
+			typename ... IOPs >
+		std::unique_ptr< module_base > make_module(
+			dimension_list< Dimension ... > const& dims,
+			config_queue< Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			auto const& config = configs.first();
+			using hana::is_a;
+
+			if constexpr(auto c = is_a< input_maker_tag >(config); c){
+				return exec_make_input(config, dims, configs.next(),
+					std::move(iops));
+			}else if constexpr(auto c = is_a< output_maker_tag >(config); c){
+// 				return exec_make_output(config, dims, configs.next(),
+// 					std::move(iops));
+			}else if constexpr(auto c = is_a< parameter_maker_tag >(config); c){
+// 				return exec_make_parameter(config, dims, configs.next(),
+// 					std::move(iops));
+			}else{
+// 				auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
+// 				static_assert(is_set_dimension_fn);
+// 				return exec_set_dimension_fn(config, dims, configs.next(),
+// 					std::move(iops));
+			}
+		}
+	};
 
 	/// \brief Maker function for \ref module in a std::unique_ptr
 	template <
@@ -157,10 +215,9 @@ namespace disposer{
 		state_maker_fn< StateMakerFn > const& state_maker,
 		exec_fn< ExecFn > const& exec
 	){
-		return deduce_dimensions(
-			dimension_list(dims),
-			config_queue(configs.config_list),
-			accessory{}, data, location, state_maker, exec);
+		return module_construction< StateMakerFn, ExecFn >
+			{location, data, state_maker, exec}.make(dims,
+			config_queue(configs.config_list), iops_ref{});
 	}
 
 

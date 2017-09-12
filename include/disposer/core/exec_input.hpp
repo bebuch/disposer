@@ -38,11 +38,9 @@ namespace disposer{
 
 		/// \brief Is the input connected to an output
 		bool is_connected()noexcept{
-			if constexpr(IsRequired){
-				static_assert(false_c< IsRequired >,
-					"Input is required and therefore always connected! "
-					"Just don't ask ;-)");
-			}
+			static_assert(IsRequired,
+				"Input is required and therefore always connected! "
+				"Just don't ask ;-)");
 
 			return output_ptr() != nullptr;
 		}
@@ -67,8 +65,8 @@ namespace disposer{
 
 	private:
 		/// \brief Get a pointer to the connected exec_output or a nullptr
-		exec_output< T >* output_ptr()const noexcept{
-			return static_cast< exec_output< T >* >(
+		unnamed_exec_output< T >* output_ptr()const noexcept{
+			return static_cast< unnamed_exec_output< T >* >(
 				exec_input_base::output_ptr());
 		}
 

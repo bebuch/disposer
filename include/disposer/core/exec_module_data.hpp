@@ -10,7 +10,7 @@
 #define _disposer__core__exec_module_data__hpp_INCLUDED_
 
 #include "exec_input.hpp"
-#include "exec_output.hpp"
+#include "exec_output_base.hpp"
 
 #include "../tool/false_c.hpp"
 #include "../tool/extract.hpp"

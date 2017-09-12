@@ -13,6 +13,7 @@
 
 #include "../tool/type_index.hpp"
 #include "../tool/type_list_as_string.hpp"
+#include "../tool/to_std_string.hpp"
 
 #include <boost/hana/remove_at.hpp>
 #include <boost/hana/remove_if.hpp>
@@ -78,7 +79,9 @@ namespace disposer{
 						== hana::size_c< 1 >;
 				});
 
-			if constexpr(is_deducible){
+			if constexpr(hana::size(unknown_dim_indexes) == hana::size_c< 0 >){
+				return solved_dimensions{};
+			}else if constexpr(is_deducible){
 				return hana::unpack(unknown_dim_indexes, [&ti](auto ... udis){
 					using solved_type =
 						solved_dimensions< std::size_t(udis) ... >;
@@ -112,7 +115,9 @@ namespace disposer{
 					throw std::logic_error(
 						"type of connected output which is ["
 						+ ti.pretty_name()
-						+ "] is not compatible with input, valid types are: "
+						+ "] is not compatible with input("
+						+ detail::to_std_string(Name{})
+						+ "), valid types are: "
 						+ type_list_as_string(get_type_indexes()));
 				});
 			}else{

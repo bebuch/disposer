@@ -40,7 +40,11 @@ namespace disposer{
 		using const_reverse_iterator =
 			typename container_type::const_reverse_iterator;
 
+		/// \brief Size type
+		using size_type = typename container_type::size_type;
 
+
+		/// \brief Constructor
 		input_data(container_type&& data)
 			: data_(std::move(data)) {}
 
@@ -68,17 +72,20 @@ namespace disposer{
 
 
 		/// \brief Access specified element
-		T&& operator[](size_type pos)&& noexcept(noexcept(data_[pos])){
+		T&& operator[](size_type pos)&&
+		noexcept(noexcept(std::declval< container_type >()[pos])){
 			return std::move(data_[pos]);
 		}
 
 		/// \brief Access specified element
-		T& operator[](size_type pos)& noexcept(noexcept(data_[pos])){
+		T& operator[](size_type pos)&
+		noexcept(noexcept(std::declval< container_type >()[pos])){
 			return data_[pos];
 		}
 
 		/// \brief Access specified element
-		T const& operator[](size_type pos)const& noexcept(noexcept(data_[pos])){
+		T const& operator[](size_type pos)const&
+		noexcept(noexcept(std::declval< container_type const >()[pos])){
 			return data_[pos];
 		}
 
@@ -179,7 +186,11 @@ namespace disposer{
 		/// \brief Constant reverse random access iterator
 		using const_reverse_iterator = reverse_iterator;
 
+		/// \brief Size type
+		using size_type = typename container_type::size_type;
 
+
+		/// \brief Constructor
 		input_data(container_type const& data)
 			: data_(data) {}
 
@@ -196,7 +207,8 @@ namespace disposer{
 		}
 
 		/// \brief Access specified element
-		T const& operator[](size_type pos)const& noexcept(noexcept(data_[pos])){
+		T const& operator[](size_type pos)const&
+		noexcept(noexcept(std::declval< container_type const& >()[pos])){
 			return data_[pos];
 		}
 

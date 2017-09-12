@@ -57,27 +57,7 @@ namespace disposer{
 
 		/// \brief Constructor
 		input(output_base* output)
-			: input_base(verify_output(output)) {}
-
-
-	private:
-		/// \brief Verify that the output connection is valid
-		static output_base* verify_output(output_base* output){
-			if(output != nullptr){
-				auto const type = output->type(input_key(), hana::type_c< T >);
-				if(type_index< T > != type){
-					throw std::logic_error("input(" + std::to_std_string(name)
-						+ ") of type [" + type_index< T >.pretty_name()
-						+ "] is connected with output of type ["
-						+ type.pretty_name() + "]");
-				}
-			}else if constexpr(is_required){
-				throw std::logic_error("input(" + std::to_std_string(name)
-					+ ") is required");
-			}
-
-			return output;
-		}
+			: input_base(output) {}
 	};
 
 

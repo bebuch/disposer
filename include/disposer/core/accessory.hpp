@@ -26,22 +26,41 @@ namespace disposer{
 		std::string_view location;
 		std::string_view maker_type_name;
 		std::string_view maker_name;
+	};
 
-		void operator()(logsys::stdlogb& os)const{
-			os << location << " " << maker_type_name
-				<< "(" << maker_name << ") ";
+	template < typename ... IOP_RefList >
+	struct iops_ref{};
+
+	iops_ref() -> iops_ref<>;
+
+	template < typename IOP_Ref, typename ... IOP_RefList >
+	struct iops_ref< IOP_Ref, IOP_RefList ... >{
+		IOP_Ref const& ref;
+		iops_ref< IOP_RefList ... > const& list;
+
+		iops_ref(IOP_Ref const& ref, iops_ref< IOP_RefList ... > const& list)
+			: ref(ref), list(list) {}
+
+		/// \brief Get const reference to an input-, output- or parameter-object
+		///        via its corresponding compile time name
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			if constexpr(ref.name == name){
+				return ref;
+			}else{
+				static_assert(sizeof...(IOP_RefList) > 0,
+					"object with name is unknown");
+
+				list(name);
+			}
 		}
 	};
 
-
-	using namespace std::literals::string_view_literals;
-
-
-	template < typename IOP_RefList >
-	class iops_accessory: public add_log< iops_accessory< IOP_RefList > >{
+	template < typename ... IOP_RefList >
+	class iops_accessory: public add_log< iops_accessory< IOP_RefList ... > >{
 	public:
 		iops_accessory(
-			IOP_RefList const& iop_list,
+			iops_ref< IOP_RefList ... > const& list,
 			iop_log&& log_fn
 		)noexcept
 			: iop_list_(iop_list)
@@ -52,62 +71,23 @@ namespace disposer{
 		///        via its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			using name_t = std::remove_reference_t< Name >;
-			static_assert(
-				hana::is_a< input_name_tag, name_t > ||
-				hana::is_a< output_name_tag, name_t > ||
-				hana::is_a< parameter_name_tag, name_t >,
-				"name is not an input_name, output_name or parameter_name");
-
-			return detail::extract(iop_list_, name);
+			return list(name);
 		}
 
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			log_fn_(os);
+			os << log_fn_.location << " " << log_fn_.maker_type_name
+				<< "(" << log_fn_.maker_name << ") ";
 		}
 
 
 	private:
-		IOP_RefList iop_list_;
+		/// \brief References to all previous IOPs
+		iops_ref< IOP_RefList ... > const& list;
 
 		/// \brief Reference to an iop_log object
 		iop_log log_fn_;
-	};
-
-	template < typename IOP_RefList, typename MakeData >
-	struct iops_make_data{
-		iops_make_data(
-			MakeData&& make_data,
-			std::string_view location,
-			IOP_RefList const& iop_list
-		)noexcept
-			: data(static_cast< MakeData&& >(make_data))
-			, accessory(iop_list, iop_log{
-				location, make_data.log_name,
-				detail::to_std_string_view(make_data.maker.name)}) {}
-
-		MakeData data;
-		iops_accessory< IOP_RefList > accessory;
-	};
-
-
-	template < typename ... Dimension, typename ... Config >
-	auto make_module_make_data(
-		dimension_list< Dimension ... >,
-		module_configure< Config ... > const& configs,
-		module_make_data const& data
-	){
-		return hana::fold(configs, hana::make_pair(
-				undeduced_list_index_c< sizeof...(Dimension) >,
-				hana::make_tuple()),
-			[](auto&& state, auto const& config){
-				return make_data(config, dimension_list< Dimension ... >{},
-					data,
-					hana::first(static_cast< decltype(state)&& >(state))
-					hana::second(static_cast< decltype(state)&& >(state)));
-			})
 	};
 
 

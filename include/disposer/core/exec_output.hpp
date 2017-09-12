@@ -11,8 +11,8 @@
 
 #include "exec_output_base.hpp"
 #include "output.hpp"
-#include "config_fn.hpp"
 
+#include "../tool/input_data.hpp"
 #include "../tool/to_std_string_view.hpp"
 
 #include <io_tools/make_string.hpp>
@@ -25,24 +25,17 @@ namespace disposer{
 
 
 	/// \brief The output type while exec
-	template < typename Name, typename T >
-	class exec_output: public exec_output_base{
+	template < typename T >
+	class unnamed_exec_output: public exec_output_base{
 	public:
-		/// \brief Compile time name of the output
-		using name_type = typename output_type::name_type;
-
-		/// \brief Name object
-		static constexpr auto name = name_type{};
-
-
 		/// \brief Constructor
-		exec_output(std::size_t use_count)noexcept
+		unnamed_exec_output(std::size_t use_count)noexcept
 			: exec_output_base(use_count) {}
 
 
 		/// \brief Add given data to \ref data_
 		template < typename ... Args >
-		void emplace(Args&& args){
+		void emplace(Args&& ... args){
 			data_.emplace_back(static_cast< Args&& >(args) ...);
 		}
 
@@ -69,13 +62,27 @@ namespace disposer{
 
 		/// \brief Remove data on last cleanup call
 		void cleanup(exec_input_key&&)noexcept{
-			if(exec_output_base::cleanup()) data_.clear();
+			if(is_cleanup()) data_.clear();
 		}
 
 
 	private:
 		/// \brief Putted data of the output
 		std::vector< T > data_;
+	};
+
+
+	/// \brief The output type while exec
+	template < typename Name, typename T >
+	class exec_output: public unnamed_exec_output< T >{
+	public:
+		/// \brief Compile time name of the output
+		using name_type = Name;
+
+		/// \brief Name object
+		static constexpr auto name = name_type{};
+
+		using unnamed_exec_output< T >::unnamed_exec_output;
 	};
 
 

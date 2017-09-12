@@ -18,7 +18,7 @@ namespace disposer{
 	template < typename StateType, typename List >
 	class exec_accessory;
 
-	/// \brief Class exec_input_key access key
+	/// \brief Class exec_key access key
 	struct exec_key{
 	private:
 		/// \brief Constructor

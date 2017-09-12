@@ -12,6 +12,8 @@
 #include "output_base.hpp"
 #include "output_name.hpp"
 
+#include <boost/hana/core/is_a.hpp>
+
 
 namespace disposer{
 

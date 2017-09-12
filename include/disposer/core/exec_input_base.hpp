@@ -17,7 +17,7 @@ namespace disposer{
 
 	class exec_input_base;
 
-	template < typename Name, typename TypeTransformFn, typename ... T >
+	template < typename Name, typename T, bool IsRequired >
 	class exec_input;
 
 	/// \brief Class exec_input_key access key
@@ -28,7 +28,7 @@ namespace disposer{
 
 		friend class exec_input_base;
 
-		template < typename Name, typename TypeTransformFn, typename ... T >
+		template < typename Name, typename T, bool IsRequired >
 		friend class exec_input;
 	};
 

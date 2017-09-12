@@ -76,6 +76,11 @@ namespace disposer{
 		constexpr std::size_t index_number()const noexcept{
 			return indexes[hana::size_c< 0 >].i;
 		}
+
+		/// \brief true if indexes has no elements, false otherwise
+		static constexpr std::size_t is_empty()noexcept{
+			return index_count == 0;
+		}
 	};
 
 	template < std::size_t D, std::size_t ... DsRest >

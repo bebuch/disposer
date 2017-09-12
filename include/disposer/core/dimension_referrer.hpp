@@ -31,6 +31,12 @@ namespace disposer{
 		template < typename DimensionList >
 		static constexpr auto convert
 			= dimension_converter< DimensionList, Template, Ds ... >{};
+
+		/// \brief The corresponding type, requires DimensionList to be unqiue
+		///        for all Ds
+		template < typename DimensionList >
+		using type = typename
+			decltype(+convert< DimensionList >.types[hana::size_c< 0 >])::type;
 	};
 
 	/// \brief Alias definition without effect
