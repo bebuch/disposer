@@ -16,6 +16,7 @@
 #include "../tool/to_std_string_view.hpp"
 
 #include <boost/hana/map.hpp>
+#include <boost/hana/tuple.hpp>
 
 
 namespace disposer{
@@ -29,23 +30,24 @@ namespace disposer{
 	};
 
 	template < typename ... IOP_RefList >
-	struct iops_ref{};
+	class iops_ref{
+	public:
+		hana::tuple<> flat()&&{ return {}; }
+	};
 
 	iops_ref() -> iops_ref<>;
 
 	template < typename IOP_Ref, typename ... IOP_RefList >
-	struct iops_ref< IOP_Ref, IOP_RefList ... >{
-		IOP_Ref const& ref;
-		iops_ref< IOP_RefList ... > const& list;
-
-		iops_ref(IOP_Ref const& ref, iops_ref< IOP_RefList ... > const& list)
-			: ref(ref), list(list) {}
+	class iops_ref< IOP_Ref, IOP_RefList ... >{
+	public:
+		iops_ref(IOP_Ref&& ref, iops_ref< IOP_RefList ... >&& list)
+			: ref(std::move(ref)), list(std::move(list)) {}
 
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			if constexpr(ref.name == name){
+			if constexpr(IOP_Ref::name == name){
 				return ref;
 			}else{
 				static_assert(sizeof...(IOP_RefList) > 0,
@@ -54,7 +56,38 @@ namespace disposer{
 				list(name);
 			}
 		}
+
+		auto flat()&&{
+			return std::move(*this).flat(
+				std::make_index_sequence< sizeof...(IOP_RefList) + 1 >());
+		}
+
+	private:
+		template < std::size_t I >
+		auto&& get()&&{
+			if constexpr(I == 0){
+				return std::move(ref);
+			}else{
+				return std::move(list).template get< I - 1 >();
+			}
+		}
+
+		template < std::size_t ... Is >
+		auto flat(std::index_sequence< Is ... >)&&{
+			return hana::make_tuple(std::move(*this)
+				.template get< sizeof...(IOP_RefList) - Is >() ...);
+		}
+
+		IOP_Ref&& ref;
+		iops_ref< IOP_RefList ... >&& list;
+
+		template < typename ... OtherIOP_RefList >
+		friend class iops_ref;
 	};
+
+	template < typename IOP_Ref, typename ... IOP_RefList >
+	iops_ref(IOP_Ref&& ref, iops_ref< IOP_RefList ... >&& list)
+		-> iops_ref< IOP_Ref, IOP_RefList ... >;
 
 	template < typename ... IOP_RefList >
 	class iops_accessory: public add_log< iops_accessory< IOP_RefList ... > >{
@@ -63,7 +96,7 @@ namespace disposer{
 			iops_ref< IOP_RefList ... > const& list,
 			iop_log&& log_fn
 		)noexcept
-			: iop_list_(iop_list)
+			: list_(list)
 			, log_fn_(std::move(log_fn)) {}
 
 
@@ -71,7 +104,7 @@ namespace disposer{
 		///        via its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			return list(name);
+			return list_(name);
 		}
 
 
@@ -84,7 +117,7 @@ namespace disposer{
 
 	private:
 		/// \brief References to all previous IOPs
-		iops_ref< IOP_RefList ... > const& list;
+		iops_ref< IOP_RefList ... > const& list_;
 
 		/// \brief Reference to an iop_log object
 		iop_log log_fn_;

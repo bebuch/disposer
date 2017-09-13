@@ -9,6 +9,7 @@
 #ifndef _disposer__core__exec_module_data__hpp_INCLUDED_
 #define _disposer__core__exec_module_data__hpp_INCLUDED_
 
+#include "input_name.hpp"
 #include "exec_input.hpp"
 #include "exec_output_base.hpp"
 
@@ -19,6 +20,7 @@
 #include <boost/hana/find_if.hpp>
 #include <boost/hana/unpack.hpp>
 #include <boost/hana/slice.hpp>
+#include <boost/hana/for_each.hpp>
 
 
 namespace disposer{

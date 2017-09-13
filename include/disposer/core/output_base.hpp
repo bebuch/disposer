@@ -34,7 +34,7 @@ namespace disposer{
 		output_base(output_base const&) = delete;
 
 		/// \brief Outputs are not movable
-		output_base(output_base&&) = delete;
+		output_base(output_base&&) = default;
 
 
 		/// \brief Outputs are not copy-assignable

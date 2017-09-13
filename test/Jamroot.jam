@@ -89,6 +89,13 @@ exe dimension_solve
 	/disposer//disposer
 	;
 
+exe module_data
+	:
+	module_data.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
 exe output
 	:
 	output.cpp

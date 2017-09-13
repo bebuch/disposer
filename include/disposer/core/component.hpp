@@ -20,24 +20,18 @@ namespace disposer{
 
 
 	/// \brief Accessory of a \ref component without log
-	template < typename List >
+	template <
+		typename ... Inputs,
+		typename ... Outputs,
+		typename ... Parameters >
 	class component_config{
 	public:
 		/// \brief Constructor
-		template < typename MakerList, typename MakeData, std::size_t ... I >
-		component_config(
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
-			std::index_sequence< I ... >
-		)
-			: list_(iops_make_data(
-				iop_make_data(maker_list[hana::size_c< I >], data, location),
-				location,
-				hana::slice_c< 0, I >(detail::as_ref_list(list_))) ...)
-		{
-			(void)location; // GCC bug (silance unused warning)
-		}
+		template < typename ... IOP_RefList >
+		component_config(iops_ref< IOP_RefList ... > const& ref_list)
+			: inputs_(move_inputs(ref_list))
+			, outputs_(move_outputs(ref_list))
+			, parameters_(move_parameters(ref_list)) {}
 
 
 		/// \brief Get reference to a parameter-object via its corresponding

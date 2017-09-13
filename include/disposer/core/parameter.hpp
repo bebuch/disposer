@@ -40,7 +40,7 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Args >
 		parameter(Args&& ... args):
-			value_(static_cast< Args&& >(value) ...){}
+			value_(static_cast< Args&& >(args) ...){}
 
 		/// \brief Get reference to value
 		T const& get()const{
