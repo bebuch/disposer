@@ -10,6 +10,7 @@
 #define _disposer__core__module__hpp_INCLUDED_
 
 #include "module_base.hpp"
+#include "module_data.hpp"
 #include "exec_module.hpp"
 #include "state_maker_fn.hpp"
 #include "exec_fn.hpp"
@@ -19,7 +20,12 @@ namespace disposer{
 
 
 	/// \brief The actual module type
-	template < typename List, typename StateMakerFn, typename ExecFn >
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters,
+		typename StateMakerFn,
+		typename ExecFn >
 	class module: public module_base{
 	public:
 		/// \brief State maker function or void for stateless modules
@@ -30,17 +36,17 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename MakerList, typename MakeData >
-		module(
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
+		template < typename ... IOP_RefList >
+		module_data(
+			std::string const& chain,
+			std::string const& type_name,
+			std::size_t number,
+			hana::tuple< IOP_RefList ... >&& ref_list,
 			state_maker_fn< StateMakerFn > const& state_maker_fn,
 			exec_fn< ExecFn > const& exec_fn
 		)
-			: module_base(data.chain, data.type_name, data.number)
-			, data_(maker_list, data, location, std::make_index_sequence<
-				decltype(hana::size(maker_list))::value >())
+			: module_base(chain, type_name, number)
+			, data_(std::move(ref_list))
 			, state_(state_maker_fn)
 			, exec_fn_(exec_fn) {}
 
@@ -56,11 +62,12 @@ namespace disposer{
 		/// \brief Calls the exec_fn
 		void exec(
 			std::size_t id,
-			exec_module_data< detail::exec_list_t< List > >& exec_data,
+			to_exec_list_t< Inputs >& inputs,
+			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
 		){
-			exec_accessory< state_type, List >
-				accessory(id, data_, exec_data, state_.object(), location);
+			exec_accessory accessory{id, inputs, outputs, data_.parameters,
+				state_.object(), location};
 			return exec_fn_(accessory);
 		}
 
@@ -96,8 +103,8 @@ namespace disposer{
 		}
 
 
-		/// \brief Module config file data
-		module_data< List > data_;
+		/// \brief inputs, outputs and parameters
+		module_data< Inputs, Outputs, Parameters > data_;
 
 		/// \brief The user defined state object
 		state< List, StateMakerFn > state_;
@@ -105,6 +112,31 @@ namespace disposer{
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;
 	};
+
+	template <
+		typename ... IOP_RefList,
+		typename StateMakerFn,
+		typename ExecFn >
+	module(
+		std::string const& chain,
+		std::string const& type_name,
+		std::size_t number,
+		hana::tuple< IOP_RefList ... >&& ref_list,
+		state_maker_fn< StateMakerFn > const& state_maker_fn,
+		exec_fn< ExecFn > const& exec_fn
+	)
+		-> module<
+			decltype(hana::filter(
+				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				hana::is_a< input_tag >)),
+			decltype(hana::filter(
+				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				hana::is_a< output_tag >)),
+			decltype(hana::filter(
+				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				hana::is_a< parameter_tag >)),
+			StateMakerFn, ExecFn >;
+
 
 
 }

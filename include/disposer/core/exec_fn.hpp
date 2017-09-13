@@ -30,21 +30,30 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during exec calls
-	template < typename StateType, typename List >
-	class exec_accessory: public add_log< exec_accessory< StateType, List > >{
+	template <
+		typename StateType,
+		typename ExecInputs,
+		typename ExecOutputs,
+		typename Parameters >
+	class exec_accessory
+		: public add_log< exec_accessory<
+			StateType, ExecInputs, ExecOutputs, Parameters > >
+	{
 	public:
 		/// \brief Constructor
 		exec_accessory(
 			std::size_t id,
-			module_data< List > const& data,
-			exec_module_data< detail::exec_list_t< List > >& exec_data,
 			StateType* state,
+			ExecInputs& inputs,
+			ExecOutputs& outputs,
+			Parameters const& parameters,
 			std::string_view location
 		)
 			: id_(id)
-			, data_(data)
-			, exec_data_(exec_data)
 			, state_(state)
+			, inputs_(inputs)
+			, outputs_(outputs)
+			, parameters_(parameters)
 			, location_(location) {}
 
 
@@ -64,8 +73,7 @@ namespace disposer{
 
 		/// \brief Get access to the state object if one exists
 		auto& state()noexcept{
-			static_assert(!std::is_void_v< StateType >,
-				"Module has no state.");
+			static_assert(!std::is_void_v< StateType >, "Module has no state.");
 			return *state_;
 		}
 
@@ -83,12 +91,30 @@ namespace disposer{
 		template < typename This, typename Name >
 		static auto& get(This& this_, Name const& name)noexcept{
 			using name_t = std::remove_reference_t< Name >;
-			if constexpr(hana::is_a< parameter_name_tag, name_t >()){
-				return this_.data_(name);
-			}else if constexpr(hana::is_a< input_name_tag, name_t >()){
-				return this_.exec_data_(name);
+			if constexpr(hana::is_a< input_name_tag, name_t >()){
+				auto const index = hana::index_if(this_.inputs_,
+					[name](auto& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"input name doesn't exist");
+
+				return this_.inputs_[index];
 			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
-				return this_.exec_data_(name);
+				auto const index = hana::index_if(this_.outputs_,
+					[name](auto& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"output name doesn't exist");
+
+				return this_.outputs_[index];
+			}else if constexpr(hana::is_a< parameter_name_tag, name_t >()){
+				auto const index = hana::index_if(this_.parameters_,
+					[name](auto& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"parameter name doesn't exist");
+
+				return this_.parameters_[index];
 			}else{
 				static_assert(detail::false_c< Name >,
 					"name is not an input_name, output_name or parameter_name");
@@ -99,16 +125,19 @@ namespace disposer{
 		/// \brief Current exec id
 		std::size_t id_;
 
-		/// \brief Data of the module
-		module_data< List > const& data_;
-
-		/// \brief Data of the exec_module
-		exec_module_data< detail::exec_list_t< List > >& exec_data_;
-
 		/// \brief Module state
 		///
 		/// nullptr-pointer to void if module is stateless.
 		StateType* state_;
+
+		/// \brief hana::tuple of exec_inputs
+		ExecInputs& inputs_;
+
+		/// \brief hana::tuple of exec_outputs
+		ExecOutputs& outputs_;
+
+		/// \brief hana::tuple of parameters
+		Parameters const& parameters_;
 
 		/// \brief Prefix for log messages
 		std::string_view location_;
