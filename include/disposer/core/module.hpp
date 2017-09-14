@@ -78,7 +78,6 @@ namespace disposer{
 		}
 
 
-	private:
 		/// \brief Enables the module for exec calls
 		///
 		/// Build a users state object.
@@ -125,6 +124,7 @@ namespace disposer{
 		}
 
 
+	private:
 		/// \brief inputs, outputs and parameters
 		module_data< Inputs, Outputs, Parameters > data_;
 
