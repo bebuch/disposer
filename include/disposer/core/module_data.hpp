@@ -25,10 +25,6 @@
 namespace disposer{
 
 
-	using output_name_to_ptr_type
-		= std::unordered_map< std::string, output_base* >;
-
-
 	struct input_name_tag;
 	struct output_name_tag;
 	struct parameter_name_tag;
@@ -55,15 +51,6 @@ namespace disposer{
 
 		/// \brief hana::tuple of the parameters
 		Parameters parameters;
-
-		/// \brief Get map from output names to its addresses
-		output_name_to_ptr_type output_name_to_ptr(){
-			return hana::unpack(outputs, [](auto& ... output){
-					return output_name_to_ptr_type{
-							{detail::to_std_string(output.name), &output} ...
-						};
-				});
-		}
 	};
 
 

@@ -11,30 +11,6 @@
 #include <cassert>
 
 
-namespace disposer{
-
-
-	struct creator_key;
-
-	/// \brief Defined in create_chain_modules.cpp
-	creator_key make_creator_key();
-
-	/// \brief Access key creator functions
-	struct creator_key{
-	private:
-		/// \brief Constructor
-		constexpr creator_key()noexcept = default;
-		friend creator_key make_creator_key();
-	};
-
-	creator_key make_creator_key(){
-		return creator_key();
-	}
-
-
-}
-
-
 namespace disposer{ namespace{
 
 
@@ -138,8 +114,7 @@ namespace disposer{
 				auto& module = *modules.back();
 
 				// get outputs and add them to variables-output-map
-				auto const output_map =
-					module.output_name_to_ptr(make_creator_key());
+				auto const output_map = module.output_name_to_ptr();
 				for(auto const& config_output: config_module.outputs){
 					variables.try_emplace(
 						config_output.variable,

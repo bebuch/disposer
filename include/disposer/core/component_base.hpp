@@ -46,7 +46,7 @@ namespace disposer{
 
 
 		/// \brief shutdown component if it has a shutdown function
-		virtual void shutdown(disposer_key const&) = 0;
+		virtual void shutdown() = 0;
 
 
 		/// \brief Name of the component in config file section 'component'

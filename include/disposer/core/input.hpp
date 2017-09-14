@@ -19,19 +19,6 @@ namespace disposer{
 	/// \brief Hana Tag for input
 	struct input_tag{};
 
-	template < typename Name, typename T, bool IsRequired >
-	class input;
-
-	/// \brief Class input_key access key
-	struct input_key{
-	private:
-		/// \brief Constructor
-		constexpr input_key()noexcept = default;
-
-		template < typename Name, typename T, bool IsRequired >
-		friend class input;
-	};
-
 	/// \brief The actual input type
 	template < typename Name, typename T, bool IsRequired >
 	class input: public input_base{

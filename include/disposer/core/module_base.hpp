@@ -18,21 +18,6 @@
 namespace disposer{
 
 
-	class module_base;
-
-	/// \brief Class module_base access key
-	struct module_base_key{
-	private:
-		/// \brief Constructor
-		constexpr module_base_key()noexcept = default;
-		friend class module_base;
-	};
-
-
-	struct chain_key;
-	struct creator_key;
-
-
 	using output_map_type
 		= std::unordered_map< output_base*, exec_output_base* >;
 
@@ -73,24 +58,20 @@ namespace disposer{
 		virtual ~module_base() = default;
 
 
-		/// \brief Call the actual enable() function
-		void enable(chain_key&&){ enable(); }
+		/// \brief Enables the module for exec calls
+		virtual void enable() = 0;
 
-		/// \brief Call the actual disable() function
-		void disable(chain_key&&)noexcept{ disable(); }
-
-		/// \brief Call the actual make_exec_module(id) function
-		exec_module_ptr make_exec_module(
-			chain_key&&, std::size_t id, output_map_type& output_map
-		){
-			return make_exec_module(id, output_map);
-		}
+		/// \brief Disables the module for exec calls
+		virtual void disable()noexcept = 0;
 
 
-		/// \brief Call output_name_to_ptr()
-		output_name_to_ptr_type output_name_to_ptr(creator_key&&){
-			return output_name_to_ptr();
-		}
+		/// \brief Make a corresponding exec_module
+		virtual exec_module_ptr make_exec_module(
+			std::size_t id, output_map_type& output_map) = 0;
+
+
+		/// \brief Get map from output names to output_base pointers
+		virtual output_name_to_ptr_type output_name_to_ptr() = 0;
 
 
 		/// \brief Name of the process chain in config file section 'chain'
@@ -105,21 +86,6 @@ namespace disposer{
 		std::size_t const number;
 
 		std::string const location;
-
-
-	protected:
-		/// \brief Enables the module for exec calls
-		virtual void enable() = 0;
-
-		/// \brief Disables the module for exec calls
-		virtual void disable()noexcept = 0;
-
-		/// \brief Make a corresponding exec_module
-		virtual exec_module_ptr make_exec_module(
-			std::size_t id, output_map_type& output_map) = 0;
-
-		/// \brief Get map from output names to output_base pointers
-		virtual output_name_to_ptr_type output_name_to_ptr() = 0;
 	};
 
 

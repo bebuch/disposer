@@ -87,15 +87,15 @@ namespace disposer{
 			, disposer_(disposer)
 			, component_(component) {}
 
+		/// \brief Get a reference to the disposer object
+		::disposer::disposer& disposer(){ return disposer_; }
+
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
 			os << "component(" << component_.name << ":"
 				<< component_.type_name << "): ";
 		}
-
-		/// \brief Get a reference to the disposer object
-		::disposer::disposer& disposer(){ return disposer_; }
 
 
 	protected:
@@ -194,7 +194,7 @@ namespace disposer{
 		///
 		/// Every component which controls the disposer asynchronous should
 		/// implement such a function.
-		void shutdown(disposer_key const&)override{
+		void shutdown()override{
 			auto has_shutdown =
 				hana::is_valid([](auto& t)->decltype((void)t.shutdown()){})
 				(component_);

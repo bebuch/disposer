@@ -15,28 +15,6 @@
 namespace disposer{
 
 
-	template <
-		typename StateType,
-		typename ExecInputs,
-		typename ExecOutputs,
-		typename Parameters >
-	class exec_accessory;
-
-	/// \brief Class exec_key access key
-	struct exec_key{
-	private:
-		/// \brief Constructor
-		constexpr exec_key()noexcept = default;
-
-		template <
-			typename StateType,
-			typename ExecInputs,
-			typename ExecOutputs,
-			typename Parameters >
-		friend class exec_accessory;
-	};
-
-
 	/// \brief Accessory of a module during exec calls
 	template <
 		typename StateType,

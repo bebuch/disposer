@@ -15,9 +15,6 @@
 namespace disposer{
 
 
-	struct chain_key;
-
-
 	/// \brief Base class for module exec object
 	class exec_module_base{
 	public:
@@ -46,20 +43,12 @@ namespace disposer{
 		virtual ~exec_module_base() = default;
 
 
-		/// \brief Call the actual worker function exec()
-		void exec(chain_key&&){ exec(); }
+		/// \brief The worker function
+		virtual void exec() = 0;
 
 		/// \brief Called for every module after a successfull exec or after
 		///        a throwing exec on the module and all following modules
 		///        in the chain without previos exec call
-		void cleanup(chain_key&&)noexcept{ cleanup(); }
-
-
-	protected:
-		/// \brief The worker function
-		virtual void exec() = 0;
-
-		/// \brief The cleanup function
 		virtual void cleanup()noexcept = 0;
 	};
 

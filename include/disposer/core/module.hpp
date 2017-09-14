@@ -20,6 +20,10 @@
 namespace disposer{
 
 
+	using output_name_to_ptr_type
+		= std::unordered_map< std::string, output_base* >;
+
+
 	/// \brief The actual module type
 	template <
 		typename Inputs,
@@ -113,7 +117,11 @@ namespace disposer{
 
 		/// \brief Get map from output names to output_base pointers
 		virtual output_name_to_ptr_type output_name_to_ptr()override{
-			return data_.output_name_to_ptr();
+			return hana::unpack(data_.outputs, [](auto& ... output){
+					return output_name_to_ptr_type{
+							{detail::to_std_string(output.name), &output} ...
+						};
+				});
 		}
 
 

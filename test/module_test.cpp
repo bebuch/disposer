@@ -26,8 +26,8 @@ int main(){
 
 	{
 		auto list = iops_ref{};
-		module data(chain, type_name, number, std::move(list).flat(), s, e);
-		static_assert(std::is_same_v< decltype(data),
+		module m(chain, type_name, number, std::move(list).flat(), s, e);
+		static_assert(std::is_same_v< decltype(m),
 			module<
 				hana::tuple<>,
 				hana::tuple<>,
@@ -39,8 +39,8 @@ int main(){
 	{
 		auto list = iops_ref{
 			std::move(i2), iops_ref{std::move(i1), iops_ref{}}};
-		module data(chain, type_name, number, std::move(list).flat(), s, e);
-		static_assert(std::is_same_v< decltype(data), module<
+		module m(chain, type_name, number, std::move(list).flat(), s, e);
+		static_assert(std::is_same_v< decltype(m), module<
 				hana::tuple<
 					input< decltype("i1"_in), long, false >,
 					input< decltype("i2"_in), int, true >
@@ -54,8 +54,8 @@ int main(){
 	{
 		auto list = iops_ref{
 			std::move(o2), iops_ref{std::move(o1), iops_ref{}}};
-		module data(chain, type_name, number, std::move(list).flat(), s, e);
-		static_assert(std::is_same_v< decltype(data), module<
+		module m(chain, type_name, number, std::move(list).flat(), s, e);
+		static_assert(std::is_same_v< decltype(m), module<
 				hana::tuple<>,
 				hana::tuple<
 					output< decltype("o1"_out), int >,
@@ -69,8 +69,8 @@ int main(){
 	{
 		auto list = iops_ref{
 			std::move(p2), iops_ref{std::move(p1), iops_ref{}}};
-		module data(chain, type_name, number, std::move(list).flat(), s, e);
-		static_assert(std::is_same_v< decltype(data), module<
+		module m(chain, type_name, number, std::move(list).flat(), s, e);
+		static_assert(std::is_same_v< decltype(m), module<
 				hana::tuple<>,
 				hana::tuple<>,
 				hana::tuple<
@@ -85,8 +85,8 @@ int main(){
 		auto list = iops_ref{std::move(o2), iops_ref{std::move(p2),
 			iops_ref{std::move(p1), iops_ref{std::move(i2),
 			iops_ref{std::move(i1), iops_ref{std::move(o1), iops_ref{}}}}}}};
-		module data(chain, type_name, number, std::move(list).flat(), s, e);
-		static_assert(std::is_same_v< decltype(data), module<
+		module m(chain, type_name, number, std::move(list).flat(), s, e);
+		static_assert(std::is_same_v< decltype(m), module<
 				hana::tuple<
 					input< decltype("i1"_in), long, false >,
 					input< decltype("i2"_in), int, true >
