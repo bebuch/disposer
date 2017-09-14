@@ -18,8 +18,6 @@
 namespace disposer{
 
 
-	struct exec_module_key;
-
 	/// \brief The actual exec_input type
 	template < typename Name, typename T, bool IsRequired >
 	class exec_input: public exec_input_base{
@@ -32,8 +30,14 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		exec_input(exec_output_base* output)noexcept
-			: exec_input_base(output) {}
+		exec_input(hana::tuple< input< Name, T, IsRequired > const&,
+			output_map_type const& > const& data
+		)noexcept
+			: exec_input_base(
+				data[hana::size_c< 0 >].output_ptr() != nullptr
+				? data[hana::size_c< 1 >]
+					.at(data[hana::size_c< 0 >].output_ptr())
+				: nullptr) {}
 
 
 		/// \brief Is the input connected to an output
@@ -58,8 +62,8 @@ namespace disposer{
 		}
 
 		/// \brief Tell the connected output that this input finished
-		void cleanup(exec_module_key&)noexcept{
-			if(output_ptr()) output_ptr()->cleanup(exec_input_key());
+		void cleanup()noexcept{
+			if(output_ptr()) output_ptr()->cleanup();
 		}
 
 

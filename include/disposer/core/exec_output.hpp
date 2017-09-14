@@ -28,9 +28,7 @@ namespace disposer{
 	template < typename T >
 	class unnamed_exec_output: public exec_output_base{
 	public:
-		/// \brief Constructor
-		unnamed_exec_output(std::size_t use_count)noexcept
-			: exec_output_base(use_count) {}
+		using exec_output_base::exec_output_base;
 
 
 		/// \brief Add given data to \ref data_
@@ -47,12 +45,12 @@ namespace disposer{
 
 
 		/// \brief Get a view to the data
-		input_data_r< T > references(exec_input_key&&)const{
+		input_data_r< T > references()const{
 			return data_;
 		}
 
 		/// \brief Get a reference to the data
-		input_data_v< T > values(exec_input_key&&)const{
+		input_data_v< T > values()const{
 			if(is_last_use()){
 				return std::move(data_);
 			}else{
@@ -61,7 +59,7 @@ namespace disposer{
 		}
 
 		/// \brief Remove data on last cleanup call
-		void cleanup(exec_input_key&&)noexcept{
+		void cleanup()noexcept{
 			if(is_cleanup()) data_.clear();
 		}
 
@@ -76,6 +74,15 @@ namespace disposer{
 	template < typename Name, typename T >
 	class exec_output: public unnamed_exec_output< T >{
 	public:
+		/// \brief Constructor
+		exec_output(
+			hana::tuple< output< Name, T >&, output_map_type& > const& data
+		)noexcept
+			: unnamed_exec_output< T >(data[hana::size_c< 0 >].use_count())
+		{
+			data[hana::size_c< 1 >].emplace(&data[hana::size_c< 0 >], this);
+		}
+
 		/// \brief Compile time name of the output
 		using name_type = Name;
 

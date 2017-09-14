@@ -98,7 +98,9 @@ int main(){
 				hana::tuple<
 					parameter< decltype("p1"_param), int >,
 					parameter< decltype("p2"_param), char >
-				>
+				>,
+				void,
+				exec
 			> >);
 	}
 }

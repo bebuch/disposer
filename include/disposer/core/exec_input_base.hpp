@@ -15,24 +15,6 @@
 namespace disposer{
 
 
-	class exec_input_base;
-
-	template < typename Name, typename T, bool IsRequired >
-	class exec_input;
-
-	/// \brief Class exec_input_key access key
-	struct exec_input_key{
-	private:
-		/// \brief Constructor
-		constexpr exec_input_key()noexcept = default;
-
-		friend class exec_input_base;
-
-		template < typename Name, typename T, bool IsRequired >
-		friend class exec_input;
-	};
-
-
 	/// \brief Base for module inputs
 	///
 	/// Polymorphe base class for module inputs.

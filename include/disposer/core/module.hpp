@@ -12,6 +12,7 @@
 #include "module_base.hpp"
 #include "module_data.hpp"
 #include "exec_module.hpp"
+#include "to_exec_list.hpp"
 #include "state_maker_fn.hpp"
 #include "exec_fn.hpp"
 
@@ -32,12 +33,13 @@ namespace disposer{
 		using state_maker_fn_type = StateMakerFn;
 
 		/// \brief Type of the module state object
-		using state_type = typename state< List, StateMakerFn >::state_type;
+		using state_type = typename
+			state< Inputs, Outputs, Parameters, StateMakerFn >::state_type;
 
 
 		/// \brief Constructor
 		template < typename ... IOP_RefList >
-		module_data(
+		module(
 			std::string const& chain,
 			std::string const& type_name,
 			std::size_t number,
@@ -66,8 +68,8 @@ namespace disposer{
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
 		){
-			exec_accessory accessory{id, inputs, outputs, data_.parameters,
-				state_.object(), location};
+			exec_accessory accessory{id, state_.object(),
+				inputs, outputs, data_.parameters, location};
 			return exec_fn_(accessory);
 		}
 
@@ -77,9 +79,8 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		virtual void enable()override{
-			state_.enable(
-				static_cast< module_data< List > const& >(data_),
-				this->location);
+			state_.enable(static_cast< module_data< Inputs, Outputs,
+				Parameters > const& >(data_), this->location);
 		}
 
 		/// \brief Disables the module for exec calls
@@ -92,8 +93,21 @@ namespace disposer{
 		virtual exec_module_ptr make_exec_module(
 			std::size_t id, output_map_type& output_map
 		)override{
-			return std::make_unique< exec_module< List, StateMakerFn, ExecFn > >
-				(*this, id, output_map);
+			return std::make_unique< exec_module< Inputs, Outputs, Parameters,
+				StateMakerFn, ExecFn > >(*this,
+					hana::transform(data_.inputs,
+						[&output_map](auto const& input){
+							return hana::tuple
+								< decltype(input), output_map_type const& >
+								{input, output_map};
+						}),
+					hana::transform(data_.outputs,
+						[&output_map](auto& output){
+							return hana::tuple
+								< decltype(output), output_map_type& >
+								{output, output_map};
+						}), id
+				);
 		}
 
 
@@ -107,7 +121,7 @@ namespace disposer{
 		module_data< Inputs, Outputs, Parameters > data_;
 
 		/// \brief The user defined state object
-		state< List, StateMakerFn > state_;
+		state< Inputs, Outputs, Parameters, StateMakerFn > state_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;

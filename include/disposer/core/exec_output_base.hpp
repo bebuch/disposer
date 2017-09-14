@@ -20,9 +20,6 @@
 namespace disposer{
 
 
-	struct exec_input_key;
-
-
 	/// \brief Base for module outpus
 	///
 	/// Polymorphe base class for module outputs.

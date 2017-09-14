@@ -16,12 +16,13 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during enable/disable calls
-	template < typename List >
-	class state_accessory: public add_log< state_accessory< List > >{
+	template < typename Inputs, typename Outputs, typename Parameters >
+	class state_accessory
+		: public add_log< state_accessory< Inputs, Outputs, Parameters > >{
 	public:
 		/// \brief Constructor
 		state_accessory(
-			module_data< List > const& data,
+			module_data< Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		)
 			: data_(data)
@@ -44,7 +45,7 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to the module object
-		module_data< List > const& data_;
+		module_data< Inputs, Outputs, Parameters > const& data_;
 
 		/// \brief Location for log messages
 		std::string_view location_;
@@ -67,15 +68,17 @@ namespace disposer{
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(static_cast< Fn&& >(fn)) {}
 
-		template < typename List >
-		auto operator()(state_accessory< List > const& accessory)const{
+		template < typename Inputs, typename Outputs, typename Parameters >
+		auto operator()(
+			state_accessory< Inputs, Outputs, Parameters > const& accessory
+		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
-				state_accessory< List > const& >
+				state_accessory< Inputs, Outputs, Parameters > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const,
-					state_accessory< List > const& > >,
+					state_accessory< Inputs, Outputs, Parameters > const& > >,
 					"Fn must not return void");
 				return std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn const >){
@@ -102,13 +105,17 @@ namespace disposer{
 
 
 	/// \brief Holds the user defined state object of a module
-	template < typename List, typename StateMakerFn >
+	template <
+		typename Inputs,
+		typename Outputs,
+		typename Parameters,
+		typename StateMakerFn >
 	class state{
 	public:
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
 			state_maker_fn< StateMakerFn >,
-			state_accessory< List >&& >;
+			state_accessory< Inputs, Outputs, Parameters >&& >;
 
 		static_assert(!std::is_void_v< state_type >,
 			"state_maker function must not return void");
@@ -121,9 +128,12 @@ namespace disposer{
 		/// \brief Enables the module for exec calls
 		///
 		/// Build a users state object.
-		void enable(module_data< List > const& data, std::string_view location){
-			state_.emplace(state_maker_fn_(
-				state_accessory< List >(data, location)));
+		void enable(
+			module_data< Inputs, Outputs, Parameters > const& data,
+			std::string_view location
+		){
+			state_.emplace(state_maker_fn_(state_accessory
+				< Inputs, Outputs, Parameters >(data, location)));
 		}
 
 		/// \brief Disables the module for exec calls
@@ -148,8 +158,8 @@ namespace disposer{
 
 
 	/// \brief Specialization for stateless modules
-	template < typename List >
-	class state< List, void >{
+	template < typename Inputs, typename Outputs, typename Parameters >
+	class state< Inputs, Outputs, Parameters, void >{
 	public:
 		/// \brief Type of the module state object
 		using state_type = void;
@@ -158,7 +168,10 @@ namespace disposer{
 		state(state_maker_fn< void > const&)noexcept{}
 
 		/// \brief Module is stateless, do nothing
-		void enable(module_data< List > const&, std::string_view)noexcept{}
+		void enable(
+			module_data< Inputs, Outputs, Parameters > const&,
+			std::string_view
+		)noexcept{}
 
 		/// \brief Module is stateless, do nothing
 		void disable()noexcept{}

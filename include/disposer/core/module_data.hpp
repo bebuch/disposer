@@ -55,6 +55,15 @@ namespace disposer{
 
 		/// \brief hana::tuple of the parameters
 		Parameters parameters;
+
+		/// \brief Get map from output names to its addresses
+		output_name_to_ptr_type output_name_to_ptr(){
+			return hana::unpack(outputs, [](auto& ... output){
+					return output_name_to_ptr_type{
+							{detail::to_std_string(output.name), &output} ...
+						};
+				});
+		}
 	};
 
 

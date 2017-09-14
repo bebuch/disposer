@@ -15,7 +15,11 @@
 namespace disposer{
 
 
-	template < typename StateType, typename List >
+	template <
+		typename StateType,
+		typename ExecInputs,
+		typename ExecOutputs,
+		typename Parameters >
 	class exec_accessory;
 
 	/// \brief Class exec_key access key
@@ -24,7 +28,11 @@ namespace disposer{
 		/// \brief Constructor
 		constexpr exec_key()noexcept = default;
 
-		template < typename StateType, typename List >
+		template <
+			typename StateType,
+			typename ExecInputs,
+			typename ExecOutputs,
+			typename Parameters >
 		friend class exec_accessory;
 	};
 
@@ -161,11 +169,18 @@ namespace disposer{
 			: fn_(static_cast< Fn&& >(fn)) {}
 
 
-		template < typename StateType, typename List >
-		void operator()(exec_accessory< StateType, List >& accessory){
+		template <
+			typename StateType,
+			typename ExecInputs,
+			typename ExecOutputs,
+			typename Parameters >
+		void operator()(
+			exec_accessory< StateType, ExecInputs, ExecOutputs, Parameters >&
+				accessory
+		){
 			// TODO: calulate noexcept
-			if constexpr(std::is_invocable_v< Fn,
-				exec_accessory< StateType, List >& >
+			if constexpr(std::is_invocable_v< Fn, exec_accessory<
+				StateType, ExecInputs, ExecOutputs, Parameters >& >
 			){
 				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){
