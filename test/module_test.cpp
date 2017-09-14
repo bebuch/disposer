@@ -49,6 +49,9 @@ BOOST_AUTO_TEST_CASE(test_1){
 			void,
 			exec
 		>* >(e.get()) != nullptr));
+
+	e->exec();
+	e->cleanup();
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
@@ -77,6 +80,9 @@ BOOST_AUTO_TEST_CASE(test_2){
 			void,
 			exec
 		>* >(e.get()) != nullptr));
+
+	e->exec();
+	e->cleanup();
 }
 
 BOOST_AUTO_TEST_CASE(test_3){
@@ -105,6 +111,9 @@ BOOST_AUTO_TEST_CASE(test_3){
 			void,
 			exec
 		>* >(e.get()) != nullptr));
+
+	e->exec();
+	e->cleanup();
 }
 
 BOOST_AUTO_TEST_CASE(test_4){
@@ -133,6 +142,9 @@ BOOST_AUTO_TEST_CASE(test_4){
 			void,
 			exec
 		>* >(e.get()) != nullptr));
+
+	e->exec();
+	e->cleanup();
 }
 
 BOOST_AUTO_TEST_CASE(test_5){
@@ -174,4 +186,7 @@ BOOST_AUTO_TEST_CASE(test_5){
 			void,
 			exec
 		>* >(e.get()) != nullptr));
+
+	e->exec();
+	e->cleanup();
 }
