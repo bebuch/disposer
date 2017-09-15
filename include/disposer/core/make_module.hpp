@@ -146,6 +146,8 @@ namespace disposer{
 				}else{
 					(void)solved_dims; // Silance GCC
 
+					DimensionReferrer::verify_solved(DimensionList{});
+
 					using type = typename
 						DimensionReferrer::template type< DimensionList >;
 
@@ -215,10 +217,8 @@ namespace disposer{
 				solved_dimensions< SDs ... > const& solved_dims
 			)const{
 				if constexpr(!solved_dimensions< SDs ... >::is_empty()){
-					auto const current_dim_number =
-						solved_dims.dimension_number();
-
-					using dim_type = decltype(current_dim_number);
+					constexpr auto current_dim_number =
+						solved_dimensions< SDs ... >::dimension_number();
 
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
@@ -228,7 +228,8 @@ namespace disposer{
 							decltype(solved_dims.rest()) const&
 						);
 
-					constexpr auto generate_next = [](auto i){
+					constexpr auto generate_next = [](auto d, auto i){
+							using dim_type = decltype(d);
 							using index_type = decltype(i);
 							return [](
 									module_construction< StateMakerFn, ExecFn >
@@ -252,14 +253,15 @@ namespace disposer{
 								};
 						};
 
-					constexpr auto tc = decltype(hana::size(DimensionList
-						::dimensions[current_dim_number]))::value;
+					constexpr auto types =
+						DimensionList::dimensions[current_dim_number];
+					constexpr auto tc = hana::size(types).value;
 
 					constexpr auto call = hana::unpack(
 						hana::range_c< std::size_t, 0, tc >,
-						[generate_next](auto ... i){
+						[generate_next, current_dim_number](auto ... i){
 							return std::array< make_fn_type, sizeof...(i) >{{
-									generate_next(i) ...
+									generate_next(current_dim_number, i) ...
 								}};
 						});
 
@@ -328,7 +330,8 @@ namespace disposer{
 	// 				return exec_make_parameter(config, dims, configs.next(),
 	// 					std::move(iops));
 				}else{
-					auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
+					auto is_set_dimension_fn =
+						is_a< set_dimension_fn_tag >(config);
 					static_assert(is_set_dimension_fn);
 					return exec_set_dimension_fn(config, dims, configs.next(),
 						std::move(iops));

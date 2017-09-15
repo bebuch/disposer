@@ -41,30 +41,30 @@ namespace disposer{
 	/// \brief Contains deduced dimension index components, derived from
 	///        hana::true_ if at least one dimension is deduced, otherwise
 	///        hana::false_
-	template < std::size_t ... Ds >
+	template < std::size_t ... SDs >
 	struct solved_dimensions:
-		std::conditional_t< (sizeof...(Ds) > 0), hana::true_, hana::false_ >
+		std::conditional_t< (sizeof...(SDs) > 0), hana::true_, hana::false_ >
 	{
 		/// \brief Count of deduced dimension index components
-		static constexpr std::size_t index_count = sizeof...(Ds);
+		static constexpr std::size_t index_count = sizeof...(SDs);
 
 		/// \brief Get the numbers of all solved dimensions
 		static constexpr auto dimension_numbers()noexcept{
-			return hana::tuple_c< std::size_t, Ds ... >;
+			return hana::tuple_c< std::size_t, SDs ... >;
 		}
 
 
 		/// \brief Constructor
-		constexpr solved_dimensions(index_component< Ds > ... is)
+		constexpr solved_dimensions(index_component< SDs > ... is)
 			: indexes(is ...) {}
 
 		/// \brief Construct by tuple
 		constexpr solved_dimensions(
-			hana::tuple< index_component< Ds > ... >&& idx
+			hana::tuple< index_component< SDs > ... >&& idx
 		): indexes(idx) {}
 
 		/// \brief Tuple of the deduced index components
-		hana::tuple< index_component< Ds > ... > indexes;
+		hana::tuple< index_component< SDs > ... > indexes;
 
 		/// \brief Get the solved dimensions without the first dimension
 		constexpr auto rest()const noexcept{
@@ -73,9 +73,8 @@ namespace disposer{
 		}
 
 		/// \brief Get the number if the first solved dimensions
-		constexpr auto dimension_number()const noexcept{
-			return hana::size_c< std::remove_reference_t<
-				decltype(indexes[hana::size_c< 0 >]) >::d >;
+		static constexpr auto dimension_number()noexcept{
+			return dimension_numbers()[hana::size_c< 0 >];
 		}
 
 		/// \brief Get index if the first dimension

@@ -32,11 +32,26 @@ namespace disposer{
 		static constexpr auto convert
 			= dimension_converter< DimensionList, Template, Ds ... >{};
 
+		template < typename DimensionList >
+		static constexpr void verify_solved(DimensionList const&)noexcept{
+			static_assert(
+				hana::size(convert< DimensionList >.types) == hana::size_c< 1 >,
+				"at least one dimension Ds is not solved yet");
+		}
+
+		template < typename DimensionList >
+		static constexpr auto calc_type()noexcept{
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+			verify_solved(DimensionList{});
+#endif
+
+			return convert< DimensionList >.types[hana::size_c< 0 >];
+		}
+
 		/// \brief The corresponding type, requires DimensionList to be unqiue
 		///        for all Ds
 		template < typename DimensionList >
-		using type = typename
-			decltype(+convert< DimensionList >.types[hana::size_c< 0 >])::type;
+		using type = typename decltype(+calc_type< DimensionList >())::type;
 	};
 
 	/// \brief Alias definition without effect
@@ -61,6 +76,9 @@ namespace disposer{
 		using type = typename impl< Args ... >::type;
 	};
 
+
+	// TODO: Use inheritance instead of using to make error messages shorter
+	//       and more expressive
 
 	/// \brief Wrap the active types of the given dimension's Ds in Template
 	template < template < typename ... > typename Template, std::size_t ... Ds >

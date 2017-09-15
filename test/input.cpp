@@ -19,7 +19,7 @@ constexpr auto list = dimension_list{
 		dimension_c< short, unsigned, long, long long >
 	};
 
-constexpr auto list_size = hana::size(list.dimensions).value;
+// constexpr auto list_size = hana::size(list.dimensions).value;
 
 
 template < std::size_t D >
@@ -109,13 +109,13 @@ BOOST_AUTO_TEST_CASE(test_1){
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
 			set_dimension_fn([](auto const&){
-				return solved_dimensions{index_component< 0 >{0}};
+				return solved_dimensions{index_component< 0 >{2}};
 			}),
 			make("i1"_in, type_ref_c< 0 >, not_required)
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
 			hana::tuple<
-				input< decltype("i1"_in), double, false >
+				input< decltype("i1"_in), float, false >
 			>,
 			hana::tuple<>,
 			hana::tuple<>,
