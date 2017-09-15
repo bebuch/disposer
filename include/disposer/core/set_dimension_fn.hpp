@@ -11,27 +11,28 @@
 
 #include "dimension.hpp"
 
-#include "../tool/depended_t.hpp"
+#include "../tool/comma_separated_output.hpp"
+
+#include <boost/hana/functional/arg.hpp>
 
 
 namespace disposer{
 
 
-
 	template < typename ... T >
 	std::string get_type_name(std::size_t i, dimension< T ... >){
-		using hana::literals;
 		// TODO; Find a more efficent solution …
 		std::string name;
 		hana::while_(
-			hana::less.than(hana::size_c< sizeof...(T) >), 0_c, [&](auto I){
-				if(i == I){
-					name = type_index::type_id< typename decltype(hana::arg
-							< I + 1 >(hana::basic_type< T > ...))::type
-						>().pretty_name();
-				}
-				return I + 1_c;
-			});
+			hana::less.than(hana::size_c< sizeof...(T) >), hana::size_c< 0 >,
+				[&](auto I){
+					if(i == I){
+						name = type_index::type_id< typename decltype(hana::arg
+								< I + 1 >(hana::type_c< T > ...))::type
+							>().pretty_name();
+					}
+					return I + hana::size_c< 1 >;
+				});
 
 #ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 		assert(name != "");
@@ -39,7 +40,6 @@ namespace disposer{
 
 		return name;
 	}
-
 
 
 	/// \brief Type referes to at least one dimension list of a module
@@ -57,11 +57,10 @@ namespace disposer{
 		using hana_tag = set_dimension_fn_tag;
 
 		/// \brief List of numbers refering to the dimension_list
-		static constexpr auto dims = dim_numbers< D ... >;
+		static constexpr auto dims = dim_numbers< D ... >{};
 
 		/// \brief Tuple with the same count of size_t's as D's
-		using result_type =
-			std::tuple< detail::value_depended_t< std::size_t, D > ... >;
+		using result_type = std::tuple< decltype(D) ... >;
 
 
 		/// \brief Default construtor
@@ -85,9 +84,8 @@ namespace disposer{
 		static constexpr bool calc_noexcept()noexcept{
 #ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 			static_assert(sizeof...(D) == sizeof...(Dimensions));
-			static_assert(hana::all_of(
-				std::declval< hana::basic_tuple< Dimension ... > >()),
-				hana::is_a< dimension_tag >);
+			static_assert(hana::all_of(hana::tuple_t< Dimensions ... >,
+				hana::is_a< dimension_tag >));
 #endif
 
 			static_assert(std::is_invocable_r_v<
@@ -104,7 +102,7 @@ namespace disposer{
 		template < typename Accessory, typename ... Dimensions >
 		result_type operator()(
 			Accessory const& accessory,
-			Dimensions const& ... dims
+			Dimensions const& ...
 		)const{
 			return accessory.log(
 				[](logsys::stdlogb& os, result_type* indexes){
@@ -117,27 +115,31 @@ namespace disposer{
 						return;
 					}
 
-					std::apply(*indices, [](std::size_t ... i){
+					std::apply(*indexes, [&os](decltype(D) ... i){
 						detail::comma_separated_output(os, std::tuple(
 							D, " to ", get_type_name(i, Dimensions{})) ...);
 					});
 				}, [&]{
-					result_type indices = std::invoke(fn_, accessory);
-					std::apply(*indices, [](std::size_t ... i){
-						if((i < Dimensions::type_count && ...)) return;
+					result_type indexes = std::invoke(fn_, accessory);
+
+					std::apply(*indexes, [](decltype(D) ... i){
+						if(((i < Dimensions::type_count) && ...)) return;
+
 						std::ostringstream os;
 						os << "index is out of range: ";
-						std::apply(*indices, [](std::size_t ... i){
-							using namespace std::literals::string_view_literals;
-							detail::comma_separated_output(os, std::tuple(
-								"dimension number ", D, " has ",
-								Dimensions::type_count, " types (index ",
-								i, " is ", (i < Dimensions::type_count
-									? "valid"sv : "invalid"sv), ")");
-						});
+
+						using namespace std::literals::string_view_literals;
+
+						detail::comma_separated_output(os, std::tuple(
+							"dimension number ", D, " has ",
+							Dimensions::type_count, " types (index ",
+							i, " is ", (i < Dimensions::type_count
+								? "valid"sv : "invalid"sv), ")") ...);
+
 						throw std::out_of_range(os.str());
 					});
-					return indices;
+
+					return indexes;
 				});
 		}
 

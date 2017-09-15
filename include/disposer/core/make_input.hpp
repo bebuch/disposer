@@ -93,9 +93,9 @@ namespace disposer{
 			constexpr dimension_solver solver(
 				dimension_list< Ds ... >{},
 				DimensionReferrer{});
-			return solver.solve(Name{}, output_ptr->get_type()));
+			return solver.solve(Name{}, output_ptr->get_type());
 		}else{
-			(void)output_ptr; (void)dims; // Silance GCC
+			(void)output_ptr; // Silance GCC
 			return solved_dimensions{};
 		}
 	}

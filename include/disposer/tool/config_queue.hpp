@@ -11,56 +11,41 @@
 
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/size.hpp>
+#include <boost/hana/minus.hpp>
 
 
 namespace disposer::detail{
 
 
-	template < typename Tuple, std::size_t Offset >
+	template < std::size_t Offset, typename ... Configs >
 	class config_queue{
 	public:
 		static constexpr auto offset = hana::size_c< Offset >;
 
-		template < typename ... Ts >
-		constexpr config_queue(
-			hana::tuple< Ts ... >& tuple,
-			hana::size_t< Offset > = hana::size_c< 0 >
-		)noexcept: tuple_(tuple) {}
+		static constexpr auto size = hana::size_c< sizeof...(Configs) > - offset;
 
-		template < typename ... Ts >
-		constexpr config_queue(
-			hana::tuple< Ts ... > const& tuple,
-			hana::size_t< Offset > = hana::size_c< 0 >
-		)noexcept: tuple_(tuple) {}
+		static constexpr auto is_empty = size() == hana::size_c< 0 >;
 
-		constexpr auto size()const noexcept{
-			return hana::size(tuple_) - offset;
-		}
 
-		constexpr config_queue< Tuple, Offset + 1 > next()const noexcept{
-			return {tuple_, hana::size_c< Offset + 1 >};
-		}
+		constexpr config_queue(hana::tuple< Configs ... > const& tuple)noexcept
+			: tuple_(tuple) {}
 
-		constexpr auto is_last()const noexcept{
-			return size() == hana::size_c< 1 >;
+		constexpr auto next()const noexcept{
+			return config_queue< Offset + 1, Configs ... >{tuple_};
 		}
 
 		constexpr decltype(auto) front()const noexcept{
-			return tuple_[hana::size_c< 0 >];
+			return tuple_[offset];
 		}
 
 
 	private:
-		Tuple& tuple_;
+		hana::tuple< Configs ... > const& tuple_;
 	};
 
-	template < typename ... Ts, std::size_t Offset >
-	config_queue(hana::tuple< Ts ... >& tuple, hana::size_t< Offset >)
-		-> config_queue< hana::tuple< Ts ... >, Offset >;
-
-	template < typename ... Ts, std::size_t Offset >
-	config_queue(hana::tuple< Ts ... > const& tuple, hana::size_t< Offset >)
-		-> config_queue< hana::tuple< Ts ... > const, Offset >;
+	template < typename ... Configs >
+	config_queue(hana::tuple< Configs ... > const&)
+		-> config_queue< 0, Configs ... >;
 
 
 }

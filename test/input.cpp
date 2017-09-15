@@ -4,8 +4,6 @@
 #include <boost/test/included/unit_test.hpp>
 
 
-namespace hana = boost::hana;
-
 using namespace disposer;
 
 using namespace hana::literals;

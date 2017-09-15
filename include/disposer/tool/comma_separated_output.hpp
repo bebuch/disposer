@@ -17,10 +17,10 @@ namespace disposer::detail{
 
 
 	template < typename T >
-	is_tuple: std::false_type{};
+	struct is_tuple: std::false_type{};
 
 	template < typename ... T >
-	is_tuple< std::tuple< T ... > >: std::true_type{};
+	struct is_tuple< std::tuple< T ... > >: std::true_type{};
 
 	template < typename T >
 	constexpr bool is_tuple_v = is_tuple< T >::value;
@@ -34,13 +34,13 @@ namespace disposer::detail{
 	){
 		if constexpr(is_tuple_v< Arg >){
 			os << arg;
-			(os << ", " << ... << args);
+			((os << ", ") << ... << args);
 		}else{
 			constexpr auto print = [&os](auto const& ... args){
 				return (os << ... << args);
 			};
 			std::apply(print, arg);
-			(os << ", " << ... << std::apply(print, args));
+			((os << ", ") << ... << std::apply(print, args));
 		}
 	}
 
