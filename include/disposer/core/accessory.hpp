@@ -22,13 +22,6 @@
 namespace disposer{
 
 
-	/// \brief Log Implementation for \ref iop_ref
-	struct iop_log{
-		std::string_view location;
-		std::string_view maker_type_name;
-		std::string_view maker_name;
-	};
-
 	template < typename ... IOP_RefList >
 	class iops_ref{
 	public:
@@ -94,10 +87,10 @@ namespace disposer{
 	public:
 		iops_accessory(
 			iops_ref< IOP_RefList ... > const& list,
-			iop_log&& log_fn
+			std::string_view log_fn
 		)noexcept
 			: list_(list)
-			, log_fn_(std::move(log_fn)) {}
+			, log_fn_(log_fn) {}
 
 
 		/// \brief Get const reference to an input-, output- or parameter-object
@@ -110,8 +103,7 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << log_fn_.location << " " << log_fn_.maker_type_name
-				<< "(" << log_fn_.maker_name << ") ";
+			os << log_fn_;
 		}
 
 
@@ -119,8 +111,8 @@ namespace disposer{
 		/// \brief References to all previous IOPs
 		iops_ref< IOP_RefList ... > const& list_;
 
-		/// \brief Reference to an iop_log object
-		iop_log log_fn_;
+		/// \brief Log location
+		std::string_view log_fn_;
 	};
 
 

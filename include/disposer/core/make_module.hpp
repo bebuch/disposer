@@ -55,7 +55,6 @@ namespace disposer{
 
 	template < typename StateMakerFn, typename ExecFn >
 	struct module_construction{
-		std::string_view location;
 		module_make_data const& data;
 		state_maker_fn< StateMakerFn > const& state_maker;
 		exec_fn< ExecFn > const& exec;
@@ -90,8 +89,7 @@ namespace disposer{
 							module_construction< StateMakerFn, ExecFn > const&,
 							input_maker< Name, DimensionReferrer, IsRequired >
 								const&,
-							detail::config_queue< Offset + 1, Config ... >
-								const&,
+							detail::config_queue< Offset, Config ... > const&,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&,
 							output_base* const
@@ -104,8 +102,8 @@ namespace disposer{
 										const& base,
 									input_maker< Name, DimensionReferrer,
 										IsRequired > const& maker,
-									detail::config_queue< Offset + 1,
-										Config ... > const& configs,
+									detail::config_queue< Offset, Config ... >
+										const& configs,
 									iops_ref< IOPs ... >&& iops,
 									decltype(solved_dims.rest()) const&
 										solved_dims,
@@ -140,12 +138,14 @@ namespace disposer{
 					return call[solved_dims.index_number()](
 							base,
 							maker,
-							configs.next(),
+							configs,
 							std::move(iops),
 							solved_dims.rest(),
 							output_ptr
 						);
 				}else{
+					(void)solved_dims; // Silance GCC
+
 					using type = typename
 						DimensionReferrer::template type< DimensionList >;
 
@@ -200,6 +200,103 @@ namespace disposer{
 				output_ptr);
 		}
 
+		template < typename DimensionList >
+		struct set_dimension_fn_execution{
+			module_construction< StateMakerFn, ExecFn > const& base;
+
+			template <
+				std::size_t Offset,
+				typename ... Config,
+				typename ... IOPs,
+				std::size_t ... SDs >
+			std::unique_ptr< module_base > make(
+				detail::config_queue< Offset, Config ... > const& configs,
+				iops_ref< IOPs ... >&& iops,
+				solved_dimensions< SDs ... > const& solved_dims
+			)const{
+				if constexpr(!solved_dimensions< SDs ... >::is_empty()){
+					auto const current_dim_number =
+						solved_dims.dimension_number();
+
+					using dim_type = decltype(current_dim_number);
+
+					using make_fn_type =
+						std::unique_ptr< module_base >(*)(
+							module_construction< StateMakerFn, ExecFn > const&,
+							detail::config_queue< Offset, Config ... > const&,
+							iops_ref< IOPs ... >&&,
+							decltype(solved_dims.rest()) const&
+						);
+
+					constexpr auto generate_next = [](auto i){
+							using index_type = decltype(i);
+							return [](
+									module_construction< StateMakerFn, ExecFn >
+										const& base,
+									detail::config_queue< Offset, Config ... >
+										const& configs,
+									iops_ref< IOPs ... >&& iops,
+									decltype(solved_dims.rest()) const&
+										solved_dims
+								){
+									auto next_dimension_list =
+										reduce_dimension_list(DimensionList{},
+											ct_index_component<
+												dim_type::value,
+												index_type::value >{});
+
+									return set_dimension_fn_execution<
+										decltype(next_dimension_list) >{base}
+										.make(configs, std::move(iops),
+											solved_dims);
+								};
+						};
+
+					constexpr auto tc = decltype(hana::size(DimensionList
+						::dimensions[current_dim_number]))::value;
+
+					constexpr auto call = hana::unpack(
+						hana::range_c< std::size_t, 0, tc >,
+						[generate_next](auto ... i){
+							return std::array< make_fn_type, sizeof...(i) >{{
+									generate_next(i) ...
+								}};
+						});
+
+					return call[solved_dims.index_number()](
+							base,
+							configs,
+							std::move(iops),
+							solved_dims.rest()
+						);
+				}else{
+					(void)solved_dims; // Silance GCC
+
+					return base.make_module(
+						DimensionList{}, configs, std::move(iops));
+				}
+			}
+		};
+
+		template <
+			typename Fn,
+			typename ... Ds,
+			std::size_t Offset,
+			typename ... Config,
+			typename ... IOPs >
+		std::unique_ptr< module_base > exec_set_dimension_fn(
+			set_dimension_fn< Fn > const& fn,
+			dimension_list< Ds ... > const& dims,
+			detail::config_queue< Offset, Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			set_dimension_fn_execution< dimension_list< Ds ... > > const
+				base{*this};
+
+			return base.make(configs, std::move(iops),
+				fn(dims, iops_accessory{iops, data.location()}));
+		}
+
 
 		template <
 			typename ... Dimension,
@@ -212,7 +309,11 @@ namespace disposer{
 			iops_ref< IOPs ... >&& iops
 		)const{
 			if constexpr(detail::config_queue< Offset, Config ... >::is_empty){
-				return {};
+				(void)configs; // Silance GCC;
+				return std::unique_ptr< module_base >(new module{
+					data.chain, data.type_name, data.number,
+					std::move(iops).flat(), state_maker, exec});
+
 			}else{
 				using hana::is_a;
 				auto const& config = configs.front();
@@ -226,11 +327,11 @@ namespace disposer{
 	// 			}else if constexpr(auto c = is_a< parameter_maker_tag >(config); c){
 	// 				return exec_make_parameter(config, dims, configs.next(),
 	// 					std::move(iops));
-	// 			}else{
-	// 				auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
-	// 				static_assert(is_set_dimension_fn);
-	// 				return exec_set_dimension_fn(config, dims, configs.next(),
-	// 					std::move(iops));
+				}else{
+					auto is_set_dimension_fn = is_a< set_dimension_fn_tag >(config);
+					static_assert(is_set_dimension_fn);
+					return exec_set_dimension_fn(config, dims, configs.next(),
+						std::move(iops));
 				}
 			}
 		}
@@ -246,13 +347,12 @@ namespace disposer{
 		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
-		std::string_view location,
 		state_maker_fn< StateMakerFn > const& state_maker,
 		exec_fn< ExecFn > const& exec
 	){
 		detail::config_queue queue{configs.config_list};
 		module_construction< StateMakerFn, ExecFn > const mc
-			{location, data, state_maker, exec};
+			{data, state_maker, exec};
 		return mc.make_module(dims, queue, iops_ref{});
 	}
 
@@ -299,11 +399,8 @@ namespace disposer{
 				}
 			}
 
-			std::string const basic_location = data.basic_location();
-
 			// Create the module
-			return make_module_ptr(
-				configuration, data, basic_location, state_maker, exec);
+			return make_module_ptr(configuration, data, state_maker, exec);
 		}
 	};
 

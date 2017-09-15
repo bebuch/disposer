@@ -48,28 +48,34 @@ namespace disposer{
 		/// \brief Count of deduced dimension index components
 		static constexpr std::size_t index_count = sizeof...(Ds);
 
+		/// \brief Get the numbers of all solved dimensions
+		static constexpr auto dimension_numbers()noexcept{
+			return hana::tuple_c< std::size_t, Ds ... >;
+		}
+
+
 		/// \brief Constructor
 		constexpr solved_dimensions(index_component< Ds > ... is)
 			: indexes(is ...) {}
 
-		/// \brief Construct without the first dimension
-		template < std::size_t D, std::size_t ... DsRest >
+		/// \brief Construct by tuple
 		constexpr solved_dimensions(
-			hana::tuple< index_component< D >,
-			index_component< DsRest > ... > idx
-		): indexes(hana::remove_at(idx, hana::size_c< 0 >)) {}
+			hana::tuple< index_component< Ds > ... >&& idx
+		): indexes(idx) {}
 
 		/// \brief Tuple of the deduced index components
 		hana::tuple< index_component< Ds > ... > indexes;
 
 		/// \brief Get the solved dimensions without the first dimension
 		constexpr auto rest()const noexcept{
-			return solved_dimensions{indexes};
+			return ::disposer::solved_dimensions{
+				hana::remove_at(indexes, hana::size_c< 0 >)};
 		}
 
-		/// \brief Get the solved dimensions without the first dimension
+		/// \brief Get the number if the first solved dimensions
 		constexpr auto dimension_number()const noexcept{
-			return hana::size_c< indexes[hana::size_c< 0 >].d >;
+			return hana::size_c< std::remove_reference_t<
+				decltype(indexes[hana::size_c< 0 >]) >::d >;
 		}
 
 		/// \brief Get index if the first dimension
@@ -83,10 +89,16 @@ namespace disposer{
 		}
 	};
 
-	template < std::size_t D, std::size_t ... DsRest >
-	solved_dimensions(
-		hana::tuple< index_component< D >, index_component< DsRest > ... > is
-	) -> solved_dimensions< DsRest ... >;
+
+	template < typename T >
+	struct is_solved_dimensions: hana::false_{};
+
+	template < std::size_t ... SDs >
+	struct is_solved_dimensions< solved_dimensions< SDs ... > >: hana::true_{};
+
+	template < typename T >
+	constexpr auto is_solved_dimensions_v = is_solved_dimensions< T >::value;
+
 
 	/// \brief Optional index components in the same order as in a DimensionList
 	template < bool ... DKs >

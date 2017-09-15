@@ -32,15 +32,16 @@ namespace disposer::detail{
 		Arg const& arg,
 		Args const& ... args
 	){
-		if constexpr(is_tuple_v< Arg >){
+		if constexpr(!is_tuple_v< Arg >){
 			os << arg;
 			((os << ", ") << ... << args);
 		}else{
-			constexpr auto print = [&os](auto const& ... args){
-				return (os << ... << args);
-			};
-			std::apply(print, arg);
-			((os << ", ") << ... << std::apply(print, args));
+			std::apply([&os](auto const& ... args)mutable{
+					(os << ... << args);
+				}, arg);
+			(std::apply([&os](auto const& ... args)mutable{
+					((os << ", ") << ... << args);
+				}, args), ...);
 		}
 	}
 
