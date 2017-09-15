@@ -111,8 +111,16 @@ namespace disposer{
 			Dimensions const&,
 			iops_accessory< IOP_RefList ... > const& accessory
 		)const noexcept(calc_noexcept< IOP_RefList ... >()){
+			auto const types = [](auto ic){
+				return Dimensions::dimensions[hana::size_c< ic.d >];
+			};
+
+			auto const type_count = [types](auto ic){
+				return hana::size(types(ic));
+			};
+
 			return accessory.log(
-				[](logsys::stdlogb& os, auto* solved_dims_ptr){
+				[types](logsys::stdlogb& os, auto* solved_dims_ptr){
 					os << "set dimension number";
 
 					using type =
@@ -130,15 +138,17 @@ namespace disposer{
 						return;
 					}
 
-					hana::unpack(solved_dims_ptr->indexes, [&os](auto ... ic){
-						detail::comma_separated_output(os, std::make_tuple(ic.d,
-							" to ", get_type_name(ic.i, Dimensions::dimensions[hana::size_c< ic.d >])) ...);
-					});
+					hana::unpack(solved_dims_ptr->indexes,
+						[&os, types](auto ... ic){
+							detail::comma_separated_output(os,
+								std::make_tuple(ic.d, " to ",
+									get_type_name(ic.i, types(ic))) ...);
+						});
 				}, [&]{
 					auto solved_dims = std::invoke(fn_, accessory);
 
-					hana::unpack(solved_dims.indexes, [](auto ... ic){
-						if(((ic.i < hana::size(Dimensions::dimensions[hana::size_c< ic.d >])) && ...)) return;
+					hana::unpack(solved_dims.indexes, [type_count](auto ... ic){
+						if(((ic.i < type_count(ic)) && ...)) return;
 
 						std::ostringstream os;
 						os << "index is out of range: ";
@@ -147,8 +157,8 @@ namespace disposer{
 
 						detail::comma_separated_output(os, std::make_tuple(
 							"dimension number ", ic.d, " has ",
-							hana::size(Dimensions::dimensions[hana::size_c< ic.d >]).value, " types (index ",
-							ic.i, " is ", (ic.i < hana::size(Dimensions::dimensions[hana::size_c< ic.d >])
+							type_count(ic).value, " types (index ",
+							ic.i, " is ", (ic.i < type_count(ic)
 								? "valid"sv : "invalid"sv), ")") ...);
 
 						throw std::out_of_range(os.str());
