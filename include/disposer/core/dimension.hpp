@@ -66,6 +66,16 @@ namespace disposer{
 		dimension& operator=(dimension const&) = delete;
 
 
+		/// \brief Default constructor
+		///
+		/// Disabled if Ts is empty to resolve ambiguity.
+		template < typename Dummy = void, typename = std::enable_if_t<
+			(sizeof...(Ts) > 0), Dummy > >
+		constexpr dimension()noexcept{}
+
+		/// \brief Construct by hana::type's
+		constexpr dimension(hana::basic_type< Ts > ...)noexcept{}
+
 		/// \brief Array of the type indexes of the Ts
 		static constexpr type_index ti[sizeof...(Ts)] =
 			{ type_index::type_id< Ts >() ... };
@@ -119,16 +129,15 @@ namespace disposer{
 	)noexcept{
 		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(Ds) >,
 			[](auto ... n){
-				auto const calc = [](auto n, auto dim){
+				constexpr auto calc = [](auto n, auto dim)noexcept{
 						if constexpr(n.value == DI){
-							return dimension< typename decltype(
-								+dim.types[hana::size_c< I >])::type >{};
+							return dimension{dim.types[hana::size_c< I >]};
 						}else{
 							return dim;
 						}
 					};
 
-				return dimension_list< decltype(calc(n, Ds{})) ... >{};
+				return dimension_list{calc(n, Ds{}) ...};
 			});
 	}
 
