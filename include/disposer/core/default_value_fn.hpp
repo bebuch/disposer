@@ -78,14 +78,19 @@ namespace disposer{
 
 		template < typename Accessory, typename T, typename ... Ts >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_r_v< T, Fn const,
-				Accessory const&, hana::basic_type< T >,
-				hana::basic_type< Ts > ... >
-				|| is_void_r_v< Accessory, T, Ts ... >(),
+			static_assert(is_invocable_v< Accessory, T, Ts ... >(),
 				"Wrong function signature, expected: "
 				"U f(auto const& iop, hana::basic_type< T > type, "
 				"hana::basic_type< Ts > ... type_dependancies) where U is "
 				"void or convertible to T"
+			);
+
+			static_assert(std::is_invocable_r_v< T, Fn const,
+				Accessory const&, hana::basic_type< T >,
+				hana::basic_type< Ts > ... >
+				|| is_void_r_v< Accessory, T, Ts ... >(),
+				"Result of default_value_fn is neither void nor convertible "
+				"to T"
 			);
 
 			return std::is_nothrow_invocable_v< Fn const,
