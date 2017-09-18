@@ -281,6 +281,72 @@ namespace disposer{
 		};
 
 		template <
+			typename Name,
+			typename DimensionReferrer,
+			typename ... Ds,
+			std::size_t Offset,
+			typename ... Config,
+			typename ... IOPs >
+		std::unique_ptr< module_base > exec_make_output(
+			output_maker< Name, DimensionReferrer > const&,
+			dimension_list< Ds ... > const&,
+			detail::config_queue< Offset, Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			DimensionReferrer::verify_solved(dimension_list< Ds ... >{});
+
+			using type = typename
+				DimensionReferrer::template type< dimension_list< Ds ... > >;
+
+			auto const use_count = get_use_count(data.outputs,
+				detail::to_std_string_view(Name{}));
+
+			output< Name, type > output{use_count};
+
+			return make_module(dimension_list< Ds ... >{}, configs,
+				iops_ref(std::move(output), std::move(iops)));
+		}
+
+		template <
+			typename Name,
+			typename DimensionReferrer,
+			typename DimensionDependancy,
+			typename ParserFn,
+			typename DefaultValueFn,
+			typename ... Ds,
+			std::size_t Offset,
+			typename ... Config,
+			typename ... IOPs >
+		std::unique_ptr< module_base > exec_make_parameter(
+			parameter_maker< Name, DimensionReferrer,
+				DimensionDependancy, ParserFn, DefaultValueFn > const& maker,
+			dimension_list< Ds ... > const&,
+			detail::config_queue< Offset, Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			DimensionReferrer::verify_solved(dimension_list< Ds ... >{});
+			DimensionDependancy::verify_solved(dimension_list< Ds ... >{});
+
+			using type = typename
+				DimensionReferrer::template type< dimension_list< Ds ... > >;
+
+			auto const param_data_ptr = get_parameter_data(data.parameters,
+				detail::to_std_string_view(Name{}));
+
+			parameter< Name, type > parameter{get_parameter_value< type >(
+					dimension_list< Ds ... >{},
+					DimensionDependancy{},
+					maker.parser,
+					maker.default_value_generator,
+					iops_accessory{iops, data.location()},
+					param_data_ptr
+				)};
+
+			return make_module(dimension_list< Ds ... >{}, configs,
+				iops_ref(std::move(parameter), std::move(iops)));
+		}
+
+		template <
 			typename Fn,
 			typename ... Ds,
 			std::size_t Offset,
@@ -323,12 +389,16 @@ namespace disposer{
 				if constexpr(auto c = is_a< input_maker_tag >(config); c){
 					return exec_make_input(config, dims, configs.next(),
 						std::move(iops));
-	// 			}else if constexpr(auto c = is_a< output_maker_tag >(config); c){
-	// 				return exec_make_output(config, dims, configs.next(),
-	// 					std::move(iops));
-	// 			}else if constexpr(auto c = is_a< parameter_maker_tag >(config); c){
-	// 				return exec_make_parameter(config, dims, configs.next(),
-	// 					std::move(iops));
+				}else if constexpr(
+					auto c = is_a< output_maker_tag >(config); c
+				){
+					return exec_make_output(config, dims, configs.next(),
+						std::move(iops));
+				}else if constexpr(
+					auto c = is_a< parameter_maker_tag >(config); c
+				){
+					return exec_make_parameter(config, dims, configs.next(),
+						std::move(iops));
 				}else{
 					auto is_set_dimension_fn =
 						is_a< set_dimension_fn_tag >(config);

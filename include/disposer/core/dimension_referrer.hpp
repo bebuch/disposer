@@ -141,6 +141,17 @@ namespace disposer{
 		static_assert(has_unique_ascending_order(numbers),
 			"dimension_dependancy VDs must be in ascending order and must not "
 			"have duplicates");
+
+		template < typename DimensionList >
+		static constexpr void verify_solved(DimensionList const&)noexcept{
+			static_assert(hana::all_of(
+					hana::make_tuple(hana::size(DimensionList::dimensions
+						[hana::size_c< VDs >]) ... ),
+					hana::size_c< 1 >),
+				"at least one dimension Ds is not solved yet");
+		}
+
+
 	};
 
 
