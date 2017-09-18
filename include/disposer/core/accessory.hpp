@@ -9,6 +9,10 @@
 #ifndef _disposer__core__accessory__hpp_INCLUDED_
 #define _disposer__core__accessory__hpp_INCLUDED_
 
+#include "input_name.hpp"
+#include "output_name.hpp"
+#include "parameter_name.hpp"
+
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
 #include "../tool/false_c.hpp"
@@ -41,7 +45,13 @@ namespace disposer{
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
 			if constexpr(IOP_Ref::name == name){
-				return ref;
+				if constexpr(hana::is_a< input_name_tag, Name >()){
+					return ref.output_ptr() != nullptr;
+				}else if constexpr(hana::is_a< output_name_tag, Name >()){
+					return ref.use_count() > 0;
+				}else{
+					return ref.get();
+				}
 			}else{
 				static_assert(sizeof...(IOP_RefList) > 0,
 					"object with name is unknown");
@@ -97,6 +107,12 @@ namespace disposer{
 		///        via its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
+			static_assert(
+				hana::is_a< input_name_tag, Name >() ||
+				hana::is_a< output_name_tag, Name >() ||
+				hana::is_a< parameter_name_tag, Name >(),
+				"name must be an input_name, an output_name or a "
+				"parameter_name");
 			return list_(name);
 		}
 
