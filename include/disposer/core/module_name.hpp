@@ -37,10 +37,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for modules
 	template < char ... C >
-	struct module_name: ct_name< C ... >{
-		/// \brief Hana tag to identify module names
-		using hana_tag = module_name_tag;
-
+	struct module_name: ct_name< module_name_tag, C ... >{
 		/// \brief Creates a \ref module_register_fn object
 		template < typename ModuleRegisterFn >
 		constexpr auto operator()(

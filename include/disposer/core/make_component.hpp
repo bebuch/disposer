@@ -6,24 +6,71 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__component__hpp_INCLUDED_
-#define _disposer__core__component__hpp_INCLUDED_
+#ifndef _disposer__core__make_component__hpp_INCLUDED_
+#define _disposer__core__make_component__hpp_INCLUDED_
 
 #include "component_base.hpp"
-#include "component_data.hpp"
 #include "module_name.hpp"
 
-#include "../config/component_make_data.hpp"
+#include "make_parameter.hpp"
+#include "set_dimension_fn.hpp"
+
 #include "../config/validate_iop.hpp"
+#include "../config/component_make_data.hpp"
+
+#include "../tool/config_queue.hpp"
+
+#include <atomic>
+
 
 
 namespace disposer{
 
 
+	/// \brief Accessory of a \ref component without log
+	template < typename ... Parameters >
+	class component_config{
+	public:
+		/// \brief Constructor
+		template < typename ... RefList >
+		component_config(iops_ref< RefList ... > const& ref_list)
+			, parameters_(move_parameters(ref_list)) {}
+
+
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto& operator()(Name const& name)noexcept{
+			return extract(list_, name);
+		}
+
+		/// \brief Get reference to a parameter-object via its corresponding
+		///        compile time name
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			return extract(list_, name);
+		}
+
+
+	private:
+		template < typename L, typename Name >
+		static auto& extract(L& list, Name const& name)noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			static_assert(hana::is_a< parameter_name_tag, name_t >,
+				"name is not a parameter_name");
+			return detail::extract(detail::as_ref_list(list), name);
+		}
+
+
+		/// \brief hana::tuple of the inputs, outputs and parameters
+		List list_;
+	};
+
+
 	/// \brief Accessory of a component
 	template < typename ... Parameters >
 	class component_accessory
-		: public component_data< Parameters ... >
+		: public component_config< Parameters ... >
 		, public add_log< component_accessory< Parameters ... > >
 	{
 	public:
@@ -36,7 +83,7 @@ namespace disposer{
 			MakeData const& data,
 			std::string_view location
 		)
-			: component_data< List >(
+			: component_config< List >(
 					maker_list, data, location, std::make_index_sequence<
 						decltype(hana::size(maker_list))::value >()
 				)
@@ -84,87 +131,6 @@ namespace disposer{
 
 	private:
 		ComponentFn component_fn_;
-	};
-
-
-	/// \brief The actual component type
-	template < typename List, typename ComponentFn >
-	class component: public component_base{
-	public:
-		/// \brief Type for exec_fn
-		using accessory_type = component_accessory< List >;
-
-
-		using component_t = std::invoke_result_t<
-			component_init< ComponentFn >, accessory_type& >;
-
-		static_assert(!std::is_same_v< component_t, void >,
-			"ComponentFn must return an object");
-
-
-		/// \brief Constructor
-		template < typename MakerList, typename MakeData >
-		component(
-			disposer& disposer,
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location,
-			component_init< ComponentFn > const& component_fn
-		)
-			: component_base(data.name, data.type_name)
-			, accessory_(*this, disposer, maker_list, data, location)
-			, component_(component_fn(accessory_)) {}
-
-
-		/// \brief Components are not copyable
-		component(component const&) = delete;
-
-		/// \brief Components are not movable
-		component(component&&) = delete;
-
-
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto& operator()(P const& param)noexcept{
-			return accessory_(param);
-		}
-
-		/// \brief Get reference to an parameter-object via
-		///        its corresponding compile time name
-		template < typename P >
-		auto const& operator()(P const& param)const noexcept{
-			return accessory_(param);
-		}
-
-
-		/// \brief Access to the component object
-		component_t& data()noexcept{ return component_; }
-
-		/// \brief Access to the const component object
-		component_t const& data()const noexcept{ return component_; }
-
-
-	private:
-		/// \brief shutdown component if it has a shutdown function
-		///
-		/// Every component which controls the disposer asynchronous should
-		/// implement such a function.
-		void shutdown()override{
-			auto has_shutdown =
-				hana::is_valid([](auto& t)->decltype((void)t.shutdown()){})
-				(component_);
-			if constexpr(has_shutdown){
-				component_.shutdown();
-			}
-		}
-
-
-		/// \brief Module access object for component_
-		accessory_type accessory_;
-
-		/// \brief The component object
-		component_t component_;
 	};
 
 
@@ -241,7 +207,7 @@ namespace disposer{
 	};
 
 
-	/// \brief Wraps all given P configurations into a hana::tuple
+	/// \brief Wraps all given parameter configurations into a hana::tuple
 	template < typename ... MakerList >
 	constexpr auto component_configure(MakerList&& ... list){
 		static_assert(hana::and_(hana::true_c,

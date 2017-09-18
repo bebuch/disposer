@@ -4,17 +4,17 @@
 namespace disposer{
 
 
-	template < typename ... IOP_RefList >
-	module_data(hana::tuple< IOP_RefList ... >&&)
+	template < typename ... RefList >
+	module_data(hana::tuple< RefList ... >&&)
 		-> module_data<
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< input_tag >)),
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< output_tag >)),
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< parameter_tag >)) >;
 
 }

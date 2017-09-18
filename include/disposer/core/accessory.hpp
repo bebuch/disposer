@@ -26,7 +26,7 @@
 namespace disposer{
 
 
-	template < typename ... IOP_RefList >
+	template < typename ... RefList >
 	class iops_ref{
 	public:
 		hana::tuple<> flat()&&{ return {}; }
@@ -34,10 +34,10 @@ namespace disposer{
 
 	iops_ref() -> iops_ref<>;
 
-	template < typename IOP_Ref, typename ... IOP_RefList >
-	class iops_ref< IOP_Ref, IOP_RefList ... >{
+	template < typename IOP_Ref, typename ... RefList >
+	class iops_ref< IOP_Ref, RefList ... >{
 	public:
-		iops_ref(IOP_Ref&& ref, iops_ref< IOP_RefList ... >&& list)
+		iops_ref(IOP_Ref&& ref, iops_ref< RefList ... >&& list)
 			: ref(std::move(ref)), list(std::move(list)) {}
 
 		/// \brief Get const reference to an input-, output- or parameter-object
@@ -45,15 +45,15 @@ namespace disposer{
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
 			if constexpr(IOP_Ref::name == name){
-				if constexpr(hana::is_a< input_name_tag, Name >()){
-					return ref.output_ptr() != nullptr;
+				if constexpr(hana::is_a< parameter_name_tag, Name >()){
+					return ref.get();
 				}else if constexpr(hana::is_a< output_name_tag, Name >()){
 					return ref.use_count() > 0;
 				}else{
-					return ref.get();
+					return ref.output_ptr() != nullptr;
 				}
 			}else{
-				static_assert(sizeof...(IOP_RefList) > 0,
+				static_assert(sizeof...(RefList) > 0,
 					"object with name is unknown");
 
 				list(name);
@@ -62,7 +62,7 @@ namespace disposer{
 
 		auto flat()&&{
 			return std::move(*this).flat(
-				std::make_index_sequence< sizeof...(IOP_RefList) + 1 >());
+				std::make_index_sequence< sizeof...(RefList) + 1 >());
 		}
 
 	private:
@@ -78,29 +78,29 @@ namespace disposer{
 		template < std::size_t ... Is >
 		auto flat(std::index_sequence< Is ... >)&&{
 			return hana::make_tuple(std::move(*this)
-				.template get< sizeof...(IOP_RefList) - Is >() ...);
+				.template get< sizeof...(RefList) - Is >() ...);
 		}
 
 		IOP_Ref&& ref;
-		iops_ref< IOP_RefList ... >&& list;
+		iops_ref< RefList ... >&& list;
 
-		template < typename ... OtherIOP_RefList >
+		template < typename ... OtherRefList >
 		friend class iops_ref;
 	};
 
-	template < typename IOP_Ref, typename ... IOP_RefList >
-	iops_ref(IOP_Ref&& ref, iops_ref< IOP_RefList ... >&& list)
-		-> iops_ref< IOP_Ref, IOP_RefList ... >;
+	template < typename IOP_Ref, typename ... RefList >
+	iops_ref(IOP_Ref&& ref, iops_ref< RefList ... >&& list)
+		-> iops_ref< IOP_Ref, RefList ... >;
 
-	template < typename ... IOP_RefList >
-	class iops_accessory: public add_log< iops_accessory< IOP_RefList ... > >{
+
+	template < typename ... RefList >
+	class module_accessory
+		: public add_log< module_accessory< RefList ... > >{
 	public:
-		iops_accessory(
-			iops_ref< IOP_RefList ... > const& list,
+		module_accessory(
+			iops_ref< RefList ... > const& list,
 			std::string_view log_fn
-		)noexcept
-			: list_(list)
-			, log_fn_(log_fn) {}
+		)noexcept: list_(list), log_fn_(log_fn) {}
 
 
 		/// \brief Get const reference to an input-, output- or parameter-object
@@ -125,7 +125,42 @@ namespace disposer{
 
 	private:
 		/// \brief References to all previous IOPs
-		iops_ref< IOP_RefList ... > const& list_;
+		iops_ref< RefList ... > const& list_;
+
+		/// \brief Log location
+		std::string_view log_fn_;
+	};
+
+
+	template < typename ... RefList >
+	class component_accessory
+		: public add_log< component_accessory< RefList ... > >{
+	public:
+		component_accessory(
+			iops_ref< RefList ... > const& list,
+			std::string_view log_fn
+		)noexcept: list_(list), log_fn_(log_fn) {}
+
+
+		/// \brief Get const reference to an parameter-object
+		///        via its corresponding compile time name
+		template < typename Name >
+		auto const& operator()(Name const& name)const noexcept{
+			static_assert(hana::is_a< parameter_name_tag, Name >(),
+				"name must be a parameter_name");
+			return list_(name);
+		}
+
+
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			os << log_fn_;
+		}
+
+
+	private:
+		/// \brief References to all previous IOPs
+		iops_ref< RefList ... > const& list_;
 
 		/// \brief Log location
 		std::string_view log_fn_;

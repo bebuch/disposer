@@ -42,12 +42,12 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename ... IOP_RefList >
+		template < typename ... RefList >
 		module(
 			std::string const& chain,
 			std::string const& type_name,
 			std::size_t number,
-			hana::tuple< IOP_RefList ... >&& ref_list,
+			hana::tuple< RefList ... >&& ref_list,
 			state_maker_fn< StateMakerFn > const& state_maker_fn,
 			exec_fn< ExecFn > const& exec_fn
 		)
@@ -136,26 +136,26 @@ namespace disposer{
 	};
 
 	template <
-		typename ... IOP_RefList,
+		typename ... RefList,
 		typename StateMakerFn,
 		typename ExecFn >
 	module(
 		std::string const& chain,
 		std::string const& type_name,
 		std::size_t number,
-		hana::tuple< IOP_RefList ... >&& ref_list,
+		hana::tuple< RefList ... >&& ref_list,
 		state_maker_fn< StateMakerFn > const& state_maker_fn,
 		exec_fn< ExecFn > const& exec_fn
 	)
 		-> module<
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< input_tag >)),
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< output_tag >)),
 			decltype(hana::filter(
-				std::declval< hana::tuple< IOP_RefList ... >&& >(),
+				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< parameter_tag >)),
 			StateMakerFn, ExecFn >;
 

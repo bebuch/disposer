@@ -1,32 +1,10 @@
 #include <disposer/component.hpp>
 
-#include <iostream>
-#include <iomanip>
-
 
 namespace hana = boost::hana;
 
 using namespace hana::literals;
 using namespace disposer::literals;
-
-void check_impl(std::string_view name, bool enabled, bool expected){
-	if(enabled == expected){
-		std::cout << " \033[0;32msuccess:\033[0m ";
-	}else{
-		std::cout << " \033[0;31mfail:\033[0m ";
-	}
-	std::cout << name << " = " << std::boolalpha << expected << "\n";
-}
-
-template < typename IO >
-void check(IO& io, bool expected){
-	check_impl(io.name, io.is_enabled(), expected);
-}
-
-template < typename IO, typename Type >
-void check(IO& io, Type const& type, bool expected){
-	check_impl(io.name, io.is_enabled(type), expected);
-}
 
 
 int main(){
