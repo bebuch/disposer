@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
-			set_dimension_fn([](auto const&){
+			module_init_fn([](auto const&){
 				return solved_dimensions{index_component< 0 >{2}};
 			})
 		}, module_data, state_dummy, exec_dummy);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(test_2){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
-			set_dimension_fn([](auto const&){
+			module_init_fn([](auto const&){
 				return solved_dimensions{
 					index_component< 0 >{2},
 					index_component< 1 >{1}
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(test_3){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
-			set_dimension_fn([](auto const&){
+			module_init_fn([](auto const&){
 				return solved_dimensions{
 					index_component< 0 >{2},
 					index_component< 1 >{1},

@@ -13,7 +13,7 @@
 #include "module_name.hpp"
 
 #include "make_parameter.hpp"
-#include "set_dimension_fn.hpp"
+#include "module_init_fn.hpp"
 
 #include "../config/validate_iop.hpp"
 #include "../config/component_make_data.hpp"

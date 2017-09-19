@@ -53,7 +53,7 @@ namespace disposer{
 		static constexpr void can_not_deduce_dimensions(){
 			static_assert(sizeof...(KDIs) == 0,
 				"Unknown dimensions KDIs can't be deduced by input. Please "
-				"provide a set_dimension_fn before the input to provide them "
+				"provide a module_init_fn before the input to provide them "
 				"manuelly.");
 		}
 

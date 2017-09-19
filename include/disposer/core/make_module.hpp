@@ -13,7 +13,7 @@
 #include "make_input.hpp"
 #include "make_output.hpp"
 #include "make_parameter.hpp"
-#include "set_dimension_fn.hpp"
+#include "module_init_fn.hpp"
 
 #include "../config/validate_iop.hpp"
 #include "../config/module_make_data.hpp"
@@ -31,10 +31,10 @@ namespace disposer{
 			hana::is_a< input_maker_tag, Config >(),
 			hana::is_a< output_maker_tag, Config >(),
 			hana::is_a< parameter_maker_tag, Config >(),
-			hana::is_a< set_dimension_fn_tag, Config >()) ...),
+			hana::is_a< module_init_fn_tag, Config >()) ...),
 			"at least one of the module configure arguments is not "
 			"an input maker, an output maker, a parameter maker or "
-			"a set_dimension_fn");
+			"a module_init_fn");
 
 		/// \brief The data
 		hana::tuple< Config ... > config_list;
@@ -201,7 +201,7 @@ namespace disposer{
 		}
 
 		template < typename DimensionList >
-		struct set_dimension_fn_execution{
+		struct module_init_fn_execution{
 			module_construction< StateMakerFn, ExecFn > const& base;
 
 			template <
@@ -244,7 +244,7 @@ namespace disposer{
 												dim_type::value,
 												index_type::value >{});
 
-									return set_dimension_fn_execution<
+									return module_init_fn_execution<
 										decltype(next_dimension_list) >{base}
 										.make(configs, std::move(iops),
 											solved_dims);
@@ -350,13 +350,13 @@ namespace disposer{
 			std::size_t Offset,
 			typename ... Config,
 			typename ... IOPs >
-		std::unique_ptr< module_base > exec_set_dimension_fn(
-			set_dimension_fn< Fn > const& fn,
+		std::unique_ptr< module_base > exec_module_init_fn(
+			module_init_fn< Fn > const& fn,
 			dimension_list< Ds ... > const& dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			set_dimension_fn_execution< dimension_list< Ds ... > > const
+			module_init_fn_execution< dimension_list< Ds ... > > const
 				base{*this};
 
 			return base.make(configs, std::move(iops),
@@ -398,10 +398,10 @@ namespace disposer{
 					return exec_make_parameter(config, dims, configs.next(),
 						std::move(iops));
 				}else{
-					auto is_set_dimension_fn =
-						is_a< set_dimension_fn_tag >(config);
-					static_assert(is_set_dimension_fn);
-					return exec_set_dimension_fn(config, dims, configs.next(),
+					auto is_module_init_fn =
+						is_a< module_init_fn_tag >(config);
+					static_assert(is_module_init_fn);
+					return exec_module_init_fn(config, dims, configs.next(),
 						std::move(iops));
 				}
 			}

@@ -89,9 +89,9 @@ exe dimension_solve
 	/disposer//disposer
 	;
 
-exe set_dimension_fn
+exe module_init_fn
 	:
-	set_dimension_fn.cpp
+	module_init_fn.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;
