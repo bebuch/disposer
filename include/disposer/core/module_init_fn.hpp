@@ -20,33 +20,6 @@
 namespace disposer{
 
 
-	template < typename Types >
-	std::string get_type_name(std::size_t i, Types types){
-		using type_count = decltype(hana::size(types));
-
-#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
-		assert(i < type_count::value);
-#endif
-
-		return hana::unpack(
-			hana::make_range(hana::size_c< 0 >, hana::size(types)),
-			[i](auto ... I){
-				constexpr auto name_fn = [](auto I){
-						return []{
-								return type_index::type_id< typename
-										decltype(+types[I])::type
-									>().pretty_name();
-							};
-					};
-
-				using fn_type = std::string(*)();
-				constexpr fn_type names[type_count::value]
-					= {static_cast< fn_type >(name_fn(decltype(I){})) ...};
-				return names[i]();
-			});
-	}
-
-
 	/// \brief Tag for module_init_fn
 	struct module_init_fn_tag;
 
@@ -142,7 +115,7 @@ namespace disposer{
 						[&os, types](auto ... ic){
 							detail::comma_separated_output(os,
 								std::make_tuple(ic.d, " to ",
-									get_type_name(ic.i, types(ic))) ...);
+								detail::get_type_name(ic.i, types(ic))) ...);
 						});
 				}, [&]{
 					auto solved_dims = std::invoke(fn_, accessory);

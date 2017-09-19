@@ -9,8 +9,13 @@
 #ifndef _disposer__tool__comma_separated_output__hpp_INCLUDED_
 #define _disposer__tool__comma_separated_output__hpp_INCLUDED_
 
+#include "type_index.hpp"
+
 #include <tuple>
 #include <type_traits>
+
+#include <boost/hana/size.hpp>
+#include <boost/hana/range.hpp>
 
 
 namespace disposer::detail{
@@ -43,6 +48,33 @@ namespace disposer::detail{
 					((os << ", ") << ... << args);
 				}, args), ...);
 		}
+	}
+
+
+	template < typename Types >
+	std::string get_type_name(std::size_t i, Types types){
+		using type_count = decltype(hana::size(types));
+
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+		assert(i < type_count::value);
+#endif
+
+		return hana::unpack(
+			hana::make_range(hana::size_c< 0 >, hana::size(types)),
+			[i](auto ... I){
+				constexpr auto name_fn = [](auto I){
+						return []{
+								return type_index::type_id< typename
+										decltype(+types[I])::type
+									>().pretty_name();
+							};
+					};
+
+				using fn_type = std::string(*)();
+				constexpr fn_type names[type_count::value]
+					= {static_cast< fn_type >(name_fn(decltype(I){})) ...};
+				return names[i]();
+			});
 	}
 
 
