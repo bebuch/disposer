@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__module_init_fn__hpp_INCLUDED_
-#define _disposer__core__module_init_fn__hpp_INCLUDED_
+#ifndef _disposer__core__set_dimension_fn__hpp_INCLUDED_
+#define _disposer__core__set_dimension_fn__hpp_INCLUDED_
 
 #include "dimension.hpp"
 #include "accessory.hpp"
@@ -20,29 +20,29 @@
 namespace disposer{
 
 
-	/// \brief Tag for module_init_fn
-	struct module_init_fn_tag;
+	/// \brief Tag for set_dimension_fn
+	struct set_dimension_fn_tag;
 
 	/// \brief Chose a type from at least one dimension_list
 	template < typename Fn >
-	class module_init_fn{
+	class set_dimension_fn{
 	public:
-		/// \brief Hana tag to identify module_init_fn
-		using hana_tag = module_init_fn_tag;
+		/// \brief Hana tag to identify set_dimension_fn
+		using hana_tag = set_dimension_fn_tag;
 
 
 		/// \brief Default construtor
-		constexpr module_init_fn()
+		constexpr set_dimension_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
 		/// \brief Construtor
-		constexpr explicit module_init_fn(Fn const& fn)
+		constexpr explicit set_dimension_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
 		/// \brief Construtor
-		constexpr explicit module_init_fn(Fn&& fn)
+		constexpr explicit set_dimension_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
@@ -51,11 +51,11 @@ namespace disposer{
 		template < typename ResultType >
 		static constexpr void check_result_type()noexcept{
 			static_assert(is_solved_dimensions_v< ResultType >,
-				"result of Fn(auto const& iops) in module_init_fn must be "
+				"result of Fn(auto const& iops) in set_dimension_fn must be "
 				"solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 
 			static_assert(ResultType::index_count > 0,
-				"result of Fn(auto const& iops) in module_init_fn must "
+				"result of Fn(auto const& iops) in set_dimension_fn must "
 				"solve at least one dimension, you must return an object of "
 				"solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 		}

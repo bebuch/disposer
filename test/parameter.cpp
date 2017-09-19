@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
-			module_init_fn([](auto const&){
+			set_dimension_fn([](auto const&){
 				return solved_dimensions{index_component< 0 >{2}};
 			}),
 			make("p1"_param, type_ref_c< 0 >, default_value(3.14159f))
