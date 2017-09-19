@@ -13,25 +13,22 @@ using namespace std::literals::string_view_literals;
 
 using type_index = boost::typeindex::ctti_type_index;
 
-constexpr auto list = dimension_list{
-		dimension_c< double, char, float >,
-		dimension_c< int, bool >,
-		dimension_c< short, unsigned, long, long long >
-	};
-
 template < std::size_t D >
 using ic = index_component< D >;
 
 
-struct exec{
-	constexpr void operator()()const{}
-};
-
-constexpr module_init_fn state_dummy{};
-constexpr exec_fn exec_dummy{exec{}};
-
-
 BOOST_AUTO_TEST_CASE(test_1){
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >
+		};
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
@@ -50,6 +47,18 @@ BOOST_AUTO_TEST_CASE(test_1){
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >
+		};
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{
@@ -71,6 +80,19 @@ BOOST_AUTO_TEST_CASE(test_2){
 }
 
 BOOST_AUTO_TEST_CASE(test_3){
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >,
+			dimension_c< short, unsigned, long, long long >
+		};
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(list,
 		module_configure{

@@ -376,10 +376,17 @@ namespace disposer{
 		)const{
 			if constexpr(detail::config_queue< Offset, Config ... >::is_empty){
 				(void)configs; // Silance GCC;
+
+				static_assert(hana::all_of(
+						dimension_list< Dimension ... >::dimensions,
+						[](auto types){
+							return hana::size(types) == hana::size_c< 1 >;
+						}
+					), "module has unused dimensions");
+
 				return std::unique_ptr< module_base >(new module{
 					data.chain, data.type_name, data.number,
 					std::move(iops).flat(), module_init, exec});
-
 			}else{
 				using hana::is_a;
 				auto const& config = configs.front();

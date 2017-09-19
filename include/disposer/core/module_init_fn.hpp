@@ -33,26 +33,35 @@ namespace disposer{
 		/// \brief Get reference to an input-, output- or parameter-object via
 		///        its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)const noexcept{
-			if constexpr(hana::is_a< input_name_tag, Name >()){
-				auto const& input = hana::find(data_.inputs, name);
-				static_assert(hana::is_nothing(input),
-					"no input with name found");
-				return *input;
-			}else if constexpr(hana::is_a< output_name_tag, Name >()){
-				auto const& output = hana::find(data_.outputs, name);
-				static_assert(hana::is_nothing(output),
-					"no output with name found");
-				return *output;
-			}else if constexpr(hana::is_a< parameter_name_tag, Name >()){
-				auto const& parameter = hana::find(data_.parameters, name);
-				static_assert(hana::is_nothing(parameter),
-					"no parameter with name found");
-				return *parameter;
+		decltype(auto) operator()(Name const& name)const noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			if constexpr(hana::is_a< input_name_tag, name_t >()){
+				auto const index = hana::index_if(data_.inputs,
+					[name](auto const& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"input name doesn't exist");
+
+				return data_.inputs[*index].output_ptr() != nullptr;
+			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
+				auto const index = hana::index_if(data_.outputs,
+					[name](auto const& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"output name doesn't exist");
+
+				return data_.outputs[*index].use_count() > 0;
+			}else if constexpr(hana::is_a< parameter_name_tag, name_t >()){
+				auto const index = hana::index_if(data_.parameters,
+					[name](auto const& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"parameter name doesn't exist");
+
+				return data_.parameters[*index].get();
 			}else{
 				static_assert(detail::false_c< Name >,
-					"name must be an input_name, an output_name or a "
-					"parameter_name");
+					"name is not an input_name, output_name or parameter_name");
 			}
 		}
 
@@ -90,15 +99,16 @@ namespace disposer{
 
 		template < typename Inputs, typename Outputs, typename Parameters >
 		auto operator()(
-			module_init_accessory< Inputs, Outputs, Parameters > const& accessory
+			module_init_accessory< Inputs, Outputs, Parameters >
+				const& accessory
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
 				module_init_accessory< Inputs, Outputs, Parameters > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					Fn const,
-					module_init_accessory< Inputs, Outputs, Parameters > const& > >,
+					Fn const, module_init_accessory<
+						Inputs, Outputs, Parameters > const& > >,
 					"Fn must not return void");
 				return std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn const >){

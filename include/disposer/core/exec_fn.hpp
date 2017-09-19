@@ -79,28 +79,28 @@ namespace disposer{
 			using name_t = std::remove_reference_t< Name >;
 			if constexpr(hana::is_a< input_name_tag, name_t >()){
 				auto const index = hana::index_if(this_.inputs_,
-					[name](auto& p){ return p.name == name; });
+					[name](auto const& p){ return p.name == name; });
 
 				static_assert(!hana::is_nothing(index),
 					"input name doesn't exist");
 
-				return this_.inputs_[index];
+				return this_.inputs_[*index];
 			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
 				auto const index = hana::index_if(this_.outputs_,
-					[name](auto& p){ return p.name == name; });
+					[name](auto const& p){ return p.name == name; });
 
 				static_assert(!hana::is_nothing(index),
 					"output name doesn't exist");
 
-				return this_.outputs_[index];
+				return this_.outputs_[*index];
 			}else if constexpr(hana::is_a< parameter_name_tag, name_t >()){
 				auto const index = hana::index_if(this_.parameters_,
-					[name](auto& p){ return p.name == name; });
+					[name](auto const& p){ return p.name == name; });
 
 				static_assert(!hana::is_nothing(index),
 					"parameter name doesn't exist");
 
-				return this_.parameters_[index];
+				return this_.parameters_[*index];
 			}else{
 				static_assert(detail::false_c< Name >,
 					"name is not an input_name, output_name or parameter_name");
@@ -157,8 +157,9 @@ namespace disposer{
 				accessory
 		){
 			// TODO: calulate noexcept
-			if constexpr(std::is_invocable_v< Fn, exec_accessory<
-				StateType, ExecInputs, ExecOutputs, Parameters >& >
+			if constexpr(
+				std::is_invocable_v< Fn, exec_accessory<
+					StateType, ExecInputs, ExecOutputs, Parameters >& >
 			){
 				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){
