@@ -33,7 +33,26 @@ namespace disposer{
 		///        its corresponding compile time name
 		template < typename Name >
 		auto const& operator()(Name const& name)const noexcept{
-			return data_(name);
+			if constexpr(hana::is_a< input_name_tag, Name >()){
+				auto const& input = hana::find(data_.inputs, name);
+				static_assert(hana::is_nothing(input),
+					"no input with name found");
+				return *input;
+			}else if constexpr(hana::is_a< output_name_tag, Name >()){
+				auto const& output = hana::find(data_.outputs, name);
+				static_assert(hana::is_nothing(output),
+					"no output with name found");
+				return *output;
+			}else if constexpr(hana::is_a< parameter_name_tag, Name >()){
+				auto const& parameter = hana::find(data_.parameters, name);
+				static_assert(hana::is_nothing(parameter),
+					"no parameter with name found");
+				return *parameter;
+			}else{
+				static_assert(detail::false_c< Name >,
+					"name must be an input_name, an output_name or a "
+					"parameter_name");
+			}
 		}
 
 
