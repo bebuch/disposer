@@ -11,6 +11,8 @@
 
 #include "dimension.hpp"
 
+#include "../tool/type_index.hpp"
+
 #include <boost/hana/range.hpp>
 #include <boost/hana/cartesian_product.hpp>
 #include <boost/hana/unpack.hpp>

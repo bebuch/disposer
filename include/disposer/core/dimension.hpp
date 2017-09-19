@@ -9,8 +9,6 @@
 #ifndef _disposer__core__dimension__hpp_INCLUDED_
 #define _disposer__core__dimension__hpp_INCLUDED_
 
-#include "../tool/type_index.hpp"
-
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/type.hpp>
 #include <boost/hana/tuple.hpp>
@@ -75,10 +73,6 @@ namespace disposer{
 
 		/// \brief Construct by hana::type's
 		constexpr dimension(hana::basic_type< Ts > ...)noexcept{}
-
-		/// \brief Array of the type indexes of the Ts
-		static constexpr type_index ti[sizeof...(Ts)] =
-			{ type_index::type_id< Ts >() ... };
 	};
 
 
