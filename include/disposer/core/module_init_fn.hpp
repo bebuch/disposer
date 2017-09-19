@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__state_maker_fn__hpp_INCLUDED_
-#define _disposer__core__state_maker_fn__hpp_INCLUDED_
+#ifndef _disposer__core__module_init_fn__hpp_INCLUDED_
+#define _disposer__core__module_init_fn__hpp_INCLUDED_
 
 #include "module_data.hpp"
 
@@ -17,11 +17,12 @@ namespace disposer{
 
 	/// \brief Accessory of a module during enable/disable calls
 	template < typename Inputs, typename Outputs, typename Parameters >
-	class state_accessory
-		: public add_log< state_accessory< Inputs, Outputs, Parameters > >{
+	class module_init_accessory
+		: public add_log<
+			module_init_accessory< Inputs, Outputs, Parameters > >{
 	public:
 		/// \brief Constructor
-		state_accessory(
+		module_init_accessory(
 			module_data< Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		)
@@ -73,31 +74,31 @@ namespace disposer{
 
 	/// \brief Wrapper for the module enable function
 	template < typename Fn = void >
-	class state_maker_fn{
+	class module_init_fn{
 	public:
-		constexpr state_maker_fn()
+		constexpr module_init_fn()
 			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
- 		constexpr explicit state_maker_fn(Fn const& fn)
+ 		constexpr explicit module_init_fn(Fn const& fn)
 			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
- 		constexpr explicit state_maker_fn(Fn&& fn)
+ 		constexpr explicit module_init_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(static_cast< Fn&& >(fn)) {}
 
 		template < typename Inputs, typename Outputs, typename Parameters >
 		auto operator()(
-			state_accessory< Inputs, Outputs, Parameters > const& accessory
+			module_init_accessory< Inputs, Outputs, Parameters > const& accessory
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
-				state_accessory< Inputs, Outputs, Parameters > const& >
+				module_init_accessory< Inputs, Outputs, Parameters > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const,
-					state_accessory< Inputs, Outputs, Parameters > const& > >,
+					module_init_accessory< Inputs, Outputs, Parameters > const& > >,
 					"Fn must not return void");
 				return std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn const >){
@@ -109,7 +110,7 @@ namespace disposer{
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be invokable with "
-					"state_accessory const& or without an argument");
+					"module_init_accessory const& or without an argument");
 			}
 		}
 
@@ -118,9 +119,9 @@ namespace disposer{
 	};
 
 	/// \brief Maker specialization for stateless modules
-	template <> class state_maker_fn< void >{};
+	template <> class module_init_fn< void >{};
 
-	state_maker_fn() -> state_maker_fn< void >;
+	module_init_fn() -> module_init_fn< void >;
 
 
 	/// \brief Holds the user defined state object of a module
@@ -128,21 +129,23 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename StateMakerFn >
-	class state{
+		typename ModuleInitFn >
+	class module_state{
 	public:
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
-			state_maker_fn< StateMakerFn >,
-			state_accessory< Inputs, Outputs, Parameters >&& >;
+			module_init_fn< ModuleInitFn >,
+			module_init_accessory< Inputs, Outputs, Parameters >&& >;
 
 		static_assert(!std::is_void_v< state_type >,
-			"state_maker function must not return void");
+			"module_init function must not return void");
 
 
 		/// \brief Constructor
-		state(state_maker_fn< StateMakerFn > const& state_maker_fn)noexcept
-			: state_maker_fn_(state_maker_fn) {}
+		module_state(
+			module_init_fn< ModuleInitFn > const& module_init_fn
+		)noexcept
+			: module_init_fn_(module_init_fn) {}
 
 		/// \brief Enables the module for exec calls
 		///
@@ -151,7 +154,7 @@ namespace disposer{
 			module_data< Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		){
-			state_.emplace(state_maker_fn_(state_accessory
+			state_.emplace(module_init_fn_(module_init_accessory
 				< Inputs, Outputs, Parameters >(data, location)));
 		}
 
@@ -169,7 +172,7 @@ namespace disposer{
 
 	private:
 		/// \brief The function object that is called in enable()
-		state_maker_fn< StateMakerFn > state_maker_fn_;
+		module_init_fn< ModuleInitFn > module_init_fn_;
 
 		/// \brief The function object that is called in exec()
 		std::optional< state_type > state_;
@@ -178,13 +181,13 @@ namespace disposer{
 
 	/// \brief Specialization for stateless modules
 	template < typename Inputs, typename Outputs, typename Parameters >
-	class state< Inputs, Outputs, Parameters, void >{
+	class module_state< Inputs, Outputs, Parameters, void >{
 	public:
 		/// \brief Type of the module state object
 		using state_type = void;
 
 		/// \brief Constructor
-		state(state_maker_fn< void > const&)noexcept{}
+		module_state(module_init_fn< void > const&)noexcept{}
 
 		/// \brief Module is stateless, do nothing
 		void enable(

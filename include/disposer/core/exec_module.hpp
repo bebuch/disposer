@@ -21,13 +21,13 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	class exec_module: public exec_module_base{
 	public:
 		/// \brief Constructor
 		exec_module(
-			module< Inputs, Outputs, Parameters, StateMakerFn, ExecFn >& module,
+			module< Inputs, Outputs, Parameters, ModuleInitFn, ExecFn >& module,
 			to_exec_init_list_t< Inputs > const& inputs,
 			to_exec_init_list_t< Outputs > const& outputs,
 			std::size_t id
@@ -44,7 +44,7 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to the module
-		module< Inputs, Outputs, Parameters, StateMakerFn, ExecFn >& module_;
+		module< Inputs, Outputs, Parameters, ModuleInitFn, ExecFn >& module_;
 
 		/// \brief Current exec id
 		std::size_t const id_;

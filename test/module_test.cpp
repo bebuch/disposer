@@ -24,7 +24,7 @@ std::string const m_type_name = "type";
 std::size_t const number = 4;
 
 exec_fn< exec > e{};
-state_maker_fn< void > s{};
+module_init_fn< void > s{};
 
 output_map_type map{{&o1, nullptr}};
 

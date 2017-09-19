@@ -24,7 +24,7 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	class module;
 

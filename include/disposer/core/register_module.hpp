@@ -26,7 +26,7 @@ namespace disposer{
 	template <
 		typename Dimensions,
 		typename Configuration,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	class module_register_fn{
 	public:
@@ -38,11 +38,11 @@ namespace disposer{
 		module_register_fn(
 			dimension_list< Dimension ... > const& dims,
 			module_configure< Config ... >&& list,
-			state_maker_fn< StateMakerFn >&& state_maker,
+			module_init_fn< ModuleInitFn >&& module_init,
 			exec_fn< ExecFn >&& exec
 		)
 			: called_flag_(false)
-			, maker_{dims, std::move(list), state_maker, exec}
+			, maker_{dims, std::move(list), module_init, exec}
 			{}
 
 		/// \brief Constructor
@@ -53,18 +53,18 @@ namespace disposer{
 			exec_fn< ExecFn >&& exec
 		)
 			: module_register_fn(dims, std::move(list),
-				state_maker_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec))
 			{}
 
 		/// \brief Constructor
 		template < typename ... Config >
 		module_register_fn(
 			module_configure< Config ... >&& list,
-			state_maker_fn< StateMakerFn >&& state_maker,
+			module_init_fn< ModuleInitFn >&& module_init,
 			exec_fn< ExecFn >&& exec
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
-				std::move(state_maker), std::move(exec))
+				std::move(module_init), std::move(exec))
 			{}
 
 		/// \brief Constructor
@@ -74,7 +74,7 @@ namespace disposer{
 			exec_fn< ExecFn >&& exec
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
-				state_maker_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec))
 			{}
 
 		/// \brief Call this function to register the module with the given type
@@ -97,7 +97,7 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The module_maker object
-		module_maker< Dimensions, Configuration, StateMakerFn, ExecFn > maker_;
+		module_maker< Dimensions, Configuration, ModuleInitFn, ExecFn > maker_;
 
 		friend struct unit_test_key;
 	};
@@ -105,19 +105,19 @@ namespace disposer{
 
 	/// \brief Deduction guide
 	template <
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn,
 		typename ... Dimension,
 		typename ... Config >
 	module_register_fn(
 		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... >&& list,
-		state_maker_fn< StateMakerFn > const& state_maker,
+		module_init_fn< ModuleInitFn > const& module_init,
 		exec_fn< ExecFn > const& exec
 	) -> module_register_fn<
 		dimension_list< Dimension ... >,
 		module_configure< Config ... >,
-		StateMakerFn, ExecFn >;
+		ModuleInitFn, ExecFn >;
 
 }
 

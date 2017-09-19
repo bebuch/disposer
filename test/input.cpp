@@ -28,7 +28,7 @@ struct exec{
 	constexpr void operator()()const{}
 };
 
-constexpr state_maker_fn state_dummy{};
+constexpr module_init_fn state_dummy{};
 constexpr exec_fn exec_dummy{exec{}};
 
 

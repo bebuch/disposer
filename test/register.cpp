@@ -54,7 +54,7 @@ int main(){
 					"cm1"_module([](auto& /*component*/){
 						return disposer::module_register_fn(
 							disposer::module_configure(),
-							disposer::state_maker_fn([](auto const& module){
+							disposer::module_init_fn([](auto const& module){
 								module.log([](logsys::stdlogb&){});
 								return 0;
 							}),
@@ -71,7 +71,7 @@ int main(){
 		{
 			auto module_register_fn = disposer::module_register_fn(
 				disposer::module_configure(),
-				disposer::state_maker_fn([](auto const& module){
+				disposer::module_init_fn([](auto const& module){
 					module.log([](logsys::stdlogb&){});
 					return 0;
 				}),
@@ -87,7 +87,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_in, hana::type_c< int >)
 				),
-				disposer::state_maker_fn([](auto const& config){
+				disposer::module_init_fn([](auto const& config){
 					auto valid_type =
 						hana::type_c< decltype(config("v"_in)) >
 						== hana::type_c< disposer::input< decltype("v"_in),
@@ -133,7 +133,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_out, hana::type_c< int >)
 				),
-				disposer::state_maker_fn([]{ return 0; }),
+				disposer::module_init_fn([]{ return 0; }),
 				disposer::exec_fn([](auto& module){
 					auto& out = module("v"_out);
 					(void) out;
@@ -148,7 +148,7 @@ int main(){
 				disposer::module_configure(
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::state_maker_fn([]{ return 0; }),
+				disposer::module_init_fn([]{ return 0; }),
 				disposer::exec_fn([]{})
 			);
 			module_register_fn("m4", mdeclarant);
@@ -161,7 +161,7 @@ int main(){
 					disposer::make("v"_out, hana::type_c< int >),
 					disposer::make("v"_param, hana::type_c< int >)
 				),
-				disposer::state_maker_fn{},
+				disposer::module_init_fn{},
 				disposer::exec_fn([]{})
 			);
 			module_register_fn("m5", mdeclarant);

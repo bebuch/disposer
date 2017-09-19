@@ -13,7 +13,7 @@
 #include "module_data.hpp"
 #include "exec_module.hpp"
 #include "to_exec_list.hpp"
-#include "state_maker_fn.hpp"
+#include "module_init_fn.hpp"
 #include "exec_fn.hpp"
 
 
@@ -29,16 +29,16 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	class module: public module_base{
 	public:
 		/// \brief State maker function or void for stateless modules
-		using state_maker_fn_type = StateMakerFn;
+		using module_init_fn_type = ModuleInitFn;
 
 		/// \brief Type of the module state object
-		using state_type = typename
-			state< Inputs, Outputs, Parameters, StateMakerFn >::state_type;
+		using state_type = typename module_state<
+			Inputs, Outputs, Parameters, ModuleInitFn >::state_type;
 
 
 		/// \brief Constructor
@@ -48,12 +48,12 @@ namespace disposer{
 			std::string const& type_name,
 			std::size_t number,
 			hana::tuple< RefList ... >&& ref_list,
-			state_maker_fn< StateMakerFn > const& state_maker_fn,
+			module_init_fn< ModuleInitFn > const& module_init_fn,
 			exec_fn< ExecFn > const& exec_fn
 		)
 			: module_base(chain, type_name, number)
 			, data_(std::move(ref_list))
-			, state_(state_maker_fn)
+			, state_(module_init_fn)
 			, exec_fn_(exec_fn) {}
 
 
@@ -97,7 +97,7 @@ namespace disposer{
 			std::size_t id, output_map_type& output_map
 		)override{
 			return std::make_unique< exec_module< Inputs, Outputs, Parameters,
-				StateMakerFn, ExecFn > >(*this,
+				ModuleInitFn, ExecFn > >(*this,
 					hana::transform(data_.inputs,
 						[&output_map](auto const& input){
 							return hana::tuple
@@ -129,7 +129,7 @@ namespace disposer{
 		module_data< Inputs, Outputs, Parameters > data_;
 
 		/// \brief The user defined state object
-		state< Inputs, Outputs, Parameters, StateMakerFn > state_;
+		module_state< Inputs, Outputs, Parameters, ModuleInitFn > state_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;
@@ -137,14 +137,14 @@ namespace disposer{
 
 	template <
 		typename ... RefList,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	module(
 		std::string const& chain,
 		std::string const& type_name,
 		std::size_t number,
 		hana::tuple< RefList ... >&& ref_list,
-		state_maker_fn< StateMakerFn > const& state_maker_fn,
+		module_init_fn< ModuleInitFn > const& module_init_fn,
 		exec_fn< ExecFn > const& exec_fn
 	)
 		-> module<
@@ -157,7 +157,7 @@ namespace disposer{
 			decltype(hana::filter(
 				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< parameter_tag >)),
-			StateMakerFn, ExecFn >;
+			ModuleInitFn, ExecFn >;
 
 
 

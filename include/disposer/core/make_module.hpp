@@ -51,15 +51,15 @@ namespace disposer{
 		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 
-	template < typename StateMakerFn, typename ExecFn >
+	template < typename ModuleInitFn, typename ExecFn >
 	struct module_construction{
 		module_make_data const& data;
-		state_maker_fn< StateMakerFn > const& state_maker;
+		module_init_fn< ModuleInitFn > const& module_init;
 		exec_fn< ExecFn > const& exec;
 
 		template < typename DimensionList >
 		struct input_construction{
-			module_construction< StateMakerFn, ExecFn > const& base;
+			module_construction< ModuleInitFn, ExecFn > const& base;
 
 			template <
 				typename Name,
@@ -84,7 +84,7 @@ namespace disposer{
 
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
-							module_construction< StateMakerFn, ExecFn > const&,
+							module_construction< ModuleInitFn, ExecFn > const&,
 							input_maker< Name, DimensionReferrer, IsRequired >
 								const&,
 							detail::config_queue< Offset, Config ... > const&,
@@ -96,7 +96,7 @@ namespace disposer{
 					constexpr auto generate_next = [](auto i){
 							using index_type = decltype(i);
 							return [](
-									module_construction< StateMakerFn, ExecFn >
+									module_construction< ModuleInitFn, ExecFn >
 										const& base,
 									input_maker< Name, DimensionReferrer,
 										IsRequired > const& maker,
@@ -202,7 +202,7 @@ namespace disposer{
 
 		template < typename DimensionList >
 		struct set_dimension_fn_execution{
-			module_construction< StateMakerFn, ExecFn > const& base;
+			module_construction< ModuleInitFn, ExecFn > const& base;
 
 			template <
 				std::size_t Offset,
@@ -220,7 +220,7 @@ namespace disposer{
 
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
-							module_construction< StateMakerFn, ExecFn > const&,
+							module_construction< ModuleInitFn, ExecFn > const&,
 							detail::config_queue< Offset, Config ... > const&,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&
@@ -230,7 +230,7 @@ namespace disposer{
 							using dim_type = decltype(d);
 							using index_type = decltype(i);
 							return [](
-									module_construction< StateMakerFn, ExecFn >
+									module_construction< ModuleInitFn, ExecFn >
 										const& base,
 									detail::config_queue< Offset, Config ... >
 										const& configs,
@@ -378,7 +378,7 @@ namespace disposer{
 				(void)configs; // Silance GCC;
 				return std::unique_ptr< module_base >(new module{
 					data.chain, data.type_name, data.number,
-					std::move(iops).flat(), state_maker, exec});
+					std::move(iops).flat(), module_init, exec});
 
 			}else{
 				using hana::is_a;
@@ -412,18 +412,18 @@ namespace disposer{
 	template <
 		typename ... Dimension,
 		typename ... Config,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	std::unique_ptr< module_base > make_module_ptr(
 		dimension_list< Dimension ... > const& dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
-		state_maker_fn< StateMakerFn > const& state_maker,
+		module_init_fn< ModuleInitFn > const& module_init,
 		exec_fn< ExecFn > const& exec
 	){
 		detail::config_queue queue{configs.config_list};
-		module_construction< StateMakerFn, ExecFn > const mc
-			{data, state_maker, exec};
+		module_construction< ModuleInitFn, ExecFn > const mc
+			{data, module_init, exec};
 		return mc.make_module(dims, queue, iops_ref{});
 	}
 
@@ -432,7 +432,7 @@ namespace disposer{
 	template <
 		typename DimensionList,
 		typename Configuration,
-		typename StateMakerFn,
+		typename ModuleInitFn,
 		typename ExecFn >
 	struct module_maker{
 		/// \brief An dimension_list object
@@ -442,7 +442,7 @@ namespace disposer{
 		Configuration configuration;
 
 		/// \brief The function object that is called in enable()
-		state_maker_fn< StateMakerFn > state_maker;
+		module_init_fn< ModuleInitFn > module_init;
 
 		/// \brief The function object that is called in exec()
 		exec_fn< ExecFn > exec;
@@ -471,7 +471,7 @@ namespace disposer{
 			}
 
 			// Create the module
-			return make_module_ptr(configuration, data, state_maker, exec);
+			return make_module_ptr(configuration, data, module_init, exec);
 		}
 	};
 
