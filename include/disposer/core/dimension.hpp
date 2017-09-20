@@ -136,6 +136,25 @@ namespace disposer{
 	}
 
 
+	/// \brief Active types of a module or component
+	template < typename ... Ts >
+	struct type_list{
+		template < typename ... Ds >
+		type_list(dimension_list< Ds ... >){
+			static_assert(hana::all_of(
+					dimension_list< Ds ... >::dimensions,
+					[](auto types){
+						return hana::size(types) == hana::size_c< 1 >;
+					}
+				), "module has unused dimensions");
+		}
+	};
+
+	template < typename ... Ds >
+	type_list(dimension_list< Ds ... >)
+	-> type_list< typename decltype(+Ds::types[hana::size_c< 0 >])::type ... >;
+
+
 }
 
 

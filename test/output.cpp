@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 			make("o1"_out, type_ref_c< 0 >)
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
+			type_list< float >,
 			hana::tuple<>,
 			hana::tuple< output< decltype("o1"_out), float > >,
 			hana::tuple<>,

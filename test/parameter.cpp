@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 			make("p1"_param, type_ref_c< 0 >, default_value(3.14159f))
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
+			type_list< float >,
 			hana::tuple<>,
 			hana::tuple<>,
 			hana::tuple< parameter< decltype("p1"_param), float > >,

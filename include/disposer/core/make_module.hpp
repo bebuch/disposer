@@ -133,6 +133,10 @@ namespace disposer{
 								}};
 						});
 
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+					assert(solved_dims.index_number() < tc);
+#endif
+
 					return call[solved_dims.index_number()](
 							base,
 							maker,
@@ -263,6 +267,10 @@ namespace disposer{
 								}};
 						});
 
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
+					assert(solved_dims.index_number() < tc);
+#endif
+
 					return call[solved_dims.index_number()](
 							base,
 							configs,
@@ -377,14 +385,8 @@ namespace disposer{
 			if constexpr(detail::config_queue< Offset, Config ... >::is_empty){
 				(void)configs; // Silance GCC;
 
-				static_assert(hana::all_of(
-						dimension_list< Dimension ... >::dimensions,
-						[](auto types){
-							return hana::size(types) == hana::size_c< 1 >;
-						}
-					), "module has unused dimensions");
-
 				return std::unique_ptr< module_base >(new module{
+					type_list{dims},
 					data.chain, data.type_name, data.number,
 					std::move(iops).flat(), module_init, exec});
 			}else{

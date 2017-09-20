@@ -9,6 +9,7 @@
 #ifndef _disposer__core__module__hpp_INCLUDED_
 #define _disposer__core__module__hpp_INCLUDED_
 
+#include "dimension.hpp"
 #include "module_base.hpp"
 #include "module_data.hpp"
 #include "exec_module.hpp"
@@ -26,6 +27,7 @@ namespace disposer{
 
 	/// \brief The actual module type
 	template <
+		typename TypeList,
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
@@ -42,8 +44,9 @@ namespace disposer{
 
 
 		/// \brief Constructor
-		template < typename ... RefList >
+		template < typename ... Ts, typename ... RefList >
 		module(
+			type_list< Ts ... >,
 			std::string const& chain,
 			std::string const& type_name,
 			std::size_t number,
@@ -96,8 +99,8 @@ namespace disposer{
 		virtual exec_module_ptr make_exec_module(
 			std::size_t id, output_map_type& output_map
 		)override{
-			return std::make_unique< exec_module< Inputs, Outputs, Parameters,
-				ModuleInitFn, ExecFn > >(*this,
+			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
+				Parameters, ModuleInitFn, ExecFn > >(*this,
 					hana::transform(data_.inputs,
 						[&output_map](auto const& input){
 							return hana::tuple
@@ -136,10 +139,12 @@ namespace disposer{
 	};
 
 	template <
+		typename ... Ts,
 		typename ... RefList,
 		typename ModuleInitFn,
 		typename ExecFn >
 	module(
+		type_list< Ts ... >,
 		std::string const& chain,
 		std::string const& type_name,
 		std::size_t number,
@@ -148,6 +153,7 @@ namespace disposer{
 		exec_fn< ExecFn > const& exec_fn
 	)
 		-> module<
+			type_list< Ts ... >,
 			decltype(hana::filter(
 				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< input_tag >)),

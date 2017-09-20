@@ -16,8 +16,18 @@
 namespace disposer{
 
 
+	template <
+		typename TypeList,
+		typename Inputs,
+		typename Outputs,
+		typename Parameters,
+		typename ModuleInitFn,
+		typename ExecFn >
+	class module;
+
 	/// \brief The actual exec_module type
 	template <
+		typename TypeList,
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
@@ -27,7 +37,8 @@ namespace disposer{
 	public:
 		/// \brief Constructor
 		exec_module(
-			module< Inputs, Outputs, Parameters, ModuleInitFn, ExecFn >& module,
+			module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn,
+				ExecFn >& module,
 			to_exec_init_list_t< Inputs > const& inputs,
 			to_exec_init_list_t< Outputs > const& outputs,
 			std::size_t id
@@ -44,7 +55,8 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to the module
-		module< Inputs, Outputs, Parameters, ModuleInitFn, ExecFn >& module_;
+		module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn, ExecFn >&
+			module_;
 
 		/// \brief Current exec id
 		std::size_t const id_;

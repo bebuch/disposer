@@ -31,9 +31,11 @@ output_map_type map{{&o1, nullptr}};
 
 BOOST_AUTO_TEST_CASE(test_1){
 	auto list = iops_ref{};
-	module m(chain_name, m_type_name, number, std::move(list).flat(), s, e);
+	module m(type_list<>{dimension_list{}},
+		chain_name, m_type_name, number, std::move(list).flat(), s, e);
 	static_assert(std::is_same_v< decltype(m),
 		module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<>,
 			hana::tuple<>,
@@ -43,6 +45,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 
 	auto e = m.make_exec_module(0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<>,
 			hana::tuple<>,
@@ -57,8 +60,10 @@ BOOST_AUTO_TEST_CASE(test_1){
 BOOST_AUTO_TEST_CASE(test_2){
 	auto list = iops_ref{
 		std::move(i2), iops_ref{std::move(i1), iops_ref{}}};
-	module m(chain_name, m_type_name, number, std::move(list).flat(), s, e);
+	module m(type_list<>{dimension_list{}},
+		chain_name, m_type_name, number, std::move(list).flat(), s, e);
 	static_assert(std::is_same_v< decltype(m), module<
+			type_list<>,
 			hana::tuple<
 				input< decltype("i1"_in), long, false >,
 				input< decltype("i2"_in), int, true >
@@ -71,6 +76,7 @@ BOOST_AUTO_TEST_CASE(test_2){
 
 	auto e = m.make_exec_module(0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
+			type_list<>,
 			hana::tuple<
 				input< decltype("i1"_in), long, false >,
 				input< decltype("i2"_in), int, true >
@@ -88,8 +94,10 @@ BOOST_AUTO_TEST_CASE(test_2){
 BOOST_AUTO_TEST_CASE(test_3){
 	auto list = iops_ref{
 		std::move(o2), iops_ref{std::move(o1), iops_ref{}}};
-	module m(chain_name, m_type_name, number, std::move(list).flat(), s, e);
+	module m(type_list<>{dimension_list{}},
+		chain_name, m_type_name, number, std::move(list).flat(), s, e);
 	static_assert(std::is_same_v< decltype(m), module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<
 				output< decltype("o1"_out), int >,
@@ -102,6 +110,7 @@ BOOST_AUTO_TEST_CASE(test_3){
 
 	auto e = m.make_exec_module(0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<
 				output< decltype("o1"_out), int >,
@@ -119,8 +128,10 @@ BOOST_AUTO_TEST_CASE(test_3){
 BOOST_AUTO_TEST_CASE(test_4){
 	auto list = iops_ref{
 		std::move(p2), iops_ref{std::move(p1), iops_ref{}}};
-	module m(chain_name, m_type_name, number, std::move(list).flat(), s, e);
+	module m(type_list<>{dimension_list{}},
+		chain_name, m_type_name, number, std::move(list).flat(), s, e);
 	static_assert(std::is_same_v< decltype(m), module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<>,
 			hana::tuple<
@@ -133,6 +144,7 @@ BOOST_AUTO_TEST_CASE(test_4){
 
 	auto e = m.make_exec_module(0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
+			type_list<>,
 			hana::tuple<>,
 			hana::tuple<>,
 			hana::tuple<
@@ -151,8 +163,10 @@ BOOST_AUTO_TEST_CASE(test_5){
 	auto list = iops_ref{std::move(o2), iops_ref{std::move(p2),
 		iops_ref{std::move(p1), iops_ref{std::move(i2),
 		iops_ref{std::move(i1), iops_ref{std::move(o1), iops_ref{}}}}}}};
-	module m(chain_name, m_type_name, number, std::move(list).flat(), s, e);
+	module m(type_list<>{dimension_list{}},
+		chain_name, m_type_name, number, std::move(list).flat(), s, e);
 	static_assert(std::is_same_v< decltype(m), module<
+			type_list<>,
 			hana::tuple<
 				input< decltype("i1"_in), long, false >,
 				input< decltype("i2"_in), int, true >
@@ -171,6 +185,7 @@ BOOST_AUTO_TEST_CASE(test_5){
 
 	auto e = m.make_exec_module(0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
+			type_list<>,
 			hana::tuple<
 				input< decltype("i1"_in), long, false >,
 				input< decltype("i2"_in), int, true >

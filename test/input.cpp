@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 			make("i1"_in, type_ref_c< 0 >, not_required)
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
+			type_list< float >,
 			hana::tuple< input< decltype("i1"_in), float, false > >,
 			hana::tuple<>,
 			hana::tuple<>,
@@ -75,6 +76,7 @@ BOOST_AUTO_TEST_CASE(test_2){
 			make("i1"_in, type_ref_c< 0 >, not_required)
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
+			type_list< float >,
 			hana::tuple< input< decltype("i1"_in), float, false > >,
 			hana::tuple<>,
 			hana::tuple<>,
@@ -114,6 +116,7 @@ BOOST_AUTO_TEST_CASE(test_3){
 			make("i1"_in, type_ref_c< 0 >, not_required)
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
+			type_list< float >,
 			hana::tuple< input< decltype("i1"_in), float, false > >,
 			hana::tuple<>,
 			hana::tuple<>,
@@ -136,6 +139,7 @@ BOOST_AUTO_TEST_CASE(test_3){
 // 			make("i1"_in, type_ref_c< 0 >, required)
 // 		}, module_data, state_dummy, exec_dummy);
 // 	auto const module_ptr = dynamic_cast< module<
+// 			type_list< float >,
 // 			hana::tuple<
 // 				input< decltype("i1"_in), float, false >
 // 			>,

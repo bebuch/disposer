@@ -20,15 +20,6 @@
 namespace disposer{
 
 
-	template <
-		typename Inputs,
-		typename Outputs,
-		typename Parameters,
-		typename ModuleInitFn,
-		typename ExecFn >
-	class module;
-
-
 	template < typename IOList >
 	struct to_exec_list;
 
