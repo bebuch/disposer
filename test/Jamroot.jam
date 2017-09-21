@@ -89,30 +89,9 @@ exe dimension_solve
 	/disposer//disposer
 	;
 
-exe set_dimension_fn
+exe make_module
 	:
-	set_dimension_fn.cpp
-	/disposer//disposer
-	/logsys//logsys
-	;
-
-exe output
-	:
-	output.cpp
-	/disposer//disposer
-	/logsys//logsys
-	;
-
-exe input
-	:
-	input.cpp
-	/disposer//disposer
-	/logsys//logsys
-	;
-
-exe parameter
-	:
-	parameter.cpp
+	make_module.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;
