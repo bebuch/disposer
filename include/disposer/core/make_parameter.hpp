@@ -27,9 +27,6 @@
 namespace disposer{
 
 
-	using namespace std::literals::string_view_literals;
-
-
 	/// \brief Provid types for constructing an parameter
 	template <
 		typename Name,

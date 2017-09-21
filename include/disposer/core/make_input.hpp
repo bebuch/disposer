@@ -25,9 +25,6 @@
 namespace disposer{
 
 
-	using namespace std::literals::string_view_literals;
-
-
 	/// \brief Provids types for constructing an input
 	template <
 		typename Name,
