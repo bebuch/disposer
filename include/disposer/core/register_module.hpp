@@ -36,10 +36,10 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Config >
 		module_register_fn(
-			dimension_list< Dimension ... > const& dims,
-			module_configure< Config ... >&& list,
-			module_init_fn< ModuleInitFn >&& module_init,
-			exec_fn< ExecFn >&& exec
+			dimension_list< Dimension ... > dims,
+			module_configure< Config ... > list,
+			module_init_fn< ModuleInitFn > module_init,
+			exec_fn< ExecFn > exec
 		)
 			: called_flag_(false)
 			, maker_{dims, std::move(list), module_init, exec}
@@ -48,9 +48,9 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Config >
 		module_register_fn(
-			dimension_list< Dimension ... > const& dims,
-			module_configure< Config ... >&& list,
-			exec_fn< ExecFn >&& exec
+			dimension_list< Dimension ... > dims,
+			module_configure< Config ... > list,
+			exec_fn< ExecFn > exec
 		)
 			: module_register_fn(dims, std::move(list),
 				module_init_fn< void >(), std::move(exec))
@@ -59,9 +59,9 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Config >
 		module_register_fn(
-			module_configure< Config ... >&& list,
-			module_init_fn< ModuleInitFn >&& module_init,
-			exec_fn< ExecFn >&& exec
+			module_configure< Config ... > list,
+			module_init_fn< ModuleInitFn > module_init,
+			exec_fn< ExecFn > exec
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
 				std::move(module_init), std::move(exec))
@@ -70,8 +70,8 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Config >
 		module_register_fn(
-			module_configure< Config ... >&& list,
-			exec_fn< ExecFn >&& exec
+			module_configure< Config ... > list,
+			exec_fn< ExecFn > exec
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
 				module_init_fn< void >(), std::move(exec))
@@ -103,21 +103,58 @@ namespace disposer{
 	};
 
 
-	/// \brief Deduction guide
 	template <
-		typename ModuleInitFn,
-		typename ExecFn,
 		typename ... Dimension,
-		typename ... Config >
+		typename ... Config,
+		typename ModuleInitFn,
+		typename ExecFn >
 	module_register_fn(
-		dimension_list< Dimension ... > const& dims,
-		module_configure< Config ... >&& list,
-		module_init_fn< ModuleInitFn > const& module_init,
-		exec_fn< ExecFn > const& exec
+		dimension_list< Dimension ... > dims,
+		module_configure< Config ... > list,
+		module_init_fn< ModuleInitFn > module_init,
+		exec_fn< ExecFn > exec
 	) -> module_register_fn<
-		dimension_list< Dimension ... >,
-		module_configure< Config ... >,
-		ModuleInitFn, ExecFn >;
+			dimension_list< Dimension ... >,
+			module_configure< Config ... >,
+			ModuleInitFn, ExecFn >;
+
+	template <
+		typename ... Dimension,
+		typename ... Config,
+		typename ExecFn >
+	module_register_fn(
+		dimension_list< Dimension ... > dims,
+		module_configure< Config ... > list,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list< Dimension ... >,
+			module_configure< Config ... >,
+			void, ExecFn >;
+
+	template <
+		typename ... Config,
+		typename ModuleInitFn,
+		typename ExecFn >
+	module_register_fn(
+		module_configure< Config ... > list,
+		module_init_fn< ModuleInitFn > module_init,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list<>,
+			module_configure< Config ... >,
+			ModuleInitFn, ExecFn >;
+
+	template <
+		typename ... Config,
+		typename ExecFn >
+	module_register_fn(
+		module_configure< Config ... > list,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list<>,
+			module_configure< Config ... >,
+			void, ExecFn >;
+
 
 }
 

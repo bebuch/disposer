@@ -184,7 +184,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > exec_make_input(
 			input_maker< Name, DimensionReferrer, IsRequired > const& maker,
-			dimension_list< Ds ... > const& dims,
+			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
@@ -295,7 +295,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > exec_make_output(
 			output_maker< Name, DimensionReferrer > const&,
-			dimension_list< Ds ... > const& dims,
+			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
@@ -325,7 +325,7 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_make_parameter(
 			parameter_maker< Name, DimensionReferrer,
 				ParserFn, DefaultValueFn > const& maker,
-			dimension_list< Ds ... > const& dims,
+			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
@@ -357,7 +357,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > exec_set_dimension_fn(
 			set_dimension_fn< Fn > const& fn,
-			dimension_list< Ds ... > const& dims,
+			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
@@ -370,12 +370,12 @@ namespace disposer{
 
 
 		template <
-			typename ... Dimension,
+			typename ... Ds,
 			std::size_t Offset,
 			typename ... Config,
 			typename ... IOPs >
 		std::unique_ptr< module_base > make_module(
-			dimension_list< Dimension ... > const& dims,
+			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
@@ -416,12 +416,12 @@ namespace disposer{
 
 	/// \brief Maker function for \ref module in a std::unique_ptr
 	template <
-		typename ... Dimension,
+		typename ... Ds,
 		typename ... Config,
 		typename ModuleInitFn,
 		typename ExecFn >
 	std::unique_ptr< module_base > make_module_ptr(
-		dimension_list< Dimension ... > const& dims,
+		dimension_list< Ds ... > dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
 		module_init_fn< ModuleInitFn > const& module_init,
@@ -477,7 +477,8 @@ namespace disposer{
 			}
 
 			// Create the module
-			return make_module_ptr(configuration, data, module_init, exec);
+			return make_module_ptr(
+				dimensions, configuration, data, module_init, exec);
 		}
 	};
 

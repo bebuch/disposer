@@ -110,9 +110,9 @@ exe module_test
 	/logsys//logsys
 	;
 
-exe register
+exe module_register
 	:
-	register.cpp
+	module_register.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;

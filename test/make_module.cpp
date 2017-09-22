@@ -1015,7 +1015,28 @@ BOOST_AUTO_TEST_CASE(param_1){
 }
 
 
-BOOST_AUTO_TEST_CASE(test_6){
+BOOST_AUTO_TEST_CASE(input_0){
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
+	module_make_data module_data{};
+	auto const module_base_ptr = make_module_ptr(dimension_list{},
+		module_configure{
+			make("i1"_in, free_type_c< float >, not_required)
+		}, module_data, state_dummy, exec_dummy);
+	auto const module_ptr = dynamic_cast< module<
+			type_list<>,
+			hana::tuple< input< decltype("i1"_in), float, false > >,
+			hana::tuple<>, hana::tuple<>, void, exec
+		>* >(module_base_ptr.get());
+	BOOST_TEST(module_ptr != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(input_1){
 	constexpr auto list = dimension_list{dimension_c< double, char, float >};
 
 	struct exec{
@@ -1026,22 +1047,93 @@ BOOST_AUTO_TEST_CASE(test_6){
 	constexpr exec_fn exec_dummy{exec{}};
 
 	module_make_data module_data{};
-	auto const module_base_ptr = make_module_ptr(list,
-		module_configure{
-			set_dimension_fn([](auto const&){
-				return solved_dimensions{ic< 0 >{2}};
-			}),
-			make("i1"_in, type_ref_c< 0 >, not_required)
-		}, module_data, state_dummy, exec_dummy);
-	auto const module_ptr = dynamic_cast< module<
-			type_list< float >,
-			hana::tuple< input< decltype("i1"_in), float, false > >,
-			hana::tuple<>,
-			hana::tuple<>,
-			void,
-			exec
-		>* >(module_base_ptr.get());
-	BOOST_TEST(module_ptr != nullptr);
+	auto const make_module = [=](std::size_t i1){
+			return make_module_ptr(list,
+				module_configure{
+					set_dimension_fn([i1](auto const&){
+						return solved_dimensions{index_component< 0 >{i1}};
+					}),
+					make("i1"_in, type_ref_c< 0 >, not_required)
+				}, module_data, state_dummy, exec_dummy);
+		};
+
+	{
+		auto module_base_ptr = make_module(0);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< double >,
+				hana::tuple< input< decltype("i1"_in), double, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(1);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< char >,
+				hana::tuple< input< decltype("i1"_in), char, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(2);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< float >,
+				hana::tuple< input< decltype("i1"_in), float, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(input_auto_1){
+	constexpr auto list = dimension_list{dimension_c< double, char, float >};
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
+	module_make_data module_data{{}, {}, {}, {}, {}, {}};
+	auto const make_module = [=](std::size_t i1){
+			return make_module_ptr(list,
+				module_configure{
+					set_dimension_fn([i1](auto const&){
+						return solved_dimensions{index_component< 0 >{i1}};
+					}),
+					make("i1"_in, type_ref_c< 0 >, not_required)
+				}, module_data, state_dummy, exec_dummy);
+		};
+
+	{
+		auto module_base_ptr = make_module(0);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< double >,
+				hana::tuple< input< decltype("i1"_in), double, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(1);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< char >,
+				hana::tuple< input< decltype("i1"_in), char, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(2);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< float >,
+				hana::tuple< input< decltype("i1"_in), float, false > >,
+				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
 }
 
 
@@ -1052,7 +1144,6 @@ struct test_2_module_init_fn{
 		static_assert(std::is_same_v< decltype(i1), bool >);
 		return 0;
 	}
-
 };
 
 BOOST_AUTO_TEST_CASE(test_7){
