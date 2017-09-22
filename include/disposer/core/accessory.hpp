@@ -44,11 +44,12 @@ namespace disposer{
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)const noexcept{
-			if constexpr(IOP_Ref::name == name){
-				if constexpr(hana::is_a< parameter_name_tag, Name >()){
+		decltype(auto) operator()(Name const& name)const noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			if constexpr(IOP_Ref::name == name_t{}){
+				if constexpr(hana::is_a< parameter_name_tag, name_t >()){
 					return ref.get();
-				}else if constexpr(hana::is_a< output_name_tag, Name >()){
+				}else if constexpr(hana::is_a< output_name_tag, name_t >()){
 					return ref.use_count() > 0;
 				}else{
 					return ref.output_ptr() != nullptr;
@@ -57,7 +58,7 @@ namespace disposer{
 				static_assert(sizeof...(RefList) > 0,
 					"object with name is unknown");
 
-				list(name);
+				return list(name);
 			}
 		}
 
@@ -108,7 +109,7 @@ namespace disposer{
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)const noexcept{
+		decltype(auto) operator()(Name const& name)const noexcept{
 			static_assert(
 				hana::is_a< input_name_tag, Name >() ||
 				hana::is_a< output_name_tag, Name >() ||
@@ -121,12 +122,12 @@ namespace disposer{
 		/// \brief Get type by dimension index
 		template < std::size_t DI >
 		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
-			static_assert(DI < DimensionList::type_count,
+			static_assert(DI < DimensionList::dimension_count,
 				"module has less then DI dimensions");
-			static_assert(hana::size(DimensionList::types[hana::size_c< DI >])
-					== hana::size_c< 1 >,
+			static_assert(hana::size_c< 1 > ==
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
 				"module dimension DI is not solved yet");
-			return DimensionList::types[i];
+			return DimensionList::dimensions[i][hana::size_c< 0 >];
 		}
 
 
@@ -159,7 +160,7 @@ namespace disposer{
 		/// \brief Get const reference to an parameter-object
 		///        via its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)const noexcept{
+		decltype(auto) operator()(Name const& name)const noexcept{
 			static_assert(hana::is_a< parameter_name_tag, Name >(),
 				"name must be a parameter_name");
 			return list_(name);

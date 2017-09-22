@@ -84,6 +84,9 @@ namespace disposer{
 	/// \brief List of type lists of a module
 	template < typename ... Ds >
 	struct dimension_list{
+		/// \brief Count of dimensions
+		static constexpr auto dimension_count = sizeof...(Ds);
+
 		static_assert(hana::all_of(
 			hana::make_tuple(Ds{} ...), hana::is_a< dimension_tag >),
 			"Ds must be a disposer::dimension< ... >");

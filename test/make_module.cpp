@@ -1219,14 +1219,38 @@ BOOST_AUTO_TEST_CASE(input_auto_2){
 struct test_2_module_init_fn{
 	template < typename Accessory >
 	constexpr auto operator()(Accessory const& accessory)const{
-		auto i1 = accessory("i1"_in);
+		decltype(auto) i1 = accessory("i1"_in);
 		static_assert(std::is_same_v< decltype(i1), bool >);
+
+		decltype(auto) o1 = accessory("o1"_out);
+		static_assert(std::is_same_v< decltype(o1), bool >);
+
+		decltype(auto) p1 = accessory("p1"_param);
+		static_assert(
+			std::is_same_v< decltype(p1), double const& > ||
+			std::is_same_v< decltype(p1), char const& > ||
+			std::is_same_v< decltype(p1), float const& >);
+
+		auto dim1 = accessory.dimension(hana::size_c< 0 >);
+		static_assert(
+			dim1 == hana::type_c< double > ||
+			dim1 == hana::type_c< char > ||
+			dim1 == hana::type_c< float >);
+
+		auto dim2 = accessory.dimension(hana::size_c< 1 >);
+		static_assert(
+			dim2 == hana::type_c< int > ||
+			dim2 == hana::type_c< bool >);
+
 		return 0;
 	}
-};
+}; template < typename T > struct fail{ static_assert(detail::false_c< T >); };
 
-BOOST_AUTO_TEST_CASE(test_7){
-	constexpr auto list = dimension_list{dimension_c< double, char, float >};
+BOOST_AUTO_TEST_CASE(module_init_fn_2){
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >
+		};
 
 	struct exec{
 		constexpr void operator()()const{}
@@ -1241,13 +1265,38 @@ BOOST_AUTO_TEST_CASE(test_7){
 			set_dimension_fn([](auto const&){
 				return solved_dimensions{ic< 0 >{2}};
 			}),
-			make("i1"_in, type_ref_c< 0 >, not_required)
+			make("i1"_in, type_ref_c< 0 >, not_required),
+			make("o1"_out, type_ref_c< 0 >),
+			make("p1"_param, type_ref_c< 0 >, default_value()),
+			set_dimension_fn([](auto const& accessory){
+				decltype(auto) i1 = accessory("i1"_in);
+				static_assert(std::is_same_v< decltype(i1), bool >);
+				BOOST_TEST(!i1);
+
+				decltype(auto) o1 = accessory("o1"_out);
+				static_assert(std::is_same_v< decltype(o1), bool >);
+				BOOST_TEST(!o1);
+
+				decltype(auto) p1 = accessory("p1"_param);
+				static_assert(
+					std::is_same_v< decltype(p1), double const& > ||
+					std::is_same_v< decltype(p1), char const& > ||
+					std::is_same_v< decltype(p1), float const& >);
+
+				auto dim1 = accessory.dimension(hana::size_c< 0 >);
+				static_assert(
+					dim1 == hana::type_c< double > ||
+					dim1 == hana::type_c< char > ||
+					dim1 == hana::type_c< float >);
+
+				return solved_dimensions{ic< 1 >{1}};
+			}),
 		}, module_data, state_dummy, exec_dummy);
 	auto const module_ptr = dynamic_cast< module<
-			type_list< float >,
+			type_list< float, bool >,
 			hana::tuple< input< decltype("i1"_in), float, false > >,
-			hana::tuple<>,
-			hana::tuple<>,
+			hana::tuple< output< decltype("o1"_out), float > >,
+			hana::tuple< parameter< decltype("p1"_param), float > >,
 			test_2_module_init_fn,
 			exec
 		>* >(module_base_ptr.get());
