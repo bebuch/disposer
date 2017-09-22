@@ -1108,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(input_auto_1){
 		auto module_base_ptr = make_module(hana::type_c< double >);
 		auto const module_ptr = dynamic_cast< module<
 				type_list< double >,
-				hana::tuple< input< decltype("i1"_in), double, false > >,
+				hana::tuple< input< decltype("i1"_in), double, true > >,
 				hana::tuple<>, hana::tuple<>, void, exec
 			>* >(module_base_ptr.get());
 		BOOST_TEST(module_ptr != nullptr);
@@ -1117,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(input_auto_1){
 		auto module_base_ptr = make_module(hana::type_c< char >);
 		auto const module_ptr = dynamic_cast< module<
 				type_list< char >,
-				hana::tuple< input< decltype("i1"_in), char, false > >,
+				hana::tuple< input< decltype("i1"_in), char, true > >,
 				hana::tuple<>, hana::tuple<>, void, exec
 			>* >(module_base_ptr.get());
 		BOOST_TEST(module_ptr != nullptr);
@@ -1126,8 +1126,90 @@ BOOST_AUTO_TEST_CASE(input_auto_1){
 		auto module_base_ptr = make_module(hana::type_c< float >);
 		auto const module_ptr = dynamic_cast< module<
 				type_list< float >,
-				hana::tuple< input< decltype("i1"_in), float, false > >,
+				hana::tuple< input< decltype("i1"_in), float, true > >,
 				hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(input_auto_2){
+	constexpr auto list = dimension_list{
+			dimension_c< double, char, float >,
+			dimension_c< int, bool >
+		};
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	constexpr module_init_fn state_dummy{};
+	constexpr exec_fn exec_dummy{exec{}};
+
+	auto const make_module = [=](auto t1, auto t2){
+			output< decltype("o1"_out), morph<
+					typename decltype(t1)::type,
+					typename decltype(t2)::type
+				> > o1{0};
+			module_make_data module_data{{}, {}, {}, {{"i1", &o1}}, {}, {}};
+			return make_module_ptr(list,
+				module_configure{
+					make("i1"_in, wrapped_type_ref_c< morph, 0, 1 >)},
+				module_data, state_dummy, exec_dummy);
+		};
+
+	using hana::type_c;
+	{
+		auto module_base_ptr = make_module(type_c< double >, type_c< int >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< double, int >, hana::tuple<
+					input< decltype("i1"_in), morph< double, int >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(type_c< char >, type_c< int >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< char, int >, hana::tuple<
+					input< decltype("i1"_in), morph< char, int >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(type_c< float >, type_c< int >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< float, int >, hana::tuple<
+					input< decltype("i1"_in), morph< float, int >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(type_c< double >, type_c< bool >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< double, bool >, hana::tuple<
+					input< decltype("i1"_in), morph< double, bool >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(type_c< char >, type_c< bool >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< char, bool >, hana::tuple<
+					input< decltype("i1"_in), morph< char, bool >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
+			>* >(module_base_ptr.get());
+		BOOST_TEST(module_ptr != nullptr);
+	}
+	{
+		auto module_base_ptr = make_module(type_c< float >, type_c< bool >);
+		auto const module_ptr = dynamic_cast< module<
+				type_list< float, bool >, hana::tuple<
+					input< decltype("i1"_in), morph< float, bool >, true >
+				>, hana::tuple<>, hana::tuple<>, void, exec
 			>* >(module_base_ptr.get());
 		BOOST_TEST(module_ptr != nullptr);
 	}
