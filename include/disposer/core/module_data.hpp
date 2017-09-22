@@ -29,7 +29,11 @@ namespace disposer{
 
 
 	/// \brief Accessory of a \ref module without log
-	template < typename Inputs, typename Outputs, typename Parameters >
+	template <
+		typename TypeList,
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
 	struct module_data{
 		/// \brief Constructor
 		template < typename ... RefList >

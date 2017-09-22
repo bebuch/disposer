@@ -9,7 +9,6 @@
 #ifndef _disposer__core__module__hpp_INCLUDED_
 #define _disposer__core__module__hpp_INCLUDED_
 
-#include "dimension.hpp"
 #include "module_base.hpp"
 #include "module_data.hpp"
 #include "exec_module.hpp"
@@ -40,7 +39,7 @@ namespace disposer{
 
 		/// \brief Type of the module state object
 		using state_type = typename module_state<
-			Inputs, Outputs, Parameters, ModuleInitFn >::state_type;
+			TypeList, Inputs, Outputs, Parameters, ModuleInitFn >::state_type;
 
 
 		/// \brief Constructor
@@ -75,7 +74,7 @@ namespace disposer{
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
 		){
-			exec_accessory accessory{id, state_.object(),
+			exec_accessory accessory{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location};
 			return exec_fn_(accessory);
 		}
@@ -85,7 +84,7 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		virtual void enable()override{
-			state_.enable(static_cast< module_data< Inputs, Outputs,
+			state_.enable(static_cast< module_data< TypeList, Inputs, Outputs,
 				Parameters > const& >(data_), this->location);
 		}
 
@@ -129,10 +128,11 @@ namespace disposer{
 
 	private:
 		/// \brief inputs, outputs and parameters
-		module_data< Inputs, Outputs, Parameters > data_;
+		module_data< TypeList, Inputs, Outputs, Parameters > data_;
 
 		/// \brief The user defined state object
-		module_state< Inputs, Outputs, Parameters, ModuleInitFn > state_;
+		module_state< TypeList, Inputs, Outputs, Parameters, ModuleInitFn >
+			state_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;

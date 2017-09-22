@@ -12,6 +12,7 @@
 #include "input_name.hpp"
 #include "output_name.hpp"
 #include "parameter_name.hpp"
+#include "dimension.hpp"
 
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
@@ -93,11 +94,12 @@ namespace disposer{
 		-> iops_ref< IOP_Ref, RefList ... >;
 
 
-	template < typename ... RefList >
+	template < typename DimensionList, typename ... RefList >
 	class module_accessory
-		: public add_log< module_accessory< RefList ... > >{
+		: public add_log< module_accessory< DimensionList, RefList ... > >{
 	public:
 		module_accessory(
+			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view log_fn
 		)noexcept: list_(list), log_fn_(log_fn) {}
@@ -116,6 +118,17 @@ namespace disposer{
 			return list_(name);
 		}
 
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::type_count,
+				"module has less then DI dimensions");
+			static_assert(hana::size(DimensionList::types[hana::size_c< DI >])
+					== hana::size_c< 1 >,
+				"module dimension DI is not solved yet");
+			return DimensionList::types[i];
+		}
+
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
@@ -132,11 +145,12 @@ namespace disposer{
 	};
 
 
-	template < typename ... RefList >
+	template < typename DimensionList, typename ... RefList >
 	class component_accessory
 		: public add_log< component_accessory< RefList ... > >{
 	public:
 		component_accessory(
+			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view log_fn
 		)noexcept: list_(list), log_fn_(log_fn) {}
@@ -149,6 +163,17 @@ namespace disposer{
 			static_assert(hana::is_a< parameter_name_tag, Name >(),
 				"name must be a parameter_name");
 			return list_(name);
+		}
+
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::type_count,
+				"component has less then DI dimensions");
+			static_assert(hana::size(DimensionList::types[hana::size_c< DI >])
+					== hana::size_c< 1 >,
+				"component dimension DI is not solved yet");
+			return DimensionList::types[i];
 		}
 
 

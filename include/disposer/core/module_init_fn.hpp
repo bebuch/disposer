@@ -16,14 +16,18 @@ namespace disposer{
 
 
 	/// \brief Accessory of a module during enable/disable calls
-	template < typename Inputs, typename Outputs, typename Parameters >
+	template <
+		typename TypeList,
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
 	class module_init_accessory
 		: public add_log<
-			module_init_accessory< Inputs, Outputs, Parameters > >{
+			module_init_accessory< TypeList, Inputs, Outputs, Parameters > >{
 	public:
 		/// \brief Constructor
 		module_init_accessory(
-			module_data< Inputs, Outputs, Parameters > const& data,
+			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		)
 			: data_(data)
@@ -65,6 +69,14 @@ namespace disposer{
 			}
 		}
 
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < TypeList::type_count,
+				"module has less then DI dimensions");
+			return TypeList::types[i];
+		}
+
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
@@ -74,7 +86,7 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to the module object
-		module_data< Inputs, Outputs, Parameters > const& data_;
+		module_data< TypeList, Inputs, Outputs, Parameters > const& data_;
 
 		/// \brief Location for log messages
 		std::string_view location_;
@@ -97,17 +109,21 @@ namespace disposer{
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(static_cast< Fn&& >(fn)) {}
 
-		template < typename Inputs, typename Outputs, typename Parameters >
+		template <
+			typename TypeList,
+			typename Inputs,
+			typename Outputs,
+			typename Parameters >
 		auto operator()(
-			module_init_accessory< Inputs, Outputs, Parameters >
+			module_init_accessory< TypeList, Inputs, Outputs, Parameters >
 				const& accessory
 		)const{
 			// TODO: calulate noexcept
-			if constexpr(std::is_invocable_v< Fn const,
-				module_init_accessory< Inputs, Outputs, Parameters > const& >
+			if constexpr(std::is_invocable_v< Fn const, module_init_accessory<
+				TypeList, Inputs, Outputs, Parameters > const& >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					Fn const, module_init_accessory<
+					Fn const, module_init_accessory< TypeList,
 						Inputs, Outputs, Parameters > const& > >,
 					"Fn must not return void");
 				return std::invoke(fn_, accessory);
@@ -136,6 +152,7 @@ namespace disposer{
 
 	/// \brief Holds the user defined state object of a module
 	template <
+		typename TypeList,
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
@@ -145,7 +162,7 @@ namespace disposer{
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
 			module_init_fn< ModuleInitFn >,
-			module_init_accessory< Inputs, Outputs, Parameters >&& >;
+			module_init_accessory< TypeList, Inputs, Outputs, Parameters >&& >;
 
 		static_assert(!std::is_void_v< state_type >,
 			"module_init function must not return void");
@@ -161,11 +178,11 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		void enable(
-			module_data< Inputs, Outputs, Parameters > const& data,
+			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		){
 			state_.emplace(module_init_fn_(module_init_accessory
-				< Inputs, Outputs, Parameters >(data, location)));
+				< TypeList, Inputs, Outputs, Parameters >(data, location)));
 		}
 
 		/// \brief Disables the module for exec calls
@@ -190,8 +207,12 @@ namespace disposer{
 
 
 	/// \brief Specialization for stateless modules
-	template < typename Inputs, typename Outputs, typename Parameters >
-	class module_state< Inputs, Outputs, Parameters, void >{
+	template <
+		typename TypeList,
+		typename Inputs,
+		typename Outputs,
+		typename Parameters >
+	class module_state< TypeList, Inputs, Outputs, Parameters, void >{
 	public:
 		/// \brief Type of the module state object
 		using state_type = void;
@@ -201,7 +222,7 @@ namespace disposer{
 
 		/// \brief Module is stateless, do nothing
 		void enable(
-			module_data< Inputs, Outputs, Parameters > const&,
+			module_data< TypeList, Inputs, Outputs, Parameters > const&,
 			std::string_view
 		)noexcept{}
 

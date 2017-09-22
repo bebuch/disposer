@@ -7,6 +7,7 @@ namespace disposer{
 	template < typename ... RefList >
 	module_data(hana::tuple< RefList ... >&&)
 		-> module_data<
+			type_list<>,
 			decltype(hana::filter(
 				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< input_tag >)),
@@ -35,13 +36,15 @@ int main(){
 		auto list = iops_ref{};
 		module_data data(std::move(list).flat());
 		static_assert(std::is_same_v< decltype(data),
-			module_data< hana::tuple<>, hana::tuple<>, hana::tuple<> > >);
+			module_data< type_list<>,
+				hana::tuple<>, hana::tuple<>, hana::tuple<> > >);
 	}
 	{
 		auto list = iops_ref{
 			std::move(i2), iops_ref{std::move(i1), iops_ref{}}};
 		module_data data(std::move(list).flat());
 		static_assert(std::is_same_v< decltype(data), module_data<
+				type_list<>,
 				hana::tuple<
 					input< decltype("i1"_in), long, false >,
 					input< decltype("i2"_in), int, true >
@@ -55,6 +58,7 @@ int main(){
 			std::move(o2), iops_ref{std::move(o1), iops_ref{}}};
 		module_data data(std::move(list).flat());
 		static_assert(std::is_same_v< decltype(data), module_data<
+				type_list<>,
 				hana::tuple<>,
 				hana::tuple<
 					output< decltype("o1"_out), int >,
@@ -68,6 +72,7 @@ int main(){
 			std::move(p2), iops_ref{std::move(p1), iops_ref{}}};
 		module_data data(std::move(list).flat());
 		static_assert(std::is_same_v< decltype(data), module_data<
+				type_list<>,
 				hana::tuple<>,
 				hana::tuple<>,
 				hana::tuple<
@@ -82,6 +87,7 @@ int main(){
 			iops_ref{std::move(i1), iops_ref{std::move(o1), iops_ref{}}}}}}};
 		module_data data(std::move(list).flat());
 		static_assert(std::is_same_v< decltype(data), module_data<
+				type_list<>,
 				hana::tuple<
 					input< decltype("i1"_in), long, false >,
 					input< decltype("i2"_in), int, true >

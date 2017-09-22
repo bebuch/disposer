@@ -295,11 +295,11 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > exec_make_output(
 			output_maker< Name, DimensionReferrer > const&,
-			dimension_list< Ds ... > const&,
+			dimension_list< Ds ... > const& dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			DimensionReferrer::verify_solved(dimension_list< Ds ... >{});
+			DimensionReferrer::verify_solved(dims);
 
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
@@ -309,7 +309,7 @@ namespace disposer{
 
 			output< Name, type > output{use_count};
 
-			return make_module(dimension_list< Ds ... >{}, configs,
+			return make_module(dims, configs,
 				iops_ref(std::move(output), std::move(iops)));
 		}
 
@@ -326,12 +326,12 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_make_parameter(
 			parameter_maker< Name, DimensionReferrer,
 				DimensionDependancy, ParserFn, DefaultValueFn > const& maker,
-			dimension_list< Ds ... > const&,
+			dimension_list< Ds ... > const& dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			DimensionReferrer::verify_solved(dimension_list< Ds ... >{});
-			DimensionDependancy::verify_solved(dimension_list< Ds ... >{});
+			DimensionReferrer::verify_solved(dims);
+			DimensionDependancy::verify_solved(dims);
 
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
@@ -340,15 +340,15 @@ namespace disposer{
 				detail::to_std_string_view(Name{}));
 
 			parameter< Name, type > parameter{get_parameter_value< type >(
-					dimension_list< Ds ... >{},
+					dims,
 					DimensionDependancy{},
 					maker.parser,
 					maker.default_value_generator,
-					module_accessory{iops, data.location()},
+					module_accessory{dims, iops, data.location()},
 					param_data_ptr
 				)};
 
-			return make_module(dimension_list< Ds ... >{}, configs,
+			return make_module(dims, configs,
 				iops_ref(std::move(parameter), std::move(iops)));
 		}
 
@@ -368,7 +368,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops),
-				fn(dims, module_accessory{iops, data.location()}));
+				fn(module_accessory{dims, iops, data.location()}));
 		}
 
 

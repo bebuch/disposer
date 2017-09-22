@@ -61,31 +61,30 @@ namespace disposer{
 		}
 
 		/// \brief Helper for noexcept of operator()
-		template < typename ... RefList >
+		template < typename DimensionList, typename ... RefList >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(std::is_invocable_v< Fn,
-					module_accessory< RefList ... > const& >,
+					module_accessory< DimensionList, RefList ... > const& >,
 				"Wrong function signature, expected: "
 				"solved_dimensions< Ds ... > f(auto const& iops)"
 			);
 
 			using result_type = std::invoke_result_t< Fn,
-				module_accessory< RefList ... > const& >;
+				module_accessory< DimensionList, RefList ... > const& >;
 
 			check_result_type< result_type >();
 
 			return std::is_nothrow_invocable_v< Fn,
-				module_accessory< RefList ... > const& >;
+				module_accessory< DimensionList, RefList ... > const& >;
 		}
 
 		/// \brief Calls the actual function
-		template < typename Dimensions, typename ... RefList >
+		template < typename DimensionList, typename ... RefList >
 		auto operator()(
-			Dimensions const&,
-			module_accessory< RefList ... > const& accessory
-		)const noexcept(calc_noexcept< RefList ... >()){
+			module_accessory< DimensionList, RefList ... > const& accessory
+		)const noexcept(calc_noexcept< DimensionList, RefList ... >()){
 			auto const types = [](auto ic){
-				return Dimensions::dimensions[hana::size_c< ic.d >];
+				return DimensionList::dimensions[hana::size_c< ic.d >];
 			};
 
 			auto const type_count = [types](auto ic){

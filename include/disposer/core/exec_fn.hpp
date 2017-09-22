@@ -18,17 +18,19 @@ namespace disposer{
 	/// \brief Accessory of a module during exec calls
 	template <
 		typename StateType,
+		typename TypeList,
 		typename ExecInputs,
 		typename ExecOutputs,
 		typename Parameters >
 	class exec_accessory
 		: public add_log< exec_accessory<
-			StateType, ExecInputs, ExecOutputs, Parameters > >
+			StateType, TypeList, ExecInputs, ExecOutputs, Parameters > >
 	{
 	public:
 		/// \brief Constructor
 		exec_accessory(
 			std::size_t id,
+			TypeList,
 			StateType* state,
 			ExecInputs& inputs,
 			ExecOutputs& outputs,
@@ -55,6 +57,14 @@ namespace disposer{
 		template < typename Name >
 		auto& operator()(Name const& name)noexcept{
 			return get(*this, name);
+		}
+
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < TypeList::type_count,
+				"module has less then DI dimensions");
+			return TypeList::types[i];
 		}
 
 		/// \brief Get access to the state object if one exists
@@ -149,17 +159,18 @@ namespace disposer{
 
 		template <
 			typename StateType,
+			typename TypeList,
 			typename ExecInputs,
 			typename ExecOutputs,
 			typename Parameters >
 		void operator()(
-			exec_accessory< StateType, ExecInputs, ExecOutputs, Parameters >&
-				accessory
+			exec_accessory< StateType, TypeList, ExecInputs, ExecOutputs,
+				Parameters >& accessory
 		){
 			// TODO: calulate noexcept
 			if constexpr(
-				std::is_invocable_v< Fn, exec_accessory<
-					StateType, ExecInputs, ExecOutputs, Parameters >& >
+				std::is_invocable_v< Fn, exec_accessory< StateType,
+					TypeList, ExecInputs, ExecOutputs, Parameters >& >
 			){
 				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){

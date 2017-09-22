@@ -139,8 +139,19 @@ namespace disposer{
 	/// \brief Active types of a module or component
 	template < typename ... Ts >
 	struct type_list{
+		/// \brief Count of types
+		static constexpr auto type_count = sizeof...(Ts);
+
+		/// \brief Types as hana::tuple_t
+		static constexpr auto types = hana::tuple_t< Ts ... >;
+
+
+		/// \brief Default Constructor
+		constexpr type_list()noexcept = default;
+
+		/// \brief Constructor
 		template < typename ... Ds >
-		type_list(dimension_list< Ds ... >){
+		constexpr type_list(dimension_list< Ds ... >)noexcept{
 			static_assert(hana::all_of(
 					dimension_list< Ds ... >::dimensions,
 					[](auto types){
