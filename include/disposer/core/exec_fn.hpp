@@ -110,7 +110,7 @@ namespace disposer{
 				static_assert(!hana::is_nothing(index),
 					"parameter name doesn't exist");
 
-				return this_.parameters_[*index];
+				return this_.parameters_[*index].get();
 			}else{
 				static_assert(detail::false_c< Name >,
 					"name is not an input_name, output_name or parameter_name");
