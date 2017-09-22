@@ -101,60 +101,6 @@ namespace disposer{
 	constexpr free_type< T > free_type_c{};
 
 
-	/// \brief Hana tag for dimension_dependancy
-	struct dimension_dependancy_tag{};
-
-	struct has_unique_ascending_order_t{
-		template < typename Foldable,
-			typename = std::enable_if_t< hana::Foldable< Foldable >::value > >
-		constexpr auto operator()(Foldable const& v)const noexcept{
-			if constexpr(auto size = hana::size(v); size < hana::size_c< 2 >){
-				return hana::true_c;
-			}else{
-				return hana::typeid_(hana::fold_left(v,
-					[](auto const& a, auto const& b){
-						if constexpr(
-							hana::typeid_(a) == hana::type_c< hana::false_ >
-						){
-							return hana::false_c;
-						}else if constexpr(a < b){
-							return b;
-						}else{
-							return hana::false_c;
-						}
-					})) != hana::type_c< hana::false_ >;
-			}
-		}
-	};
-
-	constexpr auto has_unique_ascending_order = has_unique_ascending_order_t{};
-
-
-	/// \brief Parameter value depends on the named module dimensions
-	template < std::size_t ... VDs >
-	struct dimension_dependancy{
-		using hana_tag = dimension_dependancy_tag;
-
-		/// \brief List of the dimension dependency numbers
-		static constexpr auto numbers = hana::tuple_c< std::size_t, VDs ... >;
-
-		static_assert(has_unique_ascending_order(numbers),
-			"dimension_dependancy VDs must be in ascending order and must not "
-			"have duplicates");
-
-		template < typename DimensionList >
-		static constexpr void verify_solved(DimensionList const&)noexcept{
-			static_assert(hana::all_of(
-					hana::make_tuple(hana::size(DimensionList::dimensions
-						[hana::size_c< VDs >]) ... ),
-					hana::size_c< 1 >),
-				"at least one dimension Ds is not solved yet");
-		}
-
-
-	};
-
-
 }
 
 

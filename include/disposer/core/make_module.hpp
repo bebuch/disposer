@@ -316,7 +316,6 @@ namespace disposer{
 		template <
 			typename Name,
 			typename DimensionReferrer,
-			typename DimensionDependancy,
 			typename ParserFn,
 			typename DefaultValueFn,
 			typename ... Ds,
@@ -325,13 +324,12 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > exec_make_parameter(
 			parameter_maker< Name, DimensionReferrer,
-				DimensionDependancy, ParserFn, DefaultValueFn > const& maker,
+				ParserFn, DefaultValueFn > const& maker,
 			dimension_list< Ds ... > const& dims,
 			detail::config_queue< Offset, Config ... > const& configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			DimensionReferrer::verify_solved(dims);
-			DimensionDependancy::verify_solved(dims);
 
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
@@ -341,7 +339,6 @@ namespace disposer{
 
 			parameter< Name, type > parameter{get_parameter_value< type >(
 					dims,
-					DimensionDependancy{},
 					maker.parser,
 					maker.default_value_generator,
 					module_accessory{dims, iops, data.location()},
