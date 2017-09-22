@@ -115,15 +115,14 @@ namespace disposer{
 
 									return input_construction<
 										decltype(next_dimension_list) >{base}
-										.next(
-											maker, configs, std::move(iops),
-											solved_dims, output_ptr
-										);
+										.make(maker, configs, std::move(iops),
+											solved_dims, output_ptr);
 								};
 						};
 
-					constexpr auto tc = DimensionList
-						::dimensions[current_dim_number].type_count;
+					constexpr auto types =
+						DimensionList::dimensions[current_dim_number];
+					constexpr auto tc = hana::size(types).value;
 
 					constexpr auto call = hana::unpack(
 						hana::range_c< std::size_t, 0, tc >,
