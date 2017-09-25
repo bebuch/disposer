@@ -12,9 +12,6 @@
 #include "accessory.hpp"
 #include "parameter.hpp"
 
-#include <boost/hana/for_each.hpp>
-#include <boost/hana/unpack.hpp>
-#include <boost/hana/slice.hpp>
 #include <boost/hana/tuple.hpp>
 
 
@@ -24,8 +21,8 @@ namespace disposer{
 	struct parameter_name_tag;
 
 
-	/// \brief Accessory of a \ref module without log
-	template < typename Parameters >
+	/// \brief Accessory of a \ref component without log
+	template < typename TypeList, typename Parameters >
 	struct component_data{
 		/// \brief Constructor
 		template < typename ... RefList >

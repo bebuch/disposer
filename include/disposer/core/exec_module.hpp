@@ -12,6 +12,8 @@
 #include "to_exec_list.hpp"
 #include "parameter.hpp"
 
+#include <boost/hana/for_each.hpp>
+
 
 namespace disposer{
 

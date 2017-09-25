@@ -14,9 +14,6 @@
 #include "output.hpp"
 #include "parameter.hpp"
 
-#include <boost/hana/for_each.hpp>
-#include <boost/hana/unpack.hpp>
-#include <boost/hana/slice.hpp>
 #include <boost/hana/tuple.hpp>
 
 

@@ -10,7 +10,7 @@
 #define _disposer__core__component__hpp_INCLUDED_
 
 #include "component_base.hpp"
-#include "component_data.hpp"
+#include "component_init_fn_fn.hpp"
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"
@@ -20,75 +20,8 @@
 namespace disposer{
 
 
-	/// \brief Accessory of a component
-	template < typename ... Parameters >
-	class component_accessory
-		: public component_data< Parameters ... >
-		, public add_log< component_accessory< Parameters ... > >
-	{
-	public:
-		/// \brief Constructor
-		template < typename MakerList, typename MakeData >
-		component_accessory(
-			component_base& component,
-			::disposer::disposer& disposer,
-			MakerList const& maker_list,
-			MakeData const& data,
-			std::string_view location
-		)
-			: component_data< List >(
-					maker_list, data, location, std::make_index_sequence<
-						decltype(hana::size(maker_list))::value >()
-				)
-			, disposer_(disposer)
-			, component_(component) {}
-
-		/// \brief Get a reference to the disposer object
-		::disposer::disposer& disposer(){ return disposer_; }
-
-
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << "component(" << component_.name << ":"
-				<< component_.type_name << "): ";
-		}
-
-
-	protected:
-		::disposer::disposer& disposer_;
-
-		component_base& component_;
-	};
-
-
-	/// \brief Wrapper for the component object creation function
-	template < typename ComponentFn >
-	class component_init{
-	public:
-		component_init(ComponentFn&& component_fn)
-			: component_fn_(static_cast< ComponentFn&& >(component_fn)) {}
-
-		template < typename Accessory >
-		auto operator()(Accessory& accessory)const{
-			if constexpr(std::is_invocable_v< ComponentFn const, Accessory& >){
-				return component_fn_(accessory);
-			}else if constexpr(std::is_invocable_v< ComponentFn const >){
-				(void)accessory; // silance GCC
-				return component_fn_();
-			}else{
-				static_assert(detail::false_c< Accessory >,
-					"component_init function must be invokable with component& "
-					"or without an argument");
-			}
-		}
-
-	private:
-		ComponentFn component_fn_;
-	};
-
-
 	/// \brief The actual component type
-	template < typename List, typename ComponentFn >
+	template < typename List, typename ComponentInitFn >
 	class component: public component_base{
 	public:
 		/// \brief Type for exec_fn
@@ -96,10 +29,10 @@ namespace disposer{
 
 
 		using component_t = std::invoke_result_t<
-			component_init< ComponentFn >, accessory_type& >;
+			component_init_fn< ComponentInitFn >, accessory_type& >;
 
 		static_assert(!std::is_same_v< component_t, void >,
-			"ComponentFn must return an object");
+			"ComponentInitFn must return an object");
 
 
 		/// \brief Constructor
@@ -109,7 +42,7 @@ namespace disposer{
 			MakerList const& maker_list,
 			MakeData const& data,
 			std::string_view location,
-			component_init< ComponentFn > const& component_fn
+			component_init_fn< ComponentInitFn > const& component_fn
 		)
 			: component_base(data.name, data.type_name)
 			, accessory_(*this, disposer, maker_list, data, location)
@@ -169,13 +102,13 @@ namespace disposer{
 
 
 	/// \brief Maker function for \ref component in a std::unique_ptr
-	template < typename MakerList, typename MakeData, typename ComponentFn >
+	template < typename MakerList, typename MakeData, typename ComponentInitFn >
 	auto make_component_ptr(
 		disposer& disposer,
 		MakerList const& maker_list,
 		MakeData const& data,
 		std::string_view location,
-		component_init< ComponentFn > const& component_fn
+		component_init_fn< ComponentInitFn > const& component_fn
 	){
 		auto type = hana::unpack(maker_list, [](auto const& ... maker){
 			return hana::type_c< hana::tuple<
@@ -184,7 +117,7 @@ namespace disposer{
 
 		using list_type = typename decltype(type)::type;
 
-		return std::make_unique< component< list_type, ComponentFn > >(
+		return std::make_unique< component< list_type, ComponentInitFn > >(
 			disposer, maker_list, data, location, component_fn);
 
 	}
@@ -193,14 +126,14 @@ namespace disposer{
 	/// \brief Provids types for constructing an component
 	template <
 		typename MakerList,
-		typename ComponentFn,
+		typename ComponentInitFn,
 		typename ComponentModules >
 	struct component_maker{
 		/// \brief Tuple of parameter-maker objects
 		MakerList makers;
 
 		/// \brief The function object that is called at construction
-		component_init< ComponentFn > component_fn;
+		component_init_fn< ComponentInitFn > component_fn;
 
 		/// \brief hana::tuple of \ref component_module_maker
 		ComponentModules component_modules;
