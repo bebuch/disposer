@@ -1,4 +1,5 @@
 #include <disposer/core/register_component.hpp>
+#include <disposer/core/register_module.hpp>
 
 #define BOOST_TEST_MODULE dimension solve
 #include <boost/test/included/unit_test.hpp>
@@ -66,5 +67,28 @@ BOOST_AUTO_TEST_CASE(register_1){
 	{
 		auto fn = register_fn(2);
 		fn("register_1_3", disposer.component_declarant());
+	}
+}
+
+BOOST_AUTO_TEST_CASE(register_0_module_1){
+	::disposer::disposer disposer;
+
+	struct exec{
+		constexpr void operator()()const{}
+	};
+
+	struct init_fn{
+		constexpr auto operator()()const{ return 0; }
+	};
+
+	constexpr component_init_fn init{init_fn{}};
+
+	{
+		auto fn = component_register_fn(component_modules{
+				"m1"_module([](auto& /*component*/){
+					return module_register_fn(exec_fn{exec{}});
+				})
+			}, init);
+		fn("register_0_module_1", disposer.component_declarant());
 	}
 }

@@ -57,9 +57,9 @@ namespace disposer{
 	template < typename ... Module >
 	struct component_modules{
 		static_assert(hana::and_(hana::true_c,
-			hana::is_a< module_maker_tag, Module >() ...),
-			"at least one of the component_modules arguments is not a disposer "
-			"module maker");
+			hana::is_a< component_module_maker_tag, Module >() ...),
+			"at least one of the component_modules arguments is not a "
+			"module_name");
 
 		/// \brief The data
 		hana::tuple< Module ... > module_maker_list;
