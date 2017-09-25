@@ -15,6 +15,46 @@
 namespace disposer{
 
 
+	template < typename Fn >
+	class register_fn{
+	public:
+		constexpr register_fn()
+			noexcept(std::is_nothrow_default_constructible_v< Fn >)
+			: fn_() {}
+
+ 		constexpr explicit register_fn(Fn const& fn)
+			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
+			: fn_(fn) {}
+
+ 		constexpr explicit register_fn(Fn&& fn)
+			noexcept(std::is_nothrow_move_constructible_v< Fn >)
+			: fn_(static_cast< Fn&& >(fn)) {}
+
+		template < typename TypeList, typename Parameters, typename State >
+		auto operator()(
+			component_accessory< TypeList, Parameters, State >&& accessory
+		)const{
+			// TODO: calulate noexcept
+			if constexpr(std::is_invocable_v< Fn const,
+				component_accessory< TypeList, Parameters, State > >
+			){
+				static_assert(!std::is_void_v< std::invoke_result_t<
+					Fn const, component_accessory< TypeList,
+						Parameters, State > > >,
+					"Fn must not return void");
+				return std::invoke(fn_, std::move(accessory));
+			}else{
+				static_assert(detail::false_c< Fn >,
+					"Fn function must be const invokable with "
+					"component_accessory");
+			}
+		}
+
+	private:
+		Fn fn_;
+	};
+
+
 	/// \brief Hana Tag for \ref module_name
 	struct component_module_maker_tag{};
 
@@ -28,7 +68,7 @@ namespace disposer{
 		std::string_view name;
 
 		/// \brief A list of module IOPs
-		ModuleRegisterFn module_register_fn;
+		register_fn< ModuleRegisterFn > module_register_fn;
 	};
 
 
@@ -37,20 +77,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for modules
 	template < char ... C >
-	struct module_name: ct_name< module_name_tag, C ... >{
-		/// \brief Creates a \ref module_register_fn object
-		template < typename ModuleRegisterFn >
-		constexpr auto operator()(
-			ModuleRegisterFn&& module_register_fn
-		)const{
-			return component_module_maker<
-				std::remove_reference_t< ModuleRegisterFn >
-			>{
-				detail::to_std_string_view(this->value),
-				static_cast< ModuleRegisterFn&& >(module_register_fn)
-			};
-		}
-	};
+	struct module_name: ct_name< module_name_tag, C ... >{};
 
 	/// \brief Make a \ref module_name object
 	template < char ... C >
@@ -60,6 +87,27 @@ namespace disposer{
 	/// \brief Make a \ref module_name object by a hana::string object
 	template < char ... C > constexpr module_name< C ... >
 	to_module_name(hana::string< C ... >)noexcept{ return {}; }
+
+
+		/// \brief Creates a \ref module_register_fn object
+		template < typename ModuleRegisterFn >
+		constexpr auto operator()(
+			ModuleRegisterFn&& module_register_fn
+		)const{
+		}
+
+	template < char ... C, typename ModuleRegisterFn >
+	constexpr auto make(
+		module_name< C ... > const&,
+		register_fn< ModuleRegisterFn >&& fn
+	){
+		return component_module_maker<
+				std::remove_reference_t< ModuleRegisterFn >
+			>{
+				detail::to_std_string_view(this->value),
+				static_cast< ModuleRegisterFn&& >(module_register_fn)
+			};
+	}
 
 
 }
