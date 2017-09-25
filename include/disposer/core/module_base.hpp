@@ -85,6 +85,7 @@ namespace disposer{
 		/// The first module has number 1.
 		std::size_t const number;
 
+		/// \brief Location text for log-messages
 		std::string const location;
 	};
 

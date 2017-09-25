@@ -73,7 +73,7 @@ namespace disposer{
 
 
 	/// \brief Wrapper for the component enable function
-	template < typename Fn = void >
+	template < typename Fn >
 	class component_init_fn{
 	public:
 		constexpr component_init_fn()
@@ -90,17 +90,17 @@ namespace disposer{
 
 		template < typename TypeList, typename Parameters >
 		auto operator()(
-			component_init_accessory< TypeList, Parameters > const& accessory
+			component_init_accessory< TypeList, Parameters >&& accessory
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
-				component_init_accessory< TypeList, Parameters > const& >
+				component_init_accessory< TypeList, Parameters > >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const, component_init_accessory< TypeList,
-						Parameters > const& > >,
+						Parameters > > >,
 					"Fn must not return void");
-				return std::invoke(fn_, accessory);
+				return std::invoke(fn_, std::move(accessory));
 			}else if constexpr(std::is_invocable_v< Fn const >){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const > >,
@@ -109,41 +109,13 @@ namespace disposer{
 				return std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< Fn >,
-					"Fn function must be invokable with "
-					"component_init_accessory const& or without an argument");
+					"Fn function must be const invokable with "
+					"component_init_accessory or without an argument");
 			}
 		}
 
 	private:
 		Fn fn_;
-	};
-
-
-	/// \brief Holds the user defined state object of a component
-	template <
-		typename TypeList,
-		typename Parameters,
-		typename ComponentInitFn >
-	class component_state{
-	public:
-		/// \brief Type of the component state object
-		using state_type = std::invoke_result_t<
-			component_init_fn< ComponentInitFn >,
-			component_init_accessory< TypeList, Parameters >&& >;
-
-
-		/// \brief Constructor
-		component_state(
-			component_init_fn< ComponentInitFn > const& component_init_fn
-		)noexcept
-			: state_(component_init_fn_(component_init_accessory
-				< TypeList, Parameters >(data, location))) {}
-
-
-
-	private:
-		/// \brief The function object that is called in exec()
-		state_type state_;
 	};
 
 

@@ -32,7 +32,7 @@ namespace disposer{
 			hana::is_a< output_maker_tag, Config >(),
 			hana::is_a< parameter_maker_tag, Config >(),
 			hana::is_a< set_dimension_fn_tag, Config >()) ...),
-			"at least one of the module configure arguments is not "
+			"at least one of the module_configure arguments is not "
 			"an input maker, an output maker, a parameter maker or "
 			"a set_dimension_fn");
 
@@ -40,8 +40,8 @@ namespace disposer{
 		hana::tuple< Config ... > config_list;
 
 		/// \brief Constructor
-		constexpr module_configure(Config&& ... list)
-			: config_list(static_cast< Config&& >(list) ...) {}
+		constexpr module_configure(Config ... list)
+			: config_list(std::move(list) ...) {}
 	};
 
 
@@ -433,6 +433,9 @@ namespace disposer{
 	}
 
 
+	/// \brief Tag to identify module_maker objects via hana::is_a
+	struct module_maker_tag;
+
 	/// \brief Provids types for constructing an module
 	template <
 		typename DimensionList,
@@ -440,6 +443,10 @@ namespace disposer{
 		typename ModuleInitFn,
 		typename ExecFn >
 	struct module_maker{
+		/// \brief Hana tag
+		using hana_tag = module_maker_tag;
+
+
 		/// \brief An dimension_list object
 		DimensionList dimensions;
 

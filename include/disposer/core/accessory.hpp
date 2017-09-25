@@ -99,6 +99,8 @@ namespace disposer{
 	class module_accessory
 		: public add_log< module_accessory< DimensionList, RefList ... > >{
 	public:
+		using dimension_list = DimensionList;
+
 		module_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
@@ -148,8 +150,10 @@ namespace disposer{
 
 	template < typename DimensionList, typename ... RefList >
 	class component_accessory
-		: public add_log< component_accessory< RefList ... > >{
+		: public add_log< component_accessory< DimensionList, RefList ... > >{
 	public:
+		using dimension_list = DimensionList;
+
 		component_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
@@ -169,12 +173,12 @@ namespace disposer{
 		/// \brief Get type by dimension index
 		template < std::size_t DI >
 		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
-			static_assert(DI < DimensionList::type_count,
+			static_assert(DI < DimensionList::dimension_count,
 				"component has less then DI dimensions");
-			static_assert(hana::size(DimensionList::types[hana::size_c< DI >])
-					== hana::size_c< 1 >,
+			static_assert(hana::size_c< 1 > ==
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
 				"component dimension DI is not solved yet");
-			return DimensionList::types[i];
+			return DimensionList::dimensions[i][hana::size_c< 0 >];
 		}
 
 

@@ -10,7 +10,6 @@
 #define _disposer__core__set_dimension_fn__hpp_INCLUDED_
 
 #include "dimension.hpp"
-#include "accessory.hpp"
 
 #include "../tool/comma_separated_output.hpp"
 
@@ -61,30 +60,27 @@ namespace disposer{
 		}
 
 		/// \brief Helper for noexcept of operator()
-		template < typename DimensionList, typename ... RefList >
+		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_v< Fn,
-					module_accessory< DimensionList, RefList ... > const& >,
+			static_assert(std::is_invocable_v< Fn, Accessory const& >,
 				"Wrong function signature, expected: "
 				"solved_dimensions< Ds ... > f(auto const& iops)"
 			);
 
-			using result_type = std::invoke_result_t< Fn,
-				module_accessory< DimensionList, RefList ... > const& >;
+			using result_type = std::invoke_result_t< Fn, Accessory const& >;
 
 			check_result_type< result_type >();
 
-			return std::is_nothrow_invocable_v< Fn,
-				module_accessory< DimensionList, RefList ... > const& >;
+			return std::is_nothrow_invocable_v< Fn, Accessory const& >;
 		}
 
 		/// \brief Calls the actual function
-		template < typename DimensionList, typename ... RefList >
-		auto operator()(
-			module_accessory< DimensionList, RefList ... > const& accessory
-		)const noexcept(calc_noexcept< DimensionList, RefList ... >()){
+		template < typename Accessory >
+		auto operator()(Accessory const& accessory)const
+		noexcept(calc_noexcept< Accessory >()){
 			auto const types = [](auto ic){
-				return DimensionList::dimensions[hana::size_c< ic.d >];
+				return Accessory::dimension_list
+					::dimensions[hana::size_c< ic.d >];
 			};
 
 			auto const type_count = [types](auto ic){

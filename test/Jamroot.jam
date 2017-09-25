@@ -123,3 +123,10 @@ exe component_test
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe make_component
+	:
+	make_component.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;

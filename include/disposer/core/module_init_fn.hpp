@@ -135,7 +135,7 @@ namespace disposer{
 				return std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< Fn >,
-					"Fn function must be invokable with "
+					"Fn function must be const invokable with "
 					"module_init_accessory const& or without an argument");
 			}
 		}
@@ -163,9 +163,6 @@ namespace disposer{
 		using state_type = std::invoke_result_t<
 			module_init_fn< ModuleInitFn >,
 			module_init_accessory< TypeList, Inputs, Outputs, Parameters >&& >;
-
-		static_assert(!std::is_void_v< state_type >,
-			"module_init function must not return void");
 
 
 		/// \brief Constructor
