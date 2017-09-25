@@ -46,6 +46,17 @@ namespace disposer{
 			{}
 
 		/// \brief Constructor
+		template < typename ... Dimension >
+		module_register_fn(
+			dimension_list< Dimension ... > dims,
+			module_init_fn< ModuleInitFn > module_init,
+			exec_fn< ExecFn > exec
+		)
+			: module_register_fn(dims, module_configure<>{},
+				std::move(module_init), std::move(exec))
+			{}
+
+		/// \brief Constructor
 		template < typename ... Dimension, typename ... Config >
 		module_register_fn(
 			dimension_list< Dimension ... > dims,
@@ -53,6 +64,16 @@ namespace disposer{
 			exec_fn< ExecFn > exec
 		)
 			: module_register_fn(dims, std::move(list),
+				module_init_fn< void >(), std::move(exec))
+			{}
+
+		/// \brief Constructor
+		template < typename ... Dimension >
+		module_register_fn(
+			dimension_list< Dimension ... > dims,
+			exec_fn< ExecFn > exec
+		)
+			: module_register_fn(dims, module_configure<>{},
 				module_init_fn< void >(), std::move(exec))
 			{}
 
@@ -68,6 +89,15 @@ namespace disposer{
 			{}
 
 		/// \brief Constructor
+		module_register_fn(
+			module_init_fn< ModuleInitFn > module_init,
+			exec_fn< ExecFn > exec
+		)
+			: module_register_fn(dimension_list{}, module_configure<>{},
+				std::move(module_init), std::move(exec))
+			{}
+
+		/// \brief Constructor
 		template < typename ... Config >
 		module_register_fn(
 			module_configure< Config ... > list,
@@ -76,6 +106,13 @@ namespace disposer{
 			: module_register_fn(dimension_list{}, std::move(list),
 				module_init_fn< void >(), std::move(exec))
 			{}
+
+		/// \brief Constructor
+		module_register_fn(exec_fn< ExecFn > exec)
+			: module_register_fn(dimension_list{}, module_configure<>{},
+				module_init_fn< void >(), std::move(exec))
+			{}
+
 
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
@@ -120,6 +157,19 @@ namespace disposer{
 
 	template <
 		typename ... Dimension,
+		typename ModuleInitFn,
+		typename ExecFn >
+	module_register_fn(
+		dimension_list< Dimension ... > dims,
+		module_init_fn< ModuleInitFn > module_init,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list< Dimension ... >,
+			module_configure<>,
+			ModuleInitFn, ExecFn >;
+
+	template <
+		typename ... Dimension,
 		typename ... Config,
 		typename ExecFn >
 	module_register_fn(
@@ -129,6 +179,17 @@ namespace disposer{
 	) -> module_register_fn<
 			dimension_list< Dimension ... >,
 			module_configure< Config ... >,
+			void, ExecFn >;
+
+	template <
+		typename ... Dimension,
+		typename ExecFn >
+	module_register_fn(
+		dimension_list< Dimension ... > dims,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list< Dimension ... >,
+			module_configure<>,
 			void, ExecFn >;
 
 	template <
@@ -145,6 +206,17 @@ namespace disposer{
 			ModuleInitFn, ExecFn >;
 
 	template <
+		typename ModuleInitFn,
+		typename ExecFn >
+	module_register_fn(
+		module_init_fn< ModuleInitFn > module_init,
+		exec_fn< ExecFn > exec
+	) -> module_register_fn<
+			dimension_list<>,
+			module_configure<>,
+			ModuleInitFn, ExecFn >;
+
+	template <
 		typename ... Config,
 		typename ExecFn >
 	module_register_fn(
@@ -153,6 +225,13 @@ namespace disposer{
 	) -> module_register_fn<
 			dimension_list<>,
 			module_configure< Config ... >,
+			void, ExecFn >;
+
+	template < typename ExecFn >
+	module_register_fn(exec_fn< ExecFn > exec)
+	-> module_register_fn<
+			dimension_list<>,
+			module_configure<>,
 			void, ExecFn >;
 
 

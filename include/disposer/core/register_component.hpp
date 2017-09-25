@@ -22,38 +22,60 @@ namespace disposer{
 
 	/// \brief Registers a component configuration in the \ref disposer
 	template <
-		typename MakerList,
-		typename ComponentFn,
-		typename ComponentModules >
+		typename DimensionList,
+		typename Configuration,
+		typename Modules,
+		typename ComponentInitFn >
 	class component_register_fn{
 	public:
 		/// \brief Constructor
+		template <
+			typename ... Dimension,
+			typename ... Config,
+			typename ... Module >
 		component_register_fn(
-			MakerList&& list,
-			component_init< ComponentFn >&& component_fn,
-			ComponentModules&& component_modules
+			dimension_list< Dimension ... > dims,
+			component_configure< Config ... > list,
+			component_modules< Module ... > modules,
+			component_init_fn< ComponentInitFn > module_init
 		)
 			: called_flag_(false)
 			, maker_{
-				static_cast< MakerList&& >(list),
-				std::move(component_fn),
-				static_cast< ComponentModules&& >(component_modules)
-			}
-			{}
+				dims,
+				std::move(list),
+				std::move(modules),
+				std::move(module_init)
+			} {}
 
 		/// \brief Constructor
+		template < typename ... Config, typename ... Module >
 		component_register_fn(
-			MakerList&& list,
-			component_init< ComponentFn > const& component_fn,
-			ComponentModules&& component_modules
+			component_configure< Config ... > list,
+			component_modules< Module ... > modules,
+			component_init_fn< ComponentInitFn > module_init
 		)
-			: called_flag_(false)
-			, maker_{
-				static_cast< MakerList&& >(list),
-				component_fn,
-				static_cast< ComponentModules&& >(component_modules)
-			}
-			{}
+			: component_register_fn{dimension_list{}, std::move(list),
+				std::move(modules),std::move(module_init)} {}
+
+		/// \brief Constructor
+		template < typename ... Dimension, typename ... Module >
+		component_register_fn(
+			dimension_list< Dimension ... > dims,
+			component_modules< Module ... > modules,
+			component_init_fn< ComponentInitFn > module_init
+		)
+			: component_register_fn{dims, component_configure<>{},
+				std::move(modules),std::move(module_init)} {}
+
+		/// \brief Constructor
+		template < typename ... Module >
+		component_register_fn(
+			component_modules< Module ... > modules,
+			component_init_fn< ComponentInitFn > module_init
+		)
+			: component_register_fn{dimension_list{}, component_configure<>{},
+				std::move(modules),std::move(module_init)} {}
+
 
 		/// \brief Call this function to register the component with the given
 		///        type name via the given component_declarant
@@ -80,10 +102,71 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The component_maker object
-		component_maker< MakerList, ComponentFn, ComponentModules > maker_;
+		component_maker<
+			DimensionList, Configuration, Modules, ComponentInitFn > maker_;
 
 		friend struct unit_test_key;
 	};
+
+
+	template <
+		typename ... Dimension,
+		typename ... Config,
+		typename ... Module,
+		typename ComponentInitFn >
+	component_register_fn(
+		dimension_list< Dimension ... > dims,
+		component_configure< Config ... > list,
+		component_modules< Module ... > modules,
+		component_init_fn< ComponentInitFn > module_init
+	) -> component_register_fn<
+			dimension_list< Dimension ... >,
+			component_configure< Config ... >,
+			component_modules< Module ... >,
+			ComponentInitFn >;
+
+	/// \brief Constructor
+	template <
+		typename ... Config,
+		typename ... Module,
+		typename ComponentInitFn >
+	component_register_fn(
+		component_configure< Config ... > list,
+		component_modules< Module ... > modules,
+		component_init_fn< ComponentInitFn > module_init
+	) -> component_register_fn<
+			dimension_list<>,
+			component_configure< Config ... >,
+			component_modules< Module ... >,
+			ComponentInitFn >;
+
+	/// \brief Constructor
+	template <
+		typename ... Dimension,
+		typename ... Module,
+		typename ComponentInitFn >
+	component_register_fn(
+		dimension_list< Dimension ... > dims,
+		component_modules< Module ... > modules,
+		component_init_fn< ComponentInitFn > module_init
+	) -> component_register_fn<
+			dimension_list< Dimension ... >,
+			component_configure<>,
+			component_modules< Module ... >,
+			ComponentInitFn >;
+
+	/// \brief Constructor
+	template <
+		typename ... Module,
+		typename ComponentInitFn >
+	component_register_fn(
+		component_modules< Module ... > modules,
+		component_init_fn< ComponentInitFn > module_init
+	) -> component_register_fn<
+			dimension_list<>,
+			component_configure<>,
+			component_modules< Module ... >,
+			ComponentInitFn >;
 
 
 }

@@ -117,6 +117,13 @@ exe module_register
 	/logsys//logsys
 	;
 
+exe component_register
+	:
+	component_register.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
 exe component_test
 	:
 	component_test.cpp
