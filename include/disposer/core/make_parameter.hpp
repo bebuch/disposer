@@ -54,8 +54,8 @@ namespace disposer{
 	constexpr auto create_parameter_maker(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const&,
-		parser_fn< ParserFn >&& parser,
-		default_value_fn< DefaultValueFn >&& default_value_generator
+		parser_fn< ParserFn > parser,
+		default_value_fn< DefaultValueFn > default_value_generator
 	){
 		return parameter_maker<
 				parameter_name< C ... >,

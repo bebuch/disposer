@@ -17,21 +17,21 @@ namespace disposer{
 
 	/// \brief Accessory of a module during exec calls
 	template <
-		typename StateType,
 		typename TypeList,
+		typename State,
 		typename ExecInputs,
 		typename ExecOutputs,
 		typename Parameters >
-	class exec_accessory
-		: public add_log< exec_accessory<
-			StateType, TypeList, ExecInputs, ExecOutputs, Parameters > >
+	class module_accessory
+		: public add_log< module_accessory<
+			TypeList, State, ExecInputs, ExecOutputs, Parameters > >
 	{
 	public:
 		/// \brief Constructor
-		exec_accessory(
+		module_accessory(
 			std::size_t id,
 			TypeList,
-			StateType* state,
+			State* state,
 			ExecInputs& inputs,
 			ExecOutputs& outputs,
 			Parameters const& parameters,
@@ -69,7 +69,7 @@ namespace disposer{
 
 		/// \brief Get access to the state object if one exists
 		auto& state()noexcept{
-			static_assert(!std::is_void_v< StateType >, "Module has no state.");
+			static_assert(!std::is_void_v< State >, "Module has no state.");
 			return *state_;
 		}
 
@@ -124,7 +124,7 @@ namespace disposer{
 		/// \brief Module state
 		///
 		/// nullptr-pointer to void if module is stateless.
-		StateType* state_;
+		State* state_;
 
 		/// \brief hana::tuple of exec_inputs
 		ExecInputs& inputs_;
@@ -154,31 +154,31 @@ namespace disposer{
 
 		constexpr explicit exec_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
-			: fn_(static_cast< Fn&& >(fn)) {}
+			: fn_(std::move(fn)) {}
 
 
 		template <
-			typename StateType,
 			typename TypeList,
+			typename State,
 			typename ExecInputs,
 			typename ExecOutputs,
 			typename Parameters >
 		void operator()(
-			exec_accessory< StateType, TypeList, ExecInputs, ExecOutputs,
+			module_accessory< TypeList, State, ExecInputs, ExecOutputs,
 				Parameters >& accessory
 		){
 			// TODO: calulate noexcept
 			if constexpr(
-				std::is_invocable_v< Fn, exec_accessory< StateType,
-					TypeList, ExecInputs, ExecOutputs, Parameters >& >
+				std::is_invocable_v< Fn, module_accessory< TypeList, State,
+					ExecInputs, ExecOutputs, Parameters >& >
 			){
 				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){
 				(void)accessory; // silance GCC
 				std::invoke(fn_);
 			}else{
-				static_assert(detail::false_c< StateType >,
-					"Fn must be invokable with exec_accessory& or "
+				static_assert(detail::false_c< State >,
+					"Fn must be invokable with module_accessory& or "
 					"without arguments");
 			}
 		}

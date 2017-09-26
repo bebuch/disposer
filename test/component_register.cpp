@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE(register_0_module_1){
 
 	{
 		auto fn = component_register_fn(component_modules{
-				"m1"_module([](auto& /*component*/){
+				make("m1"_module, register_fn([](auto& /*component*/){
 					return module_register_fn(exec_fn{exec{}});
-				})
+				}))
 			}, init);
 		fn("register_0_module_1", disposer.component_declarant());
 	}

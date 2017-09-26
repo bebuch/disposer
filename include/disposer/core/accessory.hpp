@@ -96,12 +96,13 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class module_accessory
-		: public add_log< module_accessory< DimensionList, RefList ... > >{
+	class module_make_accessory
+		: public add_log<
+			module_make_accessory< DimensionList, RefList ... > >{
 	public:
 		using dimension_list = DimensionList;
 
-		module_accessory(
+		module_make_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view log_fn
@@ -149,12 +150,13 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class component_accessory
-		: public add_log< component_accessory< DimensionList, RefList ... > >{
+	class component_make_accessory
+		: public add_log<
+			component_make_accessory< DimensionList, RefList ... > >{
 	public:
 		using dimension_list = DimensionList;
 
-		component_accessory(
+		component_make_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view log_fn

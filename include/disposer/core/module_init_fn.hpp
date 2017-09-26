@@ -107,7 +107,7 @@ namespace disposer{
 
  		constexpr explicit module_init_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
-			: fn_(static_cast< Fn&& >(fn)) {}
+			: fn_(std::move(fn)) {}
 
 		template <
 			typename TypeList,

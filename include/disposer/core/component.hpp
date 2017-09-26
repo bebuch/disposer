@@ -11,6 +11,7 @@
 
 #include "component_base.hpp"
 #include "component_init_fn.hpp"
+#include "component_accessory.hpp"
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"
@@ -32,7 +33,7 @@ namespace disposer{
 
 		/// \brief Actual user defined component object
 		using state_type = std::invoke_result_t<
-			component_init_fn< ComponentInitFn > const, accessory_type&& >;
+			component_init_fn< ComponentInitFn > const, accessory_type >;
 
 
 		/// \brief Constructor
@@ -45,6 +46,8 @@ namespace disposer{
 			component_init_fn< ComponentInitFn > const& component_fn
 		)
 			: component_base(name, type_name)
+			, accessory(type_list< Ts ... >{},
+				state_, data_.parameters, location)
 			, data_(std::move(ref_list))
 			, state_(component_fn(accessory_type(data_, location))) {}
 
@@ -54,6 +57,10 @@ namespace disposer{
 
 		/// \brief Components are not movable
 		component(component&&) = delete;
+
+
+		/// \brief Accessory object in component modules
+		component_accessory< TypeList, state_type, Parameters > accessory;
 
 
 	private:

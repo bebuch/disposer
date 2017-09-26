@@ -74,7 +74,7 @@ namespace disposer{
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
 		){
-			exec_accessory accessory{id, TypeList{}, state_.object(),
+			module_accessory accessory{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location};
 			return exec_fn_(accessory);
 		}

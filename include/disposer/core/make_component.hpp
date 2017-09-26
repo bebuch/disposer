@@ -200,7 +200,7 @@ namespace disposer{
 					dims,
 					maker.parser,
 					maker.default_value_generator,
-					component_accessory{dims, iops, data.location()},
+					component_make_accessory{dims, iops, data.location()},
 					param_data_ptr
 				)};
 
@@ -224,7 +224,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops),
-				fn(component_accessory{dims, iops, data.location()}));
+				fn(component_make_accessory{dims, iops, data.location()}));
 		}
 
 
@@ -254,13 +254,13 @@ namespace disposer{
 
 				// register the component modules for this component instance
 				hana::for_each(module_maker_list.module_maker_list,
-					[this, &component]
-					(auto const& component_module_maker){
-						component_module_maker.module_register_fn(component)(
-							data.name + "//"
-								+ std::string(component_module_maker.name),
-							disposer.module_declarant()
-						);
+					[this, &component](auto const& component_module_maker){
+						auto register_fn = component_module_maker
+							.module_register_fn(component.accessory);
+
+						register_fn(data.name + "//"
+							+ std::string(component_module_maker.name),
+							disposer.module_declarant());
 					});
 
 				return result;

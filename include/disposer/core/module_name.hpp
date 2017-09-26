@@ -28,21 +28,20 @@ namespace disposer{
 
  		constexpr explicit register_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
-			: fn_(static_cast< Fn&& >(fn)) {}
+			: fn_(std::move(fn)) {}
 
-		template < typename TypeList, typename Parameters, typename State >
+		template < typename TypeList, typename State, typename Parameters >
 		auto operator()(
-			component_accessory< TypeList, Parameters, State >&& accessory
+			component_accessory< TypeList, State, Parameters >& accessory
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
-				component_accessory< TypeList, Parameters, State > >
+				component_accessory< TypeList, State, Parameters >& >
 			){
-				static_assert(!std::is_void_v< std::invoke_result_t<
-					Fn const, component_accessory< TypeList,
-						Parameters, State > > >,
+				static_assert(!std::is_void_v< std::invoke_result_t< Fn const,
+					component_accessory< TypeList, State, Parameters >& > >,
 					"Fn must not return void");
-				return std::invoke(fn_, std::move(accessory));
+				return std::invoke(fn_, accessory);
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be const invokable with "
@@ -89,24 +88,14 @@ namespace disposer{
 	to_module_name(hana::string< C ... >)noexcept{ return {}; }
 
 
-		/// \brief Creates a \ref module_register_fn object
-		template < typename ModuleRegisterFn >
-		constexpr auto operator()(
-			ModuleRegisterFn&& module_register_fn
-		)const{
-		}
-
 	template < char ... C, typename ModuleRegisterFn >
 	constexpr auto make(
-		module_name< C ... > const&,
-		register_fn< ModuleRegisterFn >&& fn
+		module_name< C ... > const& name,
+		register_fn< ModuleRegisterFn > fn
 	){
 		return component_module_maker<
-				std::remove_reference_t< ModuleRegisterFn >
-			>{
-				detail::to_std_string_view(this->value),
-				static_cast< ModuleRegisterFn&& >(module_register_fn)
-			};
+				std::remove_reference_t< ModuleRegisterFn > >
+			{detail::to_std_string_view(name), std::move(fn)};
 	}
 
 

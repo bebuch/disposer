@@ -340,7 +340,7 @@ namespace disposer{
 					dims,
 					maker.parser,
 					maker.default_value_generator,
-					module_accessory{dims, iops, data.location()},
+					module_make_accessory{dims, iops, data.location()},
 					param_data_ptr
 				)};
 
@@ -364,7 +364,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops),
-				fn(module_accessory{dims, iops, data.location()}));
+				fn(module_make_accessory{dims, iops, data.location()}));
 		}
 
 
