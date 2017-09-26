@@ -33,6 +33,9 @@ namespace disposer{
 	struct input_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
+
+		/// \brief input_name object
+		static constexpr auto name = Name{};
 	};
 
 

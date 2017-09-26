@@ -39,6 +39,9 @@ namespace disposer{
 		/// \brief Tag for boost::hana
 		using hana_tag = parameter_maker_tag;
 
+		/// \brief parameter_name object
+		static constexpr auto name = Name{};
+
 		/// \brief Parameter parser function
 		parser_fn< ParserFn > parser;
 
