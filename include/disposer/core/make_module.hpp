@@ -14,6 +14,7 @@
 #include "make_output.hpp"
 #include "make_parameter.hpp"
 #include "set_dimension_fn.hpp"
+#include "verify_fn.hpp"
 
 #include "../config/validate_iop.hpp"
 #include "../config/module_make_data.hpp"
@@ -356,6 +357,22 @@ namespace disposer{
 			std::size_t Offset,
 			typename ... Config,
 			typename ... IOPs >
+		std::unique_ptr< module_base > exec_verify_fn(
+			verify_fn< Fn > const& fn,
+			dimension_list< Ds ... > dims,
+			detail::config_queue< Offset, Config ... > const& configs,
+			iops_ref< IOPs ... >&& iops
+		)const{
+			fn(module_make_accessory{dims, iops, data.location()});
+			return make_module(dims, configs, std::move(iops));
+		}
+
+		template <
+			typename Fn,
+			typename ... Ds,
+			std::size_t Offset,
+			typename ... Config,
+			typename ... IOPs >
 		std::unique_ptr< module_base > exec_set_dimension_fn(
 			set_dimension_fn< Fn > const& fn,
 			dimension_list< Ds ... > dims,
@@ -391,7 +408,9 @@ namespace disposer{
 				using hana::is_a;
 				auto const& config = configs.front();
 
-				if constexpr(auto c = is_a< input_maker_tag >(config); c){
+				if constexpr(
+					auto c = is_a< input_maker_tag >(config); c
+				){
 					return exec_make_input(config, dims, configs.next(),
 						std::move(iops));
 				}else if constexpr(
@@ -403,6 +422,11 @@ namespace disposer{
 					auto c = is_a< parameter_maker_tag >(config); c
 				){
 					return exec_make_parameter(config, dims, configs.next(),
+						std::move(iops));
+				}else if constexpr(
+					auto c = is_a< verify_fn_tag >(config); c
+				){
+					return exec_verify_fn(config, dims, configs.next(),
 						std::move(iops));
 				}else{
 					auto is_set_dimension_fn =

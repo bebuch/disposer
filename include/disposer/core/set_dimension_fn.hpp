@@ -62,16 +62,16 @@ namespace disposer{
 		/// \brief Helper for noexcept of operator()
 		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_v< Fn, Accessory const& >,
+			static_assert(std::is_invocable_v< Fn const, Accessory const& >,
 				"Wrong function signature, expected: "
-				"solved_dimensions< Ds ... > f(auto const& iops)"
-			);
+				"solved_dimensions< Ds ... > f(auto const& iops)");
 
-			using result_type = std::invoke_result_t< Fn, Accessory const& >;
+			using result_type =
+				std::invoke_result_t< Fn const, Accessory const& >;
 
 			check_result_type< result_type >();
 
-			return std::is_nothrow_invocable_v< Fn, Accessory const& >;
+			return std::is_nothrow_invocable_v< Fn const, Accessory const& >;
 		}
 
 		/// \brief Calls the actual function

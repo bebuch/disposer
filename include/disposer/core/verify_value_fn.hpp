@@ -39,22 +39,12 @@ namespace disposer{
 
 
 		template < typename T >
-		static constexpr bool calc_noexcept()noexcept{
+		void operator()(std::string_view location, T const& value)const
+		noexcept(std::is_same_v< Fn, verify_value_always_t >){
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
 				static_assert(std::is_invocable_v< Fn const, T >,
 					"Wrong function signature, expected: void f(auto value)");
 
-				return noexcept(
-					std::declval< Fn const >()(std::declval< T >()));
-			}else{
-				return false;
-			}
-		}
-
-		template < typename T >
-		void operator()(std::string_view location, T const& value)const
-		noexcept(calc_noexcept< T >()){
-			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
 				logsys::log([location](logsys::stdlogb& os){
 						os << location << "verified value of type ["
 							<< type_index::type_id< T >().pretty_name() << "]";
