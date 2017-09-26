@@ -13,6 +13,7 @@
 #include "dimension_referrer.hpp"
 #include "parser_fn.hpp"
 #include "default_value_fn.hpp"
+#include "verify_value_fn.hpp"
 
 #include "../config/module_make_data.hpp"
 
@@ -32,7 +33,8 @@ namespace disposer{
 		typename Name,
 		typename DimensionReferrer,
 		typename ParserFn,
-		typename DefaultValueFn >
+		typename DefaultValueFn,
+		typename VerfiyValueFn >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
 		using hana_tag = parameter_maker_tag;
@@ -42,6 +44,9 @@ namespace disposer{
 
 		/// \brief Default value function
 		default_value_fn< DefaultValueFn > default_value_generator;
+
+		/// \brief Verfiy value function
+		verify_value_fn< VerfiyValueFn > verify_value;
 	};
 
 
@@ -50,21 +55,25 @@ namespace disposer{
 		template < typename ... > typename Template,
 		std::size_t ... D,
 		typename ParserFn,
-		typename DefaultValueFn >
+		typename DefaultValueFn,
+		typename VerfiyValueFn >
 	constexpr auto create_parameter_maker(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const&,
 		parser_fn< ParserFn > parser,
-		default_value_fn< DefaultValueFn > default_value_generator
+		default_value_fn< DefaultValueFn > default_value_generator,
+		verify_value_fn< VerfiyValueFn > verify_value
 	){
 		return parameter_maker<
 				parameter_name< C ... >,
 				dimension_referrer< Template, D ... >,
 				ParserFn,
-				DefaultValueFn
+				DefaultValueFn,
+				VerfiyValueFn
 			>{
 				std::move(parser),
-				std::move(default_value_generator)
+				std::move(default_value_generator),
+				std::move(verify_value)
 			};
 	}
 
@@ -81,7 +90,7 @@ namespace disposer{
 		Args&& ... args
 	){
 		detail::validate_arguments< parser_fn_tag,
-			default_value_fn_tag >(args ...);
+			default_value_fn_tag, verify_value_fn_tag >(args ...);
 
 		auto arg_tuple = hana::make_tuple(static_cast< Args&& >(args) ...);
 
@@ -93,7 +102,10 @@ namespace disposer{
 				stream_parser),
 			get_or_default(std::move(arg_tuple),
 				hana::is_a< default_value_fn_tag >,
-				auto_default));
+				auto_default),
+			get_or_default(std::move(arg_tuple),
+				hana::is_a< verify_value_fn_tag >,
+				verify_value_always));
 	}
 
 
@@ -111,17 +123,23 @@ namespace disposer{
 		typename DimensionList,
 		typename ParserFn,
 		typename DefaultValueFn,
+		typename VerfiyValueFn,
 		typename Accessory >
 	static T get_parameter_value(
 		DimensionList const&,
 		parser_fn< ParserFn > const& parser,
 		default_value_fn< DefaultValueFn > const& default_value_generator,
+		verify_value_fn< VerfiyValueFn > const& verify_value,
 		Accessory const& accessory,
 		parameter_data const* param_data_ptr
 	){
 		if(param_data_ptr != nullptr && param_data_ptr->generic_value){
-			return parser(accessory,
-				*param_data_ptr->generic_value, hana::type_c< T >);
+			T result(parser(accessory,
+				*param_data_ptr->generic_value, hana::type_c< T >));
+
+			verify_value(accessory.location, result);
+
+			return result;
 		}
 
 		if constexpr(

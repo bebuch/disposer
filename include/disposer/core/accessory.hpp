@@ -105,8 +105,8 @@ namespace disposer{
 		module_make_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
-			std::string_view log_fn
-		)noexcept: list_(list), log_fn_(log_fn) {}
+			std::string_view location
+		)noexcept: location(location), list_(list) {}
 
 
 		/// \brief Get const reference to an input-, output- or parameter-object
@@ -136,16 +136,16 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << log_fn_;
+			os << location;
 		}
+
+		/// \brief Log location
+		std::string_view location;
 
 
 	private:
 		/// \brief References to all previous IOPs
 		iops_ref< RefList ... > const& list_;
-
-		/// \brief Log location
-		std::string_view log_fn_;
 	};
 
 
@@ -159,8 +159,8 @@ namespace disposer{
 		component_make_accessory(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
-			std::string_view log_fn
-		)noexcept: list_(list), log_fn_(log_fn) {}
+			std::string_view location
+		)noexcept: location(location), list_(list) {}
 
 
 		/// \brief Get const reference to an parameter-object
@@ -186,16 +186,16 @@ namespace disposer{
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << log_fn_;
+			os << location;
 		}
+
+		/// \brief Log location
+		std::string_view location;
 
 
 	private:
 		/// \brief References to all previous IOPs
 		iops_ref< RefList ... > const& list_;
-
-		/// \brief Log location
-		std::string_view log_fn_;
 	};
 
 
