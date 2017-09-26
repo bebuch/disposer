@@ -15,6 +15,8 @@
 namespace disposer{
 
 
+	struct module_register_fn_tag;
+
 	template < typename Fn >
 	class register_fn{
 	public:
@@ -38,9 +40,10 @@ namespace disposer{
 			if constexpr(std::is_invocable_v< Fn const,
 				component_accessory< TypeList, State, Parameters >& >
 			){
-				static_assert(!std::is_void_v< std::invoke_result_t< Fn const,
-					component_accessory< TypeList, State, Parameters >& > >,
-					"Fn must not return void");
+				static_assert(hana::is_a< module_register_fn_tag,
+						std::invoke_result_t< Fn const, component_accessory<
+							TypeList, State, Parameters >& > >(),
+					"register_fn Fn must return a module_register_fn");
 				return std::invoke(fn_, accessory);
 			}else{
 				static_assert(detail::false_c< Fn >,
