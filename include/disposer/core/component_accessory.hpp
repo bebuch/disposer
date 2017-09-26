@@ -10,10 +10,17 @@
 #define _disposer__core__component_accessory__hpp_INCLUDED_
 
 #include "../tool/add_log.hpp"
+#include "../tool/false_c.hpp"
+
+#include <boost/hana/core/is_a.hpp>
+#include <boost/hana/index_if.hpp>
+#include <boost/hana/optional.hpp>
 
 
 namespace disposer{
 
+
+	struct parameter_name_tag;
 
 	/// \brief Accessory of a component in component modules
 	template <

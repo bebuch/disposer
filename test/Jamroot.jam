@@ -144,3 +144,10 @@ exe make_component
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe register_fn
+	:
+	register_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
