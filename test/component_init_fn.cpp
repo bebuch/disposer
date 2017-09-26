@@ -19,4 +19,11 @@ int main(){
 
 	// Must fail:
 // 	test(component_init_fn([](auto&){ return 0; }));
+
+// 	test(component_init_fn([]()mutable{ return 0; }));
+// 	test(component_init_fn([](auto)mutable{ return 0; }));
+// 	test(component_init_fn([](auto const&)mutable{ return 0; }));
+// 	test(component_init_fn([](auto&&)mutable{ return 0; }));
+// 	test(component_init_fn([](auto const&&)mutable{ return 0; }));
+// 	test(component_init_fn([](auto&)mutable{ return 0; }));
 }
