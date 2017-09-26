@@ -40,32 +40,26 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T, typename ... Ts >
+		template < typename Accessory, typename T >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(
 				std::is_invocable_r_v< T, Fn const, Accessory const&,
-					std::string_view, hana::basic_type< T >,
-					hana::basic_type< Ts > ... >,
+					std::string_view, hana::basic_type< T > >,
 				"Wrong function signature, expected: "
 				"T f(auto const& iop, std::string_view value, "
-				"hana::basic_type< T > type, "
-				"hana::basic_type< Ts > ... type_dependancies)"
+				"hana::basic_type< T > type)"
 			);
 
 			return std::is_nothrow_invocable_v< Fn const, Accessory const&,
-				std::string_view, hana::basic_type< T >,
-				hana::basic_type< Ts > ... >;
+				std::string_view, hana::basic_type< T > >;
 		}
 
-		template < typename Accessory, typename T, typename ... Ts >
+		template < typename Accessory, typename T >
 		T operator()(
 			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< T > type,
-			hana::basic_type< Ts > ... type_dependancies
-		)const noexcept(
-			calc_noexcept< Accessory, T, hana::basic_type< Ts > ... >()
-		){
+			hana::basic_type< T > type
+		)const noexcept(calc_noexcept< Accessory, T >()){
 			return accessory.log(
 				[](logsys::stdlogb& os, T const* value){
 					os << "parsed value";
@@ -75,11 +69,8 @@ namespace disposer{
 					}
 					os << " ["
 						<< type_index::type_id< T >().pretty_name() << "]";
-				}, [&]()noexcept(
-					calc_noexcept< Accessory, T, hana::basic_type< Ts > ... >()
-				)->T{
-					return std::invoke(fn_, accessory, value, type,
-						type_dependancies ...);
+				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
+					return std::invoke(fn_, accessory, value, type);
 				});
 		}
 
@@ -102,12 +93,11 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T, typename ... Ts >
+		template < typename Accessory, typename T >
 		T operator()(
 			Accessory const& /*accessory*/,
 			std::string_view value,
-			hana::basic_type< T > type,
-			hana::basic_type< Ts > ... /*type_dependancies*/
+			hana::basic_type< T > type
 		)const{
 			if constexpr(type == hana::type_c< std::string >){
 				return std::string(value);
@@ -135,15 +125,13 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T, typename ... Ts >
+		template < typename Accessory, typename T >
 		std::optional< T > operator()(
 			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< std::optional< T > >,
-			hana::basic_type< Ts > ... type_dependancies
+			hana::basic_type< std::optional< T > >
 		)const{
-			return (*this)(accessory, value, hana::type_c< T >,
-				type_dependancies ...);
+			return (*this)(accessory, value, hana::type_c< T >);
 		}
 	};
 
