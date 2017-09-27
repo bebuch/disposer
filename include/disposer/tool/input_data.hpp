@@ -48,6 +48,10 @@ namespace disposer{
 		input_data(container_type&& data)
 			: data_(std::move(data)) {}
 
+		/// \brief Constructor
+		input_data(container_type const& data)
+			: data_(data) {}
+
 		/// \brief input_data is nighter copy nor movable
 		input_data(input_data const&) = delete;
 
