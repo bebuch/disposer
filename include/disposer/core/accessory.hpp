@@ -108,6 +108,10 @@ namespace disposer{
 			std::string_view location
 		)noexcept: location(location), list_(list) {}
 
+		module_make_accessory(module_make_accessory const& other)noexcept
+			: location(other.location)
+			, list_(other.list_) {}
+
 
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
@@ -161,6 +165,10 @@ namespace disposer{
 			iops_ref< RefList ... > const& list,
 			std::string_view location
 		)noexcept: location(location), list_(list) {}
+
+		component_make_accessory(component_make_accessory const& other)noexcept
+			: location(other.location)
+			, list_(other.list_) {}
 
 
 		/// \brief Get const reference to an parameter-object

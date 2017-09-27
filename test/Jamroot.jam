@@ -151,3 +151,10 @@ exe register_fn
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe set_dimension_fn
+	:
+	set_dimension_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;

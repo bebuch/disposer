@@ -13,8 +13,8 @@ void test(Fn const& fn){
 int main(){
 	test(component_init_fn([]{ return 0; }));
 	test(component_init_fn([](auto){ return 0; }));
-	test(component_init_fn([](auto const&){ return 0; }));
 	test(component_init_fn([](auto&&){ return 0; }));
+	test(component_init_fn([](auto const&){ return 0; }));
 	test(component_init_fn([](auto const&&){ return 0; }));
 
 	// Must fail:

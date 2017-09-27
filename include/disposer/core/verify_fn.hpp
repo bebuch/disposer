@@ -39,7 +39,7 @@ namespace disposer{
 		void operator()(Accessory const& accessory)const noexcept(false){
 			static_assert(std::is_invocable_v< Fn const, Accessory const& >,
 				"Wrong function signature, expected: "
-				"void f(auto const& iops)");
+				"void f(auto accessory)");
 
 			accessory.log([](logsys::stdlogb& os){
 					os << "verfiy";

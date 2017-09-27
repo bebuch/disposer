@@ -10,5 +10,6 @@
 #define _disposer__component__hpp_INCLUDED_
 
 #include "core/register_component.hpp"
+#include "core/register_module.hpp"
 
 #endif
