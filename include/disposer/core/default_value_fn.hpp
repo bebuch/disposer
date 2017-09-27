@@ -97,9 +97,7 @@ namespace disposer{
 		T operator()(
 			Accessory const& accessory,
 			hana::basic_type< T > type
-		)const noexcept(
-			calc_noexcept< Accessory, T >()
-		){
+		)const noexcept(calc_noexcept< Accessory, T >()){
 			return accessory.log([](logsys::stdlogb& os, T const* value){
 					if(value){
 						os << "generated default value: ";

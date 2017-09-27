@@ -38,17 +38,25 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename T >
-		void operator()(std::string_view location, T const& value)const
+		template < typename Accessory, typename T >
+		void operator()(Accessory const& accessory, T const& value)const
 		noexcept(std::is_same_v< Fn, verify_value_always_t >){
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
-				static_assert(std::is_invocable_v< Fn const, T >,
-					"Wrong function signature, expected: void f(auto value)");
+				static_assert(std::is_invocable_v< Fn const, T > ||
+					std::is_invocable_v< Fn const, T, Accessory >,
+					"Wrong function signature, expected: "
+					"void f(auto value) or void f(auto value, auto accessory)");
 
-				logsys::log([location](logsys::stdlogb& os){
-						os << location << "verified value of type ["
+				accessory.log([](logsys::stdlogb& os){
+						os << "verified value of type ["
 							<< type_index::type_id< T >().pretty_name() << "]";
-					}, [&]{ std::invoke(fn_, value); });
+					}, [&]{
+						if constexpr(std::is_invocable_v< Fn const, T >){
+							return std::invoke(fn_, value);
+						}else{
+							return std::invoke(fn_, value, accessory);
+						}
+					});
 			}
 		}
 

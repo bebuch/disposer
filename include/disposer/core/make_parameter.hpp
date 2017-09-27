@@ -140,7 +140,7 @@ namespace disposer{
 			T result(parser(accessory,
 				*param_data_ptr->generic_value, hana::type_c< T >));
 
-			verify_value(accessory.location, result);
+			verify_value(accessory, result);
 
 			return result;
 		}
