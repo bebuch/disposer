@@ -9,6 +9,8 @@
 #ifndef _disposer__core__component_accessory__hpp_INCLUDED_
 #define _disposer__core__component_accessory__hpp_INCLUDED_
 
+#include "disposer.hpp"
+
 #include "../tool/add_log.hpp"
 #include "../tool/false_c.hpp"
 
@@ -37,10 +39,12 @@ namespace disposer{
 			TypeList,
 			State& state,
 			Parameters const& parameters,
+			::disposer::disposer& disposer,
 			std::string_view location
 		)
 			: state_(state)
 			, parameters_(parameters)
+			, disposer_(disposer)
 			, location_(location) {}
 
 
@@ -69,6 +73,21 @@ namespace disposer{
 		/// \brief Get access to the state object if one exists
 		auto& state()noexcept{
 			return state_;
+		}
+
+		/// \brief Get read only access to the state object if one exists
+		auto const& state()const noexcept{
+			return state_;
+		}
+
+		/// \brief Get reference to the disposer object
+		::disposer::disposer& disposer()noexcept{
+			return disposer_;
+		}
+
+		/// \brief Get const reference to the disposer object
+		::disposer::disposer const& disposer()const noexcept{
+			return disposer_;
 		}
 
 
@@ -102,6 +121,9 @@ namespace disposer{
 
 		/// \brief hana::tuple of parameters
 		Parameters const& parameters_;
+
+		/// \brief Reference to the disposer object
+		::disposer::disposer& disposer_;
 
 		/// \brief Prefix for log messages
 		std::string_view location_;

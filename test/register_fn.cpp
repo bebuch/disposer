@@ -10,12 +10,13 @@ struct result{
 	using hana_tag = module_register_fn_tag;
 };
 
+::disposer::disposer d;
 
 template < typename Fn >
 void test(Fn const& fn){
 	int state = 0;
 	auto const params = hana::make_tuple();
-	component_accessory accessory{hana::make_tuple(), state, params, ""};
+	component_accessory accessory{hana::make_tuple(), state, params, d, ""};
 
 	fn(accessory);
 }

@@ -153,23 +153,28 @@ namespace disposer{
 					using type = typename
 						DimensionReferrer::template type< DimensionList >;
 
-					if(IsRequired || output_ptr != nullptr){
-						constexpr auto active_ti
-							= type_index::type_id< type >();
-						auto const output_ti = output_ptr->get_type();
+					if constexpr(std::is_void_v< type >){
+						return base.make_module(DimensionList{}, configs,
+							std::move(iops));
+					}else{
+						if(IsRequired || output_ptr != nullptr){
+							constexpr auto active_ti
+								= type_index::type_id< type >();
+							auto const output_ti = output_ptr->get_type();
 
-						if(output_ti != active_ti){
-							throw std::logic_error("type of input is ["
-								+ active_ti.pretty_name()
-								+ "] but connected output is of type ["
-								+ output_ti.pretty_name() + "]");
+							if(output_ti != active_ti){
+								throw std::logic_error("type of input is ["
+									+ active_ti.pretty_name()
+									+ "] but connected output is of type ["
+									+ output_ti.pretty_name() + "]");
+							}
 						}
+
+						input< Name, type, IsRequired > input{output_ptr};
+
+						return base.make_module(DimensionList{}, configs,
+							iops_ref(std::move(input), std::move(iops)));
 					}
-
-					input< Name, type, IsRequired > input{output_ptr};
-
-					return base.make_module(DimensionList{}, configs,
-						iops_ref(std::move(input), std::move(iops)));
 				}
 			}
 		};
@@ -304,13 +309,17 @@ namespace disposer{
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
 
-			auto const use_count = get_use_count(data.outputs,
-				detail::to_std_string_view(Name{}));
+			if constexpr(std::is_void_v< type >){
+				return make_module(dims, configs, std::move(iops));
+			}else{
+				auto const use_count = get_use_count(data.outputs,
+					detail::to_std_string_view(Name{}));
 
-			output< Name, type > output{use_count};
+				output< Name, type > output{use_count};
 
-			return make_module(dims, configs,
-				iops_ref(std::move(output), std::move(iops)));
+				return make_module(dims, configs,
+					iops_ref(std::move(output), std::move(iops)));
+			}
 		}
 
 		template <
@@ -335,20 +344,24 @@ namespace disposer{
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
 
-			auto const param_data_ptr = get_parameter_data(data.parameters,
-				detail::to_std_string_view(Name{}));
+			if constexpr(std::is_void_v< type >){
+				return make_module(dims, configs, std::move(iops));
+			}else{
+				auto const param_data_ptr = get_parameter_data(data.parameters,
+					detail::to_std_string_view(Name{}));
 
-			parameter< Name, type > parameter{get_parameter_value< type >(
-					dims,
-					maker.parser,
-					maker.default_value_generator,
-					maker.verify_value,
-					module_make_accessory{dims, iops, data.location()},
-					param_data_ptr
-				)};
+				parameter< Name, type > parameter{get_parameter_value< type >(
+						dims,
+						maker.parser,
+						maker.default_value_generator,
+						maker.verify_value,
+						module_make_accessory{dims, iops, data.location()},
+						param_data_ptr
+					)};
 
-			return make_module(dims, configs,
-				iops_ref(std::move(parameter), std::move(iops)));
+				return make_module(dims, configs,
+					iops_ref(std::move(parameter), std::move(iops)));
+			}
 		}
 
 		template <

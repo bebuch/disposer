@@ -42,14 +42,15 @@ namespace disposer{
 			type_list< Ts ... >,
 			std::string const& name,
 			std::string const& type_name,
+			disposer& disposer,
 			hana::tuple< RefList ... >&& ref_list,
 			component_init_fn< ComponentInitFn > const& component_fn
 		)
 			: component_base(name, type_name)
 			, accessory(type_list< Ts ... >{},
-				state_, data_.parameters, location)
+				state_, data_.parameters, disposer, location)
 			, data_(std::move(ref_list))
-			, state_(component_fn(accessory_type(data_, location))) {}
+			, state_(component_fn(accessory_type(data_, disposer, location))) {}
 
 
 		/// \brief Components are not copyable
@@ -92,6 +93,7 @@ namespace disposer{
 		type_list< Ts ... >,
 		std::string const&,
 		std::string const&,
+		disposer& disposer,
 		hana::tuple< RefList ... >&&,
 		component_init_fn< ComponentInitFn > const&
 	)

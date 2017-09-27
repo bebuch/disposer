@@ -194,20 +194,24 @@ namespace disposer{
 			using type = typename
 				DimensionReferrer::template type< dimension_list< Ds ... > >;
 
-			auto const param_data_ptr = get_parameter_data(data.parameters,
-				detail::to_std_string_view(Name{}));
+			if constexpr(std::is_void_v< type >){
+				return make_module(dims, configs, std::move(iops));
+			}else{
+				auto const param_data_ptr = get_parameter_data(data.parameters,
+					detail::to_std_string_view(Name{}));
 
-			parameter< Name, type > parameter{get_parameter_value< type >(
-					dims,
-					maker.parser,
-					maker.default_value_generator,
-					maker.verify_value,
-					component_make_accessory{dims, iops, data.location()},
-					param_data_ptr
-				)};
+				parameter< Name, type > parameter{get_parameter_value< type >(
+						dims,
+						maker.parser,
+						maker.default_value_generator,
+						maker.verify_value,
+						component_make_accessory{dims, iops, data.location()},
+						param_data_ptr
+					)};
 
-			return make_component(dims, configs,
-				iops_ref(std::move(parameter), std::move(iops)));
+				return make_component(dims, configs,
+					iops_ref(std::move(parameter), std::move(iops)));
+			}
 		}
 
 		template <
@@ -264,7 +268,7 @@ namespace disposer{
 				// information then immediately transfer the ownership to a
 				// unique_ptr of the base class
 				auto const component_ptr = new component{
-					type_list{dims}, data.name, data.type_name,
+					type_list{dims}, data.name, data.type_name, disposer,
 					std::move(iops).flat(), component_init};
 
 				std::unique_ptr< component_base > result(component_ptr);

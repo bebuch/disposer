@@ -23,9 +23,11 @@ namespace disposer{
 		/// \brief Constructor
 		component_init_accessory(
 			component_data< TypeList, Parameters > const& data,
+			::disposer::disposer& disposer,
 			std::string_view location
 		)
 			: data_(data)
+			, disposer_(disposer)
 			, location_(location) {}
 
 
@@ -56,6 +58,16 @@ namespace disposer{
 			return TypeList::types[i];
 		}
 
+		/// \brief Get reference to the disposer object
+		::disposer::disposer& disposer()noexcept{
+			return disposer_;
+		}
+
+		/// \brief Get const reference to the disposer object
+		::disposer::disposer const& disposer()const noexcept{
+			return disposer_;
+		}
+
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
@@ -66,6 +78,9 @@ namespace disposer{
 	private:
 		/// \brief Reference to the component object
 		component_data< TypeList, Parameters > const& data_;
+
+		/// \brief Reference to the disposer object
+		::disposer::disposer& disposer_;
 
 		/// \brief Location for log messages
 		std::string_view location_;
