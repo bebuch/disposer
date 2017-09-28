@@ -12,6 +12,7 @@
 #include "id_generator.hpp"
 
 #include "../config/embedded_config.hpp"
+#include "../config/create_chain_modules.hpp"
 
 #include "../tool/module_ptr.hpp"
 
@@ -102,7 +103,7 @@ namespace disposer{
 
 
 		/// \brief List of modules
-		std::vector< module_ptr > const modules_;
+		chain_module_list const modules_;
 
 
 		/// \brief Referenz to the id_generator

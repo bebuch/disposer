@@ -9,6 +9,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <cassert>
+#include <algorithm>
 
 
 namespace disposer{ namespace{
@@ -17,17 +18,16 @@ namespace disposer{ namespace{
 	struct output_t{
 		output_t(
 			module_base const& module,
-			output_base& output
+			output_base& ptr,
+			std::size_t output_module_number
 		)noexcept
 			: module(module)
-			, output(output) {}
-
-// 		output_t(output_t const& other)noexcept
-// 			: module(other.module)
-// 			, output(other.output) {}
+			, ptr(ptr)
+			, output_module_number(output_module_number) {}
 
 		module_base const& module;
-		output_base& output;
+		output_base& ptr;
+		std::size_t output_module_number;
 	};
 
 	/// \brief Map from a variable name to an output
@@ -62,13 +62,13 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	std::vector< module_ptr > create_chain_modules(
+	chain_module_list create_chain_modules(
 		module_maker_list const& maker_list,
 		types::embedded_config::chain const& config_chain
 	){
 		variables_map variables;
 
-		std::vector< module_ptr > modules;
+		chain_module_list result;
 
 		for(std::size_t i = 0; i < config_chain.modules.size(); ++i){
 			auto const& config_module = config_chain.modules[i];
@@ -79,18 +79,27 @@ namespace disposer{
 			}, [&]{
 				// create input list
 				input_list config_inputs;
-				for(auto const& config_input: config_module.inputs){
-					// find variable
-					auto const iter = variables.find(config_input.variable);
-					assert(iter != variables.end());
+				if(config_module.inputs.empty()){
+					// add as starter module
+					result.start_indexes.push_back(i);
+				}else{
+					for(auto const& config_input: config_module.inputs){
+						// find variable
+						auto const iter = variables.find(config_input.variable);
+						assert(iter != variables.end());
 
-					// emplace input with connected output
-					auto const output_ptr = &(iter->second.output);
-					config_inputs.emplace(config_input.name, output_ptr);
+						// emplace input with connected output
+						auto const& output_data = iter->second;
+						auto const output_ptr = &(output_data.ptr);
+						config_inputs.emplace(config_input.name, output_ptr);
 
-					// remove config file variable if final use
-					if(config_input.transfer == in_transfer::move){
-						variables.erase(iter);
+						result.modules[output_data.output_module_number]
+							.next_indexes.push_back(i);
+
+						// remove config file variable if final use
+						if(config_input.transfer == in_transfer::move){
+							variables.erase(iter);
+						}
 					}
 				}
 
@@ -101,17 +110,18 @@ namespace disposer{
 				}
 
 				// create module (in a unique_ptr)
-				modules.push_back(create_module(maker_list, {
-					config_module.type_name,
-					config_chain.name,
-					i + 1,
-					std::move(config_inputs),
-					std::move(config_outputs),
-					config_module.parameters
-				}));
+				result.modules.push_back(
+					chain_module_data{create_module(maker_list, {
+						config_module.type_name,
+						config_chain.name,
+						i + 1,
+						std::move(config_inputs),
+						std::move(config_outputs),
+						config_module.parameters
+					}), config_module.inputs.size(), {}});
 
 				// get a reference to the new module
-				auto& module = *modules.back();
+				auto& module = *result.modules.back().module;
 
 				// get outputs and add them to variables-output-map
 				auto const output_map = module.output_name_to_ptr();
@@ -119,7 +129,8 @@ namespace disposer{
 					variables.try_emplace(
 						config_output.variable,
 						module,
-						*output_map.at(config_output.name)
+						*output_map.at(config_output.name),
+						i
 					);
 				}
 			});
@@ -127,7 +138,16 @@ namespace disposer{
 
 		assert(variables.empty());
 
-		return modules;
+		for(auto& module: result.modules){
+			auto const first = module.next_indexes.begin();
+			auto const last = module.next_indexes.end();
+			std::sort(first, last);
+			auto const end = std::unique(first, last);
+			module.next_indexes.erase(end, last);
+			module.precursor_count -= last - end;
+		}
+
+		return result;
 	}
 
 
