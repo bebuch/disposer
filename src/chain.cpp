@@ -142,27 +142,29 @@ namespace disposer{
 				try{
 					// enable all modules
 					for(; i < modules_.modules.size(); ++i){
-						logsys::log([this, i](logsys::stdlogb& os){
+						auto& module = modules_.modules[i].module;
+						logsys::log([this, &module](logsys::stdlogb& os){
 								os << "chain(" << name << ") module("
-									<< modules_.modules[i].module->number << ":"
-									<< modules_.modules[i].module->type_name
+									<< module->number << ":"
+									<< module->type_name
 									<< ") enabled";
-							}, [this, i]{
-								modules_.modules[i].module->enable();
+							}, [&module]{
+								module->enable();
 							});
 					}
 				}catch(...){
 					// disable all modules until the one who throw
 					for(std::size_t j = 0; j < i; ++j){
-						logsys::log([this, i, j](logsys::stdlogb& os){
+						auto& module = modules_.modules[j].module;
+						logsys::log([this, i, &module](logsys::stdlogb& os){
 								os << "chain(" << name << ") module("
-									<< modules_.modules[j].module->number
+									<< module->number
 									<< ") disabled because of exception while "
 									<< "enable module("
 									<< modules_.modules[i].module->number
 									<< ")";
-							}, [this, j]{
-								modules_.modules[j].module->disable();
+							}, [&module]{
+								module->disable();
 							});
 					}
 
@@ -188,13 +190,13 @@ namespace disposer{
 			[this]{
 				// disable all modules
 				for(std::size_t i = 0; i < modules_.modules.size(); ++i){
-					logsys::log([this, i](logsys::stdlogb& os){
+					auto& module = modules_.modules[i].module;
+					logsys::log([this, &module](logsys::stdlogb& os){
 							os << "chain(" << name << ") module("
-								<< modules_.modules[i].module->number << ":"
-								<< modules_.modules[i].module->type_name
-								<< ") disabled";
-						}, [this, i]{
-							modules_.modules[i].module->disable();
+								<< module->number << ":"
+								<< module->type_name << ") disabled";
+						}, [&module]{
+							module->disable();
 						});
 				}
 			});
@@ -214,10 +216,10 @@ namespace disposer{
 
 		// exec or cleanup the module
 		logsys::log([this, id, i, action_name](logsys::stdlogb& os){
+			auto& module = modules_.modules[i].module;
 			os << "id(" << id << ") "
-				<< "chain(" << modules_.modules[i].module->chain << ") module("
-				<< modules_.modules[i].module->number << ":"
-				<< modules_.modules[i].module->type_name << ") " << action_name;
+				<< "chain(" << module->chain << ") module(" << module->number
+				<< ":" << module->type_name << ") " << action_name;
 		}, [i, &action]{ action(i); });
 
 		// make module ready
