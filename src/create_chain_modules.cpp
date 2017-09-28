@@ -138,6 +138,7 @@ namespace disposer{
 
 		assert(variables.empty());
 
+		// remove duplicates from next_indexes
 		for(auto& module: result.modules){
 			auto const first = module.next_indexes.begin();
 			auto const last = module.next_indexes.end();
