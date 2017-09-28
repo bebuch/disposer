@@ -59,14 +59,6 @@ namespace disposer{
 			, exec_fn_(exec_fn) {}
 
 
-		/// \brief Get reference to an input-, output- or parameter-object via
-		///        its corresponding compile time name
-		template < typename Name >
-		auto& operator()(Name const& name)noexcept{
-			return data_(name);
-		}
-
-
 		/// \brief Calls the exec_fn
 		void exec(
 			std::size_t id,

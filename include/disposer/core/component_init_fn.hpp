@@ -10,6 +10,7 @@
 #define _disposer__core__component_init_fn__hpp_INCLUDED_
 
 #include "component_data.hpp"
+#include "disposer.hpp"
 
 
 namespace disposer{
