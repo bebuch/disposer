@@ -24,7 +24,8 @@ namespace disposer{
 			std::string const& type_name
 		)
 			: name(name)
-			, type_name(type_name) {}
+			, type_name(type_name)
+			, location("component(" + name + ":" + type_name + "): ") {}
 
 
 		/// \brief Components are not copyable
@@ -46,7 +47,7 @@ namespace disposer{
 
 
 		/// \brief shutdown component if it has a shutdown function
-		virtual void shutdown(disposer_key const&) = 0;
+		virtual void shutdown() = 0;
 
 
 		/// \brief Name of the component in config file section 'component'
@@ -55,6 +56,9 @@ namespace disposer{
 		/// \brief Name of the component type given via class
 		///        component_declarant
 		std::string const type_name;
+
+		/// \brief Location text for log-messages
+		std::string const location;
 	};
 
 

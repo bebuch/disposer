@@ -12,7 +12,7 @@
 #include "input_name.hpp"
 #include "output_name.hpp"
 #include "parameter_name.hpp"
-#include "output_info.hpp"
+#include "dimension.hpp"
 
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
@@ -21,235 +21,189 @@
 #include "../tool/to_std_string_view.hpp"
 
 #include <boost/hana/map.hpp>
+#include <boost/hana/tuple.hpp>
 
 
 namespace disposer{
 
 
-	/// \brief Log Implementation for \ref iop_ref
-	struct iop_log{
-		std::string_view location;
-		std::string_view maker_type_name;
-		std::string_view maker_name;
-
-		void operator()(logsys::stdlogb& os)const{
-			os << location << " " << maker_type_name
-				<< "(" << maker_name << ") ";
-		}
+	template < typename ... RefList >
+	class iops_ref{
+	public:
+		hana::tuple<> flat()&&{ return {}; }
 	};
 
+	iops_ref() -> iops_ref<>;
 
-	/// \brief Converts a IOP hana::tuple into a hana::map
-	constexpr auto as_iop_map = [](auto&& xs){
-		return hana::to_map(hana::transform(
-			static_cast< decltype(xs)&& >(xs),
-			[](auto&& x){
-				return hana::make_pair(x.name, static_cast< decltype(x)&& >(x));
-			}));
-	};
+	template < typename IOP_Ref, typename ... RefList >
+	class iops_ref< IOP_Ref, RefList ... >{
+	public:
+		iops_ref(IOP_Ref&& ref, iops_ref< RefList ... >&& list)
+			: ref(std::move(ref)), list(std::move(list)) {}
 
-
-	using namespace std::literals::string_view_literals;
-
-	template < typename InputMaker >
-	struct input_make_data{
-		static constexpr auto log_name = "input"sv;
-
-		input_make_data(
-			InputMaker const& maker,
-			std::optional< output_info > const& info
-		)noexcept
-			: maker(maker)
-			, info(info){}
-
-// 		input_make_data(input_make_data&& other)noexcept
-// 			: maker(other.maker)
-// 			, info(std::move(other.info)) {}
-
-		InputMaker const& maker;
-		std::optional< output_info > info;
-	};
-
-	template < typename Maker >
-	struct output_make_data{
-		static constexpr auto log_name = "output"sv;
-
-		output_make_data(Maker const& maker, std::size_t use_count)noexcept
-			: maker(maker)
-			, use_count(use_count) {}
-
-// 		output_make_data(output_make_data&& other)noexcept
-// 			: maker(other.maker)
-// 			, use_count(other.use_count) {}
-
-		Maker const& maker;
-		std::size_t const use_count;
-	};
-
-	template < typename Maker, typename ValueMap >
-	struct parameter_make_data{
-		static constexpr auto log_name = "parameter"sv;
-
-		parameter_make_data(
-			Maker const& maker,
-			ValueMap const& value_map
-		)noexcept
-			: maker(maker)
-			, value_map(value_map) {}
-
-// 		parameter_make_data(parameter_make_data&& other)noexcept
-// 			: maker(other.maker)
-// 			, value_map(other.value_map) {}
-
-		Maker const& maker;
-		ValueMap const value_map;
-	};
-
-
-	auto inline get_use_count(
-		output_list const& outputs,
-		std::string const& name
-	){
-		auto const iter = outputs.find(name);
-		return iter != outputs.end() ? iter->second : 0;
-	}
-
-	template < typename Maker >
-	auto make_parameter_value_map(
-		std::string_view location,
-		Maker const& maker,
-		parameter_list const& params
-	){
-		auto const name = detail::to_std_string(maker.name);
-		auto const iter = params.find(name);
-		auto const found = iter != params.end();
-
-		bool all_specialized = true;
-
-		auto get_value =
-			[&location, &all_specialized, &maker, found, name, iter](auto type)
-			-> std::optional< std::string_view >
-		{
-			if(!found) return {};
-
-			auto const specialization = iter->second
-				.specialized_values.find(
-					detail::to_std_string(maker.to_text[type]));
-			auto const end =
-				iter->second.specialized_values.end();
-			if(specialization == end){
-				all_specialized = false;
-				if(!iter->second.generic_value){
-					throw std::logic_error(
-						std::string(location) + "parameter("
-						+ name + ") has neither a "
-						"generic value but a specialization "
-						"for type '" + specialization->first
-						+ "'"
-					);
+		/// \brief Get const reference to an input-, output- or parameter-object
+		///        via its corresponding compile time name
+		template < typename Name >
+		decltype(auto) operator()(Name const& name)const noexcept{
+			using name_t = std::remove_reference_t< Name >;
+			if constexpr(IOP_Ref::name == name_t{}){
+				if constexpr(hana::is_a< parameter_name_tag, name_t >()){
+					return ref.get();
+				}else if constexpr(hana::is_a< output_name_tag, name_t >()){
+					return ref.use_count() > 0;
 				}else{
-					return {*iter->second.generic_value};
+					return ref.output_ptr() != nullptr;
 				}
 			}else{
-				return {specialization->second};
+				static_assert(sizeof...(RefList) > 0,
+					"object with name is unknown");
+
+				return list(name);
 			}
-		};
-
-		auto result = hana::to_map(hana::transform(
-			maker.types,
-			[&get_value](auto type){
-				return hana::make_pair(type, get_value(type));
-			}));
-
-		if(found && all_specialized && iter->second.generic_value){
-			logsys::log([&location, name](logsys::stdlogb& os){
-				os << location << "parameter("
-					<< name << ") has specialized values for "
-					"all its types, the also given generic "
-					"value will never be used (WARNING)";
-			});
 		}
 
-		return result;
-	}
-
-
-	template < typename Maker, typename MakeData >
-	auto iop_make_data(
-		Maker const& maker,
-		MakeData const& data,
-		std::string_view location
-	){
-		(void)location; // Silance GCC ...
-
-		if constexpr(hana::is_a< input_maker_tag, Maker >()){
-			return input_make_data(maker, make_output_info(data.inputs,
-				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< output_maker_tag, Maker >()){
-			return output_make_data(maker, get_use_count(data.outputs,
-				detail::to_std_string(maker.name)));
-		}else if constexpr(hana::is_a< parameter_maker_tag, Maker >()){
-			return parameter_make_data(maker,
-				make_parameter_value_map(location, maker, data.parameters));
-		}else{
-			static_assert(detail::false_c< Maker >,
-				"maker is not an iop (this is a bug in disposer!)");
+		auto flat()&&{
+			return std::move(*this).flat(
+				std::make_index_sequence< sizeof...(RefList) + 1 >());
 		}
-	}
 
-	template < typename IOP_RefList >
-	class iops_accessory: public add_log< iops_accessory< IOP_RefList > >{
+	private:
+		template < std::size_t I >
+		auto&& get()&&{
+			if constexpr(I == 0){
+				return std::move(ref);
+			}else{
+				return std::move(list).template get< I - 1 >();
+			}
+		}
+
+		template < std::size_t ... Is >
+		auto flat(std::index_sequence< Is ... >)&&{
+			return hana::make_tuple(std::move(*this)
+				.template get< sizeof...(RefList) - Is >() ...);
+		}
+
+		IOP_Ref&& ref;
+		iops_ref< RefList ... >&& list;
+
+		template < typename ... OtherRefList >
+		friend class iops_ref;
+	};
+
+	template < typename IOP_Ref, typename ... RefList >
+	iops_ref(IOP_Ref&& ref, iops_ref< RefList ... >&& list)
+		-> iops_ref< IOP_Ref, RefList ... >;
+
+
+	template < typename DimensionList, typename ... RefList >
+	class module_make_accessory
+		: public add_log<
+			module_make_accessory< DimensionList, RefList ... > >{
 	public:
-		iops_accessory(
-			IOP_RefList const& iop_list,
-			iop_log&& log_fn
-		)noexcept
-			: iop_list_(iop_list)
-			, log_fn_(std::move(log_fn)) {}
+		using dimension_list = DimensionList;
+
+		module_make_accessory(
+			DimensionList,
+			iops_ref< RefList ... > const& list,
+			std::string_view location
+		)noexcept: location(location), list_(list) {}
+
+		module_make_accessory(module_make_accessory const& other)noexcept
+			: location(other.location)
+			, list_(other.list_) {}
 
 
 		/// \brief Get const reference to an input-, output- or parameter-object
 		///        via its corresponding compile time name
 		template < typename Name >
-		auto const& operator()(Name const& name)const noexcept{
-			using name_t = std::remove_reference_t< Name >;
+		decltype(auto) operator()(Name const& name)const noexcept{
 			static_assert(
-				hana::is_a< input_name_tag, name_t > ||
-				hana::is_a< output_name_tag, name_t > ||
-				hana::is_a< parameter_name_tag, name_t >,
-				"name is not an input_name, output_name or parameter_name");
+				hana::is_a< input_name_tag, Name >() ||
+				hana::is_a< output_name_tag, Name >() ||
+				hana::is_a< parameter_name_tag, Name >(),
+				"name must be an input_name, an output_name or a "
+				"parameter_name");
+			return list_(name);
+		}
 
-			return detail::extract(iop_list_, name);
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::dimension_count,
+				"module has less then DI dimensions");
+			static_assert(hana::size_c< 1 > ==
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
+				"module dimension DI is not solved yet");
+			return DimensionList::dimensions[i][hana::size_c< 0 >];
 		}
 
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			log_fn_(os);
+			os << location;
 		}
+
+		/// \brief Log location
+		std::string_view location;
 
 
 	private:
-		IOP_RefList iop_list_;
-
-		/// \brief Reference to an iop_log object
-		iop_log log_fn_;
+		/// \brief References to all previous IOPs
+		iops_ref< RefList ... > const& list_;
 	};
 
-	template < typename IOP_RefList, typename MakeData >
-	struct iops_make_data{
-		iops_make_data(
-			MakeData&& make_data,
-			std::string_view location,
-			IOP_RefList const& iop_list
-		)noexcept
-			: data(static_cast< MakeData&& >(make_data))
-			, accessory(iop_list, iop_log{
-				location, make_data.log_name,
-				detail::to_std_string_view(make_data.maker.name)}) {}
 
-		MakeData data;
-		iops_accessory< IOP_RefList > accessory;
+	template < typename DimensionList, typename ... RefList >
+	class component_make_accessory
+		: public add_log<
+			component_make_accessory< DimensionList, RefList ... > >{
+	public:
+		using dimension_list = DimensionList;
+
+		component_make_accessory(
+			DimensionList,
+			iops_ref< RefList ... > const& list,
+			std::string_view location
+		)noexcept: location(location), list_(list) {}
+
+		component_make_accessory(component_make_accessory const& other)noexcept
+			: location(other.location)
+			, list_(other.list_) {}
+
+
+		/// \brief Get const reference to an parameter-object
+		///        via its corresponding compile time name
+		template < typename Name >
+		decltype(auto) operator()(Name const& name)const noexcept{
+			static_assert(hana::is_a< parameter_name_tag, Name >(),
+				"name must be a parameter_name");
+			return list_(name);
+		}
+
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::dimension_count,
+				"component has less then DI dimensions");
+			static_assert(hana::size_c< 1 > ==
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
+				"component dimension DI is not solved yet");
+			return DimensionList::dimensions[i][hana::size_c< 0 >];
+		}
+
+
+		/// \brief Implementation of the log prefix
+		void log_prefix(log_key&&, logsys::stdlogb& os)const{
+			os << location;
+		}
+
+		/// \brief Log location
+		std::string_view location;
+
+
+	private:
+		/// \brief References to all previous IOPs
+		iops_ref< RefList ... > const& list_;
 	};
 
 

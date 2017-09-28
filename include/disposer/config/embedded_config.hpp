@@ -12,8 +12,6 @@
 #include "parse_config.hpp"
 
 #include <map>
-#include <set>
-#include <tuple>
 
 
 namespace disposer{
@@ -22,18 +20,18 @@ namespace disposer{
 	class output_base;
 
 	/// \brief Map from input names to output pointers
-	using input_list = std::map< std::string, output_base* >;
+	using input_list = std::map< std::string, output_base*, std::less<> >;
 
 	/// \brief Map from output names to count of connected inputs
-	using output_list = std::map< std::string, std::size_t >;
+	using output_list = std::map< std::string, std::size_t, std::less<> >;
 
 
 	struct parameter_data{
 		std::optional< std::string > generic_value;
-		std::map< std::string, std::string > specialized_values;
+		std::map< std::string, std::string, std::less<> > specialized_values;
 	};
 
-	using parameter_list = std::map< std::string, parameter_data >;
+	using parameter_list = std::map< std::string, parameter_data, std::less<> >;
 
 
 

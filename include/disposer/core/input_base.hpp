@@ -32,8 +32,8 @@ namespace disposer{
 		/// \brief Inputs are not copyable
 		input_base(input_base const&) = delete;
 
-		/// \brief Inputs are not movable
-		input_base(input_base&&) = delete;
+		/// \brief Inputs are movable
+		input_base(input_base&&) = default;
 
 
 		/// \brief Inputs are not copy-assingable

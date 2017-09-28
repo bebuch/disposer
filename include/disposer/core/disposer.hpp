@@ -19,7 +19,6 @@
 namespace disposer{
 
 
-	struct disposer_key;
 	class disposer;
 
 

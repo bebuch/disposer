@@ -19,15 +19,6 @@
 namespace disposer{
 
 
-	/// \brief Class disposer access key
-	struct chain_key{
-	private:
-		/// \brief Constructor
-		constexpr chain_key()noexcept = default;
-		friend class chain;
-	};
-
-
 	chain::chain(
 		module_maker_list const& maker_list,
 		types::embedded_config::chain const& config_chain,
@@ -77,15 +68,14 @@ namespace disposer{
 	}
 
 
-	std::vector< module_exec_ptr >
+	std::vector< exec_module_ptr >
 	chain::make_exec_modules(std::size_t const id){
-		std::vector< module_exec_ptr > list;
+		std::vector< exec_module_ptr > list;
 		list.reserve(modules_.size());
 
 		output_map_type output_map;
 		for(auto const& module: modules_){
-			list.push_back(
-				module->make_module_exec(chain_key(), id, output_map));
+			list.push_back(module->make_exec_module(id, output_map));
 		}
 
 		return list;
@@ -113,8 +103,8 @@ namespace disposer{
 			try{
 				for(std::size_t i = 0; i < modules.size(); ++i){
 					process_module(i, id, [&modules](std::size_t i){
-						modules[i]->exec(chain_key());
-						modules[i]->cleanup(chain_key());
+						modules[i]->exec();
+						modules[i]->cleanup();
 					}, "exec");
 				}
 			}catch(...){
@@ -124,7 +114,7 @@ namespace disposer{
 					if(ready_run_[i] >= id + 1) continue;
 
 					process_module(i, id, [&modules](std::size_t i){
-						modules[i]->cleanup(chain_key());
+						modules[i]->cleanup();
 					}, "cleanup");
 				}
 
@@ -157,7 +147,7 @@ namespace disposer{
 									<< modules_[i]->number << ":"
 									<< modules_[i]->type_name << ") enabled";
 							}, [this, i]{
-								modules_[i]->enable(chain_key());
+								modules_[i]->enable();
 							});
 					}
 				}catch(...){
@@ -170,7 +160,7 @@ namespace disposer{
 									<< "enable module(" << modules_[i]->number
 									<< ")";
 							}, [this, j]{
-								modules_[j]->disable(chain_key());
+								modules_[j]->disable();
 							});
 					}
 
@@ -201,7 +191,7 @@ namespace disposer{
 								<< modules_[i]->number << ":"
 								<< modules_[i]->type_name << ") disabled";
 						}, [this, i]{
-							modules_[i]->disable(chain_key());
+							modules_[i]->disable();
 						});
 				}
 			});

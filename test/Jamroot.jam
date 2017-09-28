@@ -24,6 +24,7 @@ project disposer_tests
 	<warnings>all
 	<c++-template-depth>1024
 
+	<define>DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 	<define>BOOST_HANA_CONFIG_ENABLE_STRING_UDL
 	<define>BOOST_ASIO_HAS_STD_CHRONO
 
@@ -67,23 +68,37 @@ exe parse_check
 	/disposer//disposer
 	;
 
-exe output
+exe dimension
 	:
-	output.cpp
+	dimension.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
+exe dimension_referrer
+	:
+	dimension_referrer.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
+exe dimension_solve
+	:
+	dimension_solve.cpp
+	/logsys//logsys
+	/disposer//disposer
+	;
+
+exe make_module
+	:
+	make_module.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;
 
-exe input
+exe module_data
 	:
-	input.cpp
-	/disposer//disposer
-	/logsys//logsys
-	;
-
-exe parameter
-	:
-	parameter.cpp
+	module_data.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;
@@ -95,9 +110,51 @@ exe module_test
 	/logsys//logsys
 	;
 
-exe register
+exe module_register
 	:
-	register.cpp
+	module_register.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe component_register
+	:
+	component_register.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe component_init_fn
+	:
+	component_init_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe component_test
+	:
+	component_test.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe make_component
+	:
+	make_component.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe register_fn
+	:
+	register_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
+
+exe set_dimension_fn
+	:
+	set_dimension_fn.cpp
 	/disposer//disposer
 	/logsys//logsys
 	;

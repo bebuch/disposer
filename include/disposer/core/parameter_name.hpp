@@ -23,10 +23,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for parameters
 	template < char ... C >
-	struct parameter_name: ct_name< C ... >{
-		/// \brief Hana tag to identify parameter names
-		using hana_tag = parameter_name_tag;
-	};
+	struct parameter_name: ct_name< parameter_name_tag, C ... >{};
 
 	/// \brief Make a \ref parameter_name object
 	template < char ... C >

@@ -9,7 +9,7 @@
 #ifndef _disposer__core__module_base__hpp_INCLUDED_
 #define _disposer__core__module_base__hpp_INCLUDED_
 
-#include "module_exec_base.hpp"
+#include "exec_module_base.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 #include "disposer.hpp"
@@ -18,23 +18,8 @@
 namespace disposer{
 
 
-	class module_base;
-
-	/// \brief Class module_base access key
-	struct module_base_key{
-	private:
-		/// \brief Constructor
-		constexpr module_base_key()noexcept = default;
-		friend class module_base;
-	};
-
-
-	struct chain_key;
-	struct creator_key;
-
-
 	using output_map_type
-		= std::unordered_map< output_base*, output_exec_base* >;
+		= std::unordered_map< output_base*, exec_output_base* >;
 
 	using output_name_to_ptr_type
 		= std::unordered_map< std::string, output_base* >;
@@ -73,24 +58,20 @@ namespace disposer{
 		virtual ~module_base() = default;
 
 
-		/// \brief Call the actual enable() function
-		void enable(chain_key&&){ enable(); }
+		/// \brief Enables the module for exec calls
+		virtual void enable() = 0;
 
-		/// \brief Call the actual disable() function
-		void disable(chain_key&&)noexcept{ disable(); }
-
-		/// \brief Call the actual make_module_exec(id) function
-		module_exec_ptr make_module_exec(
-			chain_key&&, std::size_t id, output_map_type& output_map
-		){
-			return make_module_exec(id, output_map);
-		}
+		/// \brief Disables the module for exec calls
+		virtual void disable()noexcept = 0;
 
 
-		/// \brief Call output_name_to_ptr()
-		output_name_to_ptr_type output_name_to_ptr(creator_key&&){
-			return output_name_to_ptr();
-		}
+		/// \brief Make a corresponding exec_module
+		virtual exec_module_ptr make_exec_module(
+			std::size_t id, output_map_type& output_map) = 0;
+
+
+		/// \brief Get map from output names to output_base pointers
+		virtual output_name_to_ptr_type output_name_to_ptr() = 0;
 
 
 		/// \brief Name of the process chain in config file section 'chain'
@@ -104,22 +85,8 @@ namespace disposer{
 		/// The first module has number 1.
 		std::size_t const number;
 
+		/// \brief Location text for log-messages
 		std::string const location;
-
-
-	protected:
-		/// \brief Enables the module for exec calls
-		virtual void enable() = 0;
-
-		/// \brief Disables the module for exec calls
-		virtual void disable()noexcept = 0;
-
-		/// \brief Make a corresponding module_exec
-		virtual module_exec_ptr make_module_exec(
-			std::size_t id, output_map_type& output_map) = 0;
-
-		/// \brief Get map from output names to output_base pointers
-		virtual output_name_to_ptr_type output_name_to_ptr() = 0;
 	};
 
 

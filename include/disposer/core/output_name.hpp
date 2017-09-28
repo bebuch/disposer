@@ -23,10 +23,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for outputs
 	template < char ... C >
-	struct output_name: ct_name< C ... >{
-		/// \brief Hana tag to identify output names
-		using hana_tag = output_name_tag;
-	};
+	struct output_name: ct_name< output_name_tag, C ... >{};
 
 	/// \brief Make a \ref output_name object
 	template < char ... C >

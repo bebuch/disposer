@@ -30,17 +30,15 @@ namespace disposer{
 	struct parameter_maker_tag;
 
 
-	template < typename MakerTag, typename Makers, typename List >
+	template < typename MakerTag, typename Configuration, typename List >
 	std::set< std::string > validate_iop(
 		std::string const& location,
-		Makers const& makers,
+		Configuration const& configuration,
 		List const& list
 	){
 		auto names = hana::transform(
-			hana::filter(makers, hana::is_a< MakerTag >),
-			[](auto const& maker){
-				return maker.name;
-			});
+			hana::filter(configuration.config_list, hana::is_a< MakerTag >),
+			[](auto const& maker){ return maker.name; });
 
 		std::set< std::string > name_list;
 		std::transform(list.begin(), list.end(),

@@ -17,8 +17,8 @@
 namespace disposer{ namespace{
 
 
-	using param_sets_map =
-		std::map< std::string, types::parse::parameter_set const& >;
+	using param_sets_map = std::map<
+		std::string, types::parse::parameter_set const&, std::less<> >;
 
 	auto map_name_to_set(types::parse::parameter_sets const& sets){
 		param_sets_map parameter_sets;
@@ -37,7 +37,8 @@ namespace disposer{ namespace{
 
 		// add all parameters from module
 		for(auto& parameter: reverse(params.parameters)){
-			std::map< std::string, std::string > specialized_values;
+			std::map< std::string, std::string, std::less<> >
+				specialized_values;
 			for(auto& specialization: parameter.specialized_values){
 				specialized_values.emplace(
 					std::move(specialization.type),
@@ -64,7 +65,8 @@ namespace disposer{ namespace{
 			for(auto& parameter: iter->second.parameters){
 				// parameter set parameters can not be moved
 				// (multiple use!)
-				std::map< std::string, std::string > specialized_values;
+				std::map< std::string, std::string, std::less<> >
+					specialized_values;
 				for(auto& specialization: parameter.specialized_values){
 					specialized_values.emplace(
 						specialization.type,

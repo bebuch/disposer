@@ -15,36 +15,33 @@
 namespace disposer{
 
 
-	template < typename StateType, typename List >
-	class exec_accessory;
-
-	/// \brief Class input_exec_key access key
-	struct exec_key{
-	private:
-		/// \brief Constructor
-		constexpr exec_key()noexcept = default;
-
-		template < typename StateType, typename List >
-		friend class exec_accessory;
-	};
-
-
 	/// \brief Accessory of a module during exec calls
-	template < typename StateType, typename List >
-	class exec_accessory: public add_log< exec_accessory< StateType, List > >{
+	template <
+		typename TypeList,
+		typename State,
+		typename ExecInputs,
+		typename ExecOutputs,
+		typename Parameters >
+	class module_accessory
+		: public add_log< module_accessory<
+			TypeList, State, ExecInputs, ExecOutputs, Parameters > >
+	{
 	public:
 		/// \brief Constructor
-		exec_accessory(
+		module_accessory(
 			std::size_t id,
-			module_data< List > const& data,
-			module_exec_data< detail::exec_list_t< List > >& exec_data,
-			StateType* state,
+			TypeList,
+			State* state,
+			ExecInputs& inputs,
+			ExecOutputs& outputs,
+			Parameters const& parameters,
 			std::string_view location
 		)
 			: id_(id)
-			, data_(data)
-			, exec_data_(exec_data)
 			, state_(state)
+			, inputs_(inputs)
+			, outputs_(outputs)
+			, parameters_(parameters)
 			, location_(location) {}
 
 
@@ -62,10 +59,17 @@ namespace disposer{
 			return get(*this, name);
 		}
 
+		/// \brief Get type by dimension index
+		template < std::size_t DI >
+		static constexpr auto dimension(hana::size_t< DI > i)noexcept{
+			static_assert(DI < TypeList::type_count,
+				"module has less then DI dimensions");
+			return TypeList::types[i];
+		}
+
 		/// \brief Get access to the state object if one exists
 		auto& state()noexcept{
-			static_assert(!std::is_void_v< StateType >,
-				"Module has no state.");
+			static_assert(!std::is_void_v< State >, "Module has no state.");
 			return *state_;
 		}
 
@@ -83,22 +87,30 @@ namespace disposer{
 		template < typename This, typename Name >
 		static auto& get(This& this_, Name const& name)noexcept{
 			using name_t = std::remove_reference_t< Name >;
-			if constexpr(hana::is_a< parameter_name_tag, name_t >()){
-				return this_.data_(name);
-			}else if constexpr(hana::is_a< input_name_tag, name_t >()){
-					return this_.exec_data_(name);
-			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
-				// TODO: Must be tested!!!
-// 				if(!this_.data_(name).is_enabled[hana::type_c< V >]){
-// 					using namespace std::literals::string_literals;
-// 					throw std::logic_error(io_tools::make_string(
-// 						"output '", detail::to_std_string_view(name),
-// 						"' with disabled type [", type_name< V >(),
-// 						"] requested"
-// 					));
-// 				}
+			if constexpr(hana::is_a< input_name_tag, name_t >()){
+				auto const index = hana::index_if(this_.inputs_,
+					[name](auto const& p){ return p.name == name; });
 
-				return this_.exec_data_(name);
+				static_assert(!hana::is_nothing(index),
+					"input name doesn't exist");
+
+				return this_.inputs_[*index];
+			}else if constexpr(hana::is_a< output_name_tag, name_t >()){
+				auto const index = hana::index_if(this_.outputs_,
+					[name](auto const& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"output name doesn't exist");
+
+				return this_.outputs_[*index];
+			}else if constexpr(hana::is_a< parameter_name_tag, name_t >()){
+				auto const index = hana::index_if(this_.parameters_,
+					[name](auto const& p){ return p.name == name; });
+
+				static_assert(!hana::is_nothing(index),
+					"parameter name doesn't exist");
+
+				return this_.parameters_[*index].get();
 			}else{
 				static_assert(detail::false_c< Name >,
 					"name is not an input_name, output_name or parameter_name");
@@ -109,16 +121,19 @@ namespace disposer{
 		/// \brief Current exec id
 		std::size_t id_;
 
-		/// \brief Data of the module
-		module_data< List > const& data_;
-
-		/// \brief Data of the exec_module
-		module_exec_data< detail::exec_list_t< List > >& exec_data_;
-
 		/// \brief Module state
 		///
 		/// nullptr-pointer to void if module is stateless.
-		StateType* state_;
+		State* state_;
+
+		/// \brief hana::tuple of exec_inputs
+		ExecInputs& inputs_;
+
+		/// \brief hana::tuple of exec_outputs
+		ExecOutputs& outputs_;
+
+		/// \brief hana::tuple of parameters
+		Parameters const& parameters_;
 
 		/// \brief Prefix for log messages
 		std::string_view location_;
@@ -139,21 +154,31 @@ namespace disposer{
 
 		constexpr explicit exec_fn(Fn&& fn)
 			noexcept(std::is_nothrow_move_constructible_v< Fn >)
-			: fn_(static_cast< Fn&& >(fn)) {}
+			: fn_(std::move(fn)) {}
 
 
-		template < typename StateType, typename List >
-		void operator()(exec_accessory< StateType, List >& accessory){
-			if constexpr(std::is_invocable_v< Fn,
-				exec_accessory< StateType, List >& >
+		template <
+			typename TypeList,
+			typename State,
+			typename ExecInputs,
+			typename ExecOutputs,
+			typename Parameters >
+		void operator()(
+			module_accessory< TypeList, State, ExecInputs, ExecOutputs,
+				Parameters >& accessory
+		){
+			// TODO: calulate noexcept
+			if constexpr(
+				std::is_invocable_v< Fn, module_accessory< TypeList, State,
+					ExecInputs, ExecOutputs, Parameters >& >
 			){
-				fn_(accessory);
+				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){
 				(void)accessory; // silance GCC
-				fn_();
+				std::invoke(fn_);
 			}else{
-				static_assert(detail::false_c< StateType >,
-					"Fn must be invokable with exec_accessory& or "
+				static_assert(detail::false_c< State >,
+					"Fn must be invokable with module_accessory& or "
 					"without arguments");
 			}
 		}

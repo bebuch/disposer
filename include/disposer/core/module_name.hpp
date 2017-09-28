@@ -10,6 +10,7 @@
 #define _disposer__core__module_name__hpp_INCLUDED_
 
 #include "module.hpp"
+#include "register_fn.hpp"
 
 
 namespace disposer{
@@ -28,7 +29,7 @@ namespace disposer{
 		std::string_view name;
 
 		/// \brief A list of module IOPs
-		ModuleRegisterFn module_register_fn;
+		register_fn< ModuleRegisterFn > module_register_fn;
 	};
 
 
@@ -37,23 +38,7 @@ namespace disposer{
 
 	/// \brief A compile time string type for modules
 	template < char ... C >
-	struct module_name: ct_name< C ... >{
-		/// \brief Hana tag to identify module names
-		using hana_tag = module_name_tag;
-
-		/// \brief Creates a \ref module_register_fn object
-		template < typename ModuleRegisterFn >
-		constexpr auto operator()(
-			ModuleRegisterFn&& module_register_fn
-		)const{
-			return component_module_maker<
-				std::remove_reference_t< ModuleRegisterFn >
-			>{
-				detail::to_std_string_view(this->value),
-				static_cast< ModuleRegisterFn&& >(module_register_fn)
-			};
-		}
-	};
+	struct module_name: ct_name< module_name_tag, C ... >{};
 
 	/// \brief Make a \ref module_name object
 	template < char ... C >
@@ -63,6 +48,17 @@ namespace disposer{
 	/// \brief Make a \ref module_name object by a hana::string object
 	template < char ... C > constexpr module_name< C ... >
 	to_module_name(hana::string< C ... >)noexcept{ return {}; }
+
+
+	template < char ... C, typename ModuleRegisterFn >
+	constexpr auto make(
+		module_name< C ... > const& name,
+		register_fn< ModuleRegisterFn > fn
+	){
+		return component_module_maker<
+				std::remove_reference_t< ModuleRegisterFn > >
+			{detail::to_std_string_view(name), std::move(fn)};
+	}
 
 
 }
