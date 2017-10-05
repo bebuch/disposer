@@ -75,7 +75,7 @@ namespace disposer{
 
 	template < typename ComponentInitFn, typename Modules >
 	struct component_construction{
-		disposer& disposer;
+		::disposer::disposer& disposer;
 
 		component_make_data const& data;
 

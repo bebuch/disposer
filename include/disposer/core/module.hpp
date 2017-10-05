@@ -31,24 +31,24 @@ namespace disposer{
 	template <>
 	class concurrency_manager< false >{
 	public:
-		constexpr concurrency_manager()noexcept: next_id(1) {}
+		concurrency_manager()noexcept: next_id_(1) {}
 
 		void wait(std::size_t const id)noexcept{
-			std::unique_lock lock(mutex);
-			cv.wait(lock, [this, id]{ return next_id == id; });
+			std::unique_lock lock(mutex_);
+			cv_.wait(lock, [this, id]{ return next_id_ == id; });
 		}
 
 		void ready(std::size_t const id)noexcept{
-			std::unique_lock lock(mutex);
-			next_id = id + 1;
+			std::unique_lock lock(mutex_);
+			next_id_ = id + 1;
 			lock.unlock();
-			cv.notify_one();
+			cv_.notify_one();
 		}
 
 	private:
-		std::size_t next_id;
-		std::mutex mutex;
-		std::condition_variable cv;
+		std::size_t next_id_;
+		std::mutex mutex_;
+		std::condition_variable cv_;
 	};
 
 	template < typename Manager >
