@@ -63,74 +63,113 @@ namespace disposer{
 
 
 		/// \brief A module and its execution data
-		struct chain_exec_module_data{
+		class chain_exec_module_data{
+		public:
 			chain_exec_module_data(
-				std::vector< exec_module_ptr > const& list,
+				chain_exec_module_data* data,
 				chain_module_data const& module_data,
 				exec_module_ptr&& exec_module
 			)
 				: module(std::move(exec_module))
 				, precursor_count(module_data.precursor_count)
-				, next_module([&]{
-						std::vector< exec_module_base* > init;
+				, next_module([data, &module_data]{
+						std::vector< chain_exec_module_data* > init;
 						init.reserve(module_data.next_indexes.size());
 						std::transform(
 							module_data.next_indexes.begin(),
 							module_data.next_indexes.end(),
 							std::back_inserter(init),
-							[&list](std::size_t i){ return list[i].get(); });
+							[data](std::size_t i){ return data + 1; });
 						return init;
 					}()) {}
 
+			void exec_next(){
+				if(--precursor_count == 0) exec();
+			}
+
+			void exec(){
+				try{
+					module->exec();
+					module->cleanup();
+				}catch(...){
+					module->cleanup();
+
+					throw;
+				}
+
+				std::vector< std::future< void > > list;
+				list.reserve(next_module.size());
+				std::transform(next_module.begin(), next_module.end(),
+					std::back_inserter(list), [](chain_exec_module_data* ptr){
+						return std::async([ptr]{ ptr->exec_next(); });
+					});
+				for(auto& exec: list) exec.get();
+			}
+
+		private:
 			/// \brief The module
-			exec_module_ptr module;
+			exec_module_ptr const module;
 
 			/// \brief The count of modules that must be ready before execution
-			std::size_t precursor_count;
+			std::atomic< std::size_t > precursor_count;
 
 			/// \brief Pointers to all modules that depend on this module
-			std::vector< exec_module_base* > next_module;
+			std::vector< chain_exec_module_data* > const next_module;
 		};
 
 		/// \brief List of a chains modules and indexes of the start modules
-		struct chain_exec_module_list{
+		class chain_exec_module_list{
+		public:
 			chain_exec_module_list(
 				chain_module_list const& module_list,
 				std::vector< exec_module_ptr >&& list
 			)
-				: start_modules([&]{
-						std::vector< exec_module_base* > init;
-						init.reserve(module_list.start_indexes.size());
-						std::transform(
-							module_list.start_indexes.begin(),
-							module_list.start_indexes.end(),
-							std::back_inserter(init),
-							[&list](std::size_t i){ return list[i].get(); });
-						return init;
-					}())
-				, modules([&]{
+				: modules([&]{
 						std::vector< chain_exec_module_data > init;
 						init.reserve(list.size());
+						auto data = init.data();
 						std::transform(
 							module_list.modules.begin(),
 							module_list.modules.end(),
 							std::make_move_iterator(list.begin()),
 							std::back_inserter(init),
-							[&list](
+							[data](
 								chain_module_data const& module_data,
 								exec_module_ptr&& exec_module
 							){
-								return chain_exec_module_data(list,
+								return chain_exec_module_data(data,
 									module_data, std::move(exec_module));
 							});
 						return init;
+					}())
+				, start_modules([this, &module_list]{
+						std::vector< chain_exec_module_data* > init;
+						init.reserve(module_list.start_indexes.size());
+						auto data = modules.data();
+						std::transform(
+							module_list.start_indexes.begin(),
+							module_list.start_indexes.end(),
+							std::back_inserter(init),
+							[&data](std::size_t i){ return data + i; });
+						return init;
 					}()) {}
 
-			/// \brief Pointers to all modules without active inputs
-			std::vector< exec_module_base* > start_modules;
+			void exec(){
+				std::vector< std::future< void > > list;
+				list.reserve(start_modules.size());
+				std::transform(start_modules.begin(), start_modules.end(),
+					std::back_inserter(list), [](chain_exec_module_data* ptr){
+						return std::async([ptr]{ ptr->exec(); });
+					});
+				for(auto& exec: list) exec.get();
+			}
 
+		private:
 			/// \brief List of modules and there execution data
 			std::vector< chain_exec_module_data > modules;
+
+			/// \brief Pointers to all modules without active inputs
+			std::vector< chain_exec_module_data* > const start_modules;
 		};
 
 
@@ -173,25 +212,27 @@ namespace disposer{
 					return make_exec_modules(modules_, id);
 				});
 
-			std::size_t i = 0;
-			try{
-				for(; i < modules.modules.size(); ++i){
-					process_module(i, id, [&modules](std::size_t i){
-						modules.modules[i].module->exec();
-						modules.modules[i].module->cleanup();
-					}, "exec");
-				}
-			}catch(...){
-				// cleanup
-				for(; i < modules.modules.size(); ++i){
-					process_module(i, id, [&modules](std::size_t i){
-						modules.modules[i].module->cleanup();
-					}, "cleanup");
-				}
+			modules.exec();
 
-				// rethrow exception
-				throw;
-			}
+// 			std::size_t i = 0;
+// 			try{
+// 				for(; i < modules.modules.size(); ++i){
+// 					process_module(i, id, [&modules](std::size_t i){
+// 						modules.modules[i].module->exec();
+// 						modules.modules[i].module->cleanup();
+// 					}, "exec");
+// 				}
+// 			}catch(...){
+// 				// cleanup
+// 				for(; i < modules.modules.size(); ++i){
+// 					process_module(i, id, [&modules](std::size_t i){
+// 						modules.modules[i].module->cleanup();
+// 					}, "cleanup");
+// 				}
+//
+// 				// rethrow exception
+// 				throw;
+// 			}
 		});
 	}
 
