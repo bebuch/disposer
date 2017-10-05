@@ -29,7 +29,8 @@ namespace disposer{
 		typename Outputs,
 		typename Parameters,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent >
 	class module: public module_base{
 	public:
 		/// \brief State maker function or void for stateless modules
@@ -49,7 +50,8 @@ namespace disposer{
 			std::size_t number,
 			hana::tuple< RefList ... >&& ref_list,
 			module_init_fn< ModuleInitFn > const& module_init_fn,
-			exec_fn< ExecFn > const& exec_fn
+			exec_fn< ExecFn > const& exec_fn,
+			hana::bool_< CanRunConcurrent >
 		)
 			: module_base(chain, type_name, number)
 			, data_(std::move(ref_list))
@@ -89,7 +91,7 @@ namespace disposer{
 			std::size_t id, output_map_type& output_map
 		)override{
 			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
-				Parameters, ModuleInitFn, ExecFn > >(*this,
+				Parameters, ModuleInitFn, ExecFn, CanRunConcurrent > >(*this,
 					hana::transform(data_.inputs,
 						[&output_map](auto const& input){
 							return hana::tuple
@@ -132,7 +134,8 @@ namespace disposer{
 		typename ... Ts,
 		typename ... RefList,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent >
 	module(
 		type_list< Ts ... >,
 		std::string const& chain,
@@ -140,7 +143,8 @@ namespace disposer{
 		std::size_t number,
 		hana::tuple< RefList ... >&& ref_list,
 		module_init_fn< ModuleInitFn > const& module_init_fn,
-		exec_fn< ExecFn > const& exec_fn
+		exec_fn< ExecFn > const& exec_fn,
+		hana::bool_< CanRunConcurrent >
 	)
 		-> module<
 			type_list< Ts ... >,
@@ -153,7 +157,7 @@ namespace disposer{
 			decltype(hana::filter(
 				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< parameter_tag >)),
-			ModuleInitFn, ExecFn >;
+			ModuleInitFn, ExecFn, CanRunConcurrent >;
 
 
 

@@ -51,7 +51,7 @@ namespace disposer{
 		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 
-	template < typename ModuleInitFn, typename ExecFn >
+	template < typename ModuleInitFn, typename ExecFn, bool CanRunConcurrent >
 	struct module_construction{
 		module_make_data const& data;
 		module_init_fn< ModuleInitFn > const& module_init;
@@ -59,7 +59,8 @@ namespace disposer{
 
 		template < typename DimensionList >
 		struct input_construction{
-			module_construction< ModuleInitFn, ExecFn > const& base;
+			module_construction< ModuleInitFn, ExecFn, CanRunConcurrent >
+				const& base;
 
 			template <
 				typename Name,
@@ -84,7 +85,8 @@ namespace disposer{
 
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
-							module_construction< ModuleInitFn, ExecFn > const&,
+							module_construction< ModuleInitFn, ExecFn,
+								CanRunConcurrent > const&,
 							input_maker< Name, DimensionReferrer, IsRequired >
 								const&,
 							detail::config_queue< Offset, Config ... > const&,
@@ -96,8 +98,8 @@ namespace disposer{
 					constexpr auto generate_next = [](auto i){
 							using index_type = decltype(i);
 							return [](
-									module_construction< ModuleInitFn, ExecFn >
-										const& base,
+									module_construction< ModuleInitFn, ExecFn,
+										CanRunConcurrent > const& base,
 									input_maker< Name, DimensionReferrer,
 										IsRequired > const& maker,
 									detail::config_queue< Offset, Config ... >
@@ -210,7 +212,8 @@ namespace disposer{
 
 		template < typename DimensionList >
 		struct set_dimension_fn_execution{
-			module_construction< ModuleInitFn, ExecFn > const& base;
+			module_construction< ModuleInitFn, ExecFn,
+				CanRunConcurrent > const& base;
 
 			template <
 				std::size_t Offset,
@@ -228,7 +231,8 @@ namespace disposer{
 
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
-							module_construction< ModuleInitFn, ExecFn > const&,
+							module_construction< ModuleInitFn, ExecFn,
+								CanRunConcurrent > const&,
 							detail::config_queue< Offset, Config ... > const&,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&
@@ -238,8 +242,8 @@ namespace disposer{
 							using dim_type = decltype(d);
 							using index_type = decltype(i);
 							return [](
-									module_construction< ModuleInitFn, ExecFn >
-										const& base,
+									module_construction< ModuleInitFn, ExecFn,
+										CanRunConcurrent > const& base,
 									detail::config_queue< Offset, Config ... >
 										const& configs,
 									iops_ref< IOPs ... >&& iops,
@@ -415,7 +419,8 @@ namespace disposer{
 				return std::unique_ptr< module_base >(new module{
 					type_list{dims},
 					data.chain, data.type_name, data.number,
-					std::move(iops).flat(), module_init, exec});
+					std::move(iops).flat(), module_init, exec,
+					hana::bool_c< CanRunConcurrent >});
 			}else{
 				using hana::is_a;
 				auto const& config = configs.front();
@@ -456,16 +461,18 @@ namespace disposer{
 		typename ... Ds,
 		typename ... Config,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent >
 	std::unique_ptr< module_base > make_module_ptr(
 		dimension_list< Ds ... > dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
 		module_init_fn< ModuleInitFn > const& module_init,
-		exec_fn< ExecFn > const& exec
+		exec_fn< ExecFn > const& exec,
+		hana::bool_< CanRunConcurrent >
 	){
 		detail::config_queue queue{configs.config_list};
-		module_construction< ModuleInitFn, ExecFn > const mc
+		module_construction< ModuleInitFn, ExecFn, CanRunConcurrent > const mc
 			{data, module_init, exec};
 		return mc.make_module(dims, queue, iops_ref{});
 	}
@@ -479,7 +486,8 @@ namespace disposer{
 		typename DimensionList,
 		typename Configuration,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent >
 	struct module_maker{
 		/// \brief Hana tag
 		using hana_tag = module_maker_tag;
@@ -521,8 +529,8 @@ namespace disposer{
 			}
 
 			// Create the module
-			return make_module_ptr(
-				dimensions, configuration, data, module_init, exec);
+			return make_module_ptr(dimensions, configuration, data,
+				module_init, exec, hana::bool_c< CanRunConcurrent >);
 		}
 	};
 

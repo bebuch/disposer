@@ -17,6 +17,12 @@
 namespace disposer{
 
 
+	template < bool CanRunConcurrent >
+	struct can_run_concurrent: hana::bool_< CanRunConcurrent >{};
+
+	constexpr can_run_concurrent< false > no_overtaking{};
+
+
 	struct unit_test_key;
 
 	/// \brief Hana Tag for \ref module_register_fn
@@ -27,7 +33,8 @@ namespace disposer{
 		typename Dimensions,
 		typename Configuration,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent >
 	class module_register_fn{
 	public:
 		/// \brief Hana tag to identify module register functions
@@ -39,7 +46,9 @@ namespace disposer{
 			dimension_list< Dimension ... > dims,
 			module_configure< Config ... > list,
 			module_init_fn< ModuleInitFn > module_init,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: called_flag_(false)
 			, maker_{dims, std::move(list), module_init, exec}
@@ -50,7 +59,9 @@ namespace disposer{
 		module_register_fn(
 			dimension_list< Dimension ... > dims,
 			module_init_fn< ModuleInitFn > module_init,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, module_configure<>{},
 				std::move(module_init), std::move(exec))
@@ -61,7 +72,9 @@ namespace disposer{
 		module_register_fn(
 			dimension_list< Dimension ... > dims,
 			module_configure< Config ... > list,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, std::move(list),
 				module_init_fn< void >(), std::move(exec))
@@ -71,7 +84,9 @@ namespace disposer{
 		template < typename ... Dimension >
 		module_register_fn(
 			dimension_list< Dimension ... > dims,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, module_configure<>{},
 				module_init_fn< void >(), std::move(exec))
@@ -82,7 +97,9 @@ namespace disposer{
 		module_register_fn(
 			module_configure< Config ... > list,
 			module_init_fn< ModuleInitFn > module_init,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
 				std::move(module_init), std::move(exec))
@@ -91,7 +108,9 @@ namespace disposer{
 		/// \brief Constructor
 		module_register_fn(
 			module_init_fn< ModuleInitFn > module_init,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, module_configure<>{},
 				std::move(module_init), std::move(exec))
@@ -101,14 +120,20 @@ namespace disposer{
 		template < typename ... Config >
 		module_register_fn(
 			module_configure< Config ... > list,
-			exec_fn< ExecFn > exec
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
 				module_init_fn< void >(), std::move(exec))
 			{}
 
 		/// \brief Constructor
-		module_register_fn(exec_fn< ExecFn > exec)
+		module_register_fn(
+			exec_fn< ExecFn > exec,
+			can_run_concurrent< CanRunConcurrent >
+				= can_run_concurrent< true >{}
+		)
 			: module_register_fn(dimension_list{}, module_configure<>{},
 				module_init_fn< void >(), std::move(exec))
 			{}
@@ -134,7 +159,8 @@ namespace disposer{
 		std::atomic< bool > called_flag_;
 
 		/// \brief The module_maker object
-		module_maker< Dimensions, Configuration, ModuleInitFn, ExecFn > maker_;
+		module_maker< Dimensions, Configuration, ModuleInitFn, ExecFn,
+			CanRunConcurrent > maker_;
 
 		friend struct unit_test_key;
 	};
@@ -144,95 +170,113 @@ namespace disposer{
 		typename ... Dimension,
 		typename ... Config,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		dimension_list< Dimension ... > dims,
 		module_configure< Config ... > list,
 		module_init_fn< ModuleInitFn > module_init,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list< Dimension ... >,
 			module_configure< Config ... >,
-			ModuleInitFn, ExecFn >;
+			ModuleInitFn, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ... Dimension,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		dimension_list< Dimension ... > dims,
 		module_init_fn< ModuleInitFn > module_init,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list< Dimension ... >,
 			module_configure<>,
-			ModuleInitFn, ExecFn >;
+			ModuleInitFn, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ... Dimension,
 		typename ... Config,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		dimension_list< Dimension ... > dims,
 		module_configure< Config ... > list,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list< Dimension ... >,
 			module_configure< Config ... >,
-			void, ExecFn >;
+			void, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ... Dimension,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		dimension_list< Dimension ... > dims,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list< Dimension ... >,
 			module_configure<>,
-			void, ExecFn >;
+			void, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ... Config,
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		module_configure< Config ... > list,
 		module_init_fn< ModuleInitFn > module_init,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list<>,
 			module_configure< Config ... >,
-			ModuleInitFn, ExecFn >;
+			ModuleInitFn, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ModuleInitFn,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		module_init_fn< ModuleInitFn > module_init,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list<>,
 			module_configure<>,
-			ModuleInitFn, ExecFn >;
+			ModuleInitFn, ExecFn, CanRunConcurrent >;
 
 	template <
 		typename ... Config,
-		typename ExecFn >
+		typename ExecFn,
+		bool CanRunConcurrent = true >
 	module_register_fn(
 		module_configure< Config ... > list,
-		exec_fn< ExecFn > exec
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> module_register_fn<
 			dimension_list<>,
 			module_configure< Config ... >,
-			void, ExecFn >;
+			void, ExecFn, CanRunConcurrent >;
 
-	template < typename ExecFn >
-	module_register_fn(exec_fn< ExecFn > exec)
-	-> module_register_fn<
+	template <
+		typename ExecFn,
+		bool CanRunConcurrent = true >
+	module_register_fn(
+		exec_fn< ExecFn > exec,
+		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
+	) -> module_register_fn<
 			dimension_list<>,
 			module_configure<>,
-			void, ExecFn >;
+			void, ExecFn, CanRunConcurrent >;
 
 
 }
