@@ -10,9 +10,7 @@
 #define _disposer__core__module__hpp_INCLUDED_
 
 #include "module_base.hpp"
-#include "module_data.hpp"
 #include "exec_module.hpp"
-#include "to_exec_list.hpp"
 #include "module_init_fn.hpp"
 #include "exec_fn.hpp"
 

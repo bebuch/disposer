@@ -10,14 +10,11 @@
 #define _disposer__core__make_component__hpp_INCLUDED_
 
 #include "component.hpp"
-#include "module_name.hpp"
 #include "make_module.hpp"
 
-#include "make_parameter.hpp"
 #include "set_dimension_fn.hpp"
 
 #include "../config/validate_iop.hpp"
-#include "../config/component_make_data.hpp"
 
 #include "../tool/config_queue.hpp"
 

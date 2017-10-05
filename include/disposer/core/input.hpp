@@ -12,6 +12,8 @@
 #include "input_base.hpp"
 #include "input_name.hpp"
 
+#include <boost/hana/core/is_a.hpp>
+
 
 namespace disposer{
 

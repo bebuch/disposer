@@ -17,6 +17,8 @@
 
 #include <io_tools/make_string.hpp>
 
+#include <boost/hana/tuple.hpp>
+
 #include <functional>
 #include <variant>
 

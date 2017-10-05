@@ -12,8 +12,6 @@
 #include "accessory.hpp"
 #include "parameter.hpp"
 
-#include <boost/hana/tuple.hpp>
-
 
 namespace disposer{
 

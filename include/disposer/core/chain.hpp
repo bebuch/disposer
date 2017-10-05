@@ -11,10 +11,7 @@
 
 #include "id_generator.hpp"
 
-#include "../config/embedded_config.hpp"
 #include "../config/create_chain_modules.hpp"
-
-#include "../tool/module_ptr.hpp"
 
 #include <mutex>
 #include <condition_variable>
