@@ -21,6 +21,57 @@ namespace disposer{
 	using output_name_to_ptr_type
 		= std::unordered_map< std::string, output_base* >;
 
+	template < bool CanRunConcurrent >
+	class concurrency_manager{
+	public:
+		constexpr void wait(std::size_t const)noexcept{}
+		constexpr void ready(std::size_t const)noexcept{}
+	};
+
+	template <>
+	class concurrency_manager< false >{
+	public:
+		constexpr concurrency_manager()noexcept: next_id(1) {}
+
+		void wait(std::size_t const id)noexcept{
+			std::unique_lock lock(mutex);
+			cv.wait(lock, [this, id]{ return next_id == id; });
+		}
+
+		void ready(std::size_t const id)noexcept{
+			std::unique_lock lock(mutex);
+			next_id = id + 1;
+			lock.unlock();
+			cv.notify_one();
+		}
+
+	private:
+		std::size_t next_id;
+		std::mutex mutex;
+		std::condition_variable cv;
+	};
+
+	template < typename Manager >
+	class concurrency_manager_guard{
+	public:
+		concurrency_manager_guard(Manager& manager, std::size_t id)noexcept
+			: manager_(manager)
+			, id_(id)
+		{
+			static_assert(noexcept(manager_.wait(id_)));
+			manager_.wait(id_);
+		}
+
+		~concurrency_manager_guard(){
+			static_assert(noexcept(manager_.ready(id_)));
+			manager_.ready(id_);
+		}
+
+	private:
+		Manager& manager_;
+		std::size_t id_;
+	};
+
 
 	/// \brief The actual module type
 	template <
@@ -31,7 +82,10 @@ namespace disposer{
 		typename ModuleInitFn,
 		typename ExecFn,
 		bool CanRunConcurrent >
-	class module: public module_base{
+	class module
+		: public concurrency_manager< CanRunConcurrent >
+		, public module_base
+	{
 	public:
 		/// \brief State maker function or void for stateless modules
 		using module_init_fn_type = ModuleInitFn;
@@ -68,6 +122,8 @@ namespace disposer{
 		){
 			module_accessory accessory{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location};
+			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
+				manager(*this, id);
 			return exec_fn_(accessory);
 		}
 

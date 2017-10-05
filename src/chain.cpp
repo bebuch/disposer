@@ -8,6 +8,8 @@
 //-----------------------------------------------------------------------------
 #include <disposer/core/module_base.hpp>
 
+#include <disposer/config/create_chain_modules.hpp>
+
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
@@ -25,9 +27,6 @@ namespace disposer{
 		name(config_chain.name),
 		modules_(create_chain_modules(maker_list, config_chain)),
 		generate_id_(generate_id),
-		next_run_(0),
-		ready_run_(modules_.modules.size()),
-		module_mutexes_(modules_.modules.size()),
 		enabled_(false),
 		exec_calls_count_(0)
 		{}
@@ -100,19 +99,17 @@ namespace disposer{
 					return make_exec_modules(id);
 				});
 
+			std::size_t i = 0;
 			try{
-				for(std::size_t i = 0; i < modules.size(); ++i){
+				for(; i < modules.size(); ++i){
 					process_module(i, id, [&modules](std::size_t i){
 						modules[i]->exec();
 						modules[i]->cleanup();
 					}, "exec");
 				}
 			}catch(...){
-				// cleanup and unlock all executions
-				for(std::size_t i = 0; i < ready_run_.size(); ++i){
-					// exec was successful
-					if(ready_run_[i] >= id + 1) continue;
-
+				// cleanup
+				for(; i < modules.size(); ++i){
 					process_module(i, id, [&modules](std::size_t i){
 						modules[i]->cleanup();
 					}, "cleanup");
@@ -210,10 +207,6 @@ namespace disposer{
 		F const& action,
 		std::string_view action_name
 	){
-		// lock mutex and wait for the previous run to be ready
-		std::unique_lock< std::mutex > lock(module_mutexes_[i]);
-		module_cv_.wait(lock, [this, i, id]{ return ready_run_[i] == id; });
-
 		// exec or cleanup the module
 		logsys::log([this, id, i, action_name](logsys::stdlogb& os){
 			auto& module = modules_.modules[i].module;
@@ -221,10 +214,6 @@ namespace disposer{
 				<< "chain(" << module->chain << ") module(" << module->number
 				<< ":" << module->type_name << ") " << action_name;
 		}, [i, &action]{ action(i); });
-
-		// make module ready
-		ready_run_[i] = id + 1;
-		module_cv_.notify_all();
 	}
 
 
