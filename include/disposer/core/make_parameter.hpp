@@ -129,6 +129,7 @@ namespace disposer{
 		typename VerfiyValueFn,
 		typename Accessory >
 	static T get_parameter_value(
+		std::string_view parameter_name,
 		DimensionList const&,
 		parser_fn< ParserFn > const& parser,
 		default_value_fn< DefaultValueFn > const& default_value_generator,
@@ -137,10 +138,10 @@ namespace disposer{
 		parameter_data const* param_data_ptr
 	){
 		if(param_data_ptr != nullptr && param_data_ptr->generic_value){
-			T result(parser(accessory,
+			T result(parser(parameter_name, accessory,
 				*param_data_ptr->generic_value, hana::type_c< T >));
 
-			verify_value(accessory, result);
+			verify_value(parameter_name, accessory, result);
 
 			return result;
 		}
@@ -150,9 +151,12 @@ namespace disposer{
 				.is_void_r(accessory, hana::type_c< T >);
 			is_void_r
 		){
-			throw std::runtime_error("config value required");
+			throw std::runtime_error(io_tools::make_string(
+				"parameter(", parameter_name, ") config value required [",
+				type_index::type_id< T >().pretty_name(), "]"));
 		}else{
-			return default_value_generator(accessory, hana::type_c< T >);
+			return default_value_generator(
+				parameter_name, accessory, hana::type_c< T >);
 		}
 	}
 

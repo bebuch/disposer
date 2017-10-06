@@ -39,7 +39,11 @@ namespace disposer{
 
 
 		template < typename Accessory, typename T >
-		void operator()(Accessory const& accessory, T const& value)const
+		void operator()(
+			std::string_view parameter_name,
+			Accessory const& accessory,
+			T const& value
+		)const
 		noexcept(std::is_same_v< Fn, verify_value_always_t >){
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
 				static_assert(std::is_invocable_v< Fn const, T > ||
@@ -47,8 +51,9 @@ namespace disposer{
 					"Wrong function signature, expected: "
 					"void f(auto value) or void f(auto value, auto accessory)");
 
-				accessory.log([](logsys::stdlogb& os){
-						os << "verified value of type ["
+				accessory.log([parameter_name](logsys::stdlogb& os){
+						os << "parameter(" << parameter_name
+							<< ") verified value of type ["
 							<< type_index::type_id< T >().pretty_name() << "]";
 					}, [&]{
 						if constexpr(std::is_invocable_v< Fn const, T >){

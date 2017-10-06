@@ -198,6 +198,7 @@ namespace disposer{
 					detail::to_std_string_view(Name{}));
 
 				parameter< Name, type > parameter{get_parameter_value< type >(
+						detail::to_std_string_view(maker.name),
 						dims,
 						maker.parser,
 						maker.default_value_generator,

@@ -95,10 +95,13 @@ namespace disposer{
 		/// \brief Operator for outputs
 		template < typename Accessory, typename T >
 		T operator()(
+			std::string_view parameter_name,
 			Accessory const& accessory,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< Accessory, T >()){
-			return accessory.log([](logsys::stdlogb& os, T const* value){
+			return accessory.log(
+				[parameter_name](logsys::stdlogb& os, T const* value){
+					os << "parameter(" << parameter_name << ") ";
 					if(value){
 						os << "generated default value: ";
 						print_if_supported(os, *value);

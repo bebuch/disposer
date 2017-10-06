@@ -56,13 +56,14 @@ namespace disposer{
 
 		template < typename Accessory, typename T >
 		T operator()(
+			std::string_view parameter_name,
 			Accessory const& accessory,
 			std::string_view value,
 			hana::basic_type< T > type
 		)const noexcept(calc_noexcept< Accessory, T >()){
 			return accessory.log(
-				[](logsys::stdlogb& os, T const* value){
-					os << "parsed value";
+				[parameter_name](logsys::stdlogb& os, T const* value){
+					os << "parameter(" << parameter_name << ") parsed value";
 					if(value){
 						os << ": ";
 						print_if_supported(os, *value);
