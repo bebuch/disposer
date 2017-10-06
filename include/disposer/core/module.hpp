@@ -31,7 +31,7 @@ namespace disposer{
 	template <>
 	class concurrency_manager< false >{
 	public:
-		concurrency_manager()noexcept: next_id_(1) {}
+		concurrency_manager()noexcept: next_id_(0) {}
 
 		void wait(std::size_t const id)noexcept{
 			std::unique_lock lock(mutex_);
@@ -42,7 +42,7 @@ namespace disposer{
 			std::unique_lock lock(mutex_);
 			next_id_ = id + 1;
 			lock.unlock();
-			cv_.notify_one();
+			cv_.notify_all();
 		}
 
 	private:
