@@ -36,8 +36,8 @@ namespace disposer{
 		component_register_fn(
 			dimension_list< Dimension ... > dims,
 			component_configure< Config ... > list,
-			component_modules< Module ... > modules,
-			component_init_fn< ComponentInitFn > module_init
+			component_init_fn< ComponentInitFn > module_init,
+			component_modules< Module ... > modules
 		)
 			: called_flag_(false)
 			, maker_{
@@ -51,30 +51,30 @@ namespace disposer{
 		template < typename ... Config, typename ... Module >
 		component_register_fn(
 			component_configure< Config ... > list,
-			component_modules< Module ... > modules,
-			component_init_fn< ComponentInitFn > module_init
+			component_init_fn< ComponentInitFn > module_init,
+			component_modules< Module ... > modules
 		)
 			: component_register_fn{dimension_list{}, std::move(list),
-				std::move(modules),std::move(module_init)} {}
+				std::move(module_init), std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Module >
 		component_register_fn(
 			dimension_list< Dimension ... > dims,
-			component_modules< Module ... > modules,
-			component_init_fn< ComponentInitFn > module_init
+			component_init_fn< ComponentInitFn > module_init,
+			component_modules< Module ... > modules
 		)
 			: component_register_fn{dims, component_configure<>{},
-				std::move(modules),std::move(module_init)} {}
+				std::move(module_init), std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Module >
 		component_register_fn(
-			component_modules< Module ... > modules,
-			component_init_fn< ComponentInitFn > module_init
+			component_init_fn< ComponentInitFn > module_init,
+			component_modules< Module ... > modules
 		)
 			: component_register_fn{dimension_list{}, component_configure<>{},
-				std::move(modules),std::move(module_init)} {}
+				std::move(module_init), std::move(modules)} {}
 
 
 		/// \brief Call this function to register the component with the given
@@ -117,8 +117,8 @@ namespace disposer{
 	component_register_fn(
 		dimension_list< Dimension ... > dims,
 		component_configure< Config ... > list,
-		component_modules< Module ... > modules,
-		component_init_fn< ComponentInitFn > module_init
+		component_init_fn< ComponentInitFn > module_init,
+		component_modules< Module ... > modules
 	) -> component_register_fn<
 			dimension_list< Dimension ... >,
 			component_configure< Config ... >,
@@ -132,8 +132,8 @@ namespace disposer{
 		typename ComponentInitFn >
 	component_register_fn(
 		component_configure< Config ... > list,
-		component_modules< Module ... > modules,
-		component_init_fn< ComponentInitFn > module_init
+		component_init_fn< ComponentInitFn > module_init,
+		component_modules< Module ... > modules
 	) -> component_register_fn<
 			dimension_list<>,
 			component_configure< Config ... >,
@@ -147,8 +147,8 @@ namespace disposer{
 		typename ComponentInitFn >
 	component_register_fn(
 		dimension_list< Dimension ... > dims,
-		component_modules< Module ... > modules,
-		component_init_fn< ComponentInitFn > module_init
+		component_init_fn< ComponentInitFn > module_init,
+		component_modules< Module ... > modules
 	) -> component_register_fn<
 			dimension_list< Dimension ... >,
 			component_configure<>,
@@ -160,8 +160,8 @@ namespace disposer{
 		typename ... Module,
 		typename ComponentInitFn >
 	component_register_fn(
-		component_modules< Module ... > modules,
-		component_init_fn< ComponentInitFn > module_init
+		component_init_fn< ComponentInitFn > module_init,
+		component_modules< Module ... > modules
 	) -> component_register_fn<
 			dimension_list<>,
 			component_configure<>,
