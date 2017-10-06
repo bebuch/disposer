@@ -25,7 +25,7 @@ namespace disposer{
 		if constexpr(is_printable){
 			os << v;
 		}else{
-			os << "value output on std::ostream& is not supported by type";
+			os << "(no output support)";
 		}
 	}
 
