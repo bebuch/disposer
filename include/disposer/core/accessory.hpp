@@ -136,6 +136,17 @@ namespace disposer{
 			return DimensionList::dimensions[i][hana::size_c< 0 >];
 		}
 
+		/// \brief Get all types of an unsolved dimension by index
+		template < std::size_t DI >
+		static constexpr auto dimension_types(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::dimension_count,
+				"module has less then DI dimensions");
+			static_assert(hana::size_c< 1 > <
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
+				"module dimension DI is already solved");
+			return DimensionList::dimensions[i];
+		}
+
 
 		/// \brief Implementation of the log prefix
 		void log_prefix(log_key&&, logsys::stdlogb& os)const{
@@ -188,6 +199,17 @@ namespace disposer{
 				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
 				"component dimension DI is not solved yet");
 			return DimensionList::dimensions[i][hana::size_c< 0 >];
+		}
+
+		/// \brief Get all types of an unsolved dimension by index
+		template < std::size_t DI >
+		static constexpr auto dimension_types(hana::size_t< DI > i)noexcept{
+			static_assert(DI < DimensionList::dimension_count,
+				"component has less then DI dimensions");
+			static_assert(hana::size_c< 1 > <
+				hana::size(DimensionList::dimensions[hana::size_c< DI >]),
+				"component dimension DI is already solved");
+			return DimensionList::dimensions[i];
 		}
 
 
