@@ -60,11 +60,11 @@ namespace disposer{
 			dimension_list< Dimension ... > dims,
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, module_configure<>{},
-				std::move(module_init), std::move(exec))
+				std::move(module_init), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
@@ -73,11 +73,11 @@ namespace disposer{
 			dimension_list< Dimension ... > dims,
 			module_configure< Config ... > list,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, std::move(list),
-				module_init_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
@@ -85,11 +85,11 @@ namespace disposer{
 		module_register_fn(
 			dimension_list< Dimension ... > dims,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dims, module_configure<>{},
-				module_init_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
@@ -98,22 +98,22 @@ namespace disposer{
 			module_configure< Config ... > list,
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
-				std::move(module_init), std::move(exec))
+				std::move(module_init), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		module_register_fn(
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, module_configure<>{},
-				std::move(module_init), std::move(exec))
+				std::move(module_init), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
@@ -121,21 +121,21 @@ namespace disposer{
 		module_register_fn(
 			module_configure< Config ... > list,
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, std::move(list),
-				module_init_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		module_register_fn(
 			exec_fn< ExecFn > exec,
-			can_run_concurrent< CanRunConcurrent >
+			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
 			: module_register_fn(dimension_list{}, module_configure<>{},
-				module_init_fn< void >(), std::move(exec))
+				module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 
