@@ -44,7 +44,7 @@ namespace disposer{
 
 
 		/// \brief The worker function
-		virtual void exec() = 0;
+		virtual bool exec()noexcept = 0;
 
 		/// \brief Called for every module after a successfull exec or after
 		///        a throwing exec on the module and all following modules

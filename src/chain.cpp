@@ -14,6 +14,7 @@
 #include <logsys/log.hpp>
 
 #include <numeric>
+#include <future>
 
 
 namespace disposer{
@@ -72,50 +73,85 @@ namespace disposer{
 			)
 				: module(std::move(exec_module))
 				, precursor_count(module_data.precursor_count)
+				, precursor_failed(false)
 				, next_module([data, &module_data]{
 						std::vector< chain_exec_module_data* > init;
 						init.reserve(module_data.next_indexes.size());
-						std::transform(
-							module_data.next_indexes.begin(),
-							module_data.next_indexes.end(),
-							std::back_inserter(init),
-							[data](std::size_t i){ return data + 1; });
+						for(std::size_t const i: module_data.next_indexes){
+							init.push_back(data + i);
+						}
 						return init;
-					}()) {}
-
-			void exec_next(){
-				if(--precursor_count == 0) exec();
+					}())
+			{
+				exec_list.reserve(next_module.size());
 			}
 
-			void exec(){
-				try{
-					module->exec();
-					module->cleanup();
-				}catch(...){
-					module->cleanup();
+			/// \brief Move constructor
+			///
+			/// This is a hack …
+			///
+			/// TODO: Implement chain_exec_module_list so that this constructor
+			///       is not needed.
+			chain_exec_module_data(chain_exec_module_data&& other)noexcept
+				: module(std::move(other.module))
+				, precursor_count(other.precursor_count.load())
+				, precursor_failed(other.precursor_failed.load())
+				, next_module(std::move(other.next_module))
+				, exec_list(std::move(other.exec_list)) {}
 
-					throw;
+			bool exec_next(bool const precurser_succeeded)noexcept{
+				if(precurser_succeeded){
+					if(--precursor_count == 0) return exec(true);
+				}else{
+					if(!precursor_failed.exchange(true)) exec(false);
+				}
+				return precurser_succeeded;
+			}
+
+			bool exec(bool const precurser_succeeded)noexcept{
+				auto success = precurser_succeeded;
+
+				if(precurser_succeeded){
+					success = module->exec();
 				}
 
-				std::vector< std::future< void > > list;
-				list.reserve(next_module.size());
+				module->cleanup();
+
 				std::transform(next_module.begin(), next_module.end(),
-					std::back_inserter(list), [](chain_exec_module_data* ptr){
-						return std::async([ptr]{ ptr->exec_next(); });
+					std::back_inserter(exec_list),
+					[success](chain_exec_module_data* ptr){
+						return std::async([success, ptr]{
+							return ptr->exec_next(success);
+						});
 					});
-				for(auto& exec: list) exec.get();
+				for(auto& exec: exec_list){
+					auto success_exec = exec.get();
+					success = success_exec && success;
+				}
+				return success;
 			}
 
 		private:
 			/// \brief The module
-			exec_module_ptr const module;
+			exec_module_ptr module;
 
 			/// \brief The count of modules that must be ready before execution
 			std::atomic< std::size_t > precursor_count;
 
+			/// \brief The count of modules that must be ready before execution
+			std::atomic< std::size_t > precursor_failed;
+
 			/// \brief Pointers to all modules that depend on this module
-			std::vector< chain_exec_module_data* > const next_module;
+			std::vector< chain_exec_module_data* > next_module;
+
+			/// \brief Memory for the async executions of the next modules
+			///
+			/// This is a member since the memory allocation might throw. To
+			/// make exec() noexcept, the memory is allocated in the
+			/// constructor by reserve().
+			std::vector< std::future< bool > > exec_list;
 		};
+
 
 		/// \brief List of a chains modules and indexes of the start modules
 		class chain_exec_module_list{
@@ -127,13 +163,12 @@ namespace disposer{
 				: modules([&]{
 						std::vector< chain_exec_module_data > init;
 						init.reserve(list.size());
-						auto data = init.data();
 						std::transform(
 							module_list.modules.begin(),
 							module_list.modules.end(),
 							std::make_move_iterator(list.begin()),
 							std::back_inserter(init),
-							[data](
+							[data = init.data()](
 								chain_module_data const& module_data,
 								exec_module_ptr&& exec_module
 							){
@@ -145,23 +180,31 @@ namespace disposer{
 				, start_modules([this, &module_list]{
 						std::vector< chain_exec_module_data* > init;
 						init.reserve(module_list.start_indexes.size());
-						auto data = modules.data();
-						std::transform(
-							module_list.start_indexes.begin(),
-							module_list.start_indexes.end(),
-							std::back_inserter(init),
-							[&data](std::size_t i){ return data + i; });
+						for(std::size_t const i: module_list.start_indexes){
+							init.push_back(modules.data() + i);
+						}
 						return init;
-					}()) {}
+					}())
+			{
+				exec_list.reserve(start_modules.size());
+			}
 
-			void exec(){
-				std::vector< std::future< void > > list;
-				list.reserve(start_modules.size());
+			bool exec()noexcept{
 				std::transform(start_modules.begin(), start_modules.end(),
-					std::back_inserter(list), [](chain_exec_module_data* ptr){
-						return std::async([ptr]{ ptr->exec(); });
+					std::back_inserter(exec_list),
+					[](chain_exec_module_data* ptr){
+						return std::async([ptr]{
+							return ptr->exec(true);
+						});
 					});
-				for(auto& exec: list) exec.get();
+
+				auto success = true;
+				for(auto& exec: exec_list){
+					auto success_exec = exec.get();
+					success = success_exec && success;
+				}
+
+				return success;
 			}
 
 		private:
@@ -170,6 +213,13 @@ namespace disposer{
 
 			/// \brief Pointers to all modules without active inputs
 			std::vector< chain_exec_module_data* > const start_modules;
+
+			/// \brief Memory for the async executions of the starter modules
+			///
+			/// This is a member since the memory allocation might throw. To
+			/// make exec() noexcept, the memory is allocated in the
+			/// constructor by reserve().
+			std::vector< std::future< bool > > exec_list;
 		};
 
 
@@ -192,7 +242,7 @@ namespace disposer{
 	}
 
 
-	void chain::exec(){
+	bool chain::exec(){
 		if(!enabled_){
 			throw std::logic_error("chain(" + name + ") is not enabled");
 		}
@@ -203,7 +253,7 @@ namespace disposer{
 		std::size_t const id = generate_id_();
 
 		// exec any module, call cleanup instead if the module throw
-		logsys::log([this, id](logsys::stdlogb& os){
+		return logsys::log([this, id](logsys::stdlogb& os){
 			os << "id(" << id << ") chain(" << name << ")";
 		}, [this, id]{
 			auto modules = logsys::log([this, id](logsys::stdlogb& os){
@@ -212,27 +262,7 @@ namespace disposer{
 					return make_exec_modules(modules_, id);
 				});
 
-			modules.exec();
-
-// 			std::size_t i = 0;
-// 			try{
-// 				for(; i < modules.modules.size(); ++i){
-// 					process_module(i, id, [&modules](std::size_t i){
-// 						modules.modules[i].module->exec();
-// 						modules.modules[i].module->cleanup();
-// 					}, "exec");
-// 				}
-// 			}catch(...){
-// 				// cleanup
-// 				for(; i < modules.modules.size(); ++i){
-// 					process_module(i, id, [&modules](std::size_t i){
-// 						modules.modules[i].module->cleanup();
-// 					}, "cleanup");
-// 				}
-//
-// 				// rethrow exception
-// 				throw;
-// 			}
+			return modules.exec();
 		});
 	}
 
@@ -313,24 +343,6 @@ namespace disposer{
 				}
 			});
 	}
-
-
-	template < typename F >
-	void chain::process_module(
-		std::size_t const i,
-		std::size_t const id,
-		F const& action,
-		std::string_view action_name
-	){
-		// exec or cleanup the module
-		logsys::log([this, id, i, action_name](logsys::stdlogb& os){
-			auto& module = modules_.modules[i].module;
-			os << "id(" << id << ") "
-				<< "chain(" << module->chain << ") module(" << module->number
-				<< ":" << module->type_name << ") " << action_name;
-		}, [i, &action]{ action(i); });
-	}
-
 
 
 }

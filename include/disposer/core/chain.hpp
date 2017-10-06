@@ -69,7 +69,7 @@ namespace disposer{
 		/// 3.3 if not last module then back to 3.1
 		///
 		/// If a module throws an exception,
-		void exec();
+		bool exec();
 
 
 		/// \brief Enables the chain for exec calls
@@ -88,16 +88,6 @@ namespace disposer{
 
 
 	private:
-		/// \brief Handles the exec and the cleanup of a module
-		template < typename F >
-		void process_module(
-			std::size_t const i,
-			std::size_t const id,
-			F const& action,
-			std::string_view action_name
-		);
-
-
 		/// \brief List of modules
 		chain_module_list const modules_;
 

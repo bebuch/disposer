@@ -63,7 +63,9 @@ namespace disposer{
 
 		/// \brief Tell the connected output that this input finished
 		void cleanup()noexcept{
-			if(output_ptr()) output_ptr()->cleanup();
+			if(output_ptr()){
+				output_ptr()->cleanup();
+			}
 		}
 
 

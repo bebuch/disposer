@@ -76,8 +76,8 @@ namespace disposer{
 
 
 		/// \brief The actual worker function called one times per trigger
-		virtual void exec()override{
-			module_.exec(id_, inputs_, outputs_, location_);
+		virtual bool exec()noexcept override{
+			return module_.exec(id_, inputs_, outputs_, location_);
 		}
 
 		/// \brief Cleanup inputs and connected outputs if appropriate

@@ -114,17 +114,20 @@ namespace disposer{
 
 
 		/// \brief Calls the exec_fn
-		void exec(
+		bool exec(
 			std::size_t id,
 			to_exec_list_t< Inputs >& inputs,
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
-		){
+		)noexcept{
 			module_accessory accessory{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
 				manager(*this, id);
-			return exec_fn_(accessory);
+			return logsys::exception_catching_log(
+				[this, id](logsys::stdlogb& os){
+					os << "id(" << id << ") " << this->location << "exec";
+				}, [this, &accessory]{ exec_fn_(accessory); });
 		}
 
 
@@ -144,7 +147,7 @@ namespace disposer{
 
 		/// \brief Make a corresponding exec_module
 		virtual exec_module_ptr make_exec_module(
-			std::size_t id, output_map_type& output_map
+			std::size_t const id, output_map_type& output_map
 		)override{
 			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
 				Parameters, ModuleInitFn, ExecFn, CanRunConcurrent > >(*this,
@@ -155,10 +158,9 @@ namespace disposer{
 								{input, output_map};
 						}),
 					hana::transform(data_.outputs,
-						[&output_map](auto& output){
-							return hana::tuple
-								< decltype(output), output_map_type& >
-								{output, output_map};
+						[this, id, &output_map](auto& output){
+							return exec_output_init_data(
+								output, output_map, id, location);
 						}), id
 				);
 		}

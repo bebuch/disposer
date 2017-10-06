@@ -36,7 +36,7 @@ namespace disposer{
 			ExecOutputs& outputs,
 			Parameters const& parameters,
 			std::string_view location
-		)
+		)noexcept
 			: id_(id)
 			, state_(state)
 			, inputs_(inputs)

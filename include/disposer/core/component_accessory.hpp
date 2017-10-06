@@ -41,7 +41,7 @@ namespace disposer{
 			Parameters const& parameters,
 			::disposer::disposer& disposer,
 			std::string_view location
-		)
+		)noexcept
 			: state_(state)
 			, parameters_(parameters)
 			, disposer_(disposer)

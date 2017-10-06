@@ -106,7 +106,9 @@ namespace disposer{
 				// create output list
 				output_list config_outputs;
 				for(auto const& config_output: config_module.outputs){
-					config_outputs.emplace(config_output.name, 0);
+					config_outputs.emplace(
+						config_output.name,
+						config_output.use_count);
 				}
 
 				// create module (in a unique_ptr)

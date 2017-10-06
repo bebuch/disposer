@@ -22,9 +22,12 @@ namespace disposer{
 
 			for(auto& module: chain.modules){
 				for(auto& input: module.inputs){
+					auto const iter = variables.find(input.variable);
+					assert(iter != variables.end());
+
+					++iter->second->use_count;
+
 					if(input.transfer == in_transfer::move){
-						auto const iter = variables.find(input.variable);
-						++iter->second->use_count;
 						variables.erase(iter);
 					}
 				}

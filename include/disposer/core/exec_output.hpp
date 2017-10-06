@@ -17,6 +17,9 @@
 
 #include <io_tools/make_string.hpp>
 
+#include <logsys/stdlogb.hpp>
+#include <logsys/log.hpp>
+
 #include <boost/hana/tuple.hpp>
 
 #include <functional>
@@ -30,7 +33,16 @@ namespace disposer{
 	template < typename T >
 	class unnamed_exec_output: public exec_output_base{
 	public:
-		using exec_output_base::exec_output_base;
+		/// \brief Constructor
+		unnamed_exec_output(
+			std::size_t const id,
+			std::string_view module_location,
+			std::string_view name,
+			std::size_t use_count
+		)noexcept
+			: exec_output_base(use_count)
+			, location_(io_tools::make_string("id(", id, ") ", module_location,
+				"output(", name, ") cleanup")) {}
 
 
 		/// \brief Add given data to \ref data_
@@ -62,27 +74,56 @@ namespace disposer{
 
 		/// \brief Remove data on last cleanup call
 		void cleanup()noexcept{
-			if(is_cleanup()) data_.clear();
+			if(is_cleanup()){
+				logsys::log(
+					[this](logsys::stdlogb& os){ os << location_; },
+					[this]{ data_.clear(); });
+			}
 		}
 
 
 	private:
+		/// \brief Log string for cleanup
+		std::string const location_;
+
 		/// \brief Putted data of the output
 		std::vector< T > data_;
 	};
 
+
+	template < typename Name, typename T >
+	struct exec_output_init_data{
+		exec_output_init_data(
+			output< Name, T >& output,
+			output_map_type& output_map,
+			std::size_t const id,
+			std::string_view module_location
+		)noexcept
+			: output(output)
+			, output_map(output_map)
+			, id(id)
+			, module_location(module_location) {}
+
+		output< Name, T >& output;
+		output_map_type& output_map;
+		std::size_t const id;
+		std::string_view module_location;
+	};
 
 	/// \brief The output type while exec
 	template < typename Name, typename T >
 	class exec_output: public unnamed_exec_output< T >{
 	public:
 		/// \brief Constructor
-		exec_output(
-			hana::tuple< output< Name, T >&, output_map_type& > const& data
-		)noexcept
-			: unnamed_exec_output< T >(data[hana::size_c< 0 >].use_count())
+		exec_output(exec_output_init_data< Name, T > const& data)noexcept
+			: unnamed_exec_output< T >(
+				data.id,
+				data.module_location,
+				detail::to_std_string_view(name),
+				data.output.use_count()
+			)
 		{
-			data[hana::size_c< 1 >].emplace(&data[hana::size_c< 0 >], this);
+			data.output_map.emplace(&data.output, this);
 		}
 
 		/// \brief Compile time name of the output

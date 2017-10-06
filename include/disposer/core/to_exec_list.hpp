@@ -56,9 +56,7 @@ namespace disposer{
 	struct to_exec_init_list
 		< hana::tuple< output< Names, Ts > ... > >
 	{
-		using type = hana::tuple< hana::tuple<
-				output< Names, Ts >&, output_map_type&
-			> ... >;
+		using type = hana::tuple< exec_output_init_data< Names, Ts > ... >;
 	};
 
 	template <>
