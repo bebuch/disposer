@@ -24,13 +24,12 @@ namespace disposer{
 		module_maker_list const& maker_list,
 		types::embedded_config::chain const& config_chain,
 		id_generator& generate_id
-	):
-		name(config_chain.name),
-		modules_(create_chain_modules(maker_list, config_chain)),
-		generate_id_(generate_id),
-		enabled_(false),
-		exec_calls_count_(0)
-		{}
+	)
+		: name(config_chain.name)
+		, modules_(create_chain_modules(maker_list, config_chain))
+		, generate_id_(generate_id)
+		, enabled_(false)
+		, exec_calls_count_(0) {}
 
 
 	chain::~chain(){
@@ -225,14 +224,16 @@ namespace disposer{
 
 		chain_exec_module_list make_exec_modules(
 			chain_module_list const& module_list,
-			std::size_t const id
+			std::size_t const id,
+			std::size_t const exec_id
 		){
 			std::vector< exec_module_ptr > list;
 			list.reserve(module_list.modules.size());
 
 			output_map_type output_map;
 			for(auto const& data: module_list.modules){
-				list.push_back(data.module->make_exec_module(id, output_map));
+				list.push_back(data.module
+					->make_exec_module(id, exec_id, output_map));
 			}
 
 			return chain_exec_module_list(module_list, std::move(list));
@@ -251,15 +252,16 @@ namespace disposer{
 
 		// generate a new id for the exec
 		std::size_t const id = generate_id_();
+		std::size_t const exec_id = generate_exec_id_();
 
 		// exec any module, call cleanup instead if the module throw
 		return logsys::log([this, id](logsys::stdlogb& os){
 			os << "id(" << id << ") chain(" << name << ")";
-		}, [this, id]{
+		}, [this, id, exec_id]{
 			auto modules = logsys::log([this, id](logsys::stdlogb& os){
 					os << "id(" << id << ") chain(" << name << ") prepared";
-				}, [this, id]{
-					return make_exec_modules(modules_, id);
+				}, [this, id, exec_id]{
+					return make_exec_modules(modules_, id, exec_id);
 				});
 
 			return modules.exec();
@@ -271,9 +273,6 @@ namespace disposer{
 		// TODO: Prevent enable while disable is waiting on exec's
 		std::unique_lock< std::mutex > lock(enable_mutex_);
 		if(enabled_) return;
-
-		// TODO: This line is redundant, right?
-		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
 		logsys::log(
 			[this](logsys::stdlogb& os){

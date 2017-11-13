@@ -6,8 +6,6 @@
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
-#include <boost/range/adaptor/reversed.hpp>
-
 #include <cassert>
 #include <algorithm>
 

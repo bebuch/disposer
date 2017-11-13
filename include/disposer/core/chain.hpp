@@ -92,8 +92,11 @@ namespace disposer{
 		chain_module_list const modules_;
 
 
-		/// \brief Referenz to the id_generator
+		/// \brief Referenz to the disposer global id_generator
 		id_generator& generate_id_;
+
+		/// \brief Chain local id generator
+		id_generator generate_exec_id_;
 
 
 		/// \brief Mutex for enable and disable

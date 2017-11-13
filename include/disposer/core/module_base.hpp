@@ -67,7 +67,9 @@ namespace disposer{
 
 		/// \brief Make a corresponding exec_module
 		virtual exec_module_ptr make_exec_module(
-			std::size_t id, output_map_type& output_map) = 0;
+			std::size_t id,
+			std::size_t exec_id,
+			output_map_type& output_map) = 0;
 
 
 		/// \brief Get map from output names to output_base pointers

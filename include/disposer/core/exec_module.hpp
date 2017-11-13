@@ -45,10 +45,12 @@ namespace disposer{
 				ExecFn, CanRunConcurrent >& module,
 			to_exec_init_list_t< Inputs > const& inputs,
 			to_exec_init_list_t< Outputs > const& outputs,
-			std::size_t id
+			std::size_t id,
+			std::size_t exec_id
 		)noexcept
 			: module_(module)
 			, id_(id)
+			, exec_id_(exec_id)
 			, inputs_(inputs)
 			, outputs_(outputs)
 			, location_("id(" + std::to_string(id_) + ") chain("
@@ -62,8 +64,15 @@ namespace disposer{
 		module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn, ExecFn,
 			CanRunConcurrent >& module_;
 
-		/// \brief Current exec id
+		/// \brief Current id
+		///
+		/// This id is unique over all chains.
 		std::size_t const id_;
+
+		/// \brief Current exec id
+		///
+		/// This id is bound to the chain.
+		std::size_t const exec_id_;
 
 		/// \brief hana::tuple of exec_inputs
 		to_exec_list_t< Inputs > inputs_;
@@ -77,7 +86,7 @@ namespace disposer{
 
 		/// \brief The actual worker function called one times per trigger
 		virtual bool exec()noexcept override{
-			return module_.exec(id_, inputs_, outputs_, location_);
+			return module_.exec(id_, exec_id_, inputs_, outputs_, location_);
 		}
 
 		/// \brief Cleanup inputs and connected outputs if appropriate

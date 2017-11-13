@@ -129,7 +129,8 @@ namespace disposer{ namespace{
 
 				result_chain.modules.push_back({
 					std::move(module.type_name),
-					embedded_config_parameters(sets, std::move(module.parameters)),
+					embedded_config_parameters(sets,
+						std::move(module.parameters)),
 					std::move(module.inputs),
 					std::move(outputs)
 				});

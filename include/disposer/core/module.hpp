@@ -31,22 +31,23 @@ namespace disposer{
 	template <>
 	class concurrency_manager< false >{
 	public:
-		concurrency_manager()noexcept: next_id_(0) {}
+		concurrency_manager()noexcept: next_exec_id_(0) {}
 
-		void wait(std::size_t const id)noexcept{
+		void wait(std::size_t const exec_id)noexcept{
 			std::unique_lock lock(mutex_);
-			cv_.wait(lock, [this, id]{ return next_id_ == id; });
+			cv_.wait(lock,
+				[this, exec_id]{ return next_exec_id_ == exec_id; });
 		}
 
-		void ready(std::size_t const id)noexcept{
+		void ready(std::size_t const exec_id)noexcept{
 			std::unique_lock lock(mutex_);
-			next_id_ = id + 1;
+			next_exec_id_ = exec_id + 1;
 			lock.unlock();
 			cv_.notify_all();
 		}
 
 	private:
-		std::size_t next_id_;
+		std::size_t next_exec_id_;
 		std::mutex mutex_;
 		std::condition_variable cv_;
 	};
@@ -54,22 +55,22 @@ namespace disposer{
 	template < typename Manager >
 	class concurrency_manager_guard{
 	public:
-		concurrency_manager_guard(Manager& manager, std::size_t id)noexcept
+		concurrency_manager_guard(Manager& manager, std::size_t exec_id)noexcept
 			: manager_(manager)
-			, id_(id)
+			, exec_id_(exec_id)
 		{
-			static_assert(noexcept(manager_.wait(id_)));
-			manager_.wait(id_);
+			static_assert(noexcept(manager_.wait(exec_id_)));
+			manager_.wait(exec_id_);
 		}
 
 		~concurrency_manager_guard(){
-			static_assert(noexcept(manager_.ready(id_)));
-			manager_.ready(id_);
+			static_assert(noexcept(manager_.ready(exec_id_)));
+			manager_.ready(exec_id_);
 		}
 
 	private:
 		Manager& manager_;
-		std::size_t id_;
+		std::size_t exec_id_;
 	};
 
 
@@ -116,6 +117,7 @@ namespace disposer{
 		/// \brief Calls the exec_fn
 		bool exec(
 			std::size_t id,
+			std::size_t exec_id,
 			to_exec_list_t< Inputs >& inputs,
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
@@ -123,7 +125,7 @@ namespace disposer{
 			module_accessory accessory{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
-				manager(*this, id);
+				manager(*this, exec_id);
 			return logsys::exception_catching_log(
 				[this, id](logsys::stdlogb& os){
 					os << "id(" << id << ") " << this->location << "exec";
@@ -147,7 +149,9 @@ namespace disposer{
 
 		/// \brief Make a corresponding exec_module
 		virtual exec_module_ptr make_exec_module(
-			std::size_t const id, output_map_type& output_map
+			std::size_t const id,
+			std::size_t const exec_id,
+			output_map_type& output_map
 		)override{
 			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
 				Parameters, ModuleInitFn, ExecFn, CanRunConcurrent > >(*this,
@@ -161,7 +165,7 @@ namespace disposer{
 						[this, id, &output_map](auto& output){
 							return exec_output_init_data(
 								output, output_map, id, location);
-						}), id
+						}), id, exec_id
 				);
 		}
 
