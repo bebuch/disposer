@@ -34,6 +34,21 @@ namespace disposer::detail{
 	struct is_optional< std::optional< T > >: std::true_type{};
 
 	template < typename T >
+	struct is_optional< T& >: is_optional< T >{};
+
+	template < typename T >
+	struct is_optional< T&& >: is_optional< T >{};
+
+	template < typename T >
+	struct is_optional< T const >: is_optional< T >{};
+
+	template < typename T >
+	struct is_optional< T volatile >: is_optional< T >{};
+
+	template < typename T >
+	struct is_optional< T const volatile >: is_optional< T >{};
+
+	template < typename T >
 	constexpr bool is_optional_v = is_optional< T >::value;
 
 
