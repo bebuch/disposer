@@ -82,10 +82,14 @@ namespace disposer{
 	struct stream_parser_t{
 		static void verify_istream(std::string_view value, std::istream& is){
 			if(!is){
+				is.clear();
 				throw std::runtime_error("parsing of '" + std::string(value)
-					+ "' failed");
+					+ "' failed on position " + std::to_string(is.tellg())
+					+ ", rest: '"
+					+ std::string(value.begin() + is.tellg(), value.end())
+					+ "'");
 			}
-			if(!is.eof()){
+			if(!is.eof() && is.tellg() < value.size()){
 				std::ostringstream os;
 				for(char c = is.get(); is; c = is.get()) os << c;
 				throw std::runtime_error("parsing of '" + std::string(value)
