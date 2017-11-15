@@ -89,7 +89,11 @@ namespace disposer{
 					+ std::string(value.begin() + is.tellg(), value.end())
 					+ "'");
 			}
-			if(!is.eof() && is.tellg() < value.size()){
+
+			if(
+				!is.eof() &&
+				static_cast< std::size_t >(is.tellg()) < value.size()
+			){
 				std::ostringstream os;
 				for(char c = is.get(); is; c = is.get()) os << c;
 				throw std::runtime_error("parsing of '" + std::string(value)
