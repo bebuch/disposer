@@ -134,7 +134,7 @@ namespace disposer{ namespace{
 							"wait_on number must not be 0");
 					}
 
-					if(wait_on.number >= module_number){
+					if(wait_on.number > module_number){
 						throw std::logic_error(location() + "wait_on number "
 							+ std::to_string(wait_on.number)
 							+ " is greater than current module number");

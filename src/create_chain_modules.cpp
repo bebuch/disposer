@@ -75,9 +75,17 @@ namespace disposer{
 				os << "chain(" << config_chain.name << ") module("
 					<< i + 1 << ":" << config_module.type_name << ") created";
 			}, [&]{
+				// add the number of this module to all its wait_on modules
+				for(auto wait_on: config_module.wait_ons){
+					result.modules[wait_on].next_indexes.push_back(i);
+				}
+
 				// create input list
 				input_list config_inputs;
-				if(config_module.inputs.empty()){
+				if(
+					config_module.wait_ons.empty() &&
+					config_module.inputs.empty()
+				){
 					// add as starter module
 					result.start_indexes.push_back(i);
 				}else{
