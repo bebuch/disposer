@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(register_0){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = component_register_fn(component_modules{}, init);
+		auto fn = component_register_fn(init, component_modules{});
 		fn("register_0", disposer.component_declarant());
 	}
 }
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(register_1){
 					set_dimension_fn([i](auto const&){
 						return solved_dimensions{index_component< 0 >{i}};
 					})
-				}, component_modules{}, init);
+				}, init, component_modules{});
 		};
 
 	{
@@ -84,11 +84,11 @@ BOOST_AUTO_TEST_CASE(register_0_module_1){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = component_register_fn(component_modules{
+		auto fn = component_register_fn(init, component_modules{
 				make("m1"_module, register_fn([](auto& /*component*/){
 					return module_register_fn(exec_fn{exec{}});
 				}))
-			}, init);
+			});
 		fn("register_0_module_1", disposer.component_declarant());
 	}
 }
