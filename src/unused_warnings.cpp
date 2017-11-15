@@ -30,28 +30,10 @@ namespace disposer{
 		}
 
 		for(auto& chain: config.chains){
-			std::map< std::string, bool > variables;
 			for(auto const& module: chain.modules){
 				for(auto const& set: module.parameters.parameter_sets){
 					parameter_sets[set] = true;
 				}
-
-				for(auto const& input: module.inputs){
-					variables[input.variable] = true;
-				}
-
-				for(auto const& output: module.outputs){
-					variables.emplace(output.variable, false);
-				}
-			}
-
-			for(auto const& var: variables){
-				if(var.second) continue;
-
-				logsys::log([&var, &chain](logsys::stdlogb& os){
-					os << "chain(" << chain.name << ") variable '"
-						<< var.first << "' is not used (WARNING)";
-				});
 			}
 		}
 
