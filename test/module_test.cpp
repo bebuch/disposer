@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(test_1){
 			true
 		> >);
 
-	auto e = m.make_exec_module(0, map);
+	auto e = m.make_exec_module(0, 0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
 			type_list<>,
 			hana::tuple<>,
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(test_2){
 			true
 		> >);
 
-	auto e = m.make_exec_module(0, map);
+	auto e = m.make_exec_module(0, 0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
 			type_list<>,
 			hana::tuple<
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_3){
 			true
 		> >);
 
-	auto e = m.make_exec_module(0, map);
+	auto e = m.make_exec_module(0, 0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
 			type_list<>,
 			hana::tuple<>,
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(test_4){
 			true
 		> >);
 
-	auto e = m.make_exec_module(0, map);
+	auto e = m.make_exec_module(0, 0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
 			type_list<>,
 			hana::tuple<>,
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_5){
 			true
 		> >);
 
-	auto e = m.make_exec_module(0, map);
+	auto e = m.make_exec_module(0, 0, map);
 	BOOST_TEST((dynamic_cast< exec_module<
 			type_list<>,
 			hana::tuple<
