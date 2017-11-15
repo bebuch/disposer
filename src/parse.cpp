@@ -48,6 +48,12 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 BOOST_FUSION_ADAPT_STRUCT(
+	disposer::types::parse::wait_on,
+	number,
+	type_name
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::parameters,
 	parameter_sets,
 	parameters
@@ -56,6 +62,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	disposer::types::parse::module,
 	type_name,
+	wait_ons,
 	parameters,
 	inputs,
 	outputs
@@ -392,6 +399,10 @@ namespace disposer::parser{
 	x3::rule< module_set_ref_tag, std::string > const
 		module_set_ref("module_set_ref");
 
+	struct module_wait_on_tag;
+	x3::rule< module_wait_on_tag, type::wait_on > const
+		module_wait_on("module_wait_on");
+
 	struct module_param_specialization_tag;
 	x3::rule< module_param_specialization_tag, type::specialized_parameter >
 		 const module_param_specialization("module_param_specialization");
@@ -496,8 +507,15 @@ namespace disposer::parser{
 	;
 
 	auto const module_set_ref_def =
+		// wait for = before throw because a parameter name
+		// might begin with parameter_set
 		("\t\t\t\tparameter_set" >> *space >> '=')
 		> *space > value > separator
+	;
+
+	auto const module_wait_on_def =
+		"\t\t\twait_on" > *space > '='
+		> *space > x3::ulong_ > ':' > value > separator
 	;
 
 	auto const module_param_specialization_def =
@@ -544,6 +562,7 @@ namespace disposer::parser{
 
 	auto const module_def =
 		("\t\t" > keyword > separator) >>
+		*module_wait_on >>
 		-module_params >>
 		-inputs >>
 		-outputs
@@ -645,6 +664,16 @@ namespace disposer::parser{
 			return "a parameter set reference line "
 				"'\t\t\t\tparameter_set = name\n', where 'parameter_set' is a "
 				"keyword and 'name' the name of the referenced parameter set";
+		}
+	};
+
+	struct module_wait_on_tag: error_base< module_wait_on_tag >{
+		const char* message()const{
+			return "a wait_on reference line "
+				"'\t\t\twait_on = number:module\n', where 'wait_on' is a "
+				"keyword, 'number' is the (with 1 beginning) number of the "
+				"referenced module in the current chain and 'module' is the "
+				"type name of the referenced module";
 		}
 	};
 
@@ -853,6 +882,7 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(module_params)
 	BOOST_SPIRIT_DEFINE(module_params_checked)
 	BOOST_SPIRIT_DEFINE(module_set_ref)
+	BOOST_SPIRIT_DEFINE(module_wait_on)
 	BOOST_SPIRIT_DEFINE(input)
 	BOOST_SPIRIT_DEFINE(output)
 	BOOST_SPIRIT_DEFINE(inputs)

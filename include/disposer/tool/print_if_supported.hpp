@@ -23,7 +23,7 @@ namespace disposer{
 		if constexpr(detail::is_optional_v< T >){
 			if(v){
 				os << "{";
-				print_if_supported(os, v);
+				print_if_supported(os, *v);
 				os << "}";
 			}else{
 				os << "{empty}";

@@ -116,7 +116,42 @@ namespace disposer{ namespace{
 					{}
 				});
 
+			std::vector< std::string > module_types;
 			for(auto& module: chain.modules){
+				std::vector< std::size_t > wait_ons;
+				wait_ons.reserve(module.wait_ons.size());
+				for(auto& wait_on: module.wait_ons){
+					auto const module_number = module_types.size();
+
+					auto location = [&result_chain, &module, module_number]{
+						return "in chain(" + result_chain.name + ") module("
+							+ std::to_string(module_number) + ":"
+							+ module.type_name + "): ";
+					};
+
+					if(wait_on.number == 0){
+						throw std::logic_error(location() +
+							"wait_on number must not be 0");
+					}
+
+					if(wait_on.number >= module_number){
+						throw std::logic_error(location() + "wait_on number "
+							+ std::to_string(wait_on.number)
+							+ " is greater than current module number");
+					}
+
+					if(wait_on.type_name != module_types[wait_on.number - 1]){
+						throw std::logic_error(location()
+							+ "wait_on referes to module("
+							+ std::to_string(wait_on.number) + ":"
+							+ wait_on.type_name +
+							+ ") but module " + std::to_string(wait_on.number)
+							+ "is of type " + module_types[wait_on.number - 1]);
+					}
+
+					wait_ons.push_back(wait_on.number - 1);
+				}
+
 				std::vector< types::embedded_config::out > outputs;
 				outputs.reserve(module.outputs.size());
 				for(auto& output: module.outputs){
@@ -128,12 +163,15 @@ namespace disposer{ namespace{
 				}
 
 				result_chain.modules.push_back({
-					std::move(module.type_name),
+					module.type_name,
+					std::move(wait_ons),
 					embedded_config_parameters(sets,
 						std::move(module.parameters)),
 					std::move(module.inputs),
 					std::move(outputs)
 				});
+
+				module_types.push_back(std::move(module.type_name));
 			}
 		}
 		return result;

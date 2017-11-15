@@ -57,6 +57,7 @@ namespace disposer{
 
 		struct module{
 			std::string type_name;
+			std::vector< std::size_t > wait_ons;
 			parameter_list parameters;
 			std::vector< in > inputs;
 			std::vector< out > outputs;

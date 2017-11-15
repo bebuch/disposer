@@ -479,6 +479,48 @@ R"file(chain
 "Syntax error at line 5, pos 8: '\t\t\t\tname\n', expected output map "
 "'\t\t\t\toutput = >variable'"
 	}
+	,
+	// 026
+	{
+R"file(chain
+	name5
+		load
+			wait_on
+)file"
+	,
+"Syntax error at line 4, pos 10: '\t\t\twait_on\n', expected a wait_on "
+"reference line '\t\t\twait_on = number:module\n', where 'wait_on' is a "
+"keyword, 'number' is the (with 1 beginning) number of the referenced module "
+"in the current chain and 'module' is the type name of the referenced module"
+	}
+	,
+	// 027
+	{
+R"file(chain
+	name5
+		load
+			wait_on = name
+)file"
+	,
+"Syntax error at line 4, pos 13: '\t\t\twait_on = name\n', expected a wait_on "
+"reference line '\t\t\twait_on = number:module\n', where 'wait_on' is a "
+"keyword, 'number' is the (with 1 beginning) number of the referenced module "
+"in the current chain and 'module' is the type name of the referenced module"
+	}
+	,
+	// 028
+	{
+R"file(chain
+	name5
+		load
+			wait_on = 0:
+)file"
+	,
+"Syntax error at line 4, pos 15: '\t\t\twait_on = 0:\n', expected a wait_on "
+"reference line '\t\t\twait_on = number:module\n', where 'wait_on' is a "
+"keyword, 'number' is the (with 1 beginning) number of the referenced module "
+"in the current chain and 'module' is the type name of the referenced module"
+	}
 };
 
 int parse(std::size_t i, std::string content, std::string const& message){

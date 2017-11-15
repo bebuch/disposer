@@ -68,8 +68,14 @@ namespace disposer{
 			std::string variable;
 		};
 
+		struct wait_on{
+			std::size_t number;
+			std::string type_name;
+		};
+
 		struct module{
 			std::string type_name;
+			std::vector< wait_on > wait_ons;
 			parse::parameters parameters;
 			std::vector< in > inputs;
 			std::vector< out > outputs;

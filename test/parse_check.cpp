@@ -227,6 +227,7 @@ component
 chain
 	chain1
 		dmod1
+			wait_on = 0:dmod0
 			parameter
 				parameter_set = ps1
 				param3 = v3
@@ -268,6 +269,9 @@ chain
 					{
 						{
 							"dmod1",
+							{
+								{0, "dmod0"}
+							},
 							{
 								{
 									{"ps1"}
