@@ -26,10 +26,8 @@ namespace disposer{
 	class module_declarant{
 	public:
 		/// \brief Register a new module in the disposer by mapping the
-		///        module name to the constructing init function
-		void operator()(
-			std::string const& type,
-			module_maker_fn&& fn);
+		///        module name to the constructing init and help function
+		void operator()(std::string const& type, module_maker_entry&& fn);
 
 
 	private:
@@ -56,10 +54,8 @@ namespace disposer{
 	class component_declarant{
 	public:
 		/// \brief Register a new component in the disposer by mapping the
-		///        component name to the constructing init function
-		void operator()(
-			std::string const& type,
-			component_maker_fn&& fn);
+		///        component name to the constructing init and help function
+		void operator()(std::string const& type, component_maker_entry&& fn);
 
 		/// \brief Get a reference to the disposer object
 		::disposer::disposer& disposer(){ return disposer_; }
@@ -119,6 +115,16 @@ namespace disposer{
 
 		/// \brief Load and parse the config file
 		void load(std::string const& filename);
+
+
+		/// \brief Get the help text of all components and modules
+		std::string help();
+
+		/// \brief Get the help text of a module
+		std::string module_help(std::string_view name);
+
+		/// \brief Get the help text of a component
+		std::string component_help(std::string_view name);
 
 
 		/// \brief List of all chaines

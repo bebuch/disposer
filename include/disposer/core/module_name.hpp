@@ -10,7 +10,7 @@
 #define _disposer__core__module_name__hpp_INCLUDED_
 
 #include "module.hpp"
-#include "register_fn.hpp"
+#include "generate_fn.hpp"
 
 
 namespace disposer{
@@ -29,7 +29,7 @@ namespace disposer{
 		std::string_view name;
 
 		/// \brief A list of module IOPs
-		register_fn< ModuleRegisterFn > module_register_fn;
+		generate_fn< ModuleRegisterFn > generate_module_fn;
 	};
 
 
@@ -53,7 +53,7 @@ namespace disposer{
 	template < char ... C, typename ModuleRegisterFn >
 	constexpr auto make(
 		module_name< C ... > const& name,
-		register_fn< ModuleRegisterFn > fn
+		generate_fn< ModuleRegisterFn > fn
 	){
 		return component_module_maker<
 				std::remove_reference_t< ModuleRegisterFn > >

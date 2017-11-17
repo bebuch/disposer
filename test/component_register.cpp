@@ -1,5 +1,5 @@
-#include <disposer/core/register_component.hpp>
-#include <disposer/core/register_module.hpp>
+#include <disposer/core/generate_component.hpp>
+#include <disposer/core/generate_module.hpp>
 
 #define BOOST_TEST_MODULE dimension solve
 #include <boost/test/included/unit_test.hpp>
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(register_0){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = component_register_fn(init, component_modules{});
+		auto fn = generate_component(init, component_modules{});
 		fn("register_0", disposer.component_declarant());
 	}
 }
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(register_1){
 
 	constexpr component_init_fn init{init_fn{}};
 
-	auto const register_fn = [=](std::size_t i){
-			return component_register_fn(list,
+	auto const generate_fn = [=](std::size_t i){
+			return generate_component(list,
 				component_configure{
 					set_dimension_fn([i](auto const&){
 						return solved_dimensions{index_component< 0 >{i}};
@@ -57,15 +57,15 @@ BOOST_AUTO_TEST_CASE(register_1){
 		};
 
 	{
-		auto fn = register_fn(0);
+		auto fn = generate_fn(0);
 		fn("register_1_1", disposer.component_declarant());
 	}
 	{
-		auto fn = register_fn(1);
+		auto fn = generate_fn(1);
 		fn("register_1_2", disposer.component_declarant());
 	}
 	{
-		auto fn = register_fn(2);
+		auto fn = generate_fn(2);
 		fn("register_1_3", disposer.component_declarant());
 	}
 }
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(register_0_module_1){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = component_register_fn(init, component_modules{
-				make("m1"_module, register_fn([](auto& /*component*/){
-					return module_register_fn(exec_fn{exec{}});
+		auto fn = generate_component(init, component_modules{
+				make("m1"_module, generate_fn([](auto& /*component*/){
+					return generate_module(exec_fn{exec{}});
 				}))
 			});
 		fn("register_0_module_1", disposer.component_declarant());

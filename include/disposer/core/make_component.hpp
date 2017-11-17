@@ -275,10 +275,10 @@ namespace disposer{
 				// register the component modules for this component instance
 				hana::for_each(module_maker_list.module_maker_list,
 					[this, &component](auto const& component_module_maker){
-						auto register_fn = component_module_maker
-							.module_register_fn(component.accessory);
+						auto generate_fn = component_module_maker
+							.generate_module_fn(component.accessory);
 
-						register_fn(data.name + "//"
+						generate_fn(data.name + "//"
 							+ std::string(component_module_maker.name),
 							disposer.module_declarant());
 					});

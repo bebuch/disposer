@@ -34,9 +34,15 @@ namespace disposer{
 	/// \brief A init function which constructs a module
 	using module_maker_fn = std::function< module_ptr(module_make_data const&) >;
 
+	/// \brief Compounds the init fn and the help text generator
+	struct module_maker_entry{
+		module_maker_fn make_fn;
+		std::string(*help_fn)();
+	};
+
 	/// \brief Map between module type name and its maker function
 	using module_maker_list =
-		std::unordered_map< std::string, module_maker_fn >;
+		std::unordered_map< std::string, module_maker_entry >;
 
 
 }

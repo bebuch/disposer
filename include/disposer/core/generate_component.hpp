@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__register_component__hpp_INCLUDED_
-#define _disposer__core__register_component__hpp_INCLUDED_
+#ifndef _disposer__core__generate_component__hpp_INCLUDED_
+#define _disposer__core__generate_component__hpp_INCLUDED_
 
 #include "make_component.hpp"
 
@@ -26,14 +26,14 @@ namespace disposer{
 		typename Configuration,
 		typename Modules,
 		typename ComponentInitFn >
-	class component_register_fn{
+	class generate_component{
 	public:
 		/// \brief Constructor
 		template <
 			typename ... Dimension,
 			typename ... Config,
 			typename ... Module >
-		component_register_fn(
+		generate_component(
 			dimension_list< Dimension ... > dims,
 			component_configure< Config ... > list,
 			component_init_fn< ComponentInitFn > module_init,
@@ -49,31 +49,31 @@ namespace disposer{
 
 		/// \brief Constructor
 		template < typename ... Config, typename ... Module >
-		component_register_fn(
+		generate_component(
 			component_configure< Config ... > list,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: component_register_fn{dimension_list{}, std::move(list),
+			: generate_component{dimension_list{}, std::move(list),
 				std::move(module_init), std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Module >
-		component_register_fn(
+		generate_component(
 			dimension_list< Dimension ... > dims,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: component_register_fn{dims, component_configure<>{},
+			: generate_component{dims, component_configure<>{},
 				std::move(module_init), std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Module >
-		component_register_fn(
+		generate_component(
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: component_register_fn{dimension_list{}, component_configure<>{},
+			: generate_component{dimension_list{}, component_configure<>{},
 				std::move(module_init), std::move(modules)} {}
 
 
@@ -84,11 +84,12 @@ namespace disposer{
 			component_declarant& add
 		){
 			if(!called_flag_.exchange(true)){
-				add(component_type,
+				add(component_type, component_maker_entry{
 					[maker{std::move(maker_)}, &add]
 					(component_make_data const& data){
 						return maker(data, add.disposer());
-					});
+					},
+					[]{ return std::string(); }});
 			}else{
 				throw std::runtime_error("called register function '"
 					+ component_type + "' more than once");
@@ -114,12 +115,12 @@ namespace disposer{
 		typename ... Config,
 		typename ... Module,
 		typename ComponentInitFn >
-	component_register_fn(
+	generate_component(
 		dimension_list< Dimension ... > dims,
 		component_configure< Config ... > list,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
-	) -> component_register_fn<
+	) -> generate_component<
 			dimension_list< Dimension ... >,
 			component_configure< Config ... >,
 			component_modules< Module ... >,
@@ -130,11 +131,11 @@ namespace disposer{
 		typename ... Config,
 		typename ... Module,
 		typename ComponentInitFn >
-	component_register_fn(
+	generate_component(
 		component_configure< Config ... > list,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
-	) -> component_register_fn<
+	) -> generate_component<
 			dimension_list<>,
 			component_configure< Config ... >,
 			component_modules< Module ... >,
@@ -145,11 +146,11 @@ namespace disposer{
 		typename ... Dimension,
 		typename ... Module,
 		typename ComponentInitFn >
-	component_register_fn(
+	generate_component(
 		dimension_list< Dimension ... > dims,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
-	) -> component_register_fn<
+	) -> generate_component<
 			dimension_list< Dimension ... >,
 			component_configure<>,
 			component_modules< Module ... >,
@@ -159,10 +160,10 @@ namespace disposer{
 	template <
 		typename ... Module,
 		typename ComponentInitFn >
-	component_register_fn(
+	generate_component(
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
-	) -> component_register_fn<
+	) -> generate_component<
 			dimension_list<>,
 			component_configure<>,
 			component_modules< Module ... >,

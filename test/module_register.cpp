@@ -1,4 +1,4 @@
-#include <disposer/core/register_module.hpp>
+#include <disposer/core/generate_module.hpp>
 
 #define BOOST_TEST_MODULE dimension solve
 #include <boost/test/included/unit_test.hpp>
@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(register_0){
 	constexpr exec_fn exec_dummy{exec{}};
 
 	{
-		auto fn = module_register_fn(
-				module_configure{}, state_dummy, exec_dummy);
+		auto fn = generate_module(
+			module_configure{}, state_dummy, exec_dummy);
 		fn("register_0", disposer.module_declarant());
 	}
 }
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(register_1){
 	constexpr module_init_fn state_dummy{};
 	constexpr exec_fn exec_dummy{exec{}};
 
-	auto const register_fn = [=](std::size_t i){
-			return module_register_fn(list,
+	auto const generate_fn = [=](std::size_t i){
+			return generate_module(list,
 				module_configure{
 					set_dimension_fn([i](auto const&){
 						return solved_dimensions{index_component< 0 >{i}};
@@ -59,15 +59,15 @@ BOOST_AUTO_TEST_CASE(register_1){
 		};
 
 	{
-		auto fn = register_fn(0);
+		auto fn = generate_fn(0);
 		fn("register_1_1", disposer.module_declarant());
 	}
 	{
-		auto fn = register_fn(1);
+		auto fn = generate_fn(1);
 		fn("register_1_2", disposer.module_declarant());
 	}
 	{
-		auto fn = register_fn(2);
+		auto fn = generate_fn(2);
 		fn("register_1_3", disposer.module_declarant());
 	}
 }

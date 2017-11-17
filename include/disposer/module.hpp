@@ -9,6 +9,6 @@
 #ifndef _disposer__module__hpp_INCLUDED_
 #define _disposer__module__hpp_INCLUDED_
 
-#include "core/register_module.hpp"
+#include "core/generate_module.hpp"
 
 #endif

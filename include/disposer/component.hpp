@@ -9,7 +9,7 @@
 #ifndef _disposer__component__hpp_INCLUDED_
 #define _disposer__component__hpp_INCLUDED_
 
-#include "core/register_component.hpp"
-#include "core/register_module.hpp"
+#include "core/generate_component.hpp"
+#include "core/generate_module.hpp"
 
 #endif

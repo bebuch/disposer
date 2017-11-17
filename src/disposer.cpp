@@ -37,7 +37,7 @@ namespace disposer{ namespace{
 		}
 
 		try{
-			return iter->second(data);
+			return iter->second.make_fn(data);
 		}catch(std::exception const& error){
 			throw std::runtime_error(
 				data.location() + error.what()
@@ -147,7 +147,7 @@ namespace disposer{
 
 	void component_declarant::operator()(
 		std::string const& type_name,
-		component_maker_fn&& fn
+		component_maker_entry&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "registered component type name '" << type_name << "'";
@@ -167,7 +167,7 @@ namespace disposer{
 
 	void module_declarant::operator()(
 		std::string const& type_name,
-		module_maker_fn&& fn
+		module_maker_entry&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "registered module type name '" << type_name << "'";
@@ -226,6 +226,20 @@ namespace disposer{
 						std::move(embedded_config.chains));
 			});
 	}
+
+
+	std::string disposer::help(){
+		return "";
+	}
+
+	std::string disposer::module_help(std::string_view name){
+		return std::string(name);
+	}
+
+	std::string disposer::component_help(std::string_view name){
+		return std::string(name);
+	}
+
 
 	chain& disposer::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);

@@ -1,4 +1,4 @@
-#include <disposer/core/register_fn.hpp>
+#include <disposer/core/generate_fn.hpp>
 
 #include <boost/hana/tuple.hpp>
 
@@ -7,7 +7,7 @@ using namespace disposer;
 
 
 struct result{
-	using hana_tag = module_register_fn_tag;
+	using hana_tag = generate_module_tag;
 };
 
 ::disposer::disposer d;
@@ -23,16 +23,16 @@ void test(Fn const& fn){
 
 
 int main(){
-	test(register_fn([](auto){ return result(); }));
-	test(register_fn([](auto&){ return result(); }));
-	test(register_fn([](auto&&){ return result(); }));
-	test(register_fn([](auto const&){ return result(); }));
+	test(generate_fn([](auto){ return result(); }));
+	test(generate_fn([](auto&){ return result(); }));
+	test(generate_fn([](auto&&){ return result(); }));
+	test(generate_fn([](auto const&){ return result(); }));
 
 	// Must fail:
-// 	test(register_fn([](auto const&&){ return result(); }));
-// 	test(register_fn([](auto)mutable{ return result(); }));
-// 	test(register_fn([](auto const&)mutable{ return result(); }));
-// 	test(register_fn([](auto&&)mutable{ return result(); }));
-// 	test(register_fn([](auto const&&)mutable{ return result(); }));
-// 	test(register_fn([](auto&)mutable{ return result(); }));
+// 	test(generate_fn([](auto const&&){ return result(); }));
+// 	test(generate_fn([](auto)mutable{ return result(); }));
+// 	test(generate_fn([](auto const&)mutable{ return result(); }));
+// 	test(generate_fn([](auto&&)mutable{ return result(); }));
+// 	test(generate_fn([](auto const&&)mutable{ return result(); }));
+// 	test(generate_fn([](auto&)mutable{ return result(); }));
 }
