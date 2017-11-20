@@ -228,16 +228,33 @@ namespace disposer{
 	}
 
 
-	std::string disposer::help(){
-		return "";
+	std::string disposer::help()const{
+		std::string result;
+		for(auto const& component: component_maker_list_){
+			result += component.second.help_fn();
+		}
+		for(auto const& module: module_maker_list_){
+			result += module.second.help_fn();
+		}
+		return result;
 	}
 
-	std::string disposer::module_help(std::string_view name){
-		return std::string(name);
+	std::string disposer::module_help(std::string const& name)const{
+		auto const iter = module_maker_list_.find(name);
+		if(iter == module_maker_list_.end()){
+			throw std::logic_error(
+				std::string("no module '") + name + "' found");
+		}
+		return iter->second.help_fn();
 	}
 
-	std::string disposer::component_help(std::string_view name){
-		return std::string(name);
+	std::string disposer::component_help(std::string const& name)const{
+		auto const iter = component_maker_list_.find(name);
+		if(iter == component_maker_list_.end()){
+			throw std::logic_error(
+				std::string("no component '") + name + "' found");
+		}
+		return iter->second.help_fn();
 	}
 
 

@@ -118,13 +118,13 @@ namespace disposer{
 
 
 		/// \brief Get the help text of all components and modules
-		std::string help();
+		std::string help()const;
 
 		/// \brief Get the help text of a module
-		std::string module_help(std::string_view name);
+		std::string module_help(std::string const& name)const;
 
 		/// \brief Get the help text of a component
-		std::string component_help(std::string_view name);
+		std::string component_help(std::string const& name)const;
 
 
 		/// \brief List of all chaines
