@@ -47,7 +47,7 @@ namespace disposer{ namespace{
 
 	auto create_components(
 		component_maker_list const& maker_list,
-		types::embedded_config::components_config&& config
+		types::embedded_config::components_config const& config
 	){
 		std::unordered_map< std::string, component_ptr > components;
 
@@ -73,7 +73,7 @@ namespace disposer{ namespace{
 
 	auto create_chains(
 		module_maker_list const& maker_list,
-		types::embedded_config::chains_config&& config
+		types::embedded_config::chains_config const& config
 	){
 		std::unordered_set< std::string > inactive_chains;
 		std::unordered_map< std::string, chain > chains;
@@ -106,21 +106,16 @@ namespace disposer{ namespace{
 				os << "chain(" << config_chain.name << ") created";
 			}, [&]{
 				// emplace the new process chain
-				chains.emplace(
-					std::piecewise_construct,
-					std::forward_as_tuple(
-						config_chain.name
-					),
-					std::forward_as_tuple(
-						maker_list,
-						config_chain,
-						id_generators[config_chain.id_generator]
-					)
+				chains.try_emplace(
+					config_chain.name,
+					maker_list,
+					config_chain,
+					id_generators[config_chain.id_generator]
 				);
 			});
 		}
 
-		return std::make_tuple(
+		return std::tuple(
 			std::move(inactive_chains),
 			std::move(chains),
 			std::move(id_generators)
@@ -205,26 +200,23 @@ namespace disposer{
 				os << "looked for unused stuff and warned about it";
 			}, [&config]{ unused_warnings(config); });
 
-		auto embedded_config = logsys::log(
+		config_ = logsys::log(
 			[](logsys::stdlogb& os){ os << "created embedded config"; },
 			[&config]{
 				auto result = create_embedded_config(std::move(config));
 				set_output_use_count(result);
 				return result;
 			});
+	}
 
-		logsys::log([](logsys::stdlogb& os){ os << "created components"; },
-			[this, &embedded_config]{
-				components_ = create_components(
-					component_maker_list_, std::move(embedded_config.components));
-			});
+	void disposer::create_components(){
+		components_ = ::disposer::create_components(
+			component_maker_list_, config_.components);
+	}
 
-		logsys::log([](logsys::stdlogb& os){ os << "created chains"; },
-			[this, &embedded_config]{
-				std::tie(inactive_chains_, chains_, id_generators_) =
-					create_chains(module_maker_list_,
-						std::move(embedded_config.chains));
-			});
+	void disposer::create_chains(){
+		std::tie(inactive_chains_, chains_, id_generators_) =
+			::disposer::create_chains(module_maker_list_, config_.chains);
 	}
 
 

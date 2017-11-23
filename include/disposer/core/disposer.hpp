@@ -11,6 +11,8 @@
 
 #include "chain.hpp"
 
+#include "../config/embedded_config.hpp"
+
 #include "../tool/component_ptr.hpp"
 
 #include <unordered_set>
@@ -116,6 +118,12 @@ namespace disposer{
 		/// \brief Load and parse the config file
 		void load(std::string const& filename);
 
+		/// \brief Create components as in config_ defined
+		void create_components();
+
+		/// \brief Create chains as in config_ defined
+		void create_chains();
+
 
 		/// \brief Get the help text of all components and modules
 		std::string help()const;
@@ -136,6 +144,9 @@ namespace disposer{
 
 
 	private:
+		/// \brief Configuration data to create components and chains
+		types::embedded_config::config config_;
+
 		/// \brief List of components (map from component type name to maker
 		///        function)
 		component_maker_list component_maker_list_;
