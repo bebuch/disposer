@@ -45,31 +45,6 @@ namespace disposer{ namespace{
 		}
 	}
 
-	auto create_components(
-		component_maker_list const& maker_list,
-		types::embedded_config::components_config const& config
-	){
-		std::unordered_map< std::string, component_ptr > components;
-
-		for(auto& config_component: config){
-			logsys::log([&config_component](logsys::stdlogb& os){
-				os << "component(" << config_component.name << ":"
-					<< config_component.type_name << ") created";
-			}, [&]{
-				// emplace the new process chain
-				components.emplace(
-					config_component.name,
-					create_component(maker_list, {
-							config_component.name,
-							config_component.type_name,
-							config_component.parameters
-						})
-				);
-			});
-		}
-
-		return components;
-	}
 
 	auto create_chains(
 		module_maker_list const& maker_list,
@@ -210,8 +185,22 @@ namespace disposer{
 	}
 
 	void disposer::create_components(){
-		components_ = ::disposer::create_components(
-			component_maker_list_, config_.components);
+		for(auto& config_component: config_.components){
+			logsys::log([&config_component](logsys::stdlogb& os){
+				os << "component(" << config_component.name << ":"
+					<< config_component.type_name << ") created";
+			}, [&]{
+				// emplace the new process chain
+				components_.emplace(
+					config_component.name,
+					create_component(component_maker_list_, {
+							config_component.name,
+							config_component.type_name,
+							config_component.parameters
+						})
+				);
+			});
+		}
 	}
 
 	void disposer::create_chains(){
