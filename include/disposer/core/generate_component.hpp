@@ -11,9 +11,6 @@
 
 #include "make_component.hpp"
 
-#include <atomic>
-
-
 
 namespace disposer{
 
@@ -39,8 +36,7 @@ namespace disposer{
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: called_flag_(false)
-			, maker_{
+			: maker_{
 				dims,
 				std::move(list),
 				std::move(modules),
@@ -82,26 +78,16 @@ namespace disposer{
 		void operator()(
 			std::string const& component_type,
 			component_declarant& add
-		){
-			if(!called_flag_.exchange(true)){
-				add(component_type, component_maker_entry{
-					[maker{std::move(maker_)}, &add]
-					(component_make_data const& data){
-						return maker(data, add.disposer());
-					},
-					[]{ return std::string(); }});
-			}else{
-				throw std::runtime_error("called register function '"
-					+ component_type + "' more than once");
-			}
-
+		)const{
+			add(component_type, component_maker_entry{
+				[maker = maker_, &add](component_make_data const& data){
+					return maker(data, add.disposer());
+				},
+				[]{ return std::string(); }});
 		}
 
 
 	private:
-		/// \brief Operator must only called once!
-		std::atomic< bool > called_flag_;
-
 		/// \brief The component_maker object
 		component_maker<
 			DimensionList, Configuration, Modules, ComponentInitFn > maker_;

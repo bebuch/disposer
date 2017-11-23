@@ -44,7 +44,7 @@ namespace disposer::detail{
 	};
 
 	template < typename ... Configs >
-	config_queue(hana::tuple< Configs ... > const&)
+	config_queue(hana::tuple< Configs ... >)
 		-> config_queue< 0, Configs ... >;
 
 

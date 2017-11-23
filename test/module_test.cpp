@@ -33,8 +33,8 @@ constexpr auto t = hana::true_c;
 
 BOOST_AUTO_TEST_CASE(test_1){
 	auto list = iops_ref{};
-	module m(type_list<>{dimension_list{}},
-		chain_name, m_type_name, number, std::move(list).flat(), s, e, t);
+	module m(type_list<>{dimension_list{}}, chain_name, m_type_name, number,
+		std::move(list).flat(), s, e, t, optional_component< void >{});
 	static_assert(std::is_same_v< decltype(m),
 		module<
 			type_list<>,
@@ -43,7 +43,8 @@ BOOST_AUTO_TEST_CASE(test_1){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		> >);
 
 	auto e = m.make_exec_module(0, 0, map);
@@ -54,7 +55,8 @@ BOOST_AUTO_TEST_CASE(test_1){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		>* >(e.get()) != nullptr));
 
 	e->exec();
@@ -64,8 +66,8 @@ BOOST_AUTO_TEST_CASE(test_1){
 BOOST_AUTO_TEST_CASE(test_2){
 	auto list = iops_ref{
 		std::move(i2), iops_ref{std::move(i1), iops_ref{}}};
-	module m(type_list<>{dimension_list{}},
-		chain_name, m_type_name, number, std::move(list).flat(), s, e, t);
+	module m(type_list<>{dimension_list{}}, chain_name, m_type_name, number,
+		std::move(list).flat(), s, e, t, optional_component< void >{});
 	static_assert(std::is_same_v< decltype(m), module<
 			type_list<>,
 			hana::tuple<
@@ -76,7 +78,8 @@ BOOST_AUTO_TEST_CASE(test_2){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		> >);
 
 	auto e = m.make_exec_module(0, 0, map);
@@ -90,7 +93,8 @@ BOOST_AUTO_TEST_CASE(test_2){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		>* >(e.get()) != nullptr));
 
 	e->exec();
@@ -100,8 +104,8 @@ BOOST_AUTO_TEST_CASE(test_2){
 BOOST_AUTO_TEST_CASE(test_3){
 	auto list = iops_ref{
 		std::move(o2), iops_ref{std::move(o1), iops_ref{}}};
-	module m(type_list<>{dimension_list{}},
-		chain_name, m_type_name, number, std::move(list).flat(), s, e, t);
+	module m(type_list<>{dimension_list{}}, chain_name, m_type_name, number,
+		std::move(list).flat(), s, e, t, optional_component< void >{});
 	static_assert(std::is_same_v< decltype(m), module<
 			type_list<>,
 			hana::tuple<>,
@@ -112,7 +116,8 @@ BOOST_AUTO_TEST_CASE(test_3){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		> >);
 
 	auto e = m.make_exec_module(0, 0, map);
@@ -126,7 +131,8 @@ BOOST_AUTO_TEST_CASE(test_3){
 			hana::tuple<>,
 			void,
 			exec,
-			true
+			true,
+			void
 		>* >(e.get()) != nullptr));
 
 	e->exec();
@@ -136,8 +142,8 @@ BOOST_AUTO_TEST_CASE(test_3){
 BOOST_AUTO_TEST_CASE(test_4){
 	auto list = iops_ref{
 		std::move(p2), iops_ref{std::move(p1), iops_ref{}}};
-	module m(type_list<>{dimension_list{}},
-		chain_name, m_type_name, number, std::move(list).flat(), s, e, t);
+	module m(type_list<>{dimension_list{}}, chain_name, m_type_name, number,
+		std::move(list).flat(), s, e, t, optional_component< void >{});
 	static_assert(std::is_same_v< decltype(m), module<
 			type_list<>,
 			hana::tuple<>,
@@ -148,7 +154,8 @@ BOOST_AUTO_TEST_CASE(test_4){
 			>,
 			void,
 			exec,
-			true
+			true,
+			void
 		> >);
 
 	auto e = m.make_exec_module(0, 0, map);
@@ -162,7 +169,8 @@ BOOST_AUTO_TEST_CASE(test_4){
 			>,
 			void,
 			exec,
-			true
+			true,
+			void
 		>* >(e.get()) != nullptr));
 
 	e->exec();
@@ -173,8 +181,8 @@ BOOST_AUTO_TEST_CASE(test_5){
 	auto list = iops_ref{std::move(o2), iops_ref{std::move(p2),
 		iops_ref{std::move(p1), iops_ref{std::move(i2),
 		iops_ref{std::move(i1), iops_ref{std::move(o1), iops_ref{}}}}}}};
-	module m(type_list<>{dimension_list{}},
-		chain_name, m_type_name, number, std::move(list).flat(), s, e, t);
+	module m(type_list<>{dimension_list{}}, chain_name, m_type_name, number,
+		std::move(list).flat(), s, e, t, optional_component< void >{});
 	static_assert(std::is_same_v< decltype(m), module<
 			type_list<>,
 			hana::tuple<
@@ -191,7 +199,8 @@ BOOST_AUTO_TEST_CASE(test_5){
 			>,
 			void,
 			exec,
-			true
+			true,
+			void
 		> >);
 
 	auto e = m.make_exec_module(0, 0, map);
@@ -211,7 +220,8 @@ BOOST_AUTO_TEST_CASE(test_5){
 			>,
 			void,
 			exec,
-			true
+			true,
+			void
 		>* >(e.get()) != nullptr));
 
 	e->exec();

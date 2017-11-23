@@ -11,8 +11,6 @@
 
 #include "make_module.hpp"
 
-#include <atomic>
-
 
 namespace disposer{
 
@@ -22,6 +20,23 @@ namespace disposer{
 
 	constexpr can_run_concurrent< false > no_overtaking{};
 
+
+// 	/// \brief Get help text to the module
+// 	std::string generate_module_help(
+// 		dimension_list< Dimension ... > dims,
+// 		module_configure< Config ... > const& list,
+// 		module_init_fn< ModuleInitFn > const& module_init,
+// 		exec_fn< ExecFn > const& exec
+// 	){
+// 		std::ostringstream os;
+// 		hana::for_each(list.config_list, [&os](auto const& iop){
+// 			os << iop.help();
+// 		});
+// 		os << module_init.help();
+// 		os << exec.help();
+// 		return os.str();
+// 	}
+//
 
 	struct unit_test_key;
 
@@ -50,8 +65,7 @@ namespace disposer{
 			can_run_concurrent< CanRunConcurrent >
 				= can_run_concurrent< true >{}
 		)
-			: called_flag_(false)
-			, maker_{dims, std::move(list), module_init, exec}
+			: maker_{dims, std::move(list), module_init, exec}
 			{}
 
 		/// \brief Constructor
@@ -141,24 +155,37 @@ namespace disposer{
 
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
-		void operator()(std::string const& module_type, module_declarant& add){
-			if(!called_flag_.exchange(true)){
-				add(module_type, module_maker_entry{
-					[maker{std::move(maker_)}](module_make_data const& data){
-						return maker(data);
-					},
-					[]{ return std::string(); }});
-			}else{
-				throw std::runtime_error("called module register function '"
-					+ module_type + "' more than once");
-			}
+		void operator()(
+			std::string const& module_type,
+			module_declarant& add
+		)const{
+			add(module_type, module_maker_entry{
+				[maker = maker_](module_make_data const& data){
+					return maker(data);
+				},
+				[]{ return std::string(); }});
 		}
 
 
-	private:
-		/// \brief Operator must only called once!
-		std::atomic< bool > called_flag_;
+		/// \brief Call this function to register the module with the given type
+		///        name and an existing component via the given module_declarant
+		template < typename Component >
+		void operator()(
+			std::string const& module_type,
+			module_declarant& add,
+			Component& component
+		)const{
+			add(module_type, module_maker_entry{
+				[maker = maker_, &component]
+				(module_make_data const& data){
+					return maker(data, component);
+				},
+				[]{ return std::string(); }});
+		}
 
+
+
+	private:
 		/// \brief The module_maker object
 		module_maker< Dimensions, Configuration, ModuleInitFn, ExecFn,
 			CanRunConcurrent > maker_;

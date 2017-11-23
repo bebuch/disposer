@@ -82,7 +82,8 @@ namespace disposer{
 		typename Parameters,
 		typename ModuleInitFn,
 		typename ExecFn,
-		bool CanRunConcurrent >
+		bool CanRunConcurrent,
+		typename Component >
 	class module
 		: public concurrency_manager< CanRunConcurrent >
 		, public module_base
@@ -92,8 +93,8 @@ namespace disposer{
 		using module_init_fn_type = ModuleInitFn;
 
 		/// \brief Type of the module state object
-		using state_type = typename module_state<
-			TypeList, Inputs, Outputs, Parameters, ModuleInitFn >::state_type;
+		using state_type = typename module_state< TypeList, Inputs, Outputs,
+			Parameters, ModuleInitFn, Component >::state_type;
 
 
 		/// \brief Constructor
@@ -106,11 +107,12 @@ namespace disposer{
 			hana::tuple< RefList ... >&& ref_list,
 			module_init_fn< ModuleInitFn > const& module_init_fn,
 			exec_fn< ExecFn > const& exec_fn,
-			hana::bool_< CanRunConcurrent >
+			hana::bool_< CanRunConcurrent >,
+			optional_component< Component > component
 		)
 			: module_base(chain, type_name, number)
 			, data_(std::move(ref_list))
-			, state_(module_init_fn)
+			, state_(module_init_fn, component)
 			, exec_fn_(exec_fn) {}
 
 
@@ -123,7 +125,7 @@ namespace disposer{
 			std::string_view location
 		)noexcept{
 			module_accessory accessory{id, TypeList{}, state_.object(),
-				inputs, outputs, data_.parameters, location};
+				inputs, outputs, data_.parameters, location, state_.component};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
 				manager(*this, exec_id);
 			return logsys::exception_catching_log(
@@ -154,7 +156,9 @@ namespace disposer{
 			output_map_type& output_map
 		)override{
 			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
-				Parameters, ModuleInitFn, ExecFn, CanRunConcurrent > >(*this,
+					Parameters, ModuleInitFn, ExecFn, CanRunConcurrent,
+					Component
+				> >(*this,
 					hana::transform(data_.inputs,
 						[&output_map](auto const& input){
 							return hana::tuple
@@ -185,8 +189,8 @@ namespace disposer{
 		module_data< TypeList, Inputs, Outputs, Parameters > data_;
 
 		/// \brief The user defined state object
-		module_state< TypeList, Inputs, Outputs, Parameters, ModuleInitFn >
-			state_;
+		module_state< TypeList, Inputs, Outputs, Parameters, ModuleInitFn,
+			Component > state_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;
@@ -197,7 +201,8 @@ namespace disposer{
 		typename ... RefList,
 		typename ModuleInitFn,
 		typename ExecFn,
-		bool CanRunConcurrent >
+		bool CanRunConcurrent,
+		typename Component >
 	module(
 		type_list< Ts ... >,
 		std::string const& chain,
@@ -206,7 +211,8 @@ namespace disposer{
 		hana::tuple< RefList ... >&& ref_list,
 		module_init_fn< ModuleInitFn > const& module_init_fn,
 		exec_fn< ExecFn > const& exec_fn,
-		hana::bool_< CanRunConcurrent >
+		hana::bool_< CanRunConcurrent >,
+		optional_component< Component >
 	)
 		-> module<
 			type_list< Ts ... >,
@@ -219,7 +225,7 @@ namespace disposer{
 			decltype(hana::filter(
 				std::declval< hana::tuple< RefList ... >&& >(),
 				hana::is_a< parameter_tag >)),
-			ModuleInitFn, ExecFn, CanRunConcurrent >;
+			ModuleInitFn, ExecFn, CanRunConcurrent, Component >;
 
 
 

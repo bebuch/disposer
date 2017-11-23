@@ -140,11 +140,11 @@ namespace disposer{
 		///        function)
 		component_maker_list component_maker_list_;
 
-		/// \brief List of all components (map from name to object)
-		std::unordered_map< std::string, component_ptr > components_;
-
 		/// \brief List of modules (map from module type name to maker function)
 		module_maker_list module_maker_list_;
+
+		/// \brief List of all components (map from name to object)
+		std::unordered_map< std::string, component_ptr > components_;
 
 		/// \brief List of all inactive chains
 		std::unordered_set< std::string > inactive_chains_;

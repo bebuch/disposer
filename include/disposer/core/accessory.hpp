@@ -13,6 +13,7 @@
 #include "output_name.hpp"
 #include "parameter_name.hpp"
 #include "dimension.hpp"
+#include "exec_fn.hpp"
 
 #include "../tool/add_log.hpp"
 #include "../tool/extract.hpp"
@@ -94,21 +95,30 @@ namespace disposer{
 		-> iops_ref< IOP_Ref, RefList ... >;
 
 
-	template < typename DimensionList, typename ... RefList >
+	template <
+		typename Component,
+		typename DimensionList,
+		typename ... RefList >
 	class module_make_accessory
-		: public add_log<
-			module_make_accessory< DimensionList, RefList ... > >{
+		: public optional_component_accessory< Component >
+		, public add_log<
+			module_make_accessory< Component, DimensionList, RefList ... > >{
 	public:
 		using dimension_list = DimensionList;
 
 		module_make_accessory(
+			optional_component< Component > component,
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view location
-		)noexcept: location(location), list_(list) {}
+		)noexcept
+			: optional_component_accessory< Component >(component)
+			, location(location)
+			, list_(list) {}
 
 		module_make_accessory(module_make_accessory const& other)noexcept
-			: location(other.location)
+			: optional_component_accessory< Component >(other)
+			, location(other.location)
 			, list_(other.list_) {}
 
 

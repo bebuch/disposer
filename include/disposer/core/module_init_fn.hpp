@@ -20,17 +20,21 @@ namespace disposer{
 		typename TypeList,
 		typename Inputs,
 		typename Outputs,
-		typename Parameters >
+		typename Parameters,
+		typename Component >
 	class module_init_accessory
-		: public add_log<
-			module_init_accessory< TypeList, Inputs, Outputs, Parameters > >{
+		: public optional_component_accessory< Component >
+		, public add_log< module_init_accessory< TypeList, Inputs, Outputs,
+			Parameters, Component > >{
 	public:
 		/// \brief Constructor
 		module_init_accessory(
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
-			std::string_view location
+			std::string_view location,
+			optional_component< Component > component
 		)
-			: data_(data)
+			: optional_component_accessory< Component >(component)
+			, data_(data)
 			, location_(location) {}
 
 
@@ -113,18 +117,19 @@ namespace disposer{
 			typename TypeList,
 			typename Inputs,
 			typename Outputs,
-			typename Parameters >
+			typename Parameters,
+			typename Component >
 		auto operator()(
-			module_init_accessory< TypeList, Inputs, Outputs, Parameters >
-				const& accessory
+			module_init_accessory< TypeList, Inputs, Outputs, Parameters,
+				Component > accessory
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const, module_init_accessory<
-				TypeList, Inputs, Outputs, Parameters > const& >
+				TypeList, Inputs, Outputs, Parameters, Component > >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const, module_init_accessory< TypeList,
-						Inputs, Outputs, Parameters > const& > >,
+						Inputs, Outputs, Parameters, Component > > >,
 					"Fn must not return void");
 				return std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn const >){
@@ -136,7 +141,7 @@ namespace disposer{
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be const invokable with "
-					"module_init_accessory const& or without an argument");
+					"module_init_accessory or without an argument");
 			}
 		}
 
@@ -156,20 +161,24 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename ModuleInitFn >
+		typename ModuleInitFn,
+		typename Component >
 	class module_state{
 	public:
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
 			module_init_fn< ModuleInitFn >,
-			module_init_accessory< TypeList, Inputs, Outputs, Parameters >&& >;
+			module_init_accessory< TypeList, Inputs, Outputs, Parameters,
+				Component > >;
 
 
 		/// \brief Constructor
 		module_state(
-			module_init_fn< ModuleInitFn > const& module_init_fn
+			module_init_fn< ModuleInitFn > const& module_init_fn,
+			optional_component< Component > component
 		)noexcept
-			: module_init_fn_(module_init_fn) {}
+			: component(component)
+			, module_init_fn_(module_init_fn) {}
 
 		/// \brief Enables the module for exec calls
 		///
@@ -178,8 +187,9 @@ namespace disposer{
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		){
-			state_.emplace(module_init_fn_(module_init_accessory
-				< TypeList, Inputs, Outputs, Parameters >(data, location)));
+			state_.emplace(module_init_fn_(module_init_accessory< TypeList,
+				Inputs, Outputs, Parameters, Component >(
+					data, location, component)));
 		}
 
 		/// \brief Disables the module for exec calls
@@ -192,6 +202,10 @@ namespace disposer{
 			assert(state_);
 			return &*state_;
 		}
+
+
+		/// \brief Reference to component or empty struct
+		optional_component< Component > component;
 
 
 	private:
@@ -208,14 +222,21 @@ namespace disposer{
 		typename TypeList,
 		typename Inputs,
 		typename Outputs,
-		typename Parameters >
-	class module_state< TypeList, Inputs, Outputs, Parameters, void >{
+		typename Parameters,
+		typename Component >
+	class module_state<
+		TypeList, Inputs, Outputs, Parameters, void, Component
+	>{
 	public:
 		/// \brief Type of the module state object
 		using state_type = void;
 
 		/// \brief Constructor
-		module_state(module_init_fn< void > const&)noexcept{}
+		module_state(
+			module_init_fn< void > const&,
+			optional_component< Component > component
+		)noexcept
+			: component(component) {}
 
 		/// \brief Module is stateless, do nothing
 		void enable(
@@ -228,6 +249,10 @@ namespace disposer{
 
 		/// \brief Module is stateless, return nullptr
 		void* object()noexcept{ return nullptr; }
+
+
+		/// \brief Reference to component or empty struct
+		optional_component< Component > component;
 	};
 
 

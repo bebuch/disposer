@@ -9,8 +9,7 @@
 #ifndef _disposer__core__module_name__hpp_INCLUDED_
 #define _disposer__core__module_name__hpp_INCLUDED_
 
-#include "module.hpp"
-#include "generate_fn.hpp"
+#include "generate_module.hpp"
 
 
 namespace disposer{
@@ -20,7 +19,12 @@ namespace disposer{
 	struct component_module_maker_tag{};
 
 	/// \brief Data to create a component module
-	template < typename ModuleRegisterFn >
+	template <
+		typename Dimensions,
+		typename Configuration,
+		typename ModuleInitFn,
+		typename ExecFn,
+		bool CanRunConcurrent >
 	struct component_module_maker{
 		/// \brief Hana tag to identify component module makers
 		using hana_tag = component_module_maker_tag;
@@ -28,8 +32,9 @@ namespace disposer{
 		/// \brief Name of the component module
 		std::string_view name;
 
-		/// \brief A list of module IOPs
-		generate_fn< ModuleRegisterFn > generate_module_fn;
+		/// \brief A module generator function
+		generate_module< Dimensions, Configuration, ModuleInitFn, ExecFn,
+			CanRunConcurrent > generate_module_fn;
 	};
 
 
@@ -50,13 +55,20 @@ namespace disposer{
 	to_module_name(hana::string< C ... >)noexcept{ return {}; }
 
 
-	template < char ... C, typename ModuleRegisterFn >
+	template <
+		char ... C,
+		typename Dimensions,
+		typename Configuration,
+		typename ModuleInitFn,
+		typename ExecFn,
+		bool CanRunConcurrent >
 	constexpr auto make(
 		module_name< C ... > const& name,
-		generate_fn< ModuleRegisterFn > fn
+		generate_module< Dimensions, Configuration, ModuleInitFn, ExecFn,
+			CanRunConcurrent > fn
 	){
-		return component_module_maker<
-				std::remove_reference_t< ModuleRegisterFn > >
+		return component_module_maker< Dimensions, Configuration, ModuleInitFn,
+			ExecFn, CanRunConcurrent >
 			{detail::to_std_string_view(name), std::move(fn)};
 	}
 

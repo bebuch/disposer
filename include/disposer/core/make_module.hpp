@@ -51,16 +51,21 @@ namespace disposer{
 		< std::remove_cv_t< std::remove_reference_t< Config > > ... >;
 
 
-	template < typename ModuleInitFn, typename ExecFn, bool CanRunConcurrent >
+	template <
+		typename ModuleInitFn,
+		typename ExecFn,
+		bool CanRunConcurrent,
+		typename Component >
 	struct module_construction{
 		module_make_data const& data;
 		module_init_fn< ModuleInitFn > const& module_init;
 		exec_fn< ExecFn > const& exec;
+		optional_component< Component > component;
 
 		template < typename DimensionList >
 		struct input_construction{
-			module_construction< ModuleInitFn, ExecFn, CanRunConcurrent >
-				const& base;
+			module_construction< ModuleInitFn, ExecFn, CanRunConcurrent,
+				Component > const& base;
 
 			template <
 				typename Name,
@@ -72,7 +77,7 @@ namespace disposer{
 				std::size_t ... SDs >
 			std::unique_ptr< module_base > make(
 				input_maker< Name, DimensionReferrer, IsRequired > const& maker,
-				detail::config_queue< Offset, Config ... > const& configs,
+				detail::config_queue< Offset, Config ... > const configs,
 				iops_ref< IOPs ... >&& iops,
 				solved_dimensions< SDs ... > const& solved_dims,
 				output_base* const output_ptr
@@ -86,10 +91,10 @@ namespace disposer{
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
 							module_construction< ModuleInitFn, ExecFn,
-								CanRunConcurrent > const&,
+								CanRunConcurrent, Component > const&,
 							input_maker< Name, DimensionReferrer, IsRequired >
 								const&,
-							detail::config_queue< Offset, Config ... > const&,
+							detail::config_queue< Offset, Config ... > const,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&,
 							output_base* const
@@ -99,11 +104,12 @@ namespace disposer{
 							using index_type = decltype(i);
 							return [](
 									module_construction< ModuleInitFn, ExecFn,
-										CanRunConcurrent > const& base,
+										CanRunConcurrent, Component >
+											const& base,
 									input_maker< Name, DimensionReferrer,
 										IsRequired > const& maker,
 									detail::config_queue< Offset, Config ... >
-										const& configs,
+										const configs,
 									iops_ref< IOPs ... >&& iops,
 									decltype(solved_dims.rest()) const&
 										solved_dims,
@@ -191,7 +197,7 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_make_input(
 			input_maker< Name, DimensionReferrer, IsRequired > const& maker,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			auto const output_ptr = get_output_ptr(data.inputs,
@@ -213,7 +219,7 @@ namespace disposer{
 		template < typename DimensionList >
 		struct set_dimension_fn_execution{
 			module_construction< ModuleInitFn, ExecFn,
-				CanRunConcurrent > const& base;
+				CanRunConcurrent, Component > const& base;
 
 			template <
 				std::size_t Offset,
@@ -221,7 +227,7 @@ namespace disposer{
 				typename ... IOPs,
 				std::size_t ... SDs >
 			std::unique_ptr< module_base > make(
-				detail::config_queue< Offset, Config ... > const& configs,
+				detail::config_queue< Offset, Config ... > const configs,
 				iops_ref< IOPs ... >&& iops,
 				solved_dimensions< SDs ... > const& solved_dims
 			)const{
@@ -232,8 +238,8 @@ namespace disposer{
 					using make_fn_type =
 						std::unique_ptr< module_base >(*)(
 							module_construction< ModuleInitFn, ExecFn,
-								CanRunConcurrent > const&,
-							detail::config_queue< Offset, Config ... > const&,
+								CanRunConcurrent, Component > const&,
+							detail::config_queue< Offset, Config ... > const,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&
 						);
@@ -243,9 +249,10 @@ namespace disposer{
 							using index_type = decltype(i);
 							return [](
 									module_construction< ModuleInitFn, ExecFn,
-										CanRunConcurrent > const& base,
+										CanRunConcurrent, Component >
+											const& base,
 									detail::config_queue< Offset, Config ... >
-										const& configs,
+										const configs,
 									iops_ref< IOPs ... >&& iops,
 									decltype(solved_dims.rest()) const&
 										solved_dims
@@ -304,7 +311,7 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_make_output(
 			output_maker< Name, DimensionReferrer > const&,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			DimensionReferrer::verify_solved(dims);
@@ -339,7 +346,7 @@ namespace disposer{
 			parameter_maker< Name, DimensionReferrer,
 				ParserFn, DefaultValueFn, VerfiyValueFn > const& maker,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			DimensionReferrer::verify_solved(dims);
@@ -359,7 +366,8 @@ namespace disposer{
 						maker.parser,
 						maker.default_value_generator,
 						maker.verify_value,
-						module_make_accessory{dims, iops, data.location()},
+						module_make_accessory{
+							component, dims, iops, data.location()},
 						param_data_ptr
 					)};
 
@@ -377,10 +385,10 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_verify_fn(
 			verify_fn< Fn > const& fn,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			fn(module_make_accessory{dims, iops, data.location()});
+			fn(module_make_accessory{component, dims, iops, data.location()});
 			return make_module(dims, configs, std::move(iops));
 		}
 
@@ -393,14 +401,14 @@ namespace disposer{
 		std::unique_ptr< module_base > exec_set_dimension_fn(
 			set_dimension_fn< Fn > const& fn,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			set_dimension_fn_execution< dimension_list< Ds ... > > const
 				base{*this};
 
-			return base.make(configs, std::move(iops),
-				fn(module_make_accessory{dims, iops, data.location()}));
+			return base.make(configs, std::move(iops), fn(
+				module_make_accessory{component, dims, iops, data.location()}));
 		}
 
 
@@ -411,7 +419,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< module_base > make_module(
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			if constexpr(detail::config_queue< Offset, Config ... >::is_empty){
@@ -421,7 +429,7 @@ namespace disposer{
 					type_list{dims},
 					data.chain, data.type_name, data.number,
 					std::move(iops).flat(), module_init, exec,
-					hana::bool_c< CanRunConcurrent >});
+					hana::bool_c< CanRunConcurrent >, component});
 			}else{
 				using hana::is_a;
 				auto const& config = configs.front();
@@ -463,21 +471,47 @@ namespace disposer{
 		typename ... Config,
 		typename ModuleInitFn,
 		typename ExecFn,
-		bool CanRunConcurrent >
+		bool CanRunConcurrent,
+		typename Component >
 	std::unique_ptr< module_base > make_module_ptr(
 		dimension_list< Ds ... > dims,
 		module_configure< Config ... > const& configs,
 		module_make_data const& data,
 		module_init_fn< ModuleInitFn > const& module_init,
 		exec_fn< ExecFn > const& exec,
-		hana::bool_< CanRunConcurrent >
+		hana::bool_< CanRunConcurrent >,
+		optional_component< Component > component
 	){
-		detail::config_queue queue{configs.config_list};
-		module_construction< ModuleInitFn, ExecFn, CanRunConcurrent > const mc
-			{data, module_init, exec};
+		detail::config_queue const queue{configs.config_list};
+		module_construction< ModuleInitFn, ExecFn, CanRunConcurrent,
+			Component > const mc{data, module_init, exec, component};
 		return mc.make_module(dims, queue, iops_ref{});
 	}
 
+
+	/// \brief Check config file data for undefined inputs, outputs and
+	///        parameters
+	///
+	/// Warn about parameters, throw for inputs and outputs.
+	template < typename Configuration >
+	void validate_iops(
+		Configuration const& configuration,
+		module_make_data const& data
+	){
+		auto const location = data.location();
+		auto const inputs = validate_iop< input_maker_tag >(
+			location, configuration, data.inputs);
+		auto const outputs = validate_iop< output_maker_tag >(
+			location, configuration, data.outputs);
+		validate_iop< parameter_maker_tag >(
+			location, configuration, data.parameters);
+
+		if(!inputs.empty() || !outputs.empty()){
+			throw std::logic_error(location + "some inputs or "
+				"outputs don't exist, see previos log messages for "
+				"more details");
+		}
+	}
 
 	/// \brief Tag to identify module_maker objects via hana::is_a
 	struct module_maker_tag;
@@ -511,27 +545,24 @@ namespace disposer{
 		std::unique_ptr< module_base > operator()(
 			module_make_data const& data
 		)const{
-			// Check config file data for undefined inputs, outputs and
-			// parameters, warn about parameters, throw for inputs and outputs
-			auto const location = data.location();
-			{
-				auto inputs = validate_iop< input_maker_tag >(
-					location, configuration, data.inputs);
-				auto outputs = validate_iop< output_maker_tag >(
-					location, configuration, data.outputs);
-				validate_iop< parameter_maker_tag >(
-					location, configuration, data.parameters);
+			validate_iops(configuration, data);
 
-				if(!inputs.empty() || !outputs.empty()){
-					throw std::logic_error(location + "some inputs or "
-						"outputs don't exist, see previos log messages for "
-						"more details");
-				}
-			}
-
-			// Create the module
 			return make_module_ptr(dimensions, configuration, data,
-				module_init, exec, hana::bool_c< CanRunConcurrent >);
+				module_init, exec, hana::bool_c< CanRunConcurrent >,
+				optional_component< void >{});
+		}
+
+		/// \brief Create an module object bound to an existing component object
+		template < typename Component >
+		std::unique_ptr< module_base > operator()(
+			module_make_data const& data,
+			Component& component
+		)const{
+			validate_iops(configuration, data);
+
+			return make_module_ptr(dimensions, configuration, data,
+				module_init, exec, hana::bool_c< CanRunConcurrent >,
+				optional_component{component});
 		}
 	};
 

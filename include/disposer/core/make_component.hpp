@@ -69,7 +69,7 @@ namespace disposer{
 
 	/// \brief Deduction guide to store all config items as values
 	template < typename ... Module >
-	component_modules(Module&& ...) -> component_modules
+	component_modules(Module ...) -> component_modules
 		< std::remove_cv_t< std::remove_reference_t< Module > > ... >;
 
 
@@ -96,7 +96,7 @@ namespace disposer{
 				typename ... IOPs,
 				std::size_t ... SDs >
 			std::unique_ptr< component_base > make(
-				detail::config_queue< Offset, Config ... > const& configs,
+				detail::config_queue< Offset, Config ... > const configs,
 				iops_ref< IOPs ... >&& iops,
 				solved_dimensions< SDs ... > const& solved_dims
 			)const{
@@ -108,7 +108,7 @@ namespace disposer{
 						std::unique_ptr< component_base >(*)(
 							component_construction< ComponentInitFn,
 								Modules > const&,
-							detail::config_queue< Offset, Config ... > const&,
+							detail::config_queue< Offset, Config ... > const,
 							iops_ref< IOPs ... >&&,
 							decltype(solved_dims.rest()) const&
 						);
@@ -120,7 +120,7 @@ namespace disposer{
 									component_construction< ComponentInitFn,
 										Modules > const& base,
 									detail::config_queue< Offset, Config ... >
-										const& configs,
+										const configs,
 									iops_ref< IOPs ... >&& iops,
 									decltype(solved_dims.rest()) const&
 										solved_dims
@@ -183,7 +183,7 @@ namespace disposer{
 			parameter_maker< Name, DimensionReferrer,
 				ParserFn, DefaultValueFn, VerfiyValueFn > const& maker,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			DimensionReferrer::verify_solved(dims);
@@ -221,7 +221,7 @@ namespace disposer{
 		std::unique_ptr< component_base > exec_verify_fn(
 			verify_fn< Fn > const& fn,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			fn(component_make_accessory{dims, iops, data.location()});
@@ -237,7 +237,7 @@ namespace disposer{
 		std::unique_ptr< component_base > exec_set_dimension_fn(
 			set_dimension_fn< Fn > const& fn,
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			set_dimension_fn_execution< dimension_list< Ds ... > > const
@@ -255,7 +255,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< component_base > make_component(
 			dimension_list< Ds ... > dims,
-			detail::config_queue< Offset, Config ... > const& configs,
+			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
 			if constexpr(detail::config_queue< Offset, Config ... >::is_empty){
@@ -275,12 +275,10 @@ namespace disposer{
 				// register the component modules for this component instance
 				hana::for_each(module_maker_list.module_maker_list,
 					[this, &component](auto const& component_module_maker){
-						auto generate_fn = component_module_maker
-							.generate_module_fn(component.accessory);
-
-						generate_fn(data.name + "//"
-							+ std::string(component_module_maker.name),
-							disposer.module_declarant());
+						component_module_maker.generate_module_fn(
+							data.name + "//" +
+							std::string(component_module_maker.name),
+							disposer.module_declarant(), component);
 					});
 
 				return result;
@@ -324,7 +322,7 @@ namespace disposer{
 		component_make_data const& data,
 		component_init_fn< ComponentInitFn > const& component_init
 	){
-		detail::config_queue queue{configs.config_list};
+		detail::config_queue const queue{configs.config_list};
 		component_construction<
 			ComponentInitFn, component_modules< Module ... > > const mc
 			{disposer, data, component_init, module_maker_list};

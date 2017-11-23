@@ -25,7 +25,8 @@ namespace disposer{
 		typename Parameters,
 		typename ModuleInitFn,
 		typename ExecFn,
-		bool CanRunConcurrent >
+		bool CanRunConcurrent,
+		typename Component >
 	class module;
 
 	/// \brief The actual exec_module type
@@ -36,13 +37,14 @@ namespace disposer{
 		typename Parameters,
 		typename ModuleInitFn,
 		typename ExecFn,
-		bool CanRunConcurrent >
+		bool CanRunConcurrent,
+		typename Component >
 	class exec_module: public exec_module_base{
 	public:
 		/// \brief Constructor
 		exec_module(
 			module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn,
-				ExecFn, CanRunConcurrent >& module,
+				ExecFn, CanRunConcurrent, Component >& module,
 			to_exec_init_list_t< Inputs > const& inputs,
 			to_exec_init_list_t< Outputs > const& outputs,
 			std::size_t id,
@@ -62,7 +64,7 @@ namespace disposer{
 	private:
 		/// \brief Reference to the module
 		module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn, ExecFn,
-			CanRunConcurrent >& module_;
+			CanRunConcurrent, Component >& module_;
 
 		/// \brief Current id
 		///

@@ -9,10 +9,46 @@
 #ifndef _disposer__core__exec_fn__hpp_INCLUDED_
 #define _disposer__core__exec_fn__hpp_INCLUDED_
 
+#include "input_name.hpp"
+#include "output_name.hpp"
+#include "parameter_name.hpp"
+
 #include "../tool/add_log.hpp"
+#include "../tool/false_c.hpp"
 
 
 namespace disposer{
+
+
+	/// \brief Reference to a component or empty struct
+	template < typename Component >
+	struct optional_component{
+		constexpr optional_component(Component& component)noexcept
+			: component(component) {}
+
+		constexpr optional_component(optional_component const& other)noexcept
+			: component(other.component) {}
+
+		Component& component;
+	};
+
+	/// \brief Empty struct
+	template <>
+	struct optional_component< void >{};
+
+
+	template < typename Component >
+	struct optional_component_accessory{
+		optional_component_accessory(optional_component< Component > c)
+			: component(c.component.accessory){}
+
+		decltype(std::declval< Component >().accessory) component;
+	};
+
+	template <>
+	struct optional_component_accessory< void >{
+		optional_component_accessory(optional_component< void >){}
+	};
 
 
 	/// \brief Accessory of a module during exec calls
@@ -21,10 +57,12 @@ namespace disposer{
 		typename State,
 		typename ExecInputs,
 		typename ExecOutputs,
-		typename Parameters >
+		typename Parameters,
+		typename Component >
 	class module_accessory
-		: public add_log< module_accessory<
-			TypeList, State, ExecInputs, ExecOutputs, Parameters > >
+		: public optional_component_accessory< Component >
+		, public add_log< module_accessory<
+			TypeList, State, ExecInputs, ExecOutputs, Parameters, Component > >
 	{
 	public:
 		/// \brief Constructor
@@ -35,9 +73,11 @@ namespace disposer{
 			ExecInputs& inputs,
 			ExecOutputs& outputs,
 			Parameters const& parameters,
-			std::string_view location
+			std::string_view location,
+			optional_component< Component > component
 		)noexcept
-			: id_(id)
+			: optional_component_accessory< Component >(component)
+			, id_(id)
 			, state_(state)
 			, inputs_(inputs)
 			, outputs_(outputs)
@@ -162,15 +202,16 @@ namespace disposer{
 			typename State,
 			typename ExecInputs,
 			typename ExecOutputs,
-			typename Parameters >
+			typename Parameters,
+			typename Component >
 		void operator()(
 			module_accessory< TypeList, State, ExecInputs, ExecOutputs,
-				Parameters >& accessory
+				Parameters, Component >& accessory
 		){
 			// TODO: calulate noexcept
 			if constexpr(
 				std::is_invocable_v< Fn, module_accessory< TypeList, State,
-					ExecInputs, ExecOutputs, Parameters >& >
+					ExecInputs, ExecOutputs, Parameters, Component >& >
 			){
 				std::invoke(fn_, accessory);
 			}else if constexpr(std::is_invocable_v< Fn >){

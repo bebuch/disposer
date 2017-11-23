@@ -145,13 +145,6 @@ exe make_component
 	/logsys//logsys
 	;
 
-exe register_fn
-	:
-	register_fn.cpp
-	/disposer//disposer
-	/logsys//logsys
-	;
-
 exe set_dimension_fn
 	:
 	set_dimension_fn.cpp

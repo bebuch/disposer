@@ -11,6 +11,7 @@
 
 #include "component_base.hpp"
 #include "component_init_fn.hpp"
+#include "component_accessory.hpp"
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"

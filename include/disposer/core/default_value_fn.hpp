@@ -138,13 +138,15 @@ namespace disposer{
 	constexpr auto default_value(T&& value)
 	noexcept(std::is_nothrow_move_constructible_v< T >){
 		return default_value_fn(
-			[value = std::move(value)](auto const&, auto)
+			[value = static_cast< T&& >(value)](auto const, auto)
 			noexcept(std::is_nothrow_copy_constructible_v< T >)
-			{ return value; });
+			{
+				return value;
+			});
 	}
 
 	constexpr auto default_value(){
-		return default_value_fn([](auto const&, auto type)
+		return default_value_fn([](auto const, auto type)
 			noexcept(std::is_nothrow_default_constructible_v<
 				typename decltype(type)::type >
 			){
