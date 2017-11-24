@@ -9,6 +9,7 @@
 #ifndef _disposer__tool__component_ptr__hpp_INCLUDED_
 #define _disposer__tool__component_ptr__hpp_INCLUDED_
 
+#include <string>
 #include <memory>
 #include <functional>
 #include <unordered_map>
@@ -29,10 +30,10 @@ namespace disposer{
 	using component_maker_fn =
 		std::function< component_ptr(component_make_data const&) >;
 
-	/// \brief Compounds the init fn and the help text generator
+	/// \brief Compounds the init fn and the help text
 	struct component_maker_entry{
 		component_maker_fn make_fn;
-		std::string(*help_fn)();
+		std::string const help;
 	};
 
 	/// \brief Map between component type name and its maker function

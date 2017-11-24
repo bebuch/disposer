@@ -212,10 +212,10 @@ namespace disposer{
 	std::string disposer::help()const{
 		std::string result;
 		for(auto const& component: component_maker_list_){
-			result += component.second.help_fn();
+			result += component.second.help;
 		}
 		for(auto const& module: module_maker_list_){
-			result += module.second.help_fn();
+			result += module.second.help;
 		}
 		return result;
 	}
@@ -226,7 +226,7 @@ namespace disposer{
 			throw std::logic_error(
 				std::string("no module '") + name + "' found");
 		}
-		return iter->second.help_fn();
+		return iter->second.help;
 	}
 
 	std::string disposer::component_help(std::string const& name)const{
@@ -235,7 +235,7 @@ namespace disposer{
 			throw std::logic_error(
 				std::string("no component '") + name + "' found");
 		}
-		return iter->second.help_fn();
+		return iter->second.help;
 	}
 
 

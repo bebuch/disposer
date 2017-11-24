@@ -15,6 +15,28 @@
 namespace disposer{
 
 
+	/// \brief Get help text to the module
+	template < typename ComponentInitFn, typename ... Dimension,
+		typename ... Config, typename ... Module >
+	std::string generate_component_help(
+		dimension_list< Dimension ... > dims,
+		component_configure< Config ... > list,
+		component_init_fn< ComponentInitFn > module_init,
+		component_modules< Module ... > modules
+	){
+		std::ostringstream help;
+		hana::for_each(list.config_list, [&help](auto const& iop){
+			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
+			if constexpr(is_iop){
+				help << iop.help_text;
+			}
+		});
+// 		help << module_init.help_text;
+// 		help << exec.help_text;
+		return help.str();
+	}
+
+
 	struct unit_test_key;
 
 	/// \brief Registers a component configuration in the \ref disposer
@@ -37,6 +59,7 @@ namespace disposer{
 			component_modules< Module ... > modules
 		)
 			: maker_{
+				generate_component_help(dims, list, module_init, modules),
 				dims,
 				std::move(list),
 				std::move(modules),
@@ -73,6 +96,15 @@ namespace disposer{
 				std::move(module_init), std::move(modules)} {}
 
 
+		/// \brief Generates help text
+		std::string help(std::string const& component_type)const{
+			std::ostringstream help;
+			help << "  * component: " << component_type << "\n";
+			help << maker_.help_text << "\n";
+			return help.str();
+		}
+
+
 		/// \brief Call this function to register the component with the given
 		///        type name via the given component_declarant
 		void operator()(
@@ -83,7 +115,7 @@ namespace disposer{
 				[maker = maker_, &add](component_make_data const& data){
 					return maker(data, add.disposer());
 				},
-				[]{ return std::string(); }});
+				help(component_type)});
 		}
 
 

@@ -30,6 +30,28 @@ namespace disposer{
 	struct parameter_maker_tag;
 
 
+	template < typename MakerTag >
+	constexpr std::string_view iop_string_view()noexcept{
+		if constexpr(std::is_same_v< MakerTag, input_maker_tag >){
+			return "input";
+		}else if constexpr(std::is_same_v< MakerTag, output_maker_tag >){
+			return "output";
+		}else if constexpr(std::is_same_v< MakerTag, parameter_maker_tag >){
+			return "parameter";
+		}else{
+			static_assert(detail::false_c< MakerTag >,
+				"MakerTag must be input_maker_tag, output_maker_tag "
+				"or parameter_maker_tag");
+		}
+	}
+
+	template < typename MakerTag >
+	constexpr std::string_view iop_string_view(MakerTag&&)noexcept{
+		return iop_string_view<
+			typename std::remove_reference_t< MakerTag >::hana_tag >();
+	}
+
+
 	template < typename MakerTag, typename Configuration, typename List >
 	std::set< std::string > validate_iop(
 		std::string const& location,
@@ -54,23 +76,7 @@ namespace disposer{
 		for(auto const& name: name_list){
 			logsys::log([&location, &name](logsys::stdlogb& os){
 				os << location;
-				if constexpr(
-					std::is_same_v< MakerTag, input_maker_tag >
-				){
-					os << "input";
-				}else if constexpr(
-					std::is_same_v< MakerTag, output_maker_tag >
-				){
-					os << "output";
-				}else if constexpr(
-					std::is_same_v< MakerTag, parameter_maker_tag >
-				){
-					os << "parameter";
-				}else{
-					static_assert(detail::false_c< MakerTag >,
-						"MakerTag must be input_maker_tag, output_maker_tag "
-						"or parameter_maker_tag");
-				}
+				os << iop_string_view< MakerTag >();
 				os << "(" << name << ") doesn't exist";
 				if constexpr(std::is_same_v< MakerTag, parameter_maker_tag >){
 					os << " (WARNING)";

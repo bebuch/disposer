@@ -42,6 +42,9 @@ namespace disposer{
 		/// \brief parameter_name object
 		static constexpr auto name = Name{};
 
+		/// \brief Description of the input
+		std::string const help_text;
+
 		/// \brief Parameter parser function
 		parser_fn< ParserFn > parser;
 
@@ -60,13 +63,17 @@ namespace disposer{
 		typename ParserFn,
 		typename DefaultValueFn,
 		typename VerfiyValueFn >
-	constexpr auto create_parameter_maker(
+	auto create_parameter_maker(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const&,
 		parser_fn< ParserFn > parser,
 		default_value_fn< DefaultValueFn > default_value_generator,
 		verify_value_fn< VerfiyValueFn > verify_value
 	){
+		std::ostringstream help;
+		help << "    * parameter: "
+			<< detail::to_std_string_view(parameter_name< C ... >{}) << "\n";
+
 		return parameter_maker<
 				parameter_name< C ... >,
 				dimension_referrer< Template, D ... >,
@@ -74,6 +81,7 @@ namespace disposer{
 				DefaultValueFn,
 				VerfiyValueFn
 			>{
+				help.str(),
 				std::move(parser),
 				std::move(default_value_generator),
 				std::move(verify_value)
@@ -87,7 +95,7 @@ namespace disposer{
 		template < typename ... > typename Template,
 		std::size_t ... D,
 		typename ... Args >
-	constexpr auto make(
+	auto make(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const& referrer,
 		Args&& ... args

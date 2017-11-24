@@ -528,6 +528,9 @@ namespace disposer{
 		using hana_tag = module_maker_tag;
 
 
+		/// \brief Description of the input
+		std::string const help_text;
+
 		/// \brief An dimension_list object
 		DimensionList dimensions;
 

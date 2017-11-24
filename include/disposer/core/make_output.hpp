@@ -33,6 +33,9 @@ namespace disposer{
 
 		/// \brief output_name object
 		static constexpr auto name = Name{};
+
+		/// \brief Description of the input
+		std::string const help_text;
 	};
 
 
@@ -41,13 +44,17 @@ namespace disposer{
 		char ... C,
 		template < typename ... > typename Template,
 		std::size_t ... D >
-	constexpr auto make(
+	auto make(
 		output_name< C ... > const&,
 		dimension_referrer< Template, D ... > const&
 	){
+		std::ostringstream help;
+		help << "    * output: "
+			<< detail::to_std_string_view(output_name< C ... >{}) << "\n";
+
 		return output_maker<
 			output_name< C ... >,
-			dimension_referrer< Template, D ... > >{};
+			dimension_referrer< Template, D ... > >{help.str()};
 	}
 
 

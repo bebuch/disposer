@@ -21,22 +21,52 @@ namespace disposer{
 	constexpr can_run_concurrent< false > no_overtaking{};
 
 
-// 	/// \brief Get help text to the module
-// 	std::string generate_module_help(
-// 		dimension_list< Dimension ... > dims,
-// 		module_configure< Config ... > const& list,
-// 		module_init_fn< ModuleInitFn > const& module_init,
-// 		exec_fn< ExecFn > const& exec
-// 	){
-// 		std::ostringstream os;
-// 		hana::for_each(list.config_list, [&os](auto const& iop){
-// 			os << iop.help();
-// 		});
-// 		os << module_init.help();
-// 		os << exec.help();
-// 		return os.str();
-// 	}
-//
+	/// \brief Get help text to the module
+	template < typename ... Dimension >
+	std::string generate_dims_help(
+		dimension_list< Dimension ... > dims
+	){
+		std::ostringstream help;
+
+		help << "    dimension count: "
+			<< dims.dimension_count << "\n";
+
+		hana::for_each(dims.dimensions,
+			[&help, i = 0u](auto const& dim)mutable{
+				help << "      dimension " << ++i << ":\n";
+				hana::for_each(dim, [&help](auto type){
+						help << "        " << type_index::type_id< typename
+							decltype(type)::type >().pretty_name() << "\n";
+					});
+			});
+
+		return help.str();
+	}
+
+	/// \brief Get help text to the module
+	template < typename ModuleInitFn, typename ExecFn,
+		typename ... Dimension, typename ... Config >
+	std::string generate_module_help(
+		dimension_list< Dimension ... > dims,
+		module_configure< Config ... > const& list,
+		module_init_fn< ModuleInitFn > const& module_init,
+		exec_fn< ExecFn > const& exec
+	){
+		std::ostringstream help;
+
+		help << generate_dims_help(dims);
+
+		hana::for_each(list.config_list, [&help](auto const& iop){
+			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
+			if constexpr(is_iop){
+				help << iop.help_text;
+			}
+		});
+// 		help << module_init.help_text;
+// 		help << exec.help_text;
+		return help.str();
+	}
+
 
 	struct unit_test_key;
 
@@ -65,8 +95,13 @@ namespace disposer{
 			can_run_concurrent< CanRunConcurrent >
 				= can_run_concurrent< true >{}
 		)
-			: maker_{dims, std::move(list), module_init, exec}
-			{}
+			: maker_{
+				generate_module_help(dims, list, module_init, exec),
+				dims,
+				std::move(list),
+				std::move(module_init),
+				std::move(exec)
+			} {}
 
 		/// \brief Constructor
 		template < typename ... Dimension >
@@ -153,6 +188,15 @@ namespace disposer{
 			{}
 
 
+		/// \brief Generates help text
+		std::string help(std::string const& module_type)const{
+			std::ostringstream help;
+			help << "  * module: " << module_type << "\n";
+			help << maker_.help_text << "\n";
+			return help.str();
+		}
+
+
 		/// \brief Call this function to register the module with the given type
 		///        name via the given module_declarant
 		void operator()(
@@ -163,7 +207,7 @@ namespace disposer{
 				[maker = maker_](module_make_data const& data){
 					return maker(data);
 				},
-				[]{ return std::string(); }});
+				help(module_type)});
 		}
 
 
@@ -180,7 +224,7 @@ namespace disposer{
 				(module_make_data const& data){
 					return maker(data, component);
 				},
-				[]{ return std::string(); }});
+				help(module_type)});
 		}
 
 

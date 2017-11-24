@@ -36,6 +36,9 @@ namespace disposer{
 
 		/// \brief input_name object
 		static constexpr auto name = Name{};
+
+		/// \brief Description of the input
+		std::string const help_text;
 	};
 
 
@@ -56,15 +59,19 @@ namespace disposer{
 		template < typename ... > typename Template,
 		std::size_t ... D,
 		bool IsRequired = true >
-	constexpr auto make(
+	auto make(
 		input_name< C ... > const&,
 		dimension_referrer< Template, D ... > const&,
 		is_required< IsRequired > = required
 	){
+		std::ostringstream help;
+		help << "    * input: "
+			<< detail::to_std_string_view(input_name< C ... >{}) << "\n";
+
 		return input_maker<
 			input_name< C ... >,
 			dimension_referrer< Template, D ... >,
-			IsRequired >{};
+			IsRequired >{help.str()};
 	}
 
 

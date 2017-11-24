@@ -336,6 +336,9 @@ namespace disposer{
 		typename Modules,
 		typename ComponentInitFn >
 	struct component_maker{
+		/// \brief Description of the input
+		std::string const help_text;
+
 		/// \brief An dimension_list object
 		DimensionList dimensions;
 
