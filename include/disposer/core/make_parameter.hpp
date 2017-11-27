@@ -165,7 +165,7 @@ namespace disposer{
 		){
 			throw std::runtime_error(io_tools::make_string(
 				"parameter(", parameter_name, ") config value required [",
-				type_index::type_id< T >().pretty_name(), "]"));
+				ct_pretty_name< T >(), "]"));
 		}else{
 			return default_value_generator(
 				parameter_name, accessory, hana::type_c< T >);

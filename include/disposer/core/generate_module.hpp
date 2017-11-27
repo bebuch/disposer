@@ -11,6 +11,8 @@
 
 #include "make_module.hpp"
 
+#include "../tool/ct_pretty_name.hpp"
+
 
 namespace disposer{
 
@@ -35,8 +37,8 @@ namespace disposer{
 			[&help, i = 0u](auto const& dim)mutable{
 				help << "      * dimension " << ++i << ":\n";
 				hana::for_each(dim, [&help](auto type){
-						help << "        * " << type_index::type_id< typename
-							decltype(type)::type >().pretty_name() << "\n";
+						help << "        * " << ct_pretty_name< typename
+							decltype(type)::type >() << "\n";
 					});
 			});
 

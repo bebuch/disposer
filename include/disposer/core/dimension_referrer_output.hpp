@@ -11,6 +11,8 @@
 
 #include "dimension_referrer.hpp"
 
+#include "../tool/ct_pretty_name.hpp"
+
 #include <io_tools/make_string.hpp>
 
 
@@ -40,24 +42,23 @@ namespace disposer{
 					hana::unpack(convert.packed, [&text](auto ... p){
 							text += io_tools::make_string_separated_by(
 								" × ",
-								type_index::type_id<
+								ct_pretty_name<
 									typename decltype(
 										+dimension_list< DTs ... >::
 										dimensions[p]
 										[index[convert.pos(p)]])::type
-								 >().pretty_name() ...);
+								 >() ...);
 						});
 
-					text += " => " + type_index::type_id< typename
-						decltype(convert.value_type_of(index))::type
-						>().pretty_name() + "\n";
+					text += " => " + ct_pretty_name< typename
+							decltype(convert.value_type_of(index))::type
+						>() + "\n";
 				});
 
-	// 		(text += type_index::type_id< T >().pretty_name() ...)
 			return text;
 		}else{
 			return "      * free type:\n      * "
-				+ type_index::type_id< Template<> >().pretty_name() + "\n";
+				+ ct_pretty_name< Template<> >() + "\n";
 		}
 	}
 

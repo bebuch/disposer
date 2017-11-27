@@ -9,7 +9,7 @@
 #ifndef _disposer__tool__comma_separated_output__hpp_INCLUDED_
 #define _disposer__tool__comma_separated_output__hpp_INCLUDED_
 
-#include "type_index.hpp"
+#include "ct_pretty_name.hpp"
 
 #include <tuple>
 #include <type_traits>
@@ -65,9 +65,9 @@ namespace disposer::detail{
 			[i](auto ... I){
 				constexpr auto name_fn = [](auto I){
 						return []{
-								return type_index::type_id< typename
+								return ct_pretty_name< typename
 										decltype(+types[I])::type
-									>().pretty_name();
+									>();
 							};
 					};
 

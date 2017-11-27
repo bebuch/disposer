@@ -54,7 +54,7 @@ namespace disposer{
 				accessory.log([parameter_name](logsys::stdlogb& os){
 						os << "parameter(" << parameter_name
 							<< ") verified value of type ["
-							<< type_index::type_id< T >().pretty_name() << "]";
+							<< ct_pretty_name< T >() << "]";
 					}, [&]{
 						if constexpr(std::is_invocable_v< Fn const, T >){
 							return std::invoke(fn_, value);

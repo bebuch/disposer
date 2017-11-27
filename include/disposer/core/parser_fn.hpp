@@ -68,8 +68,7 @@ namespace disposer{
 						os << ": ";
 						print_if_supported(os, *value);
 					}
-					os << " ["
-						<< type_index::type_id< T >().pretty_name() << "]";
+					os << " [" << ct_pretty_name< T >() << "]";
 				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
 					return std::invoke(fn_, accessory, value, type);
 				});

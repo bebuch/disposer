@@ -10,6 +10,7 @@
 #define _disposer__core__default_value_fn__hpp_INCLUDED_
 
 #include "../tool/print_if_supported.hpp"
+#include "../tool/ct_pretty_name.hpp"
 
 #include <logsys/log.hpp>
 #include <logsys/stdlogb.hpp>
@@ -108,8 +109,7 @@ namespace disposer{
 					}else{
 						os << "no default value generated";
 					}
-					os << " [" << type_index::type_id< T >().pretty_name()
-						<< "]";
+					os << " [" << ct_pretty_name< T >() << "]";
 				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
 					return std::invoke(fn_, accessory, type);
 				});
