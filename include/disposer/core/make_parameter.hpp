@@ -11,6 +11,7 @@
 
 #include "parameter_name.hpp"
 #include "dimension_referrer.hpp"
+#include "dimension_referrer_output.hpp"
 #include "parser_fn.hpp"
 #include "default_value_fn.hpp"
 #include "verify_value_fn.hpp"
@@ -42,8 +43,16 @@ namespace disposer{
 		/// \brief parameter_name object
 		static constexpr auto name = Name{};
 
-		/// \brief Description of the input
-		std::string const help_text;
+		/// \brief Description of the parameter
+		template < typename ... DTs >
+		std::string help_text_fn(dimension_list< DTs ... >)const{
+			std::ostringstream help;
+			help << "    * parameter: "
+				<< detail::to_std_string_view(name) << "\n";
+			help << wrapped_type_ref_text(
+				DimensionReferrer{}, dimension_list< DTs ... >{});
+			return help.str();
+		}
 
 		/// \brief Parameter parser function
 		parser_fn< ParserFn > parser;
@@ -70,10 +79,6 @@ namespace disposer{
 		default_value_fn< DefaultValueFn > default_value_generator,
 		verify_value_fn< VerfiyValueFn > verify_value
 	){
-		std::ostringstream help;
-		help << "    * parameter: "
-			<< detail::to_std_string_view(parameter_name< C ... >{}) << "\n";
-
 		return parameter_maker<
 				parameter_name< C ... >,
 				dimension_referrer< Template, D ... >,
@@ -81,7 +86,6 @@ namespace disposer{
 				DefaultValueFn,
 				VerfiyValueFn
 			>{
-				help.str(),
 				std::move(parser),
 				std::move(default_value_generator),
 				std::move(verify_value)

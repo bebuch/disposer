@@ -11,6 +11,7 @@
 
 #include "output_name.hpp"
 #include "dimension_referrer.hpp"
+#include "dimension_referrer_output.hpp"
 
 #include "../config/module_make_data.hpp"
 
@@ -34,8 +35,16 @@ namespace disposer{
 		/// \brief output_name object
 		static constexpr auto name = Name{};
 
-		/// \brief Description of the input
-		std::string const help_text;
+		/// \brief Description of the output
+		template < typename ... DTs >
+		std::string help_text_fn(dimension_list< DTs ... >)const{
+			std::ostringstream help;
+			help << "    * output: "
+				<< detail::to_std_string_view(name) << "\n";
+			help << wrapped_type_ref_text(
+				DimensionReferrer{}, dimension_list< DTs ... >{});
+			return help.str();
+		}
 	};
 
 
@@ -48,13 +57,9 @@ namespace disposer{
 		output_name< C ... > const&,
 		dimension_referrer< Template, D ... > const&
 	){
-		std::ostringstream help;
-		help << "    * output: "
-			<< detail::to_std_string_view(output_name< C ... >{}) << "\n";
-
 		return output_maker<
 			output_name< C ... >,
-			dimension_referrer< Template, D ... > >{help.str()};
+			dimension_referrer< Template, D ... > >{};
 	}
 
 

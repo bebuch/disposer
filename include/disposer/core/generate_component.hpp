@@ -25,10 +25,10 @@ namespace disposer{
 		component_modules< Module ... > modules
 	){
 		std::ostringstream help;
-		hana::for_each(list.config_list, [&help](auto const& iop){
+		hana::for_each(list.config_list, [&help, dims](auto const& iop){
 			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
 			if constexpr(is_iop){
-				help << iop.help_text;
+				help << iop.help_text_fn(dims);
 			}
 		});
 // 		help << module_init.help_text;

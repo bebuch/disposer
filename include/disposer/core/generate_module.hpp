@@ -28,14 +28,14 @@ namespace disposer{
 	){
 		std::ostringstream help;
 
-		help << "    dimension count: "
+		help << "    * dimension count: "
 			<< dims.dimension_count << "\n";
 
 		hana::for_each(dims.dimensions,
 			[&help, i = 0u](auto const& dim)mutable{
-				help << "      dimension " << ++i << ":\n";
+				help << "      * dimension " << ++i << ":\n";
 				hana::for_each(dim, [&help](auto type){
-						help << "        " << type_index::type_id< typename
+						help << "        * " << type_index::type_id< typename
 							decltype(type)::type >().pretty_name() << "\n";
 					});
 			});
@@ -56,10 +56,10 @@ namespace disposer{
 
 		help << generate_dims_help(dims);
 
-		hana::for_each(list.config_list, [&help](auto const& iop){
+		hana::for_each(list.config_list, [&help, dims](auto const& iop){
 			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
 			if constexpr(is_iop){
-				help << iop.help_text;
+				help << iop.help_text_fn(dims);
 			}
 		});
 // 		help << module_init.help_text;

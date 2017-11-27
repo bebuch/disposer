@@ -12,6 +12,7 @@
 #include "input_name.hpp"
 #include "dimension_solve.hpp"
 #include "output_base.hpp"
+#include "dimension_referrer_output.hpp"
 
 #include "../config/module_make_data.hpp"
 
@@ -38,7 +39,15 @@ namespace disposer{
 		static constexpr auto name = Name{};
 
 		/// \brief Description of the input
-		std::string const help_text;
+		template < typename ... DTs >
+		std::string help_text_fn(dimension_list< DTs ... >)const{
+			std::ostringstream help;
+			help << "    * input: "
+				<< detail::to_std_string_view(name) << "\n";
+			help << wrapped_type_ref_text(
+				DimensionReferrer{}, dimension_list< DTs ... >{});
+			return help.str();
+		}
 	};
 
 
@@ -64,14 +73,10 @@ namespace disposer{
 		dimension_referrer< Template, D ... > const&,
 		is_required< IsRequired > = required
 	){
-		std::ostringstream help;
-		help << "    * input: "
-			<< detail::to_std_string_view(input_name< C ... >{}) << "\n";
-
 		return input_maker<
 			input_name< C ... >,
 			dimension_referrer< Template, D ... >,
-			IsRequired >{help.str()};
+			IsRequired >{};
 	}
 
 
