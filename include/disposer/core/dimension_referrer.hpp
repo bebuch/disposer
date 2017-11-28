@@ -58,6 +58,16 @@ namespace disposer{
 	template < typename T >
 	using self_t = T;
 
+	template < template < typename ... > typename >
+	struct is_self_t: std::false_type{};
+
+	template <>
+	struct is_self_t< self_t >: std::true_type{};
+
+	template < template < typename ... > typename Template >
+	constexpr bool is_self_t_v = is_self_t< Template >::value;
+
+
 	template < typename T >
 	struct free_t{
 		template < typename ...

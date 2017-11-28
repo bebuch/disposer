@@ -28,7 +28,10 @@ namespace disposer{
 		dimension_referrer< Template, Ds ... >,
 		dimension_list< DTs ... >
 	){
-		if constexpr(sizeof...(Ds) > 0){
+		if constexpr(is_self_t_v< Template >){
+			return "      * type is equal to dimension "
+				+ std::to_string((Ds, ...) + 1) + "\n";
+		}else if constexpr(sizeof...(Ds) > 0){
 			std::string text = "      * type depends on dimension: ";
 			dimension_converter< dimension_list< DTs ... >, Template, Ds ... >
 				convert;
@@ -57,7 +60,7 @@ namespace disposer{
 
 			return text;
 		}else{
-			return "      * free type:\n      * "
+			return "      * free type: "
 				+ ct_pretty_name< Template<> >() + "\n";
 		}
 	}
