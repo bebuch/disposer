@@ -513,6 +513,28 @@ namespace disposer{
 		}
 	}
 
+	/// \brief Get help text to the module
+	template < typename ... Dimension >
+	std::string generate_dims_help(
+		dimension_list< Dimension ... > dims
+	){
+		std::ostringstream help;
+
+		help << "    * dimension count: "
+			<< dims.dimension_count << "\n";
+
+		hana::for_each(dims.dimensions,
+			[&help, i = 0u](auto const& dim)mutable{
+				help << "      * dimension " << ++i << ":\n";
+				hana::for_each(dim, [&help](auto type){
+						help << "        * " << ct_pretty_name< typename
+							decltype(type)::type >() << "\n";
+					});
+			});
+
+		return help.str();
+	}
+
 	/// \brief Tag to identify module_maker objects via hana::is_a
 	struct module_maker_tag;
 
@@ -529,7 +551,21 @@ namespace disposer{
 
 
 		/// \brief Description of the input
-		std::string const help_text;
+		std::string const help_text_fn()const{
+			std::ostringstream help;
+
+			help << help_text << "\n";
+			help << generate_dims_help(DimensionList{});
+
+			hana::for_each(configuration.config_list, [&help](auto const& iop){
+				auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
+				if constexpr(is_iop){
+					help << iop.help_text_fn(DimensionList{});
+				}
+			});
+
+			return help.str();
+		}
 
 		/// \brief An dimension_list object
 		DimensionList dimensions;
@@ -542,6 +578,9 @@ namespace disposer{
 
 		/// \brief The function object that is called in exec()
 		exec_fn< ExecFn > exec;
+
+		/// \brief User defined help text
+		std::string const help_text;
 
 
 		/// \brief Create an module object

@@ -22,6 +22,8 @@
 #include "../tool/validate_arguments.hpp"
 #include "../tool/to_std_string_view.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <variant>
 #include <unordered_map>
 
@@ -49,6 +51,7 @@ namespace disposer{
 			std::ostringstream help;
 			help << "    * parameter: "
 				<< detail::to_std_string_view(name) << "\n";
+			help << help_text << "\n";
 			help << wrapped_type_ref_text(
 				DimensionReferrer{}, dimension_list< DTs ... >{});
 			return help.str();
@@ -62,6 +65,9 @@ namespace disposer{
 
 		/// \brief Verfiy value function
 		verify_value_fn< VerfiyValueFn > verify_value;
+
+		/// \brief User defined help text
+		std::string const help_text;
 	};
 
 
@@ -75,6 +81,7 @@ namespace disposer{
 	auto create_parameter_maker(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const&,
+		std::string const& description,
 		parser_fn< ParserFn > parser,
 		default_value_fn< DefaultValueFn > default_value_generator,
 		verify_value_fn< VerfiyValueFn > verify_value
@@ -88,7 +95,9 @@ namespace disposer{
 			>{
 				std::move(parser),
 				std::move(default_value_generator),
-				std::move(verify_value)
+				std::move(verify_value),
+				"      * " +
+				boost::replace_all_copy(description, "\n", "\n        ")
 			};
 	}
 
@@ -102,6 +111,7 @@ namespace disposer{
 	auto make(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const& referrer,
+		std::string const& description,
 		Args&& ... args
 	){
 		detail::validate_arguments< parser_fn_tag,
@@ -112,6 +122,7 @@ namespace disposer{
 		return create_parameter_maker(
 			parameter_name< C ... >{},
 			referrer,
+			description,
 			get_or_default(std::move(arg_tuple),
 				hana::is_a< parser_fn_tag >,
 				stream_parser),

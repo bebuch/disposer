@@ -23,53 +23,6 @@ namespace disposer{
 	constexpr can_run_concurrent< false > no_overtaking{};
 
 
-	/// \brief Get help text to the module
-	template < typename ... Dimension >
-	std::string generate_dims_help(
-		dimension_list< Dimension ... > dims
-	){
-		std::ostringstream help;
-
-		help << "    * dimension count: "
-			<< dims.dimension_count << "\n";
-
-		hana::for_each(dims.dimensions,
-			[&help, i = 0u](auto const& dim)mutable{
-				help << "      * dimension " << ++i << ":\n";
-				hana::for_each(dim, [&help](auto type){
-						help << "        * " << ct_pretty_name< typename
-							decltype(type)::type >() << "\n";
-					});
-			});
-
-		return help.str();
-	}
-
-	/// \brief Get help text to the module
-	template < typename ModuleInitFn, typename ExecFn,
-		typename ... Dimension, typename ... Config >
-	std::string generate_module_help(
-		dimension_list< Dimension ... > dims,
-		module_configure< Config ... > const& list,
-		module_init_fn< ModuleInitFn > const& module_init,
-		exec_fn< ExecFn > const& exec
-	){
-		std::ostringstream help;
-
-		help << generate_dims_help(dims);
-
-		hana::for_each(list.config_list, [&help, dims](auto const& iop){
-			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
-			if constexpr(is_iop){
-				help << iop.help_text_fn(dims);
-			}
-		});
-// 		help << module_init.help_text;
-// 		help << exec.help_text;
-		return help.str();
-	}
-
-
 	struct unit_test_key;
 
 	/// \brief Hana Tag for \ref generate_module
@@ -90,6 +43,7 @@ namespace disposer{
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Config >
 		generate_module(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			module_configure< Config ... > list,
 			module_init_fn< ModuleInitFn > module_init,
@@ -98,95 +52,106 @@ namespace disposer{
 				= can_run_concurrent< true >{}
 		)
 			: maker_{
-				generate_module_help(dims, list, module_init, exec),
 				dims,
 				std::move(list),
 				std::move(module_init),
-				std::move(exec)
+				std::move(exec),
+				"    * " +
+				boost::replace_all_copy(description, "\n", "\n      ")
 			} {}
 
 		/// \brief Constructor
 		template < typename ... Dimension >
 		generate_module(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dims, module_configure<>{},
-				std::move(module_init), std::move(exec), crc)
+			: generate_module(description, dims,
+				module_configure<>{}, std::move(module_init), std::move(exec),
+				crc)
 			{}
 
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Config >
 		generate_module(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			module_configure< Config ... > list,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dims, std::move(list),
+			: generate_module(description, dims, std::move(list),
 				module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		template < typename ... Dimension >
 		generate_module(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dims, module_configure<>{},
-				module_init_fn< void >(), std::move(exec), crc)
+			: generate_module(description, dims,
+				module_configure<>{}, module_init_fn< void >(),
+				std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		template < typename ... Config >
 		generate_module(
+			std::string const& description,
 			module_configure< Config ... > list,
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dimension_list{}, std::move(list),
-				std::move(module_init), std::move(exec), crc)
+			: generate_module(description, dimension_list{},
+				std::move(list), std::move(module_init), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		generate_module(
+			std::string const& description,
 			module_init_fn< ModuleInitFn > module_init,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dimension_list{}, module_configure<>{},
-				std::move(module_init), std::move(exec), crc)
+			: generate_module(description, dimension_list{},
+				module_configure<>{}, std::move(module_init), std::move(exec),
+				crc)
 			{}
 
 		/// \brief Constructor
 		template < typename ... Config >
 		generate_module(
+			std::string const& description,
 			module_configure< Config ... > list,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dimension_list{}, std::move(list),
-				module_init_fn< void >(), std::move(exec), crc)
+			: generate_module(description, dimension_list{},
+				std::move(list), module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 		/// \brief Constructor
 		generate_module(
+			std::string const& description,
 			exec_fn< ExecFn > exec,
 			can_run_concurrent< CanRunConcurrent > crc
 				= can_run_concurrent< true >{}
 		)
-			: generate_module(dimension_list{}, module_configure<>{},
-				module_init_fn< void >(), std::move(exec), crc)
+			: generate_module(description, dimension_list{},
+				module_configure<>{}, module_init_fn< void >(), std::move(exec), crc)
 			{}
 
 
@@ -194,7 +159,7 @@ namespace disposer{
 		std::string help(std::string const& module_type)const{
 			std::ostringstream help;
 			help << "  * module: " << module_type << "\n";
-			help << maker_.help_text << "\n";
+			help << maker_.help_text_fn() << "\n";
 			return help.str();
 		}
 
@@ -247,6 +212,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		module_configure< Config ... > list,
 		module_init_fn< ModuleInitFn > module_init,
@@ -263,6 +229,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		module_init_fn< ModuleInitFn > module_init,
 		exec_fn< ExecFn > exec,
@@ -278,6 +245,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		module_configure< Config ... > list,
 		exec_fn< ExecFn > exec,
@@ -292,6 +260,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		exec_fn< ExecFn > exec,
 		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
@@ -306,6 +275,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		module_configure< Config ... > list,
 		module_init_fn< ModuleInitFn > module_init,
 		exec_fn< ExecFn > exec,
@@ -320,6 +290,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		module_init_fn< ModuleInitFn > module_init,
 		exec_fn< ExecFn > exec,
 		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
@@ -333,6 +304,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		module_configure< Config ... > list,
 		exec_fn< ExecFn > exec,
 		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
@@ -345,6 +317,7 @@ namespace disposer{
 		typename ExecFn,
 		bool CanRunConcurrent = true >
 	generate_module(
+		std::string description,
 		exec_fn< ExecFn > exec,
 		can_run_concurrent< CanRunConcurrent > = can_run_concurrent< true >{}
 	) -> generate_module<

@@ -17,6 +17,8 @@
 
 #include "../tool/to_std_string_view.hpp"
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <variant>
 #include <unordered_map>
 
@@ -41,10 +43,15 @@ namespace disposer{
 			std::ostringstream help;
 			help << "    * output: "
 				<< detail::to_std_string_view(name) << "\n";
+			help << help_text << "\n";
 			help << wrapped_type_ref_text(
 				DimensionReferrer{}, dimension_list< DTs ... >{});
 			return help.str();
 		}
+
+
+		/// \brief User defined help text
+		std::string const help_text;
 	};
 
 
@@ -55,11 +62,15 @@ namespace disposer{
 		std::size_t ... D >
 	auto make(
 		output_name< C ... > const&,
-		dimension_referrer< Template, D ... > const&
+		dimension_referrer< Template, D ... > const&,
+		std::string const& description
 	){
 		return output_maker<
 			output_name< C ... >,
-			dimension_referrer< Template, D ... > >{};
+			dimension_referrer< Template, D ... > >{
+				"      * " +
+				boost::replace_all_copy(description, "\n", "\n        ")
+			};
 	}
 
 

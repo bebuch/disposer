@@ -15,28 +15,6 @@
 namespace disposer{
 
 
-	/// \brief Get help text to the module
-	template < typename ComponentInitFn, typename ... Dimension,
-		typename ... Config, typename ... Module >
-	std::string generate_component_help(
-		dimension_list< Dimension ... > dims,
-		component_configure< Config ... > list,
-		component_init_fn< ComponentInitFn > module_init,
-		component_modules< Module ... > modules
-	){
-		std::ostringstream help;
-		hana::for_each(list.config_list, [&help, dims](auto const& iop){
-			auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
-			if constexpr(is_iop){
-				help << iop.help_text_fn(dims);
-			}
-		});
-// 		help << module_init.help_text;
-// 		help << exec.help_text;
-		return help.str();
-	}
-
-
 	struct unit_test_key;
 
 	/// \brief Registers a component configuration in the \ref disposer
@@ -53,54 +31,61 @@ namespace disposer{
 			typename ... Config,
 			typename ... Module >
 		generate_component(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			component_configure< Config ... > list,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
 			: maker_{
-				generate_component_help(dims, list, module_init, modules),
 				dims,
 				std::move(list),
 				std::move(modules),
-				std::move(module_init)
+				std::move(module_init),
+				"    * " +
+				boost::replace_all_copy(description, "\n", "\n      ")
 			} {}
 
 		/// \brief Constructor
 		template < typename ... Config, typename ... Module >
 		generate_component(
+			std::string const& description,
 			component_configure< Config ... > list,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: generate_component{dimension_list{}, std::move(list),
-				std::move(module_init), std::move(modules)} {}
+			: generate_component{description, dimension_list{},
+				std::move(list), std::move(module_init), std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Dimension, typename ... Module >
 		generate_component(
+			std::string const& description,
 			dimension_list< Dimension ... > dims,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: generate_component{dims, component_configure<>{},
-				std::move(module_init), std::move(modules)} {}
+			: generate_component{description, dims,
+				component_configure<>{}, std::move(module_init),
+				std::move(modules)} {}
 
 		/// \brief Constructor
 		template < typename ... Module >
 		generate_component(
+			std::string const& description,
 			component_init_fn< ComponentInitFn > module_init,
 			component_modules< Module ... > modules
 		)
-			: generate_component{dimension_list{}, component_configure<>{},
-				std::move(module_init), std::move(modules)} {}
+			: generate_component{description, dimension_list{},
+				component_configure<>{}, std::move(module_init),
+				std::move(modules)} {}
 
 
 		/// \brief Generates help text
 		std::string help(std::string const& component_type)const{
 			std::ostringstream help;
 			help << "  * component: " << component_type << "\n";
-			help << maker_.help_text << "\n";
+			help << maker_.help_text_fn() << "\n";
 			return help.str();
 		}
 
@@ -134,6 +119,7 @@ namespace disposer{
 		typename ... Module,
 		typename ComponentInitFn >
 	generate_component(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		component_configure< Config ... > list,
 		component_init_fn< ComponentInitFn > module_init,
@@ -150,6 +136,7 @@ namespace disposer{
 		typename ... Module,
 		typename ComponentInitFn >
 	generate_component(
+		std::string description,
 		component_configure< Config ... > list,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
@@ -165,6 +152,7 @@ namespace disposer{
 		typename ... Module,
 		typename ComponentInitFn >
 	generate_component(
+		std::string description,
 		dimension_list< Dimension ... > dims,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
@@ -179,6 +167,7 @@ namespace disposer{
 		typename ... Module,
 		typename ComponentInitFn >
 	generate_component(
+		std::string description,
 		component_init_fn< ComponentInitFn > module_init,
 		component_modules< Module ... > modules
 	) -> generate_component<

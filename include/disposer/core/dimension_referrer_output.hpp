@@ -60,7 +60,7 @@ namespace disposer{
 
 			return text;
 		}else{
-			return "      * free type: "
+			return "      * type: "
 				+ ct_pretty_name< Template<> >() + "\n";
 		}
 	}

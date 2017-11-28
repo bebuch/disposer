@@ -337,7 +337,18 @@ namespace disposer{
 		typename ComponentInitFn >
 	struct component_maker{
 		/// \brief Description of the input
-		std::string const help_text;
+		std::string const help_text_fn()const{
+			std::ostringstream help;
+			help << help_text << "\n";
+			hana::for_each(configuration.config_list, [&help](auto const& iop){
+				auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
+				if constexpr(is_iop){
+					help << iop.help_text_fn(DimensionList{});
+				}
+			});
+// 			help << module_maker_list.help_text_fn();
+			return help.str();
+		}
 
 		/// \brief An dimension_list object
 		DimensionList dimensions;
@@ -350,6 +361,9 @@ namespace disposer{
 
 		/// \brief The function that creates the state object
 		component_init_fn< ComponentInitFn > component_init;
+
+		/// \brief User defined help text
+		std::string const help_text;
 
 
 		/// \brief Create an component object
