@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(register_0){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = generate_component(init, component_modules{});
+		auto fn = generate_component("description", init, component_modules{});
 		fn("register_0", disposer.component_declarant());
 	}
 }
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(register_1){
 	constexpr component_init_fn init{init_fn{}};
 
 	auto const generate_fn = [=](std::size_t i){
-			return generate_component(list,
+			return generate_component("description", list,
 				component_configure{
 					set_dimension_fn([i](auto const&){
 						return solved_dimensions{index_component< 0 >{i}};
@@ -84,8 +84,9 @@ BOOST_AUTO_TEST_CASE(register_0_module_1){
 	constexpr component_init_fn init{init_fn{}};
 
 	{
-		auto fn = generate_component(init, component_modules{
-				make("m1"_module, generate_module(exec_fn{exec{}}))
+		auto fn = generate_component("description", init, component_modules{
+				make("m1"_module,
+					generate_module("description", exec_fn{exec{}}))
 			});
 		fn("register_0_module_1", disposer.component_declarant());
 	}

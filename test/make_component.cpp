@@ -775,7 +775,8 @@ BOOST_AUTO_TEST_CASE(param_0){
 	component_make_data component_data{};
 	auto const component_base_ptr = make_component_ptr(dimension_list{},
 		component_configure{
-			make("p1"_param, free_type_c< float >, default_value(3.14159f))
+			make("p1"_param, free_type_c< float >, "description",
+				default_value(3.14159f))
 		}, component_modules{}, d, component_data, init);
 	auto const component_ptr = dynamic_cast< component<
 			type_list<>,
@@ -801,7 +802,8 @@ BOOST_AUTO_TEST_CASE(param_1){
 					set_dimension_fn([i1](auto const&){
 						return solved_dimensions{index_component< 0 >{i1}};
 					}),
-					make("p1"_param, type_ref_c< 0 >, default_value())
+					make("p1"_param, type_ref_c< 0 >, "description",
+						default_value())
 				}, component_modules{}, d, component_data, init);
 		};
 
@@ -872,7 +874,7 @@ BOOST_AUTO_TEST_CASE(component_2){
 			set_dimension_fn([](auto const&){
 				return solved_dimensions{ic< 0 >{2}};
 			}),
-			make("p1"_param, type_ref_c< 0 >, default_value()),
+			make("p1"_param, type_ref_c< 0 >, "description", default_value()),
 			set_dimension_fn([](auto const& accessory){
 				decltype(auto) p1 = accessory("p1"_param);
 				static_assert(

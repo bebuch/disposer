@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(output_0){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(dimension_list{},
 		module_configure{
-			make("o1"_out, free_type_c< char >)
+			make("o1"_out, free_type_c< char >, "description")
 		}, module_data, state_dummy, exec_dummy, hana::true_c,
 		optional_component< void >{});
 	auto const module_ptr = dynamic_cast< module<
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(output_1){
 					set_dimension_fn([i1](auto const&){
 						return solved_dimensions{index_component< 0 >{i1}};
 					}),
-					make("o1"_out, type_ref_c< 0 >)
+					make("o1"_out, type_ref_c< 0 >, "description")
 				}, module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -912,7 +912,8 @@ BOOST_AUTO_TEST_CASE(output_2){
 							index_component< 1 >{i2}
 						};
 					}),
-					make("o1"_out, wrapped_type_ref_c< morph, 0, 1 >)
+					make("o1"_out, wrapped_type_ref_c< morph, 0, 1 >,
+						"description")
 				}, module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -996,7 +997,8 @@ BOOST_AUTO_TEST_CASE(param_0){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(dimension_list{},
 		module_configure{
-			make("p1"_param, free_type_c< float >, default_value(3.14159f))
+			make("p1"_param, free_type_c< float >, "description",
+				default_value(3.14159f))
 		}, module_data, state_dummy, exec_dummy, hana::true_c,
 		optional_component< void >{});
 	auto const module_ptr = dynamic_cast< module<
@@ -1024,7 +1026,8 @@ BOOST_AUTO_TEST_CASE(param_1){
 					set_dimension_fn([i1](auto const&){
 						return solved_dimensions{index_component< 0 >{i1}};
 					}),
-					make("p1"_param, type_ref_c< 0 >, default_value())
+					make("p1"_param, type_ref_c< 0 >, "description",
+						default_value())
 				}, module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -1070,7 +1073,7 @@ BOOST_AUTO_TEST_CASE(input_0){
 	module_make_data module_data{};
 	auto const module_base_ptr = make_module_ptr(dimension_list{},
 		module_configure{
-			make("i1"_in, free_type_c< float >, not_required)
+			make("i1"_in, free_type_c< float >, "description", not_required)
 		}, module_data, state_dummy, exec_dummy, hana::true_c,
 		optional_component< void >{});
 	auto const module_ptr = dynamic_cast< module<
@@ -1098,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(input_1){
 					set_dimension_fn([i1](auto const&){
 						return solved_dimensions{index_component< 0 >{i1}};
 					}),
-					make("i1"_in, type_ref_c< 0 >, not_required)
+					make("i1"_in, type_ref_c< 0 >, "description", not_required)
 				}, module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -1146,7 +1149,7 @@ BOOST_AUTO_TEST_CASE(input_auto_1){
 			output< decltype("o1"_out), typename decltype(type)::type > o1{0};
 			module_make_data module_data{{}, {}, {}, {{"i1", &o1}}, {}, {}};
 			return make_module_ptr(list,
-				module_configure{make("i1"_in, type_ref_c< 0 >)},
+				module_configure{make("i1"_in, type_ref_c< 0 >, "description")},
 				module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -1201,7 +1204,8 @@ BOOST_AUTO_TEST_CASE(input_auto_2){
 			module_make_data module_data{{}, {}, {}, {{"i1", &o1}}, {}, {}};
 			return make_module_ptr(list,
 				module_configure{
-					make("i1"_in, wrapped_type_ref_c< morph, 0, 1 >)},
+					make("i1"_in, wrapped_type_ref_c< morph, 0, 1 >,
+						"description")},
 				module_data, state_dummy, exec_dummy, hana::true_c,
 				optional_component< void >{});
 		};
@@ -1349,9 +1353,9 @@ BOOST_AUTO_TEST_CASE(module_2){
 			set_dimension_fn([](auto const&){
 				return solved_dimensions{ic< 0 >{2}};
 			}),
-			make("i1"_in, type_ref_c< 0 >, not_required),
-			make("o1"_out, type_ref_c< 0 >),
-			make("p1"_param, type_ref_c< 0 >, default_value()),
+			make("i1"_in, type_ref_c< 0 >, "description", not_required),
+			make("o1"_out, type_ref_c< 0 >, "description"),
+			make("p1"_param, type_ref_c< 0 >, "description", default_value()),
 			set_dimension_fn([](auto const& accessory){
 				decltype(auto) i1 = accessory("i1"_in);
 				static_assert(std::is_same_v< decltype(i1), bool >);

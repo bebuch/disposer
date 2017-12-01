@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(register_0){
 	constexpr exec_fn exec_dummy{exec{}};
 
 	{
-		auto fn = generate_module(
+		auto fn = generate_module("description",
 			module_configure{}, state_dummy, exec_dummy);
 		fn("register_0", disposer.module_declarant());
 	}
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(register_1){
 	constexpr exec_fn exec_dummy{exec{}};
 
 	auto const generate_fn = [=](std::size_t i){
-			return generate_module(list,
+			return generate_module("description", list,
 				module_configure{
 					set_dimension_fn([i](auto const&){
 						return solved_dimensions{index_component< 0 >{i}};
