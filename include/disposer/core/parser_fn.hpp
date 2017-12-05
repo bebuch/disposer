@@ -10,6 +10,7 @@
 #define _disposer__core__parser_fn__hpp_INCLUDED_
 
 #include "../tool/print_if_supported.hpp"
+#include "../tool/ct_pretty_name.hpp"
 
 #include <logsys/log.hpp>
 #include <logsys/stdlogb.hpp>
@@ -40,27 +41,34 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(
-				std::is_invocable_r_v< T, Fn const, Accessory const&,
-					std::string_view, hana::basic_type< T > >,
-				"Wrong function signature, expected: "
-				"T f(auto const& iop, std::string_view value, "
-				"hana::basic_type< T > type)"
+				std::is_invocable_r_v< T, Fn const,
+					std::string_view > ||
+				std::is_invocable_r_v< T, Fn const,
+					std::string_view, hana::basic_type< T > > ||
+				std::is_invocable_r_v< T, Fn const,
+					std::string_view, hana::basic_type< T >, Accessory >,
+				"Wrong function signature, expected one of:\n"
+				"  T function(std::string_view value)\n"
+				"  T function(std::string_view value, "
+				"hana::basic_type< T > type)\n"
+				"  T function(std::string_view value, "
+				"hana::basic_type< T > type, auto accessory)"
 			);
 
-			return std::is_nothrow_invocable_v< Fn const, Accessory const&,
-				std::string_view, hana::basic_type< T > >;
+			return std::is_nothrow_invocable_v< Fn const,
+				std::string_view, hana::basic_type< T >, Accessory >;
 		}
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		T operator()(
 			std::string_view parameter_name,
-			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< Accessory, T >()){
+			hana::basic_type< T > type,
+			Accessory const& accessory
+		)const noexcept(calc_noexcept< T, Accessory >()){
 			return accessory.log(
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") parsed value";
@@ -69,8 +77,18 @@ namespace disposer{
 						print_if_supported(os, *value);
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
-				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
-					return std::invoke(fn_, accessory, value, type);
+				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
+					if constexpr(std::is_invocable_r_v< T, Fn const,
+						std::string_view, hana::basic_type< T >, Accessory >
+					){
+						return std::invoke(fn_, value, type, accessory);
+					}else if constexpr(std::is_invocable_r_v< T, Fn const,
+						std::string_view, hana::basic_type< T > >
+					){
+						return std::invoke(fn_, value, type);
+					}else{
+						return std::invoke(fn_, value);
+					}
 				});
 		}
 
@@ -101,11 +119,11 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		T operator()(
-			Accessory const& /*accessory*/,
 			std::string_view value,
-			hana::basic_type< T > type
+			hana::basic_type< T > type,
+			Accessory const& /*accessory*/
 		)const{
 			if constexpr(type == hana::type_c< std::string >){
 				return std::string(value);
@@ -133,13 +151,13 @@ namespace disposer{
 			}
 		}
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		std::optional< T > operator()(
-			Accessory const& accessory,
 			std::string_view value,
-			hana::basic_type< std::optional< T > >
+			hana::basic_type< std::optional< T > >,
+			Accessory const& accessory
 		)const{
-			return (*this)(accessory, value, hana::type_c< T >);
+			return (*this)(value, hana::type_c< T >, accessory);
 		}
 	};
 

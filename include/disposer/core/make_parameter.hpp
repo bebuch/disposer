@@ -162,8 +162,8 @@ namespace disposer{
 		parameter_data const* param_data_ptr
 	){
 		if(param_data_ptr != nullptr && param_data_ptr->generic_value){
-			T result(parser(parameter_name, accessory,
-				*param_data_ptr->generic_value, hana::type_c< T >));
+			T result(parser(parameter_name,
+				*param_data_ptr->generic_value, hana::type_c< T >, accessory));
 
 			verify_value(parameter_name, accessory, result);
 

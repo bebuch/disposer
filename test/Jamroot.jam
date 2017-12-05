@@ -151,3 +151,10 @@ exe set_dimension_fn
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe parser_fn
+	:
+	parser_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
