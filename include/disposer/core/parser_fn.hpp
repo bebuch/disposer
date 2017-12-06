@@ -58,8 +58,20 @@ namespace disposer{
 				"hana::basic_type< T > type, auto accessory)"
 			);
 
-			return std::is_nothrow_invocable_v< Fn const,
-				std::string_view, hana::basic_type< T >, Accessory >;
+			if constexpr(std::is_invocable_r_v< T, Fn const,
+				std::string_view, hana::basic_type< T >, Accessory >
+			){
+				return std::is_nothrow_invocable_r_v< T, Fn const,
+					std::string_view, hana::basic_type< T >, Accessory >;
+			}else if constexpr(std::is_invocable_r_v< T, Fn const,
+				std::string_view, hana::basic_type< T > >
+			){
+				return std::is_nothrow_invocable_r_v< T, Fn const,
+					std::string_view, hana::basic_type< T > >;
+			}else{
+				return std::is_nothrow_invocable_r_v< T, Fn const,
+					std::string_view >;
+			}
 		}
 
 		template < typename T, typename Accessory >
