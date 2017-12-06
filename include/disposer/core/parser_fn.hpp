@@ -51,11 +51,12 @@ namespace disposer{
 				std::is_invocable_r_v< T, Fn const,
 					std::string_view, hana::basic_type< T >, Accessory >,
 				"Wrong function signature, expected one of:\n"
-				"  T function(std::string_view value)\n"
-				"  T function(std::string_view value, "
+				"  R function(std::string_view value)\n"
+				"  R function(std::string_view value, "
 				"hana::basic_type< T > type)\n"
-				"  T function(std::string_view value, "
-				"hana::basic_type< T > type, auto accessory)"
+				"  R function(std::string_view value, "
+				"hana::basic_type< T > type, auto accessory)\n"
+				"where R is convertible to T"
 			);
 
 			if constexpr(std::is_invocable_r_v< T, Fn const,
