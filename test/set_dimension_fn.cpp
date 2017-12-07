@@ -18,7 +18,6 @@ void test(Fn const& fn){
 
 
 int main(){
-	test(set_dimension_fn([]{ return result; }));
 	test(set_dimension_fn([](auto){ return result; }));
 	test(set_dimension_fn([](auto&&){ return result; }));
 	test(set_dimension_fn([](auto const&){ return result; }));
@@ -26,7 +25,6 @@ int main(){
 
 	// Must fail:
 // 	test(set_dimension_fn([](auto&){ return result; }));
-// 	test(set_dimension_fn([]mutable{ return result; }));
 // 	test(set_dimension_fn([](auto)mutable{ return result; }));
 // 	test(set_dimension_fn([](auto const&)mutable{ return result; }));
 // 	test(set_dimension_fn([](auto&&)mutable{ return result; }));

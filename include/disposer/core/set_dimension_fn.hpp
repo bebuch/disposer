@@ -77,11 +77,11 @@ namespace disposer{
 		template < typename DimensionList, typename ResultType >
 		static constexpr void check_result_type()noexcept{
 			static_assert(is_solved_dimensions_v< ResultType >,
-				"result of Fn(auto accessory) or Fn() in set_dimension_fn must "
+				"result of Fn(auto accessory) in set_dimension_fn must "
 				"be solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 
 			static_assert(ResultType::index_count > 0,
-				"result of Fn(auto accessory) or Fn() in set_dimension_fn must "
+				"result of Fn(auto accessory) in set_dimension_fn must "
 				"solve at least one dimension, you must return an object of "
 				"solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 
@@ -99,21 +99,13 @@ namespace disposer{
 		/// \brief Helper for noexcept of operator()
 		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_v< Fn const, Accessory > ||
-				std::is_invocable_v< Fn const >,
-				"Wrong function signature, expected: "
-				"solved_dimensions< Ds ... > f(auto accessory) or "
-				"solved_dimensions< Ds ... > f()");
+			static_assert(std::is_invocable_v< Fn const, Accessory >,
+				"Wrong function signature, expected:\n"
+				"solved_dimensions< Ds ... > f(auto accessory)");
 
-			if constexpr(std::is_invocable_v< Fn const, Accessory >){
-				check_result_type< typename Accessory::dimension_list,
-					std::invoke_result_t< Fn const, Accessory > >();
-				return std::is_nothrow_invocable_v< Fn const, Accessory >;
-			}else{
-				check_result_type< typename Accessory::dimension_list,
-					std::invoke_result_t< Fn const > >();
-				return std::is_nothrow_invocable_v< Fn const >;
-			}
+			check_result_type< typename Accessory::dimension_list,
+				std::invoke_result_t< Fn const, Accessory > >();
+			return std::is_nothrow_invocable_v< Fn const, Accessory >;
 		}
 
 		/// \brief Calls the actual function
@@ -155,15 +147,7 @@ namespace disposer{
 								detail::get_type_name(ic.i, types(ic))) ...);
 						});
 				}, [&]{
-					auto solved_dims = [&]{
-							if constexpr(
-								std::is_invocable_v< Fn const, Accessory >
-							){
-								return std::invoke(fn_, accessory);
-							}else{
-								return std::invoke(fn_);
-							}
-						}();
+					auto solved_dims = std::invoke(fn_, accessory);
 
 					hana::unpack(solved_dims.indexes, [type_count](auto ... ic){
 						if(((ic.i < type_count(ic)) && ...)) return;
