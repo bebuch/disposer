@@ -155,12 +155,9 @@ namespace disposer{
 			{}
 
 
-		/// \brief Generates help text
-		std::string help(std::string const& module_type)const{
-			std::ostringstream help;
-			help << "  * module: " << module_type << "\n";
-			help << maker_.help_text_fn() << "\n";
-			return help.str();
+		/// \brief Description of the module
+		std::string help_text_fn(std::string const& module_type)const{
+			return maker_.help_text_fn(module_type);
 		}
 
 
@@ -174,7 +171,8 @@ namespace disposer{
 				(module_make_data const& data){
 					return maker(data);
 				});
-			add.help(module_type, help(module_type));
+
+			add.help(module_type, maker_.help_text_fn(module_type));
 		}
 
 
@@ -190,7 +188,8 @@ namespace disposer{
 				(module_make_data const& data){
 					return maker(data, component);
 				});
-			add.help(module_type, help(module_type));
+
+			add.help(module_type, maker_.help_text_fn(module_type));
 		}
 
 

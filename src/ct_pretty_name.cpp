@@ -16,7 +16,8 @@ namespace disposer{ namespace{
 			c == '_';
 	}
 
-	std::array< std::pair< std::string, std::string >, 11 > replace_table{{
+	std::array< std::pair< std::string, std::string >, 12 > replace_table{{
+		{"long long", "long long"},
 		{"long double", "long double"},
 		{"float", "float32"},
 		{"double", "float64"},

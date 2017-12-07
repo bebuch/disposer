@@ -81,16 +81,6 @@ namespace disposer{
 				std::move(modules)} {}
 
 
-		/// \brief Generates help text
-		std::string help(std::string const& component_type)const{
-			std::ostringstream help;
-			help << "  * component: " << component_type << "\n";
-			help << maker_.help_text_fn() << "\n";
-			// TODO: add component module help
-			return help.str();
-		}
-
-
 		/// \brief Call this function to register the component with the given
 		///        type name via the given component_declarant
 		void operator()(
@@ -101,7 +91,8 @@ namespace disposer{
 				(component_make_data const& data){
 					return maker(data, add.disposer());
 				});
-			add.help(component_type, help(component_type));
+
+			add.help(component_type, maker_.help_text_fn(component_type));
 		}
 
 

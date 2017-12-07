@@ -551,9 +551,10 @@ namespace disposer{
 
 
 		/// \brief Description of the input
-		std::string const help_text_fn()const{
+		std::string help_text_fn(std::string const& module_type)const{
 			std::ostringstream help;
 
+			help << "  * module: " << module_type << "\n";
 			help << help_text << "\n";
 			help << generate_dims_help(DimensionList{});
 

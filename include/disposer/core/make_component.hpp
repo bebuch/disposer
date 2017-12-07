@@ -336,17 +336,24 @@ namespace disposer{
 		typename Modules,
 		typename ComponentInitFn >
 	struct component_maker{
-		/// \brief Description of the input
-		std::string const help_text_fn()const{
+		/// \brief Description of the component and its modules
+		std::string help_text_fn(std::string const& component_type)const{
 			std::ostringstream help;
+			help << "  * component: " << component_type << "\n";
 			help << help_text << "\n";
 			hana::for_each(configuration.config_list, [&help](auto const& iop){
-				auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
-				if constexpr(is_iop){
-					help << iop.help_text_fn(DimensionList{});
-				}
-			});
-// 			help << module_maker_list.help_text_fn();
+					auto const is_iop =
+						!hana::is_a< set_dimension_fn_tag >(iop);
+					if constexpr(is_iop){
+						help << iop.help_text_fn(DimensionList{});
+					}
+				});
+			hana::for_each(module_maker_list.module_maker_list,
+				[&component_type, &help](auto const& module_maker){
+					help << module_maker.generate_module_fn.help_text_fn(
+						"[" + component_type + "]//"
+						+ std::string(module_maker.name));
+				});
 			return help.str();
 		}
 
