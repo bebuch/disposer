@@ -158,3 +158,10 @@ exe parser_fn
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe default_value_fn
+	:
+	default_value_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;

@@ -16,6 +16,7 @@
 #include <logsys/stdlogb.hpp>
 
 #include <boost/hana/type.hpp>
+#include <boost/hana/traits.hpp>
 
 #include <optional>
 
@@ -43,63 +44,98 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		static constexpr bool is_invocable_v()noexcept{
-			return std::is_invocable_v< Fn const, Accessory const&,
-				hana::basic_type< T > >;
+			return
+				std::is_invocable_v< Fn const, hana::basic_type< T >,
+					Accessory > ||
+				std::is_invocable_v< Fn const, hana::basic_type< T > > ||
+				std::is_invocable_v< Fn const >;
+		}
+
+		template < typename T, typename Accessory >
+		static constexpr auto invoke_result_type()noexcept{
+			static_assert(is_invocable_v< T, Accessory >(),
+				"Wrong function signature, expected one of:\n"
+				"  R function()\n"
+				"  R function(hana::basic_type< T > type)\n"
+				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"where R is void or convertible to T"
+			);
+
+			auto type = []{
+					if constexpr(
+						std::is_invocable_v< Fn const, hana::basic_type< T >,
+							Accessory >
+					){
+						return hana::type_c< std::invoke_result_t< Fn const,
+							hana::basic_type< T >, Accessory > >;
+					}else if constexpr(
+						std::is_invocable_v< Fn const, hana::basic_type< T > >
+					){
+						return hana::type_c< std::invoke_result_t< Fn const,
+							hana::basic_type< T > > >;
+					}else{
+						return hana::type_c< std::invoke_result_t< Fn const > >;
+					}
+				}();
+
+			auto const is_result_valid =
+				hana::traits::is_void(type) ||
+				hana::traits::is_convertible(type, hana::type_c< T >);
+			static_assert(is_result_valid,
+				"Wrong function signature, expected one of:\n"
+				"  R function()\n"
+				"  R function(hana::basic_type< T > type)\n"
+				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"where R must be void or convertible to T"
+			);
+
+			return type;
 		}
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename Accessory, typename T >
-		static constexpr bool is_void_r_v()noexcept{
-			if constexpr(is_invocable_v< Accessory, T >()){
-				return std::is_void_v< std::invoke_result_t< Fn const,
-					Accessory const&, hana::basic_type< T > > >;
-			}else{
-				return false;
-			}
-		}
-
-		/// \brief true if correctly invocable and return type void,
-		///        false otherwise
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		static constexpr auto is_void_r(
-			Accessory const&, hana::basic_type< T >
+			hana::basic_type< T >, Accessory
 		)noexcept{
-			if constexpr(is_void_r_v< Accessory, T >()){
-				return hana::true_c;
-			}else{
-				return hana::false_c;
-			}
+			return hana::traits::is_void(invoke_result_type< T, Accessory >());
 		}
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(is_invocable_v< Accessory, T >(),
-				"Wrong function signature, expected: "
-				"U f(auto const& iop, hana::basic_type< T > type) where U is "
-				"void or convertible to T"
+			static_assert(is_invocable_v< T, Accessory >(),
+				"Wrong function signature, expected one of:\n"
+				"  R function()\n"
+				"  R function(hana::basic_type< T > type)\n"
+				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"where R is void or convertible to T"
 			);
 
-			static_assert(std::is_invocable_r_v< T, Fn const,
-				Accessory const&, hana::basic_type< T > >
-				|| is_void_r_v< Accessory, T >(),
-				"Result of default_value_fn is neither void nor convertible "
-				"to T"
-			);
-
-			return std::is_nothrow_invocable_v< Fn const,
-				Accessory const&, hana::basic_type< T > >;
+			if constexpr(
+				std::is_invocable_v< Fn const, hana::basic_type< T >,
+					Accessory >
+			){
+				return std::is_nothrow_invocable_v< Fn const,
+					hana::basic_type< T >, Accessory >;
+			}else if constexpr(
+				std::is_invocable_v< Fn const, hana::basic_type< T > >
+			){
+				return std::is_nothrow_invocable_v< Fn const,
+					hana::basic_type< T > >;
+			}else{
+				return std::is_nothrow_invocable_v< Fn const >;
+			}
 		}
 
 		/// \brief Operator for outputs
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
 		T operator()(
 			std::string_view parameter_name,
-			Accessory const& accessory,
-			hana::basic_type< T > type
-		)const noexcept(calc_noexcept< Accessory, T >()){
+			hana::basic_type< T > type,
+			Accessory accessory
+		)const noexcept(calc_noexcept< T, Accessory >()){
 			return accessory.log(
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") ";
@@ -110,8 +146,19 @@ namespace disposer{
 						os << "no default value generated";
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
-				}, [&]()noexcept(calc_noexcept< Accessory, T >())->T{
-					return std::invoke(fn_, accessory, type);
+				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
+					if constexpr(
+						std::is_invocable_v< Fn const, hana::basic_type< T >,
+							Accessory >
+					){
+						return std::invoke(fn_, type, accessory);
+					}else if constexpr(
+						std::is_invocable_v< Fn const, hana::basic_type< T > >
+					){
+						return std::invoke(fn_, type);
+					}else{
+						return std::invoke(fn_);
+					}
 				});
 		}
 
@@ -122,12 +169,11 @@ namespace disposer{
 
 
 	struct auto_default_t{
-		template < typename Accessory, typename T >
-		void operator()(Accessory const&, hana::basic_type< T >)const noexcept{}
+		template < typename T >
+		void operator()(hana::basic_type< T >)const noexcept{}
 
-		template < typename Accessory, typename T >
+		template < typename T >
 		std::optional< T > operator()(
-			Accessory const&,
 			hana::basic_type< std::optional< T > >
 		)const noexcept{ return {}; }
 	};
@@ -138,15 +184,15 @@ namespace disposer{
 	constexpr auto default_value(T&& value)
 	noexcept(std::is_nothrow_move_constructible_v< T >){
 		return default_value_fn(
-			[value = static_cast< T&& >(value)](auto const, auto)
+			[value = static_cast< T&& >(value)]()
 			noexcept(std::is_nothrow_copy_constructible_v< T >)
 			{
 				return value;
 			});
 	}
 
-	constexpr auto default_value(){
-		return default_value_fn([](auto const, auto type)
+	constexpr auto default_value()noexcept{
+		return default_value_fn([](auto const type)
 			noexcept(std::is_nothrow_default_constructible_v<
 				typename decltype(type)::type >
 			){
