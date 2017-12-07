@@ -30,15 +30,9 @@ namespace disposer{
 	using component_maker_fn =
 		std::function< component_ptr(component_make_data const&) >;
 
-	/// \brief Compounds the init fn and the help text
-	struct component_maker_entry{
-		component_maker_fn make_fn;
-		std::string const help;
-	};
-
 	/// \brief Map between component type name and its maker function
 	using component_maker_list =
-		std::unordered_map< std::string, component_maker_entry >;
+		std::unordered_map< std::string, component_maker_fn >;
 
 
 }

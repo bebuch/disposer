@@ -45,7 +45,7 @@ namespace disposer{ namespace{
 		}
 
 		try{
-			return iter->second.make_fn(data);
+			return iter->second(data);
 		}catch(std::exception const& error){
 			throw std::runtime_error(
 				data.location() + error.what()

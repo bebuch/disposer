@@ -32,16 +32,13 @@ namespace disposer{ namespace{
 		if(iter == maker_list.end()){
 			throw std::logic_error(
 				data.location() + "component type(" + data.type_name
-				+ ") is unknown!"
-			);
+				+ ") is unknown!");
 		}
 
 		try{
-			return iter->second.make_fn(data);
+			return iter->second(data);
 		}catch(std::exception const& error){
-			throw std::runtime_error(
-				data.location() + error.what()
-			);
+			throw std::runtime_error(data.location() + error.what());
 		}
 	}
 
@@ -117,19 +114,37 @@ namespace disposer{
 
 	void component_declarant::operator()(
 		std::string const& type_name,
-		component_maker_entry&& fn
+		component_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "registered component type name '" << type_name << "'";
+			os << "add component type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.component_maker_list_.insert(
-				std::make_pair(type_name, std::move(fn))
-			);
+				std::make_pair(type_name, std::move(fn)));
 
 			if(!iter.second){
 				throw std::logic_error(
 					"component type name '" + type_name
-					+ "' is double registered!"
+					+ "' has been added more than one time!"
+				);
+			}
+		});
+	}
+
+	void component_declarant::help(
+		std::string const& type_name,
+		std::string&& text
+	){
+		logsys::log([&type_name](logsys::stdlogb& os){
+			os << "add help for component type name '" << type_name << "'";
+		}, [&]{
+			auto iter = disposer_.component_help_list_.insert(
+				std::make_pair(type_name, std::move(text)));
+
+			if(!iter.second){
+				throw std::logic_error(
+					"component type name '" + type_name
+					+ "' help text has been added more than one time!"
 				);
 			}
 		});
@@ -137,18 +152,37 @@ namespace disposer{
 
 	void module_declarant::operator()(
 		std::string const& type_name,
-		module_maker_entry&& fn
+		module_maker_fn&& fn
 	){
 		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "registered module type name '" << type_name << "'";
+			os << "add module type name '" << type_name << "'";
 		}, [&]{
 			auto iter = disposer_.module_maker_list_.insert(
-				std::make_pair(type_name, std::move(fn))
-			);
+				std::make_pair(type_name, std::move(fn)));
 
 			if(!iter.second){
 				throw std::logic_error(
-					"module type name '" + type_name + "' is double registered!"
+					"module type name '" + type_name
+					+ "' has been added more than one time!"
+				);
+			}
+		});
+	}
+
+	void module_declarant::help(
+		std::string const& type_name,
+		std::string&& text
+	){
+		logsys::log([&type_name](logsys::stdlogb& os){
+			os << "add help for module type name '" << type_name << "'";
+		}, [&]{
+			auto iter = disposer_.module_help_list_.insert(
+				std::make_pair(type_name, std::move(text)));
+
+			if(!iter.second){
+				throw std::logic_error(
+					"module type name '" + type_name
+					+ "' help text has been added more than one time!"
 				);
 			}
 		});
@@ -211,31 +245,31 @@ namespace disposer{
 
 	std::string disposer::help()const{
 		std::string result;
-		for(auto const& component: component_maker_list_){
-			result += component.second.help;
+		for(auto const& component: component_help_list_){
+			result += component.second;
 		}
-		for(auto const& module: module_maker_list_){
-			result += module.second.help;
+		for(auto const& module: module_help_list_){
+			result += module.second;
 		}
 		return result;
 	}
 
 	std::string disposer::module_help(std::string const& name)const{
-		auto const iter = module_maker_list_.find(name);
-		if(iter == module_maker_list_.end()){
+		auto const iter = module_help_list_.find(name);
+		if(iter == module_help_list_.end()){
 			throw std::logic_error(
 				std::string("no module '") + name + "' found");
 		}
-		return iter->second.help;
+		return iter->second;
 	}
 
 	std::string disposer::component_help(std::string const& name)const{
-		auto const iter = component_maker_list_.find(name);
-		if(iter == component_maker_list_.end()){
+		auto const iter = component_help_list_.find(name);
+		if(iter == component_help_list_.end()){
 			throw std::logic_error(
 				std::string("no component '") + name + "' found");
 		}
-		return iter->second.help;
+		return iter->second;
 	}
 
 

@@ -30,8 +30,7 @@ namespace disposer{
 		typename State,
 		typename Parameters >
 	class component_accessory
-		: public add_log< component_accessory<
-			TypeList, State, Parameters > >
+		: public add_log< component_accessory< TypeList, State, Parameters > >
 	{
 	public:
 		/// \brief Constructor

@@ -170,11 +170,11 @@ namespace disposer{
 			std::string const& module_type,
 			module_declarant& add
 		)const{
-			add(module_type, module_maker_entry{
-				[maker = maker_](module_make_data const& data){
+			add(module_type, [maker = maker_]
+				(module_make_data const& data){
 					return maker(data);
-				},
-				help(module_type)});
+				});
+			add.help(module_type, help(module_type));
 		}
 
 
@@ -186,12 +186,11 @@ namespace disposer{
 			module_declarant& add,
 			Component& component
 		)const{
-			add(module_type, module_maker_entry{
-				[maker = maker_, &component]
+			add(module_type, [maker = maker_, &component]
 				(module_make_data const& data){
 					return maker(data, component);
-				},
-				help(module_type)});
+				});
+			add.help(module_type, help(module_type));
 		}
 
 

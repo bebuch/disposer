@@ -29,7 +29,10 @@ namespace disposer{
 	public:
 		/// \brief Register a new module in the disposer by mapping the
 		///        module name to the constructing init and help function
-		void operator()(std::string const& type, module_maker_entry&& fn);
+		void operator()(std::string const& type_name, module_maker_fn&& fn);
+
+		/// \brief Register the help text of a new module in the disposer
+		void help(std::string const& type_name, std::string&& text);
 
 
 	private:
@@ -57,7 +60,10 @@ namespace disposer{
 	public:
 		/// \brief Register a new component in the disposer by mapping the
 		///        component name to the constructing init and help function
-		void operator()(std::string const& type, component_maker_entry&& fn);
+		void operator()(std::string const& type_name, component_maker_fn&& fn);
+
+		/// \brief Register the help text of a new component in the disposer
+		void help(std::string const& type_name, std::string&& text);
 
 		/// \brief Get a reference to the disposer object
 		::disposer::disposer& disposer(){ return disposer_; }
@@ -147,12 +153,21 @@ namespace disposer{
 		/// \brief Configuration data to create components and chains
 		types::embedded_config::config config_;
 
+
+		/// \brief Map from component type name to help text
+		std::unordered_map< std::string, std::string > component_help_list_;
+
+		/// \brief Map from module type name to help text
+		std::unordered_map< std::string, std::string > module_help_list_;
+
+
 		/// \brief List of components (map from component type name to maker
 		///        function)
 		component_maker_list component_maker_list_;
 
 		/// \brief List of modules (map from module type name to maker function)
 		module_maker_list module_maker_list_;
+
 
 		/// \brief List of all components (map from name to object)
 		std::unordered_map< std::string, component_ptr > components_;
@@ -166,11 +181,13 @@ namespace disposer{
 		/// \brief List of id_generators (map from name to object)
 		std::unordered_map< std::string, id_generator > id_generators_;
 
+
 		/// \brief The declarant object to register new component types
 		::disposer::component_declarant component_declarant_;
 
 		/// \brief The declarant object to register new module types
 		::disposer::module_declarant module_declarant_;
+
 
 	friend class ::disposer::module_declarant;
 	friend class ::disposer::component_declarant;

@@ -86,6 +86,7 @@ namespace disposer{
 			std::ostringstream help;
 			help << "  * component: " << component_type << "\n";
 			help << maker_.help_text_fn() << "\n";
+			// TODO: add component module help
 			return help.str();
 		}
 
@@ -96,11 +97,11 @@ namespace disposer{
 			std::string const& component_type,
 			component_declarant& add
 		)const{
-			add(component_type, component_maker_entry{
-				[maker = maker_, &add](component_make_data const& data){
+			add(component_type, [maker = maker_, &add]
+				(component_make_data const& data){
 					return maker(data, add.disposer());
-				},
-				help(component_type)});
+				});
+			add.help(component_type, help(component_type));
 		}
 
 
