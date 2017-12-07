@@ -165,7 +165,7 @@ namespace disposer{
 			T result(parser(parameter_name,
 				*param_data_ptr->generic_value, hana::type_c< T >, accessory));
 
-			verify_value(parameter_name, accessory, result);
+			verify_value(parameter_name, result, accessory);
 
 			return result;
 		}

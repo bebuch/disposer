@@ -165,3 +165,10 @@ exe default_value_fn
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+exe verify_value_fn
+	:
+	verify_value_fn.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;

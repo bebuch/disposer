@@ -9,6 +9,8 @@
 #ifndef _disposer__core__verify_value_fn__hpp_INCLUDED_
 #define _disposer__core__verify_value_fn__hpp_INCLUDED_
 
+#include "../tool/ct_pretty_name.hpp"
+
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
@@ -38,28 +40,48 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory, typename T >
+		template < typename T, typename Accessory >
+		static constexpr bool calc_noexcept()noexcept{
+			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
+				static_assert(
+					std::is_invocable_v< Fn const, T const& > ||
+					std::is_invocable_v< Fn const, T const&, Accessory >,
+					"Wrong function signature, expected one of:\n"
+					"  void function(T const& value)\n"
+					"  void function(T const& value, auto accessory)"
+				);
+
+				if constexpr(
+					std::is_invocable_v< Fn const, T const&, Accessory >
+				){
+					return std::is_nothrow_invocable_v<
+						Fn const, T const&, Accessory >;
+				}else{
+					return std::is_nothrow_invocable_v< Fn const, T const& >;
+				}
+			}else{
+				return true;
+			}
+		}
+
+		template < typename T, typename Accessory >
 		void operator()(
 			std::string_view parameter_name,
-			Accessory const& accessory,
-			T const& value
-		)const
-		noexcept(std::is_same_v< Fn, verify_value_always_t >){
+			T const& value,
+			Accessory const& accessory
+		)const noexcept(calc_noexcept< T, Accessory >()){
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
-				static_assert(std::is_invocable_v< Fn const, T > ||
-					std::is_invocable_v< Fn const, T, Accessory >,
-					"Wrong function signature, expected: "
-					"void f(auto value) or void f(auto value, auto accessory)");
-
 				accessory.log([parameter_name](logsys::stdlogb& os){
 						os << "parameter(" << parameter_name
 							<< ") verified value of type ["
 							<< ct_pretty_name< T >() << "]";
 					}, [&]{
-						if constexpr(std::is_invocable_v< Fn const, T >){
-							return std::invoke(fn_, value);
+						if constexpr(std::is_invocable_v<
+							Fn const, T const&, Accessory >
+						){
+							std::invoke(fn_, value, accessory);
 						}else{
-							return std::invoke(fn_, value, accessory);
+							std::invoke(fn_, value);
 						}
 					});
 			}
