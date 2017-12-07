@@ -101,7 +101,7 @@ namespace disposer{
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(std::is_invocable_v< Fn const, Accessory >,
 				"Wrong function signature, expected:\n"
-				"solved_dimensions< Ds ... > f(auto accessory)");
+				"solved_dimensions< Ds ... > function(auto accessory)");
 
 			check_result_type< typename Accessory::dimension_list,
 				std::invoke_result_t< Fn const, Accessory > >();

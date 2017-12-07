@@ -36,11 +36,17 @@ namespace disposer{
 
 
 		template < typename Accessory >
-		void operator()(Accessory const& accessory)const noexcept(false){
-			static_assert(std::is_invocable_v< Fn const, Accessory const& >,
-				"Wrong function signature, expected: "
-				"void f(auto accessory)");
+		static constexpr bool calc_noexcept()noexcept{
+			static_assert(std::is_invocable_v< Fn const, Accessory >,
+				"Wrong function signature, expected:\n"
+				"void function(auto accessory)");
 
+			return std::is_nothrow_invocable_v< Fn const, Accessory >;
+		}
+
+		template < typename Accessory >
+		void operator()(Accessory const& accessory)const
+		noexcept(calc_noexcept< Accessory >()){
 			accessory.log([](logsys::stdlogb& os){
 					os << "verfiy";
 				}, [&]{ std::invoke(fn_, accessory); });
