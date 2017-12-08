@@ -24,6 +24,23 @@
 namespace disposer{
 
 
+// 	template < typename Fn >
+// 	std::string default_value_help_generator(Fn const& fn){
+// 		static_assert(
+// 			std::is_invocable_v< Fn const, hana::basic_type< T > > ||
+// 			std::is_invocable_v< Fn const >,
+// 			"For automatic help text generation the function signature must "
+// 			"be one of:\n"
+// 			"  R function()\n"
+// 			"  R function(hana::basic_type< T > type)\n"
+// 			"where R is void or convertible to T, if your function signature "
+// 			"is:\n"
+// 			"  R function(hana::basic_type< T > type, auto accessory)\n"
+// 			"you must provide a help text as second parameter of "
+// 			"default_value_fn");
+// 	}
+
+
 	struct default_value_fn_tag;
 
 	template < typename Fn >
@@ -32,15 +49,12 @@ namespace disposer{
 		using hana_tag = default_value_fn_tag;
 
 		constexpr default_value_fn()
-			noexcept(std::is_nothrow_default_constructible_v< Fn >)
 			: fn_() {}
 
 		constexpr explicit default_value_fn(Fn const& fn)
-			noexcept(std::is_nothrow_copy_constructible_v< Fn >)
 			: fn_(fn) {}
 
 		constexpr explicit default_value_fn(Fn&& fn)
-			noexcept(std::is_nothrow_move_constructible_v< Fn >)
 			: fn_(std::move(fn)) {}
 
 
@@ -123,7 +137,7 @@ namespace disposer{
 			}
 		}
 
-		/// \brief Operator for outputs
+		/// \brief Generate a value via the user defined function
 		template < typename T, typename Accessory >
 		T operator()(
 			std::string_view parameter_name,
@@ -154,6 +168,9 @@ namespace disposer{
 		}
 
 
+		std::string const help_text;
+
+
 	private:
 		Fn fn_;
 	};
@@ -169,28 +186,40 @@ namespace disposer{
 		)const noexcept{ return {}; }
 	};
 
-	constexpr auto auto_default = default_value_fn(auto_default_t{});
+	inline auto const auto_default = default_value_fn(auto_default_t{});
 
 	template < typename T >
-	constexpr auto default_value(T&& value)
+	auto default_value(T&& value)
 	noexcept(std::is_nothrow_move_constructible_v< T >){
 		return default_value_fn(
 			[value = static_cast< T&& >(value)]()
-			noexcept(std::is_nothrow_copy_constructible_v< T >)
-			{
+			noexcept(std::is_nothrow_copy_constructible_v< T >){
 				return value;
 			});
 	}
 
-	constexpr auto default_value()noexcept{
-		return default_value_fn([](auto const type)
-			noexcept(std::is_nothrow_default_constructible_v<
-				typename decltype(type)::type >
-			){
-				static_assert(std::is_default_constructible_v<
-					typename decltype(type)::type >,
+
+	namespace detail{
+
+
+		template < typename T >
+		constexpr bool is_nothrow_default_constructible_v = []{
+				static_assert(std::is_default_constructible_v< T >,
 					"type is not default constructible, you can't use "
 					"default_value(), use default_value(value) instead");
+
+				return std::is_nothrow_default_constructible_v< T >;
+			}();
+
+
+	}
+
+
+	auto default_value()noexcept{
+		return default_value_fn([](auto const type)
+			noexcept(detail::is_nothrow_default_constructible_v<
+				typename decltype(type)::type >
+			){
 				return typename decltype(type)::type();
 			});
 	}
