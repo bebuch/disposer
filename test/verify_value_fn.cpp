@@ -121,9 +121,9 @@ BOOST_AUTO_TEST_CASE(test_6){
 	static_assert(
 		!noexcept(f1(""sv, std::size_t(0), accessory{})));
 	static_assert(
-		!noexcept(f2(""sv, std::size_t(0), accessory{})));
+		noexcept(f2(""sv, std::size_t(0), accessory{})));
 	static_assert(
-		noexcept(f3(""sv, std::size_t(0), accessory{})));
+		!noexcept(f3(""sv, std::size_t(0), accessory{})));
 	static_assert(
 		noexcept(f4(""sv, std::size_t(0), accessory{})));
 }
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(test_7){
 	static_assert(
 		!noexcept(f1(""sv, std::size_t(0), accessory{})));
 	static_assert(
-		!noexcept(f2(""sv, std::size_t(0), accessory{})));
+		noexcept(f2(""sv, std::size_t(0), accessory{})));
 	static_assert(
-		noexcept(f3(""sv, std::size_t(0), accessory{})));
+		!noexcept(f3(""sv, std::size_t(0), accessory{})));
 	static_assert(
 		noexcept(f4(""sv, std::size_t(0), accessory{})));
 }
