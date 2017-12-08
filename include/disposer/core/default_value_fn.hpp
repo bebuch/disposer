@@ -64,19 +64,16 @@ namespace disposer{
 			);
 
 			auto type = []{
-					if constexpr(
-						std::is_invocable_v< Fn const, hana::basic_type< T >,
-							Accessory >
-					){
-						return hana::type_c< std::invoke_result_t< Fn const,
-							hana::basic_type< T >, Accessory > >;
+					if constexpr(std::is_invocable_v< Fn const >){
+						return hana::type_c< std::invoke_result_t< Fn const > >;
 					}else if constexpr(
 						std::is_invocable_v< Fn const, hana::basic_type< T > >
 					){
 						return hana::type_c< std::invoke_result_t< Fn const,
 							hana::basic_type< T > > >;
 					}else{
-						return hana::type_c< std::invoke_result_t< Fn const > >;
+						return hana::type_c< std::invoke_result_t< Fn const,
+							hana::basic_type< T >, Accessory > >;
 					}
 				}();
 
@@ -113,19 +110,16 @@ namespace disposer{
 				"where R is void or convertible to T"
 			);
 
-			if constexpr(
-				std::is_invocable_v< Fn const, hana::basic_type< T >,
-					Accessory >
-			){
-				return std::is_nothrow_invocable_v< Fn const,
-					hana::basic_type< T >, Accessory >;
+			if constexpr(std::is_invocable_v< Fn const >){
+				return std::is_nothrow_invocable_v< Fn const >;
 			}else if constexpr(
 				std::is_invocable_v< Fn const, hana::basic_type< T > >
 			){
 				return std::is_nothrow_invocable_v< Fn const,
 					hana::basic_type< T > >;
 			}else{
-				return std::is_nothrow_invocable_v< Fn const >;
+				return std::is_nothrow_invocable_v< Fn const,
+					hana::basic_type< T >, Accessory >;
 			}
 		}
 
@@ -147,17 +141,14 @@ namespace disposer{
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
 				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
-					if constexpr(
-						std::is_invocable_v< Fn const, hana::basic_type< T >,
-							Accessory >
-					){
-						return std::invoke(fn_, type, accessory);
+					if constexpr(std::is_invocable_v< Fn const >){
+						return std::invoke(fn_);
 					}else if constexpr(
 						std::is_invocable_v< Fn const, hana::basic_type< T > >
 					){
 						return std::invoke(fn_, type);
 					}else{
-						return std::invoke(fn_);
+						return std::invoke(fn_, type, accessory);
 					}
 				});
 		}

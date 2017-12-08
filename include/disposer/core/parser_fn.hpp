@@ -59,11 +59,11 @@ namespace disposer{
 				"where R is convertible to T"
 			);
 
-			if constexpr(std::is_invocable_r_v< T, Fn const,
-				std::string_view, hana::basic_type< T >, Accessory >
+			if constexpr(
+				std::is_invocable_r_v< T, Fn const, std::string_view >
 			){
 				return std::is_nothrow_invocable_r_v< T, Fn const,
-					std::string_view, hana::basic_type< T >, Accessory >;
+					std::string_view >;
 			}else if constexpr(std::is_invocable_r_v< T, Fn const,
 				std::string_view, hana::basic_type< T > >
 			){
@@ -71,7 +71,7 @@ namespace disposer{
 					std::string_view, hana::basic_type< T > >;
 			}else{
 				return std::is_nothrow_invocable_r_v< T, Fn const,
-					std::string_view >;
+					std::string_view, hana::basic_type< T >, Accessory >;
 			}
 		}
 
@@ -91,16 +91,16 @@ namespace disposer{
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
 				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
-					if constexpr(std::is_invocable_r_v< T, Fn const,
-						std::string_view, hana::basic_type< T >, Accessory >
+					if constexpr(
+						std::is_invocable_r_v< T, Fn const, std::string_view >
 					){
-						return std::invoke(fn_, value, type, accessory);
+						return std::invoke(fn_, value);
 					}else if constexpr(std::is_invocable_r_v< T, Fn const,
 						std::string_view, hana::basic_type< T > >
 					){
 						return std::invoke(fn_, value, type);
 					}else{
-						return std::invoke(fn_, value);
+						return std::invoke(fn_, value, type, accessory);
 					}
 				});
 		}

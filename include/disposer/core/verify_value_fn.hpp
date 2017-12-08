@@ -51,13 +51,11 @@ namespace disposer{
 					"  void function(T const& value, auto accessory)"
 				);
 
-				if constexpr(
-					std::is_invocable_v< Fn const, T const&, Accessory >
-				){
+				if constexpr(std::is_invocable_v< Fn const, T const& >){
+					return std::is_nothrow_invocable_v< Fn const, T const& >;
+				}else{
 					return std::is_nothrow_invocable_v<
 						Fn const, T const&, Accessory >;
-				}else{
-					return std::is_nothrow_invocable_v< Fn const, T const& >;
 				}
 			}else{
 				return true;
@@ -76,12 +74,10 @@ namespace disposer{
 							<< ") verified value of type ["
 							<< ct_pretty_name< T >() << "]";
 					}, [&]{
-						if constexpr(std::is_invocable_v<
-							Fn const, T const&, Accessory >
-						){
-							std::invoke(fn_, value, accessory);
-						}else{
+						if constexpr(std::is_invocable_v< Fn const, T const& >){
 							std::invoke(fn_, value);
+						}else{
+							std::invoke(fn_, value, accessory);
 						}
 					});
 			}
