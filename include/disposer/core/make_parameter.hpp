@@ -37,6 +37,7 @@ namespace disposer{
 		typename DimensionReferrer,
 		typename ParserFn,
 		typename DefaultValueFn,
+		typename DefaultValueHelpFn,
 		typename VerfiyValueFn >
 	struct parameter_maker{
 		/// \brief Tag for boost::hana
@@ -52,9 +53,14 @@ namespace disposer{
 			help << "    * parameter: "
 				<< detail::to_std_string_view(name) << "\n";
 			help << help_text << "\n";
-			// TODO: Print default value if it exists
 			help << wrapped_type_ref_text(
 				DimensionReferrer{}, dimension_list< DTs ... >{});
+			auto const default_value_help =
+				default_value_generator.help_text_fn(
+					DimensionReferrer{}, dimension_list< DTs ... >{});
+			help << "      * " <<
+				boost::replace_all_copy(default_value_help, "\n", "\n        ")
+				<< "\n";
 			return help.str();
 		}
 
@@ -62,7 +68,8 @@ namespace disposer{
 		parser_fn< ParserFn > parser;
 
 		/// \brief Default value function
-		default_value_fn< DefaultValueFn > default_value_generator;
+		default_value_fn< DefaultValueFn, DefaultValueHelpFn >
+			default_value_generator;
 
 		/// \brief Verfiy value function
 		verify_value_fn< VerfiyValueFn > verify_value;
@@ -78,13 +85,15 @@ namespace disposer{
 		std::size_t ... D,
 		typename ParserFn,
 		typename DefaultValueFn,
+		typename DefaultValueHelpFn,
 		typename VerfiyValueFn >
 	auto create_parameter_maker(
 		parameter_name< C ... >,
 		dimension_referrer< Template, D ... > const&,
 		std::string const& description,
 		parser_fn< ParserFn > parser,
-		default_value_fn< DefaultValueFn > default_value_generator,
+		default_value_fn< DefaultValueFn, DefaultValueHelpFn >
+			default_value_generator,
 		verify_value_fn< VerfiyValueFn > verify_value
 	){
 		return parameter_maker<
@@ -92,6 +101,7 @@ namespace disposer{
 				dimension_referrer< Template, D ... >,
 				ParserFn,
 				DefaultValueFn,
+				DefaultValueHelpFn,
 				VerfiyValueFn
 			>{
 				std::move(parser),
@@ -150,13 +160,15 @@ namespace disposer{
 		typename DimensionList,
 		typename ParserFn,
 		typename DefaultValueFn,
+		typename DefaultValueHelpFn,
 		typename VerfiyValueFn,
 		typename Accessory >
 	static T get_parameter_value(
 		std::string_view parameter_name,
 		DimensionList const&,
 		parser_fn< ParserFn > const& parser,
-		default_value_fn< DefaultValueFn > const& default_value_generator,
+		default_value_fn< DefaultValueFn, DefaultValueHelpFn > const&
+			default_value_generator,
 		verify_value_fn< VerfiyValueFn > const& verify_value,
 		Accessory const& accessory,
 		parameter_data const* param_data_ptr

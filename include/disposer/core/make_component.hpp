@@ -174,6 +174,7 @@ namespace disposer{
 			typename DimensionReferrer,
 			typename ParserFn,
 			typename DefaultValueFn,
+			typename DefaultValueHelpFn,
 			typename VerfiyValueFn,
 			typename ... Ds,
 			std::size_t Offset,
@@ -181,7 +182,7 @@ namespace disposer{
 			typename ... IOPs >
 		std::unique_ptr< component_base > exec_make_parameter(
 			parameter_maker< Name, DimensionReferrer,
-				ParserFn, DefaultValueFn, VerfiyValueFn > const& maker,
+				ParserFn, DefaultValueFn, DefaultValueHelpFn, VerfiyValueFn > const& maker,
 			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
