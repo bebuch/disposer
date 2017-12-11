@@ -12,6 +12,7 @@
 #include "type_index.hpp"
 
 #include <vector>
+#include <optional>
 
 
 namespace disposer{
@@ -31,6 +32,13 @@ namespace disposer{
 	struct ct_pretty_name_t< std::vector< T > >{
 		std::string operator()()const{
 			return "std::vector<" + ct_pretty_name_t< T >{}() + ">";
+		}
+	};
+
+	template < typename T >
+	struct ct_pretty_name_t< std::optional< T > >{
+		std::string operator()()const{
+			return "std::optional<" + ct_pretty_name_t< T >{}() + ">";
 		}
 	};
 
