@@ -153,6 +153,28 @@ BOOST_AUTO_TEST_CASE(test_6){
 	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
+BOOST_AUTO_TEST_CASE(test_default){
+	struct v1{v1()noexcept(false){}};
+	struct v2{v2()noexcept(true){}};
+
+	auto const f1 = default_value();
+	auto const f2 = default_value();
+
+	static_assert(!noexcept(f1(""sv, hana::type_c< v1 >, accessory{})));
+	static_assert(noexcept(f2(""sv, hana::type_c< v2 >, accessory{})));
+}
+
+BOOST_AUTO_TEST_CASE(test_copy){
+	struct v1{v1()=default; v1(v1 const&)noexcept(false){}};
+	struct v2{v2()=default; v2(v2 const&)noexcept(true){}};
+
+	auto const f1 = default_value(v1{});
+	auto const f2 = default_value(v2{});
+
+	static_assert(!noexcept(f1(""sv, hana::type_c< v1 >, accessory{})));
+	static_assert(noexcept(f2(""sv, hana::type_c< v2 >, accessory{})));
+}
+
 BOOST_AUTO_TEST_CASE(test_7){
 	struct fnl1: fn1, fn2, fn3{};
 	auto const f1 = default_value_fn(fnl1{});
