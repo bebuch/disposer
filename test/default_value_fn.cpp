@@ -18,6 +18,9 @@ struct accessory: add_log< accessory >{
 };
 
 
+constexpr auto type = hana::type_c< std::size_t >;
+
+
 BOOST_AUTO_TEST_CASE(test_1){
 	auto const f1 = default_value_fn([](
 			hana::basic_type< std::size_t >,
@@ -28,13 +31,11 @@ BOOST_AUTO_TEST_CASE(test_1){
 			auto const
 		)noexcept{ return 0; });
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
@@ -45,13 +46,11 @@ BOOST_AUTO_TEST_CASE(test_2){
 			hana::basic_type< std::size_t >
 		)noexcept{ return 0; });
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_3){
@@ -59,13 +58,11 @@ BOOST_AUTO_TEST_CASE(test_3){
 	auto const f2 = default_value_fn([]()noexcept{ return 0; });
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 0));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 
@@ -125,13 +122,11 @@ BOOST_AUTO_TEST_CASE(test_4){
 	auto const f2 = default_value_fn(fn3_nothrow{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 3));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 3));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 3));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 3));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_5){
@@ -139,13 +134,11 @@ BOOST_AUTO_TEST_CASE(test_5){
 	auto const f2 = default_value_fn(fn2_nothrow{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 2));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 2));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_6){
@@ -153,13 +146,11 @@ BOOST_AUTO_TEST_CASE(test_6){
 	auto const f2 = default_value_fn(fn1_nothrow{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_7){
@@ -181,31 +172,23 @@ BOOST_AUTO_TEST_CASE(test_7){
 	auto const f8 = default_value_fn(fnl8{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f3(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f4(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f5(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f6(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f7(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f8(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f3(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f4(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f5(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f6(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f7(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f8(""sv, type, accessory{}) == 1));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		!noexcept(f3(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f4(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		!noexcept(f5(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f6(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		!noexcept(f7(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f8(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
+	static_assert(!noexcept(f5(""sv, type, accessory{})));
+	static_assert(noexcept(f6(""sv, type, accessory{})));
+	static_assert(!noexcept(f7(""sv, type, accessory{})));
+	static_assert(noexcept(f8(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_8){
@@ -219,19 +202,15 @@ BOOST_AUTO_TEST_CASE(test_8){
 	auto const f4 = default_value_fn(fnl4{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f3(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
-	BOOST_TEST((f4(""sv, hana::type_c< std::size_t >, accessory{}) == 1));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f3(""sv, type, accessory{}) == 1));
+	BOOST_TEST((f4(""sv, type, accessory{}) == 1));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		!noexcept(f3(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f4(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_9){
@@ -245,18 +224,14 @@ BOOST_AUTO_TEST_CASE(test_9){
 	auto const f4 = default_value_fn(fnl4{});
 
 
-	BOOST_TEST((f1(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
-	BOOST_TEST((f2(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
-	BOOST_TEST((f3(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
-	BOOST_TEST((f4(""sv, hana::type_c< std::size_t >, accessory{}) == 2));
+	BOOST_TEST((f1(""sv, type, accessory{}) == 2));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 2));
+	BOOST_TEST((f3(""sv, type, accessory{}) == 2));
+	BOOST_TEST((f4(""sv, type, accessory{}) == 2));
 
-	static_assert(
-		!noexcept(f1(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f2(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		!noexcept(f3(""sv, hana::type_c< std::size_t >, accessory{})));
-	static_assert(
-		noexcept(f4(""sv, hana::type_c< std::size_t >, accessory{})));
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
 }
 

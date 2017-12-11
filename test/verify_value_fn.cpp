@@ -18,32 +18,31 @@ struct accessory: add_log< accessory >{
 };
 
 
+constexpr auto value = std::size_t();
+
+
 BOOST_AUTO_TEST_CASE(test_1){
 	auto const f1 = verify_value_fn(
 		[](std::size_t, auto const){ return 0; });
 	auto const f2 = verify_value_fn(
 		[](std::size_t, auto const)noexcept{ return 0; });
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
 	auto const f1 = verify_value_fn([](std::size_t){ return 0; });
 	auto const f2 = verify_value_fn([](std::size_t)noexcept{ return 0; });
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
 }
 
 
@@ -79,13 +78,11 @@ BOOST_AUTO_TEST_CASE(test_4){
 	auto const f2 = verify_value_fn(fn3_nothrow{});
 
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_5){
@@ -93,13 +90,11 @@ BOOST_AUTO_TEST_CASE(test_5){
 	auto const f2 = verify_value_fn(fn2_nothrow{});
 
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_6){
@@ -113,19 +108,15 @@ BOOST_AUTO_TEST_CASE(test_6){
 	auto const f4 = verify_value_fn(fnl4{});
 
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f3(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f4(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f3(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f4(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		!noexcept(f3(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f4(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
+	static_assert(!noexcept(f3(""sv, value, accessory{})));
+	static_assert(noexcept(f4(""sv, value, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_7){
@@ -139,18 +130,14 @@ BOOST_AUTO_TEST_CASE(test_7){
 	auto const f4 = verify_value_fn(fnl4{});
 
 
-	BOOST_CHECK_NO_THROW((f1(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f2(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f3(""sv, std::size_t(0), accessory{})));
-	BOOST_CHECK_NO_THROW((f4(""sv, std::size_t(0), accessory{})));
+	BOOST_CHECK_NO_THROW((f1(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f2(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f3(""sv, value, accessory{})));
+	BOOST_CHECK_NO_THROW((f4(""sv, value, accessory{})));
 
-	static_assert(
-		!noexcept(f1(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f2(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		!noexcept(f3(""sv, std::size_t(0), accessory{})));
-	static_assert(
-		noexcept(f4(""sv, std::size_t(0), accessory{})));
+	static_assert(!noexcept(f1(""sv, value, accessory{})));
+	static_assert(noexcept(f2(""sv, value, accessory{})));
+	static_assert(!noexcept(f3(""sv, value, accessory{})));
+	static_assert(noexcept(f4(""sv, value, accessory{})));
 }
 
