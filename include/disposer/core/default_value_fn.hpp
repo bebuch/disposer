@@ -101,48 +101,50 @@ namespace disposer{
 					hana::basic_type< T > > ||
 				std::is_invocable_r_v< std::string, Fn const, T const& >,
 				"Wrong function signature, expected one of:\n"
-				"  R function()\n"
-				"  R function(hana::basic_type< T > default_value_type)\n"
-				"  R function(T const& default_value)\n"
-				"where R is convertible to std::string"
+				"  H function()\n"
+				"  H function(hana::basic_type< T > default_value_type)\n"
+				"  H function(T const& default_value)\n"
+				"where H is convertible to std::string"
 			);
 
 			if constexpr(!std::is_invocable_v< Fn const, T const& >){
 				return std::invoke(fn_, hana::type_c< T >);
+			}else if constexpr(std::is_invocable_v< GenFn const >){
+				if constexpr(
+					std::is_void_v< std::invoke_result_t< GenFn const > >
+				){
+					return "no default value";
+				}else{
+					T const default_value(std::invoke(fn));
+					return "default value: "
+						+ std::invoke(fn_, default_value);
+				}
 			}else if constexpr(
-				std::is_invocable_v< GenFn const > ||
 				std::is_invocable_v< GenFn const, hana::basic_type< T > >
 			){
-				if constexpr(std::is_invocable_v< GenFn const >){
-					if constexpr(
-						std::is_void_v< std::invoke_result_t< GenFn const > >
-					){
-						return "no default value";
-					}else{
-						T const default_value(std::invoke(fn));
-						return "default value: "
-							+ std::invoke(fn_, default_value);
-					}
+				if constexpr(
+					std::is_void_v< std::invoke_result_t< GenFn const,
+						hana::basic_type< T > > >
+				){
+					return "no default value";
 				}else{
-					if constexpr(
-						std::is_void_v< std::invoke_result_t< GenFn const,
-							hana::basic_type< T > > >
-					){
-						return "no default value";
-					}else{
-						T const default_value(
-							std::invoke(fn, hana::type_c< T >));
-						return "default value: "
-							+ std::invoke(fn_, default_value);
-					}
+					T const default_value(
+						std::invoke(fn, hana::type_c< T >));
+					return "default value: "
+						+ std::invoke(fn_, default_value);
 				}
 			}else{
 				static_assert(detail::false_c< GenFn >,
-					"default_value_fn depends on Accessory, "
-					"default_value_help_fn must have one of these signatures\n"
+					"default_value_fn doesn't have the signature:\n"
 					"  R function()\n"
-					"  R function(hana::basic_type< T > default_value_type)\n"
-					"where R is convertible to std::string"
+					"  R function(hana::basic_type< T > type)\n"
+					"its signature is invalid or depends on Accessory by "
+					"signature:\n"
+					"  R function(hana::basic_type< T > type, auto accessory)\n"
+					"default_value_help_fn must have one of these signatures\n"
+					"  H function()\n"
+					"  H function(hana::basic_type< T > default_value_type)\n"
+					"where H is convertible to std::string"
 				);
 			}
 		}

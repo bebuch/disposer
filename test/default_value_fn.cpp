@@ -21,6 +21,16 @@ struct accessory: add_log< accessory >{
 constexpr auto type = hana::type_c< std::size_t >;
 
 
+template < typename ... > struct morph{morph(std::size_t){}};
+template < typename T > using self = T;
+
+
+constexpr dimension_referrer< self, 0 > ref_self;
+constexpr dimension_referrer< morph, 0 > ref_morph;
+
+constexpr dimension_list< dimension< std::size_t > > list1;
+
+
 BOOST_AUTO_TEST_CASE(test_1){
 	auto const f1 = default_value_fn([](
 			hana::basic_type< std::size_t >,
@@ -31,11 +41,11 @@ BOOST_AUTO_TEST_CASE(test_1){
 			auto const
 		)noexcept{ return 0; });
 
-	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
-	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
-
 	static_assert(!noexcept(f1(""sv, type, accessory{})));
 	static_assert(noexcept(f2(""sv, type, accessory{})));
+
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
@@ -46,23 +56,34 @@ BOOST_AUTO_TEST_CASE(test_2){
 			hana::basic_type< std::size_t >
 		)noexcept{ return 0; });
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+
 	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
+	BOOST_TEST((f1.help_text_fn(ref_self, list1)) == "default value: 0");
+	BOOST_TEST((f2.help_text_fn(ref_self, list1)) == "default value: 0");
 }
 
 BOOST_AUTO_TEST_CASE(test_3){
 	auto const f1 = default_value_fn([](){ return 0; });
 	auto const f2 = default_value_fn([]()noexcept{ return 0; });
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
 
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
+	BOOST_TEST((f1.help_text_fn(ref_self, list1)) == "default value: 0");
+	BOOST_TEST((f2.help_text_fn(ref_self, list1)) == "default value: 0");
+
+	// TODO: print not supported
+	BOOST_TEST((f1.help_text_fn(ref_morph, list1)) ==
+		"default value: (no output support)");
+	BOOST_TEST((f2.help_text_fn(ref_morph, list1)) ==
+		"default value: (no output support)");
 }
 
 
@@ -121,36 +142,33 @@ BOOST_AUTO_TEST_CASE(test_4){
 	auto const f1 = default_value_fn(fn3{});
 	auto const f2 = default_value_fn(fn3_nothrow{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 3));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 3));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_5){
 	auto const f1 = default_value_fn(fn2{});
 	auto const f2 = default_value_fn(fn2_nothrow{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 2));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 2));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_6){
 	auto const f1 = default_value_fn(fn1{});
 	auto const f2 = default_value_fn(fn1_nothrow{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_default){
@@ -193,6 +211,14 @@ BOOST_AUTO_TEST_CASE(test_7){
 	struct fnl8: fn1_nothrow, fn2_nothrow, fn3_nothrow{};
 	auto const f8 = default_value_fn(fnl8{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
+	static_assert(!noexcept(f5(""sv, type, accessory{})));
+	static_assert(noexcept(f6(""sv, type, accessory{})));
+	static_assert(!noexcept(f7(""sv, type, accessory{})));
+	static_assert(noexcept(f8(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
@@ -202,15 +228,6 @@ BOOST_AUTO_TEST_CASE(test_7){
 	BOOST_TEST((f6(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f7(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f8(""sv, type, accessory{}) == 1));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
-	static_assert(!noexcept(f3(""sv, type, accessory{})));
-	static_assert(noexcept(f4(""sv, type, accessory{})));
-	static_assert(!noexcept(f5(""sv, type, accessory{})));
-	static_assert(noexcept(f6(""sv, type, accessory{})));
-	static_assert(!noexcept(f7(""sv, type, accessory{})));
-	static_assert(noexcept(f8(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_8){
@@ -223,16 +240,15 @@ BOOST_AUTO_TEST_CASE(test_8){
 	struct fnl4: fn1_nothrow, fn2_nothrow{};
 	auto const f4 = default_value_fn(fnl4{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f3(""sv, type, accessory{}) == 1));
 	BOOST_TEST((f4(""sv, type, accessory{}) == 1));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
-	static_assert(!noexcept(f3(""sv, type, accessory{})));
-	static_assert(noexcept(f4(""sv, type, accessory{})));
 }
 
 BOOST_AUTO_TEST_CASE(test_9){
@@ -245,15 +261,14 @@ BOOST_AUTO_TEST_CASE(test_9){
 	struct fnl4: fn2_nothrow, fn3_nothrow{};
 	auto const f4 = default_value_fn(fnl4{});
 
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+	static_assert(!noexcept(f3(""sv, type, accessory{})));
+	static_assert(noexcept(f4(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 2));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 2));
 	BOOST_TEST((f3(""sv, type, accessory{}) == 2));
 	BOOST_TEST((f4(""sv, type, accessory{}) == 2));
-
-	static_assert(!noexcept(f1(""sv, type, accessory{})));
-	static_assert(noexcept(f2(""sv, type, accessory{})));
-	static_assert(!noexcept(f3(""sv, type, accessory{})));
-	static_assert(noexcept(f4(""sv, type, accessory{})));
 }
 
