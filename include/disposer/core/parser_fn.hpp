@@ -50,7 +50,7 @@ namespace disposer{
 					std::string_view, hana::basic_type< T > > ||
 				std::is_invocable_r_v< T, Fn const,
 					std::string_view, hana::basic_type< T >, Accessory >,
-				"Wrong function signature, expected one of:\n"
+				"Wrong function signature for parser_fn, expected one of:\n"
 				"  R function(std::string_view value)\n"
 				"  R function(std::string_view value, "
 				"hana::basic_type< T > type)\n"

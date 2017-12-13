@@ -46,7 +46,8 @@ namespace disposer{
 				static_assert(
 					std::is_invocable_v< Fn const, T const& > ||
 					std::is_invocable_v< Fn const, T const&, Accessory >,
-					"Wrong function signature, expected one of:\n"
+					"Wrong function signature for verify_value_fn, expected "
+					"one of:\n"
 					"  void function(T const& value)\n"
 					"  void function(T const& value, auto accessory)"
 				);

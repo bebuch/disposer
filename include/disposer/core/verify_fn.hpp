@@ -38,7 +38,7 @@ namespace disposer{
 		template < typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(std::is_invocable_v< Fn const, Accessory >,
-				"Wrong function signature, expected:\n"
+				"Wrong function signature for verify_fn, expected:\n"
 				"void function(auto accessory)");
 
 			return std::is_nothrow_invocable_v< Fn const, Accessory >;
