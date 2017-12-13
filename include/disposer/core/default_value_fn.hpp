@@ -29,6 +29,10 @@
 namespace disposer{
 
 
+
+	struct no_value{};
+
+
 	template < typename Fn >
 	class default_value_help_fn{
 	public:
@@ -58,9 +62,15 @@ namespace disposer{
 			dimension_referrer< Template, Ds ... >,
 			dimension_list< DTs ... >
 		)const{
-			if constexpr(std::is_invocable_r_v< std::string, Fn const >){
+			if constexpr(std::is_invocable_v< Fn const >){
+				static_assert(std::is_invocable_r_v< std::string, Fn const >,
+					"Wrong function signature for default_value_help_fn, "
+					"found:\n"
+					"  H function()\n"
+					"but with an H that is not convertible to std::string");
 				// user defined type independent function
-				return "user defined default value help:\n" + std::invoke(fn_);
+				return "user defined default value help: "
+					+ std::string(std::invoke(fn_));
 			}else{
 				constexpr dimension_converter< dimension_list< DTs ... >,
 					Template, Ds ... > convert;
@@ -97,55 +107,77 @@ namespace disposer{
 		template < typename GenFn, typename T >
 		std::string print_by_type(GenFn const& fn, hana::basic_type< T >)const{
 			static_assert(
-				std::is_invocable_r_v< std::string, Fn const,
-					hana::basic_type< T > > ||
-				std::is_invocable_r_v< std::string, Fn const, T const& >,
-				"Wrong function signature, expected one of:\n"
+				std::is_invocable_v< Fn const, T const& > ||
+				std::is_invocable_v< Fn const, no_value,
+					hana::basic_type< T > >,
+				"Wrong function signature for default_value_help_fn, expected "
+				"one of:\n"
 				"  H function()\n"
-				"  H function(hana::basic_type< T > default_value_type)\n"
 				"  H function(T const& default_value)\n"
-				"where H is convertible to std::string"
-			);
+				"  H function(no_value, hana::basic_type< T > "
+				"default_value_type)\n"
+				"where H is convertible to std::string");
 
-			if constexpr(!std::is_invocable_v< Fn const, T const& >){
-				return std::invoke(fn_, hana::type_c< T >);
-			}else if constexpr(std::is_invocable_v< GenFn const >){
-				if constexpr(
-					std::is_void_v< std::invoke_result_t< GenFn const > >
+
+			if constexpr(std::is_invocable_v< Fn const, T const& >){
+				static_assert(
+					std::is_invocable_r_v< std::string, Fn const, T const& >,
+					"Wrong function signature for default_value_help_fn, "
+					"found:\n"
+					"  H function(T const& default_value)"
+					"but with an H that is not convertible to std::string");
+
+				if constexpr(std::is_invocable_v< GenFn const >){
+					if constexpr(
+						std::is_void_v< std::invoke_result_t< GenFn const > >
+					){
+						return "no default value";
+					}else{
+						T const default_value(std::invoke(fn));
+						return "default value: "
+							+ std::string(std::invoke(fn_, default_value));
+					}
+				}else if constexpr(
+					std::is_invocable_v< GenFn const, hana::basic_type< T > >
 				){
-					return "no default value";
+					if constexpr(
+						std::is_void_v< std::invoke_result_t< GenFn const,
+							hana::basic_type< T > > >
+					){
+						return "no default value";
+					}else{
+						T const default_value(
+							std::invoke(fn, hana::type_c< T >));
+						return "default value: "
+							+ std::string(std::invoke(fn_, default_value));
+					}
 				}else{
-					T const default_value(std::invoke(fn));
-					return "default value: "
-						+ std::invoke(fn_, default_value);
-				}
-			}else if constexpr(
-				std::is_invocable_v< GenFn const, hana::basic_type< T > >
-			){
-				if constexpr(
-					std::is_void_v< std::invoke_result_t< GenFn const,
-						hana::basic_type< T > > >
-				){
-					return "no default value";
-				}else{
-					T const default_value(
-						std::invoke(fn, hana::type_c< T >));
-					return "default value: "
-						+ std::invoke(fn_, default_value);
+					static_assert(detail::false_c< GenFn >,
+						"default_value_fn doesn't have the signature:\n"
+						"  R function()\n"
+						"  R function(hana::basic_type< T > type)\n"
+						"its signature is invalid or depends on Accessory by "
+						"signature:\n"
+						"  R function(hana::basic_type< T > type, "
+						"auto accessory)\n"
+						"if it depends on Accessory, default_value_help_fn "
+						"must have one of these signatures\n"
+						"  H function()\n"
+						"  H function(no_value, hana::basic_type< T > "
+						"default_value_type)\n"
+						"where H is convertible to std::string");
 				}
 			}else{
-				static_assert(detail::false_c< GenFn >,
-					"default_value_fn doesn't have the signature:\n"
-					"  R function()\n"
-					"  R function(hana::basic_type< T > type)\n"
-					"its signature is invalid or depends on Accessory by "
-					"signature:\n"
-					"  R function(hana::basic_type< T > type, auto accessory)\n"
-					"default_value_help_fn must have one of these signatures\n"
-					"  H function()\n"
-					"  H function(hana::basic_type< T > default_value_type)\n"
-					"where H is convertible to std::string"
-				);
+				static_assert(std::is_invocable_r_v< std::string, Fn const,
+					no_value, hana::basic_type< T > >,
+					"Wrong function signature for default_value_help_fn, "
+					"found:\n"
+					"  H function(no_value, hana::basic_type< T > "
+					"default_value_type)\n"
+					"but with an H that is not convertible to std::string");
+
+				return "default value: " + std::string(std::invoke(fn_,
+					no_value{}, hana::type_c< T >));
 			}
 		}
 
@@ -161,9 +193,6 @@ namespace disposer{
 			return os.str();
 		}
 	};
-
-	constexpr auto default_value_help_generator_fn =
-		default_value_help_fn< default_value_help_generator >();
 
 
 	struct default_value_fn_tag;
@@ -181,8 +210,7 @@ namespace disposer{
 			, help_fn() {}
 
 		constexpr default_value_fn(
-			default_value_help_fn< HelpFn > const& help_fn
-				= default_value_help_generator_fn
+			HelpFn const& help_fn = default_value_help_generator{}
 		)noexcept(
 			std::is_nothrow_default_constructible_v< Fn > &&
 			std::is_nothrow_copy_constructible_v< HelpFn >
@@ -191,7 +219,7 @@ namespace disposer{
 			, help_fn(help_fn) {}
 
 		constexpr default_value_fn(
-			default_value_help_fn< HelpFn >&& help_fn
+			HelpFn&& help_fn
 		)noexcept(
 			std::is_nothrow_default_constructible_v< Fn > &&
 			std::is_nothrow_move_constructible_v< HelpFn >
@@ -201,8 +229,7 @@ namespace disposer{
 
 		constexpr default_value_fn(
 			Fn const& fn,
-			default_value_help_fn< HelpFn > const& help_fn
-				= default_value_help_generator_fn
+			HelpFn const& help_fn = default_value_help_generator{}
 		)noexcept(
 			std::is_nothrow_copy_constructible_v< Fn > &&
 			std::is_nothrow_copy_constructible_v< HelpFn >
@@ -212,7 +239,7 @@ namespace disposer{
 
 		constexpr default_value_fn(
 			Fn const& fn,
-			default_value_help_fn< HelpFn >&& help_fn
+			HelpFn&& help_fn
 		)noexcept(
 			std::is_nothrow_copy_constructible_v< Fn > &&
 			std::is_nothrow_move_constructible_v< HelpFn >
@@ -222,8 +249,7 @@ namespace disposer{
 
 		constexpr default_value_fn(
 			Fn&& fn,
-			default_value_help_fn< HelpFn > const& help_fn
-				= default_value_help_generator_fn
+			HelpFn const& help_fn = default_value_help_generator{}
 		)noexcept(
 			std::is_nothrow_move_constructible_v< Fn > &&
 			std::is_nothrow_copy_constructible_v< HelpFn >
@@ -233,7 +259,7 @@ namespace disposer{
 
 		constexpr default_value_fn(
 			Fn&& fn,
-			default_value_help_fn< HelpFn >&& help_fn
+			HelpFn&& help_fn
 		)noexcept(
 			std::is_nothrow_move_constructible_v< Fn > &&
 			std::is_nothrow_move_constructible_v< HelpFn >
@@ -254,12 +280,12 @@ namespace disposer{
 		template < typename T, typename Accessory >
 		static constexpr auto invoke_result_type()noexcept{
 			static_assert(is_invocable_v< T, Accessory >(),
-				"Wrong function signature, expected one of:\n"
+				"Wrong function signature for default_value_fn, expected one "
+				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
 				"  R function(hana::basic_type< T > type, auto accessory)\n"
-				"where R is void or convertible to T"
-			);
+				"where R is void or convertible to T");
 
 			auto type = []{
 					if constexpr(std::is_invocable_v< Fn const >){
@@ -279,12 +305,12 @@ namespace disposer{
 				hana::traits::is_void(type) ||
 				hana::traits::is_convertible(type, hana::type_c< T >);
 			static_assert(is_result_valid,
-				"Wrong function signature, expected one of:\n"
+				"Wrong function signature for default_value_fn, expected one "
+				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
 				"  R function(hana::basic_type< T > type, auto accessory)\n"
-				"where R must be void or convertible to T"
-			);
+				"where R must be void or convertible to T");
 
 			return type;
 		}
@@ -301,12 +327,12 @@ namespace disposer{
 		template < typename T, typename Accessory >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(is_invocable_v< T, Accessory >(),
-				"Wrong function signature, expected one of:\n"
+				"Wrong function signature for default_value_fn, expected one "
+				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
 				"  R function(hana::basic_type< T > type, auto accessory)\n"
-				"where R is void or convertible to T"
-			);
+				"where R is void or convertible to T");
 
 			if constexpr(std::is_invocable_v< Fn const >){
 				return std::is_nothrow_invocable_v< Fn const >;

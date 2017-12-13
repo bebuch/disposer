@@ -31,21 +31,26 @@ constexpr dimension_referrer< morph, 0 > ref_morph;
 constexpr dimension_list< dimension< std::size_t > > list1;
 
 
-BOOST_AUTO_TEST_CASE(test_1){
+BOOST_AUTO_TEST_CASE(test_1_user_help_0){
 	auto const f1 = default_value_fn([](
 			hana::basic_type< std::size_t >,
 			auto const
-		){ return 0; });
+		){ return 0; }, []{ return "0"; });
 	auto const f2 = default_value_fn([](
 			hana::basic_type< std::size_t >,
 			auto const
-		)noexcept{ return 0; });
+		)noexcept{ return 0; }, []{ return "0"; });
 
 	static_assert(!noexcept(f1(""sv, type, accessory{})));
 	static_assert(noexcept(f2(""sv, type, accessory{})));
 
 	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
 	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
+
+	BOOST_TEST((f1.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
+	BOOST_TEST((f2.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
 }
 
 BOOST_AUTO_TEST_CASE(test_2){
@@ -66,6 +71,26 @@ BOOST_AUTO_TEST_CASE(test_2){
 	BOOST_TEST((f2.help_text_fn(ref_self, list1)) == "default value: 0");
 }
 
+BOOST_AUTO_TEST_CASE(test_2_user_help_0){
+	auto const f1 = default_value_fn([](
+			hana::basic_type< std::size_t >
+		){ return 0; }, []{ return "0"; });
+	auto const f2 = default_value_fn([](
+			hana::basic_type< std::size_t >
+		)noexcept{ return 0; }, []{ return "0"; });
+
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
+
+	BOOST_TEST((f1.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
+	BOOST_TEST((f2.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
+}
+
 BOOST_AUTO_TEST_CASE(test_3){
 	auto const f1 = default_value_fn([](){ return 0; });
 	auto const f2 = default_value_fn([]()noexcept{ return 0; });
@@ -84,6 +109,29 @@ BOOST_AUTO_TEST_CASE(test_3){
 		"default value: (no output support)");
 	BOOST_TEST((f2.help_text_fn(ref_morph, list1)) ==
 		"default value: (no output support)");
+}
+
+BOOST_AUTO_TEST_CASE(test_3_user_help_0){
+	auto const f1 = default_value_fn([](){ return 0; },
+		[]{ return "0"; });
+	auto const f2 = default_value_fn([]()noexcept{ return 0; },
+		[]{ return "0"; });
+
+	static_assert(!noexcept(f1(""sv, type, accessory{})));
+	static_assert(noexcept(f2(""sv, type, accessory{})));
+
+	BOOST_TEST((f1(""sv, type, accessory{}) == 0));
+	BOOST_TEST((f2(""sv, type, accessory{}) == 0));
+
+	BOOST_TEST((f1.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
+	BOOST_TEST((f2.help_text_fn(ref_self, list1)) ==
+		"user defined default value help: 0");
+
+	BOOST_TEST((f1.help_text_fn(ref_morph, list1)) ==
+		"user defined default value help: 0");
+	BOOST_TEST((f2.help_text_fn(ref_morph, list1)) ==
+		"user defined default value help: 0");
 }
 
 
