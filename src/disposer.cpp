@@ -272,6 +272,25 @@ namespace disposer{
 		return iter->second;
 	}
 
+	std::vector< std::string > disposer::module_names()const{
+		std::vector< std::string > modules;
+		modules.reserve(module_help_list_.size());
+		for(auto const& module: module_help_list_){
+			modules.push_back(module.first);
+		}
+		return modules;
+	}
+
+	std::vector< std::string > disposer::component_names()const{
+		std::vector< std::string > components;
+		components.reserve(component_help_list_.size());
+		for(auto const& component: component_help_list_){
+			components.push_back(component.first);
+		}
+		return components;
+	}
+
+
 
 	chain& disposer::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);

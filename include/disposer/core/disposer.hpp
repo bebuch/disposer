@@ -141,6 +141,13 @@ namespace disposer{
 		std::string component_help(std::string const& name)const;
 
 
+		/// \brief Get all module names
+		std::vector< std::string > module_names()const;
+
+		/// \brief Get all component names
+		std::vector< std::string > component_names()const;
+
+
 		/// \brief List of all chaines
 		std::unordered_set< std::string > chains()const;
 
@@ -155,10 +162,10 @@ namespace disposer{
 
 
 		/// \brief Map from component type name to help text
-		std::unordered_map< std::string, std::string > component_help_list_;
+		std::map< std::string, std::string > component_help_list_;
 
 		/// \brief Map from module type name to help text
-		std::unordered_map< std::string, std::string > module_help_list_;
+		std::map< std::string, std::string > module_help_list_;
 
 
 		/// \brief List of components (map from component type name to maker
