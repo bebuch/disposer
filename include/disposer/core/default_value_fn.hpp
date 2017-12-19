@@ -11,7 +11,7 @@
 
 #include "dimension_referrer.hpp"
 
-#include "../tool/print_if_supported.hpp"
+#include "../tool/assisted_to_string.hpp"
 #include "../tool/ct_pretty_name.hpp"
 #include "../tool/false_c.hpp"
 
@@ -188,9 +188,7 @@ namespace disposer{
 	struct default_value_help_generator{
 		template < typename T >
 		std::string operator()(T const& v)const{
-			std::ostringstream os;
-			print_if_supported(os, v);
-			return os.str();
+			return assisted_to_string(v);
 		}
 	};
 
@@ -358,8 +356,8 @@ namespace disposer{
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") ";
 					if(value){
-						os << "generated default value: ";
-						print_if_supported(os, *value);
+						os << "generated default value: "
+							<< assisted_to_string(*value, hana::true_c);
 					}else{
 						os << "no default value generated";
 					}

@@ -9,7 +9,7 @@
 #ifndef _disposer__core__parser_fn__hpp_INCLUDED_
 #define _disposer__core__parser_fn__hpp_INCLUDED_
 
-#include "../tool/print_if_supported.hpp"
+#include "../tool/assisted_to_string.hpp"
 #include "../tool/ct_pretty_name.hpp"
 
 #include <logsys/log.hpp>
@@ -86,8 +86,7 @@ namespace disposer{
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") parsed value";
 					if(value){
-						os << ": ";
-						print_if_supported(os, *value);
+						os << ": " << assisted_to_string(*value);
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
 				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
