@@ -43,6 +43,14 @@ namespace disposer{
 		return os.str();
 	}
 
+	inline std::string to_string(unsigned char v){
+		return std::to_string(v);
+	}
+
+	inline std::string to_string(signed char v){
+		return std::to_string(v);
+	}
+
 
 	template < typename T, bool Assert = false >
 	std::string assisted_to_string(
