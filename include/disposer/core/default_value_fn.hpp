@@ -88,7 +88,8 @@ namespace disposer{
 				}else if constexpr(
 					hana::size(unique_types) == hana::size_c< 1 >
 				){
-					return print_by_type(fn, unique_types[hana::size_c< 0 >]);
+					return "default value: "
+						+ print_by_type(fn, unique_types[hana::size_c< 0 >]);
 				}else{
 					std::string help_text = "default values by type: ";
 					hana::for_each(unique_types,
@@ -134,8 +135,7 @@ namespace disposer{
 						return "no default value";
 					}else{
 						T const default_value(std::invoke(fn));
-						return "default value: "
-							+ std::string(std::invoke(fn_, default_value));
+						return std::invoke(fn_, default_value);
 					}
 				}else if constexpr(
 					std::is_invocable_v< GenFn const, hana::basic_type< T > >
@@ -148,8 +148,7 @@ namespace disposer{
 					}else{
 						T const default_value(
 							std::invoke(fn, hana::type_c< T >));
-						return "default value: "
-							+ std::string(std::invoke(fn_, default_value));
+						return std::invoke(fn_, default_value);
 					}
 				}else{
 					static_assert(detail::false_c< GenFn >,
@@ -176,8 +175,7 @@ namespace disposer{
 					"default_value_type)\n"
 					"but with an H that is not convertible to std::string");
 
-				return "default value: " + std::string(std::invoke(fn_,
-					no_value{}, hana::type_c< T >));
+				return std::invoke(fn_, no_value{}, hana::type_c< T >);
 			}
 		}
 
