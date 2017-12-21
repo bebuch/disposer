@@ -112,82 +112,6 @@ namespace disposer{
 		}
 	}
 
-	void component_declarant::operator()(
-		std::string const& type_name,
-		component_maker_fn&& fn
-	){
-		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "add component type name '" << type_name << "'";
-		}, [&]{
-			auto iter = disposer_.component_maker_list_.insert(
-				std::make_pair(type_name, std::move(fn)));
-
-			if(!iter.second){
-				throw std::logic_error(
-					"component type name '" + type_name
-					+ "' has been added more than one time!"
-				);
-			}
-		});
-	}
-
-	void component_declarant::help(
-		std::string const& type_name,
-		std::string&& text
-	){
-		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "add help for component type name '" << type_name << "'";
-		}, [&]{
-			auto iter = disposer_.component_help_list_.insert(
-				std::make_pair(type_name, std::move(text)));
-
-			if(!iter.second){
-				throw std::logic_error(
-					"component type name '" + type_name
-					+ "' help text has been added more than one time!"
-				);
-			}
-		});
-	}
-
-	void module_declarant::operator()(
-		std::string const& type_name,
-		module_maker_fn&& fn
-	){
-		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "add module type name '" << type_name << "'";
-		}, [&]{
-			auto iter = disposer_.module_maker_list_.insert(
-				std::make_pair(type_name, std::move(fn)));
-
-			if(!iter.second){
-				throw std::logic_error(
-					"module type name '" + type_name
-					+ "' has been added more than one time!"
-				);
-			}
-		});
-	}
-
-	void module_declarant::help(
-		std::string const& type_name,
-		std::string&& text
-	){
-		logsys::log([&type_name](logsys::stdlogb& os){
-			os << "add help for module type name '" << type_name << "'";
-		}, [&]{
-			auto iter = disposer_.module_help_list_.insert(
-				std::make_pair(type_name, std::move(text)));
-
-			if(!iter.second){
-				throw std::logic_error(
-					"module type name '" + type_name
-					+ "' help text has been added more than one time!"
-				);
-			}
-		});
-	}
-
 
 	component_declarant& disposer::component_declarant(){
 		return component_declarant_;
@@ -227,7 +151,7 @@ namespace disposer{
 				// emplace the new process chain
 				components_.emplace(
 					config_component.name,
-					create_component(component_maker_list_, {
+					create_component(directory_.component_maker_list_, {
 							config_component.name,
 							config_component.type_name,
 							config_component.parameters
@@ -239,57 +163,9 @@ namespace disposer{
 
 	void disposer::create_chains(){
 		std::tie(inactive_chains_, chains_, id_generators_) =
-			::disposer::create_chains(module_maker_list_, config_.chains);
+			::disposer::create_chains(directory_.module_maker_list_,
+				config_.chains);
 	}
-
-
-	std::string disposer::help()const{
-		std::string result;
-		for(auto const& component: component_help_list_){
-			result += component.second;
-		}
-		for(auto const& module: module_help_list_){
-			result += module.second;
-		}
-		return result;
-	}
-
-	std::string disposer::module_help(std::string const& name)const{
-		auto const iter = module_help_list_.find(name);
-		if(iter == module_help_list_.end()){
-			throw std::logic_error(
-				std::string("no module '") + name + "' found");
-		}
-		return iter->second;
-	}
-
-	std::string disposer::component_help(std::string const& name)const{
-		auto const iter = component_help_list_.find(name);
-		if(iter == component_help_list_.end()){
-			throw std::logic_error(
-				std::string("no component '") + name + "' found");
-		}
-		return iter->second;
-	}
-
-	std::vector< std::string > disposer::module_names()const{
-		std::vector< std::string > modules;
-		modules.reserve(module_help_list_.size());
-		for(auto const& module: module_help_list_){
-			modules.push_back(module.first);
-		}
-		return modules;
-	}
-
-	std::vector< std::string > disposer::component_names()const{
-		std::vector< std::string > components;
-		components.reserve(component_help_list_.size());
-		for(auto const& component: component_help_list_){
-			components.push_back(component.first);
-		}
-		return components;
-	}
-
 
 
 	chain& disposer::get_chain(std::string const& chain){

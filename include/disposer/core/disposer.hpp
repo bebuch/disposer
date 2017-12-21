@@ -9,84 +9,16 @@
 #ifndef _disposer__core__disposer__hpp_INCLUDED_
 #define _disposer__core__disposer__hpp_INCLUDED_
 
+#include "disposer_declarant.hpp"
+#include "disposer_directory.hpp"
 #include "chain.hpp"
 
 #include "../config/embedded_config.hpp"
-
-#include "../tool/component_ptr.hpp"
 
 #include <unordered_set>
 
 
 namespace disposer{
-
-
-	class disposer;
-
-
-	/// \brief Functor to register a new module by a name and an init function
-	class module_declarant{
-	public:
-		/// \brief Register a new module in the disposer by mapping the
-		///        module name to the constructing init and help function
-		void operator()(std::string const& type_name, module_maker_fn&& fn);
-
-		/// \brief Register the help text of a new module in the disposer
-		void help(std::string const& type_name, std::string&& text);
-
-
-	private:
-		/// \brief Only constructible by the disposer class
-		module_declarant(disposer& disposer): disposer_(disposer) {}
-
-
-		/// \brief Not copyable
-		module_declarant(module_declarant const&) = delete;
-
-		/// \brief Not movable
-		module_declarant(module_declarant&&) = delete;
-
-
-		/// \brief Reference to the disposer class
-		disposer& disposer_;
-
-	friend class disposer;
-	};
-
-
-	/// \brief Functor to register a new component by a name and an init
-	///        function
-	class component_declarant{
-	public:
-		/// \brief Register a new component in the disposer by mapping the
-		///        component name to the constructing init and help function
-		void operator()(std::string const& type_name, component_maker_fn&& fn);
-
-		/// \brief Register the help text of a new component in the disposer
-		void help(std::string const& type_name, std::string&& text);
-
-		/// \brief Get a reference to the disposer object
-		::disposer::disposer& disposer(){ return disposer_; }
-
-
-	private:
-		/// \brief Only constructible by the disposer class
-		component_declarant(::disposer::disposer& disposer)
-			: disposer_(disposer) {}
-
-
-		/// \brief Not copyable
-		component_declarant(component_declarant const&) = delete;
-
-		/// \brief Not movable
-		component_declarant(component_declarant&&) = delete;
-
-
-		/// \brief Reference to the disposer class
-		::disposer::disposer& disposer_;
-
-	friend class ::disposer::disposer;
-	};
 
 
 	/// \brief Main class of the disposer software
@@ -131,21 +63,10 @@ namespace disposer{
 		void create_chains();
 
 
-		/// \brief Get the help text of all components and modules
-		std::string help()const;
-
-		/// \brief Get the help text of a module
-		std::string module_help(std::string const& name)const;
-
-		/// \brief Get the help text of a component
-		std::string component_help(std::string const& name)const;
-
-
-		/// \brief Get all module names
-		std::vector< std::string > module_names()const;
-
-		/// \brief Get all component names
-		std::vector< std::string > component_names()const;
+		/// \brief The directory object
+		disposer_directory const& directory(){
+			return directory_;
+		}
 
 
 		/// \brief List of all chaines
@@ -161,19 +82,8 @@ namespace disposer{
 		types::embedded_config::config config_;
 
 
-		/// \brief Map from component type name to help text
-		std::map< std::string, std::string > component_help_list_;
-
-		/// \brief Map from module type name to help text
-		std::map< std::string, std::string > module_help_list_;
-
-
-		/// \brief List of components (map from component type name to maker
-		///        function)
-		component_maker_list component_maker_list_;
-
-		/// \brief List of modules (map from module type name to maker function)
-		module_maker_list module_maker_list_;
+		/// \brief Component and module generators
+		disposer_directory directory_;
 
 
 		/// \brief List of all components (map from name to object)
@@ -196,8 +106,8 @@ namespace disposer{
 		::disposer::module_declarant module_declarant_;
 
 
-	friend class ::disposer::module_declarant;
-	friend class ::disposer::component_declarant;
+	friend class module_declarant;
+	friend class component_declarant;
 	};
 
 
