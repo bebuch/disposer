@@ -21,7 +21,8 @@ namespace disposer{
 	class directory;
 
 
-	/// \brief Functor to register a new module by a name and an init function
+	/// \brief Register a new module or component in directory by a name and
+	///        an init function
 	class declarant{
 	public:
 		/// \brief Not copyable
