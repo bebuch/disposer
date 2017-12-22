@@ -9,7 +9,7 @@
 #ifndef _disposer__core__component_accessory__hpp_INCLUDED_
 #define _disposer__core__component_accessory__hpp_INCLUDED_
 
-#include "disposer.hpp"
+#include "system.hpp"
 
 #include "../tool/add_log.hpp"
 #include "../tool/false_c.hpp"
@@ -38,12 +38,12 @@ namespace disposer{
 			TypeList,
 			State& state,
 			Parameters const& parameters,
-			::disposer::disposer& disposer,
+			disposer::system& system,
 			std::string_view location
 		)noexcept
 			: state_(state)
 			, parameters_(parameters)
-			, disposer_(disposer)
+			, system_(system)
 			, location_(location) {}
 
 
@@ -79,14 +79,14 @@ namespace disposer{
 			return state_;
 		}
 
-		/// \brief Get reference to the disposer object
-		::disposer::disposer& disposer()noexcept{
-			return disposer_;
+		/// \brief Get reference to the system object
+		disposer::system& system()noexcept{
+			return system_;
 		}
 
-		/// \brief Get const reference to the disposer object
-		::disposer::disposer const& disposer()const noexcept{
-			return disposer_;
+		/// \brief Get const reference to the system object
+		disposer::system const& system()const noexcept{
+			return system_;
 		}
 
 
@@ -121,8 +121,8 @@ namespace disposer{
 		/// \brief hana::tuple of parameters
 		Parameters const& parameters_;
 
-		/// \brief Reference to the disposer object
-		::disposer::disposer& disposer_;
+		/// \brief Reference to the system object
+		disposer::system& system_;
 
 		/// \brief Prefix for log messages
 		std::string_view location_;

@@ -10,7 +10,7 @@
 #define _disposer__core__component_init_fn__hpp_INCLUDED_
 
 #include "component_data.hpp"
-#include "disposer.hpp"
+#include "system.hpp"
 
 
 namespace disposer{
@@ -24,11 +24,11 @@ namespace disposer{
 		/// \brief Constructor
 		component_init_accessory(
 			component_data< TypeList, Parameters > const& data,
-			::disposer::disposer& disposer,
+			disposer::system& system,
 			std::string_view location
 		)
 			: data_(data)
-			, disposer_(disposer)
+			, system_(system)
 			, location_(location) {}
 
 
@@ -59,14 +59,14 @@ namespace disposer{
 			return TypeList::types[i];
 		}
 
-		/// \brief Get reference to the disposer object
-		::disposer::disposer& disposer()noexcept{
-			return disposer_;
+		/// \brief Get reference to the system object
+		disposer::system& system()noexcept{
+			return system_;
 		}
 
-		/// \brief Get const reference to the disposer object
-		::disposer::disposer const& disposer()const noexcept{
-			return disposer_;
+		/// \brief Get const reference to the system object
+		disposer::system const& system()const noexcept{
+			return system_;
 		}
 
 
@@ -80,8 +80,8 @@ namespace disposer{
 		/// \brief Reference to the component object
 		component_data< TypeList, Parameters > const& data_;
 
-		/// \brief Reference to the disposer object
-		::disposer::disposer& disposer_;
+		/// \brief Reference to the system object
+		disposer::system& system_;
 
 		/// \brief Location for log messages
 		std::string_view location_;

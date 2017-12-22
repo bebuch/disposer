@@ -18,7 +18,7 @@ namespace disposer{
 	class output_base;
 
 
-	/// \brief Dataset for disposer to construct and initialize a module
+	/// \brief Dataset to construct and initialize a module
 	struct module_make_data{
 		/// \brief Name of the module type given via class module_declarant
 		std::string const type_name;

@@ -7,7 +7,7 @@
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
 #include <disposer/core/disposer_declarant.hpp>
-#include <disposer/core/disposer.hpp>
+#include <disposer/core/system.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -23,7 +23,7 @@ namespace disposer{
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "add component type name '" << type_name << "'";
 		}, [&]{
-			auto iter = disposer_.directory_.component_maker_list_.insert(
+			auto iter = system_.directory_.component_maker_list_.insert(
 				std::make_pair(type_name, std::move(fn)));
 
 			if(!iter.second){
@@ -42,7 +42,7 @@ namespace disposer{
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "add help for component type name '" << type_name << "'";
 		}, [&]{
-			auto iter = disposer_.directory_.component_help_list_.insert(
+			auto iter = system_.directory_.component_help_list_.insert(
 				std::make_pair(type_name, std::move(text)));
 
 			if(!iter.second){
@@ -61,7 +61,7 @@ namespace disposer{
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "add module type name '" << type_name << "'";
 		}, [&]{
-			auto iter = disposer_.directory_.module_maker_list_.insert(
+			auto iter = system_.directory_.module_maker_list_.insert(
 				std::make_pair(type_name, std::move(fn)));
 
 			if(!iter.second){
@@ -80,7 +80,7 @@ namespace disposer{
 		logsys::log([&type_name](logsys::stdlogb& os){
 			os << "add help for module type name '" << type_name << "'";
 		}, [&]{
-			auto iter = disposer_.directory_.module_help_list_.insert(
+			auto iter = system_.directory_.module_help_list_.insert(
 				std::make_pair(type_name, std::move(text)));
 
 			if(!iter.second){

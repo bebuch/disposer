@@ -6,11 +6,11 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__disposer__hpp_INCLUDED_
-#define _disposer__core__disposer__hpp_INCLUDED_
+#ifndef _disposer__core__system__hpp_INCLUDED_
+#define _disposer__core__system__hpp_INCLUDED_
 
 #include "disposer_declarant.hpp"
-#include "disposer_directory.hpp"
+#include "directory.hpp"
 #include "chain.hpp"
 
 #include "../config/embedded_config.hpp"
@@ -22,35 +22,35 @@ namespace disposer{
 
 
 	/// \brief Main class of the disposer software
-	class disposer{
+	class system{
 	public:
 		/// \brief Constructor
-		disposer();
+		system();
 
 
 		/// \brief Standard Destructor
-		~disposer();
+		~system();
 
 
 		/// \brief Not copyable
-		disposer(disposer const&) = delete;
+		system(system const&) = delete;
 
 		/// \brief Not movable
-		disposer(disposer&&) = delete;
+		system(system&&) = delete;
 
 
 		/// \brief Not copyable
-		disposer& operator=(disposer const&) = delete;
+		system& operator=(system const&) = delete;
 
 		/// \brief Not movable
-		disposer& operator=(disposer&&) = delete;
+		system& operator=(system&&) = delete;
 
 
 		/// \brief Get a reference to the component_declarant object
-		::disposer::component_declarant& component_declarant();
+		disposer::component_declarant& component_declarant();
 
 		/// \brief Get a reference to the module_declarant object
-		::disposer::module_declarant& module_declarant();
+		disposer::module_declarant& module_declarant();
 
 
 		/// \brief Load and parse the config file
@@ -64,7 +64,7 @@ namespace disposer{
 
 
 		/// \brief The directory object
-		disposer_directory const& directory(){
+		disposer::directory const& directory(){
 			return directory_;
 		}
 
@@ -83,7 +83,7 @@ namespace disposer{
 
 
 		/// \brief Component and module generators
-		disposer_directory directory_;
+		disposer::directory directory_;
 
 
 		/// \brief List of all components (map from name to object)
@@ -100,10 +100,10 @@ namespace disposer{
 
 
 		/// \brief The declarant object to register new component types
-		::disposer::component_declarant component_declarant_;
+		disposer::component_declarant component_declarant_;
 
 		/// \brief The declarant object to register new module types
-		::disposer::module_declarant module_declarant_;
+		disposer::module_declarant module_declarant_;
 
 
 	friend class module_declarant;

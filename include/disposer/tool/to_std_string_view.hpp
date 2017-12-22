@@ -31,7 +31,7 @@ namespace disposer::detail{
 	/// \brief Converts a disposer::ct_name to std::string_view
 	template < typename Tag, char ... C >
 	constexpr std::string_view to_std_string_view(
-		::disposer::ct_name< Tag, C ... > const& name
+		disposer::ct_name< Tag, C ... > const& name
 	)noexcept{
 		return to_std_string_view(name.value);
 	}

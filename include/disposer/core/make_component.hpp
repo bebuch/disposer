@@ -75,7 +75,7 @@ namespace disposer{
 
 	template < typename ComponentInitFn, typename Modules >
 	struct component_construction{
-		::disposer::disposer& disposer;
+		disposer::system& system;
 
 		component_make_data const& data;
 
@@ -267,7 +267,7 @@ namespace disposer{
 				// information then immediately transfer the ownership to a
 				// unique_ptr of the base class
 				auto const component_ptr = new component{
-					type_list{dims}, data.name, data.type_name, disposer,
+					type_list{dims}, data.name, data.type_name, system,
 					std::move(iops).flat(), component_init};
 
 				std::unique_ptr< component_base > result(component_ptr);
@@ -279,7 +279,7 @@ namespace disposer{
 						component_module_maker.generate_module_fn(
 							data.name + "//" +
 							std::string(component_module_maker.name),
-							disposer.module_declarant(), component);
+							system.module_declarant(), component);
 					});
 
 				return result;
@@ -319,14 +319,14 @@ namespace disposer{
 		dimension_list< Ds ... > dims,
 		component_configure< Config ... > const& configs,
 		component_modules< Module ... > const& module_maker_list,
-		disposer& disposer,
+		disposer::system& system,
 		component_make_data const& data,
 		component_init_fn< ComponentInitFn > const& component_init
 	){
 		detail::config_queue const queue{configs.config_list};
 		component_construction<
 			ComponentInitFn, component_modules< Module ... > > const mc
-			{disposer, data, component_init, module_maker_list};
+			{system, data, component_init, module_maker_list};
 		return mc.make_component(dims, queue, iops_ref{});
 	}
 
@@ -377,7 +377,7 @@ namespace disposer{
 		/// \brief Create an component object
 		auto operator()(
 			component_make_data const& data,
-			disposer& disposer
+			disposer::system& system
 		)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
@@ -387,7 +387,7 @@ namespace disposer{
 
 			// Create the component
 			return make_component_ptr(dimensions, configuration,
-				module_maker_list, disposer, data, component_init);
+				module_maker_list, system, data, component_init);
 		}
 	};
 

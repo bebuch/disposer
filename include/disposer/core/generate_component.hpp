@@ -17,7 +17,7 @@ namespace disposer{
 
 	struct unit_test_key;
 
-	/// \brief Registers a component configuration in the \ref disposer
+	/// \brief Registers a component configuration in the \ref system
 	template <
 		typename DimensionList,
 		typename Configuration,
@@ -89,7 +89,7 @@ namespace disposer{
 		)const{
 			add(component_type, [maker = maker_, &add]
 				(component_make_data const& data){
-					return maker(data, add.disposer());
+					return maker(data, add.system());
 				});
 
 			add.help(component_type, maker_.help_text_fn(component_type));

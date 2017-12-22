@@ -9,13 +9,13 @@
 #ifndef _disposer__core__component_base__hpp_INCLUDED_
 #define _disposer__core__component_base__hpp_INCLUDED_
 
-#include "disposer.hpp"
+#include "system.hpp"
 
 
 namespace disposer{
 
 
-	/// \brief Base class for all disposer components
+	/// \brief Base class for all components
 	class component_base{
 	public:
 		/// \brief Constructor

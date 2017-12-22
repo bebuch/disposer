@@ -15,7 +15,7 @@
 namespace disposer{
 
 
-	/// \brief Dataset for disposer to construct and initialize a component
+	/// \brief Dataset to construct and initialize a component
 	struct component_make_data{
 		/// \brief Name of the component from the config file
 		std::string const name;

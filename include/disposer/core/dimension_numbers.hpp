@@ -70,7 +70,7 @@ namespace disposer{
 
 		/// \brief Get the solved dimensions without the first dimension
 		constexpr auto rest()const noexcept{
-			return ::disposer::solved_dimensions{
+			return disposer::solved_dimensions{
 				hana::remove_at(indexes, hana::size_c< 0 >)};
 		}
 

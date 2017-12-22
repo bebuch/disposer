@@ -12,7 +12,7 @@
 #include "exec_module_base.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
-#include "disposer.hpp"
+#include "system.hpp"
 
 
 namespace disposer{
@@ -25,7 +25,7 @@ namespace disposer{
 		= std::unordered_map< std::string, output_base* >;
 
 
-	/// \brief Base class for all disposer modules
+	/// \brief Base class for all modules
 	class module_base{
 	public:
 		/// \brief Constructor

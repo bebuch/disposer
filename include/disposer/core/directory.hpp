@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__disposer_directory__hpp_INCLUDED_
-#define _disposer__core__disposer_directory__hpp_INCLUDED_
+#ifndef _disposer__core__directory__hpp_INCLUDED_
+#define _disposer__core__directory__hpp_INCLUDED_
 
 #include "../tool/component_ptr.hpp"
 #include "../tool/module_ptr.hpp"
@@ -24,24 +24,24 @@ namespace disposer{
 
 
 	/// \brief Component and module makers
-	class disposer_directory{
+	class directory{
 	public:
 		/// \brief Constructor
-		disposer_directory() = default;
+		directory() = default;
 
 
 		/// \brief Not copyable
-		disposer_directory(disposer_directory const&) = delete;
+		directory(directory const&) = delete;
 
 		/// \brief Not movable
-		disposer_directory(disposer_directory&&) = delete;
+		directory(directory&&) = delete;
 
 
 		/// \brief Not copyable
-		disposer_directory& operator=(disposer_directory const&) = delete;
+		directory& operator=(directory const&) = delete;
 
 		/// \brief Not movable
-		disposer_directory& operator=(disposer_directory&&) = delete;
+		directory& operator=(directory&&) = delete;
 
 
 		/// \brief Get the help text of all components and modules
@@ -77,7 +77,7 @@ namespace disposer{
 		module_maker_list module_maker_list_;
 
 
-	friend class disposer;
+	friend class system;
 	friend class module_declarant;
 	friend class component_declarant;
 	};

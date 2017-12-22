@@ -25,7 +25,7 @@ namespace disposer{
 	class add_log;
 
 
-	/// \brief Class disposer access key
+	/// \brief Access key
 	struct log_key{
 	private:
 		/// \brief Constructor

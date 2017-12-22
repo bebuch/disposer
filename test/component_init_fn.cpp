@@ -3,7 +3,7 @@
 using namespace disposer;
 
 
-::disposer::disposer d;
+disposer::system d;
 
 template < typename Fn >
 void test(Fn const& fn){

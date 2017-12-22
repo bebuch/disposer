@@ -17,7 +17,7 @@ using ic = index_component< D >;
 
 template < typename ... T > struct morph{};
 
-::disposer::disposer d;
+disposer::system d;
 
 
 BOOST_AUTO_TEST_CASE(set_dimension_fn_1){

@@ -28,7 +28,7 @@ namespace disposer{
 	/// \brief Hana Tag for \ref generate_module
 	struct generate_module_tag{};
 
-	/// \brief Registers a module configuration in the \ref disposer
+	/// \brief Registers a module configuration in the \ref system
 	template <
 		typename Dimensions,
 		typename Configuration,

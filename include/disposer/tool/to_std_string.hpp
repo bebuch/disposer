@@ -29,7 +29,7 @@ namespace disposer::detail{
 
 	/// \brief Converts a disposer::ct_name to std::string
 	template < typename Tag, char ... C >
-	std::string to_std_string(::disposer::ct_name< Tag, C ... > const& name){
+	std::string to_std_string(disposer::ct_name< Tag, C ... > const& name){
 		return to_std_string(name.value);
 	}
 

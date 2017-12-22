@@ -9,6 +9,6 @@
 #ifndef _disposer__disposer__hpp_INCLUDED_
 #define _disposer__disposer__hpp_INCLUDED_
 
-#include "core/disposer.hpp"
+#include "core/system.hpp"
 
 #endif

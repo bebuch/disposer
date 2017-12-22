@@ -19,7 +19,7 @@ namespace disposer{
 	///
 	/// Polymorphe base class for module inputs.
 	///
-	/// A disposer module input must have at least one input data type.
+	/// A module input must have at least one input data type.
 	/// An input might have more then one data type.
 	class exec_input_base{
 	public:

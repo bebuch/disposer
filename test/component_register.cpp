@@ -20,7 +20,7 @@ template < typename ... T > struct morph{};
 
 
 BOOST_AUTO_TEST_CASE(register_0){
-	::disposer::disposer disposer;
+	disposer::system disposer;
 
 	struct init_fn{
 		constexpr auto operator()()const{ return 0; }
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(register_0){
 }
 
 BOOST_AUTO_TEST_CASE(register_1){
-	::disposer::disposer disposer;
+	disposer::system disposer;
 
 	constexpr auto list = dimension_list{
 			dimension_c< double, char, float >
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(register_1){
 }
 
 BOOST_AUTO_TEST_CASE(register_0_module_1){
-	::disposer::disposer disposer;
+	disposer::system disposer;
 
 	struct exec{
 		constexpr void operator()()const{}

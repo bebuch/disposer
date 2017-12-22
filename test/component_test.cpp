@@ -22,7 +22,7 @@ component_init_fn< init_fn > s{};
 std::string const name = "component";
 std::string const type = "type";
 
-::disposer::disposer d;
+disposer::system d;
 
 
 BOOST_AUTO_TEST_CASE(test_0){

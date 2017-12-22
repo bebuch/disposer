@@ -24,7 +24,7 @@ namespace disposer{
 	///
 	/// Polymorphe base class for module outputs.
 	///
-	/// A disposer module output must have at least one output data type.
+	/// A module output must have at least one output data type.
 	/// An output might have more then one data type.
 	class exec_output_base{
 	public:

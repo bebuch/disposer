@@ -92,7 +92,7 @@ namespace disposer{
 		chain_module_list const modules_;
 
 
-		/// \brief Referenz to the disposer global id_generator
+		/// \brief Referenz to the global id_generator
 		id_generator& generate_id_;
 
 		/// \brief Chain local id generator

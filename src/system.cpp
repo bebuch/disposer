@@ -6,6 +6,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
+#include <disposer/core/system.hpp>
 #include <disposer/core/module_base.hpp>
 #include <disposer/core/component_base.hpp>
 
@@ -13,8 +14,6 @@
 #include <disposer/config/check_semantic.hpp>
 #include <disposer/config/unused_warnings.hpp>
 #include <disposer/config/set_output_use_count.hpp>
-
-#include <disposer/disposer.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -101,11 +100,11 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	disposer::disposer()
+	system::system()
 		: component_declarant_(*this)
 		, module_declarant_(*this) {}
 
-	disposer::~disposer(){
+	system::~system(){
 		for(auto& [name, component]: components_){
 			(void)name;
 			component->shutdown();
@@ -113,15 +112,15 @@ namespace disposer{
 	}
 
 
-	component_declarant& disposer::component_declarant(){
+	component_declarant& system::component_declarant(){
 		return component_declarant_;
 	}
 
-	module_declarant& disposer::module_declarant(){
+	module_declarant& system::module_declarant(){
 		return module_declarant_;
 	}
 
-	void disposer::load(std::string const& filename){
+	void system::load(std::string const& filename){
 		auto config = logsys::log([&](logsys::stdlogb& os){
 				os << "parsed '" << filename << "'";
 			}, [&]{ return parse(filename); });
@@ -142,7 +141,7 @@ namespace disposer{
 			});
 	}
 
-	void disposer::create_components(){
+	void system::create_components(){
 		for(auto& config_component: config_.components){
 			logsys::log([&config_component](logsys::stdlogb& os){
 				os << "component(" << config_component.name << ":"
@@ -161,14 +160,14 @@ namespace disposer{
 		}
 	}
 
-	void disposer::create_chains(){
+	void system::create_chains(){
 		std::tie(inactive_chains_, chains_, id_generators_) =
-			::disposer::create_chains(directory_.module_maker_list_,
+			disposer::create_chains(directory_.module_maker_list_,
 				config_.chains);
 	}
 
 
-	chain& disposer::get_chain(std::string const& chain){
+	chain& system::get_chain(std::string const& chain){
 		auto iter = chains_.find(chain);
 		if(iter != chains_.end()) return iter->second;
 		if(inactive_chains_.find(chain) != inactive_chains_.end()){
@@ -178,7 +177,7 @@ namespace disposer{
 		throw std::logic_error("chain(" + chain + ") does not exist");
 	}
 
-	std::unordered_set< std::string > disposer::chains()const{
+	std::unordered_set< std::string > system::chains()const{
 		std::unordered_set< std::string > result;
 		for(auto& chain: chains_) result.emplace(chain.first);
 		return result;

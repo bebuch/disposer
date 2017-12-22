@@ -18,7 +18,7 @@
 namespace disposer{
 
 
-	class disposer;
+	class system;
 
 
 	/// \brief Functor to register a new module by a name and an init function
@@ -31,24 +31,24 @@ namespace disposer{
 		module_declarant(module_declarant&&) = delete;
 
 
-		/// \brief Register a new module in the disposer by mapping the
+		/// \brief Register a new module in the system by mapping the
 		///        module name to the constructing init and help function
 		void operator()(std::string const& type_name, module_maker_fn&& fn);
 
-		/// \brief Register the help text of a new module in the disposer
+		/// \brief Register the help text of a new module in the system
 		void help(std::string const& type_name, std::string&& text);
 
 
 	private:
 		/// \brief Constructor
-		module_declarant(disposer& disposer): disposer_(disposer) {}
+		module_declarant(system& system): system_(system) {}
 
 
-		/// \brief Reference to the disposer class
-		disposer& disposer_;
+		/// \brief Reference to the system object
+		system& system_;
 
 
-	friend class disposer;
+	friend class system;
 	};
 
 
@@ -63,28 +63,28 @@ namespace disposer{
 		component_declarant(component_declarant&&) = delete;
 
 
-		/// \brief Register a new component in the disposer by mapping the
+		/// \brief Register a new component in the system by mapping the
 		///        component name to the constructing init and help function
 		void operator()(std::string const& type_name, component_maker_fn&& fn);
 
-		/// \brief Register the help text of a new component in the disposer
+		/// \brief Register the help text of a new component in the system
 		void help(std::string const& type_name, std::string&& text);
 
-		/// \brief Get a reference to the disposer object
-		::disposer::disposer& disposer(){ return disposer_; }
+		/// \brief Get a reference to the system object
+		disposer::system& system(){ return system_; }
 
 
 	private:
 		/// \brief Constructor
-		component_declarant(::disposer::disposer& disposer)
-			: disposer_(disposer) {}
+		component_declarant(disposer::system& system)
+			: system_(system) {}
 
 
-		/// \brief Reference to the disposer class
-		::disposer::disposer& disposer_;
+		/// \brief Reference to the system object
+		disposer::system& system_;
 
 
-	friend class disposer;
+	friend class system;
 	};
 
 
