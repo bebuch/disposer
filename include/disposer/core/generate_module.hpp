@@ -189,8 +189,6 @@ namespace disposer{
 				(module_make_data const& data){
 					return maker(data, component);
 				});
-
-			add.module_help(module_type, maker_.help_text_fn(module_type));
 		}
 
 
