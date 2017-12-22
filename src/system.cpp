@@ -24,7 +24,8 @@ namespace disposer{ namespace{
 
 	component_ptr create_component(
 		component_maker_list const& maker_list,
-		component_make_data const& data
+		component_make_data const& data,
+		system& system
 	){
 		auto iter = maker_list.find(data.type_name);
 
@@ -35,7 +36,7 @@ namespace disposer{ namespace{
 		}
 
 		try{
-			return iter->second(data);
+			return iter->second(data, system);
 		}catch(std::exception const& error){
 			throw std::runtime_error(data.location() + error.what());
 		}
@@ -101,8 +102,8 @@ namespace disposer{
 
 
 	system::system()
-		: component_declarant_(*this)
-		, module_declarant_(*this) {}
+		: component_declarant_(directory_)
+		, module_declarant_(directory_) {}
 
 	system::~system(){
 		for(auto& [name, component]: components_){
@@ -154,7 +155,7 @@ namespace disposer{
 							config_component.name,
 							config_component.type_name,
 							config_component.parameters
-						})
+						}, *this)
 				);
 			});
 		}

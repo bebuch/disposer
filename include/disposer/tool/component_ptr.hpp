@@ -25,10 +25,11 @@ namespace disposer{
 
 
 	struct component_make_data;
+	class system;
 
 	/// \brief A init function which constructs a component
 	using component_maker_fn =
-		std::function< component_ptr(component_make_data const&) >;
+		std::function< component_ptr(component_make_data const&, system&) >;
 
 	/// \brief Map between component type name and its maker function
 	using component_maker_list =

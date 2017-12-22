@@ -19,6 +19,7 @@ namespace disposer{
 
 
 	class system;
+	class directory;
 
 
 	/// \brief Functor to register a new module by a name and an init function
@@ -31,21 +32,21 @@ namespace disposer{
 		module_declarant(module_declarant&&) = delete;
 
 
-		/// \brief Register a new module in the system by mapping the
+		/// \brief Register a new module in the directory by mapping the
 		///        module name to the constructing init and help function
 		void operator()(std::string const& type_name, module_maker_fn&& fn);
 
-		/// \brief Register the help text of a new module in the system
+		/// \brief Register the help text of a new module in the directory
 		void help(std::string const& type_name, std::string&& text);
 
 
 	private:
 		/// \brief Constructor
-		module_declarant(system& system): system_(system) {}
+		module_declarant(directory& directory): directory_(directory) {}
 
 
-		/// \brief Reference to the system object
-		system& system_;
+		/// \brief Reference to the directory object
+		directory& directory_;
 
 
 	friend class system;
@@ -63,25 +64,25 @@ namespace disposer{
 		component_declarant(component_declarant&&) = delete;
 
 
-		/// \brief Register a new component in the system by mapping the
+		/// \brief Register a new component in the directory by mapping the
 		///        component name to the constructing init and help function
 		void operator()(std::string const& type_name, component_maker_fn&& fn);
 
-		/// \brief Register the help text of a new component in the system
+		/// \brief Register the help text of a new component in the directory
 		void help(std::string const& type_name, std::string&& text);
 
-		/// \brief Get a reference to the system object
-		disposer::system& system(){ return system_; }
+		/// \brief Get a reference to the directory object
+		disposer::directory& directory(){ return directory_; }
 
 
 	private:
 		/// \brief Constructor
-		component_declarant(disposer::system& system)
-			: system_(system) {}
+		component_declarant(disposer::directory& directory)
+			: directory_(directory) {}
 
 
-		/// \brief Reference to the system object
-		disposer::system& system_;
+		/// \brief Reference to the directory object
+		disposer::directory& directory_;
 
 
 	friend class system;

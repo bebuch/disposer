@@ -87,9 +87,9 @@ namespace disposer{
 			std::string const& component_type,
 			component_declarant& add
 		)const{
-			add(component_type, [maker = maker_, &add]
-				(component_make_data const& data){
-					return maker(data, add.system());
+			add(component_type, [maker = maker_]
+				(component_make_data const& data, system& system){
+					return maker(data, system);
 				});
 
 			add.help(component_type, maker_.help_text_fn(component_type));

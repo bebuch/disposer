@@ -33,7 +33,8 @@ namespace disposer{
 	struct module_make_data;
 
 	/// \brief A init function which constructs a module
-	using module_maker_fn = std::function< module_ptr(module_make_data const&) >;
+	using module_maker_fn =
+		std::function< module_ptr(module_make_data const&) >;
 
 	/// \brief Map between module type name and its maker function
 	using module_maker_list =
