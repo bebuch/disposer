@@ -54,7 +54,7 @@ namespace disposer{
 		});
 	}
 
-	void declarant::module_help(
+	void declarant::component_help(
 		std::string const& type_name,
 		std::string&& text
 	){
@@ -73,7 +73,7 @@ namespace disposer{
 		});
 	}
 
-	void declarant::component_help(
+	void declarant::module_help(
 		std::string const& type_name,
 		std::string&& text
 	){

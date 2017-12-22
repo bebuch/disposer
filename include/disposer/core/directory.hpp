@@ -51,18 +51,18 @@ namespace disposer{
 		/// \brief Get the help text of all components and modules
 		std::string help()const;
 
-		/// \brief Get the help text of a module
-		std::string module_help(std::string const& name)const;
-
 		/// \brief Get the help text of a component
 		std::string component_help(std::string const& name)const;
 
+		/// \brief Get the help text of a module
+		std::string module_help(std::string const& name)const;
 
-		/// \brief Get all module names
-		std::vector< std::string > module_names()const;
 
 		/// \brief Get all component names
 		std::vector< std::string > component_names()const;
+
+		/// \brief Get all module names
+		std::vector< std::string > module_names()const;
 
 
 	private:
