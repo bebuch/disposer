@@ -9,7 +9,7 @@
 #ifndef _disposer__core__component_base__hpp_INCLUDED_
 #define _disposer__core__component_base__hpp_INCLUDED_
 
-#include "system.hpp"
+#include <string>
 
 
 namespace disposer{
@@ -54,7 +54,7 @@ namespace disposer{
 		std::string const name;
 
 		/// \brief Name of the component type given via class
-		///        component_declarant
+		///        declarant
 		std::string const type_name;
 
 		/// \brief Location text for log-messages

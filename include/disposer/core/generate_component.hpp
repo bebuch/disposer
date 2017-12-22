@@ -82,17 +82,18 @@ namespace disposer{
 
 
 		/// \brief Call this function to register the component with the given
-		///        type name via the given component_declarant
+		///        type name via the given declarant
 		void operator()(
 			std::string const& component_type,
-			component_declarant& add
+			declarant& add
 		)const{
 			add(component_type, [maker = maker_]
 				(component_make_data const& data, system& system){
 					return maker(data, system);
 				});
 
-			add.help(component_type, maker_.help_text_fn(component_type));
+			add.component_help(
+				component_type, maker_.help_text_fn(component_type));
 		}
 
 

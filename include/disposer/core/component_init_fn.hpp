@@ -9,6 +9,7 @@
 #ifndef _disposer__core__component_init_fn__hpp_INCLUDED_
 #define _disposer__core__component_init_fn__hpp_INCLUDED_
 
+#include "component_base.hpp"
 #include "component_data.hpp"
 #include "system.hpp"
 

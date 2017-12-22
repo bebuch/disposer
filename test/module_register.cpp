@@ -1,4 +1,5 @@
 #include <disposer/core/generate_module.hpp>
+#include <disposer/core/directory.hpp>
 
 #define BOOST_TEST_MODULE dimension solve
 #include <boost/test/included/unit_test.hpp>
@@ -19,7 +20,7 @@ template < typename ... T > struct morph{};
 
 
 BOOST_AUTO_TEST_CASE(register_0){
-	disposer::system disposer;
+	directory dir;
 
 	struct exec{
 		constexpr void operator()()const{}
@@ -31,12 +32,12 @@ BOOST_AUTO_TEST_CASE(register_0){
 	{
 		auto fn = generate_module("description",
 			module_configure{}, state_dummy, exec_dummy);
-		fn("register_0", disposer.module_declarant());
+		fn("register_0", dir.declarant());
 	}
 }
 
 BOOST_AUTO_TEST_CASE(register_1){
-	disposer::system disposer;
+	directory dir;
 
 	constexpr auto list = dimension_list{
 			dimension_c< double, char, float >
@@ -60,14 +61,14 @@ BOOST_AUTO_TEST_CASE(register_1){
 
 	{
 		auto fn = generate_fn(0);
-		fn("register_1_1", disposer.module_declarant());
+		fn("register_1_1", dir.declarant());
 	}
 	{
 		auto fn = generate_fn(1);
-		fn("register_1_2", disposer.module_declarant());
+		fn("register_1_2", dir.declarant());
 	}
 	{
 		auto fn = generate_fn(2);
-		fn("register_1_3", disposer.module_declarant());
+		fn("register_1_3", dir.declarant());
 	}
 }

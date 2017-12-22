@@ -101,10 +101,6 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	system::system()
-		: component_declarant_(directory_)
-		, module_declarant_(directory_) {}
-
 	system::~system(){
 		for(auto& [name, component]: components_){
 			(void)name;
@@ -112,14 +108,6 @@ namespace disposer{
 		}
 	}
 
-
-	component_declarant& system::component_declarant(){
-		return component_declarant_;
-	}
-
-	module_declarant& system::module_declarant(){
-		return module_declarant_;
-	}
 
 	void system::load(std::string const& filename){
 		auto config = logsys::log([&](logsys::stdlogb& os){

@@ -21,7 +21,7 @@ namespace disposer{
 		std::string const name;
 
 		/// \brief Name of the component type given via class
-		///        component_declarant
+		///        declarant
 		std::string const type_name;
 
 		/// \brief Parameters from the config file

@@ -12,7 +12,10 @@
 #include "exec_module_base.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
-#include "system.hpp"
+
+#include "../tool/module_ptr.hpp"
+
+#include <unordered_map>
 
 
 namespace disposer{
@@ -79,7 +82,7 @@ namespace disposer{
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string const chain;
 
-		/// \brief Name of the module type given via class module_declarant
+		/// \brief Name of the module type given via class declarant
 		std::string const type_name;
 
 		/// \brief Position of the module in the process chain

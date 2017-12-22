@@ -20,7 +20,7 @@ template < typename ... T > struct morph{};
 
 
 BOOST_AUTO_TEST_CASE(register_0){
-	disposer::system disposer;
+	directory dir;
 
 	struct init_fn{
 		constexpr auto operator()()const{ return 0; }
@@ -30,12 +30,12 @@ BOOST_AUTO_TEST_CASE(register_0){
 
 	{
 		auto fn = generate_component("description", init, component_modules{});
-		fn("register_0", disposer.component_declarant());
+		fn("register_0", dir.declarant());
 	}
 }
 
 BOOST_AUTO_TEST_CASE(register_1){
-	disposer::system disposer;
+	directory dir;
 
 	constexpr auto list = dimension_list{
 			dimension_c< double, char, float >
@@ -58,20 +58,20 @@ BOOST_AUTO_TEST_CASE(register_1){
 
 	{
 		auto fn = generate_fn(0);
-		fn("register_1_1", disposer.component_declarant());
+		fn("register_1_1", dir.declarant());
 	}
 	{
 		auto fn = generate_fn(1);
-		fn("register_1_2", disposer.component_declarant());
+		fn("register_1_2", dir.declarant());
 	}
 	{
 		auto fn = generate_fn(2);
-		fn("register_1_3", disposer.component_declarant());
+		fn("register_1_3", dir.declarant());
 	}
 }
 
 BOOST_AUTO_TEST_CASE(register_0_module_1){
-	disposer::system disposer;
+	directory dir;
 
 	struct exec{
 		constexpr void operator()()const{}
@@ -88,6 +88,6 @@ BOOST_AUTO_TEST_CASE(register_0_module_1){
 				make("m1"_module,
 					generate_module("description", exec_fn{exec{}}))
 			});
-		fn("register_0_module_1", disposer.component_declarant());
+		fn("register_0_module_1", dir.declarant());
 	}
 }

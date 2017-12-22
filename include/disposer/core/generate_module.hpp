@@ -9,6 +9,7 @@
 #ifndef _disposer__core__generate_module__hpp_INCLUDED_
 #define _disposer__core__generate_module__hpp_INCLUDED_
 
+#include "declarant.hpp"
 #include "make_module.hpp"
 
 #include "../tool/ct_pretty_name.hpp"
@@ -162,26 +163,26 @@ namespace disposer{
 
 
 		/// \brief Call this function to register the module with the given type
-		///        name via the given module_declarant
+		///        name via the given declarant
 		void operator()(
 			std::string const& module_type,
-			module_declarant& add
+			declarant& add
 		)const{
 			add(module_type, [maker = maker_]
 				(module_make_data const& data){
 					return maker(data);
 				});
 
-			add.help(module_type, maker_.help_text_fn(module_type));
+			add.module_help(module_type, maker_.help_text_fn(module_type));
 		}
 
 
 		/// \brief Call this function to register the module with the given type
-		///        name and an existing component via the given module_declarant
+		///        name and an existing component via the given declarant
 		template < typename Component >
 		void operator()(
 			std::string const& module_type,
-			module_declarant& add,
+			declarant& add,
 			Component& component
 		)const{
 			add(module_type, [maker = maker_, &component]
@@ -189,7 +190,7 @@ namespace disposer{
 					return maker(data, component);
 				});
 
-			add.help(module_type, maker_.help_text_fn(module_type));
+			add.module_help(module_type, maker_.help_text_fn(module_type));
 		}
 
 

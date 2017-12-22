@@ -9,7 +9,6 @@
 #ifndef _disposer__core__system__hpp_INCLUDED_
 #define _disposer__core__system__hpp_INCLUDED_
 
-#include "disposer_declarant.hpp"
 #include "directory.hpp"
 #include "chain.hpp"
 
@@ -25,10 +24,9 @@ namespace disposer{
 	class system{
 	public:
 		/// \brief Constructor
-		system();
+		system() = default;
 
-
-		/// \brief Standard Destructor
+		/// \brief Destructor
 		~system();
 
 
@@ -46,13 +44,6 @@ namespace disposer{
 		system& operator=(system&&) = delete;
 
 
-		/// \brief Get a reference to the component_declarant object
-		disposer::component_declarant& component_declarant();
-
-		/// \brief Get a reference to the module_declarant object
-		disposer::module_declarant& module_declarant();
-
-
 		/// \brief Load and parse the config file
 		void load(std::string const& filename);
 
@@ -64,7 +55,12 @@ namespace disposer{
 
 
 		/// \brief The directory object
-		disposer::directory const& directory(){
+		disposer::directory& directory(){
+			return directory_;
+		}
+
+		/// \brief The directory object
+		disposer::directory const& directory()const{
 			return directory_;
 		}
 
@@ -97,17 +93,6 @@ namespace disposer{
 
 		/// \brief List of id_generators (map from name to object)
 		std::unordered_map< std::string, id_generator > id_generators_;
-
-
-		/// \brief The declarant object to register new component types
-		disposer::component_declarant component_declarant_;
-
-		/// \brief The declarant object to register new module types
-		disposer::module_declarant module_declarant_;
-
-
-	friend class module_declarant;
-	friend class component_declarant;
 	};
 
 

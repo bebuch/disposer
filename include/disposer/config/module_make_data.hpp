@@ -20,7 +20,7 @@ namespace disposer{
 
 	/// \brief Dataset to construct and initialize a module
 	struct module_make_data{
-		/// \brief Name of the module type given via class module_declarant
+		/// \brief Name of the module type given via class declarant
 		std::string const type_name;
 
 		/// \brief Name of the process chain in config file section 'chain'

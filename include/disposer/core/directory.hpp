@@ -9,8 +9,9 @@
 #ifndef _disposer__core__directory__hpp_INCLUDED_
 #define _disposer__core__directory__hpp_INCLUDED_
 
-#include "../tool/component_ptr.hpp"
-#include "../tool/module_ptr.hpp"
+#include "declarant.hpp"
+#include "module_base.hpp"
+#include "component_base.hpp"
 
 #include <vector>
 #include <map>
@@ -19,15 +20,14 @@
 namespace disposer{
 
 
-	class module_declarant;
-	class component_declarant;
+	class system;
 
 
 	/// \brief Component and module makers
 	class directory{
 	public:
 		/// \brief Constructor
-		directory() = default;
+		directory();
 
 
 		/// \brief Not copyable
@@ -42,6 +42,10 @@ namespace disposer{
 
 		/// \brief Not movable
 		directory& operator=(directory&&) = delete;
+
+
+		/// \brief Get a reference to the declarant object
+		disposer::declarant& declarant();
 
 
 		/// \brief Get the help text of all components and modules
@@ -62,6 +66,11 @@ namespace disposer{
 
 
 	private:
+		/// \brief The declarant object to register new component
+		///        and module types
+		disposer::declarant declarant_;
+
+
 		/// \brief Map from component type name to help text
 		std::map< std::string, std::string > component_help_list_;
 
@@ -78,8 +87,7 @@ namespace disposer{
 
 
 	friend class system;
-	friend class module_declarant;
-	friend class component_declarant;
+	friend class declarant;
 	};
 
 

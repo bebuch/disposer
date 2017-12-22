@@ -12,6 +12,15 @@
 namespace disposer{
 
 
+	directory::directory()
+		: declarant_(*this) {}
+
+
+	declarant& directory::declarant(){
+		return declarant_;
+	}
+
+
 	std::string directory::help()const{
 		std::string result;
 		for(auto const& component: component_help_list_){

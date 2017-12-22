@@ -279,7 +279,7 @@ namespace disposer{
 						component_module_maker.generate_module_fn(
 							data.name + "//" +
 							std::string(component_module_maker.name),
-							system.module_declarant(), component);
+							system.directory().declarant(), component);
 					});
 
 				return result;
