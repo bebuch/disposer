@@ -87,16 +87,13 @@ namespace disposer{
 	};
 
 
-	// TODO: Use inheritance instead of using to make error messages shorter
-	//       and more expressive
-
 	/// \brief Wrap the active types of the given dimension's Ds in Template
 	template < template < typename ... > typename Template, std::size_t ... Ds >
 	constexpr dimension_referrer< Template, Ds ... > wrapped_type_ref_c{};
 
 	/// \brief Defines a type by a module dimension
 	template < std::size_t D >
-	using type_ref = dimension_referrer< self_t, D >;
+	struct type_ref: dimension_referrer< self_t, D >{};
 
 	/// \brief Refers to the active type of the given dimension D
 	template < std::size_t D >
@@ -104,7 +101,7 @@ namespace disposer{
 
 	/// \brief Defines a type
 	template < typename T >
-	using free_type = dimension_referrer< free_t< T >::template type >;
+	struct free_type: dimension_referrer< free_t< T >::template type >{};
 
 	/// \brief Refers to type T
 	template < typename T >
