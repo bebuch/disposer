@@ -99,7 +99,16 @@ namespace disposer{
 	}
 
 
+	/// \brief Parse a full config definition
 	types::parse::config parse(std::istream& is);
+
+	/// \brief Parse one component of a config definition
+	types::parse::component parse_component(std::istream& is);
+
+	/// \brief Parse one chain of a config definition
+	types::parse::chain parse_chain(std::istream& is);
+
+	/// \brief Parse a full config definition
 	types::parse::config parse(std::string const& filename);
 
 

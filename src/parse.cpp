@@ -444,6 +444,10 @@ namespace disposer::parser{
 	struct chain_tag;
 	x3::rule< chain_tag, type::chain > const chain("chain");
 
+	struct chain_config_tag;
+	x3::rule< chain_config_tag, type::chain > const
+		chain_config("chain_config");
+
 	struct chain_params_tag;
 	x3::rule< chain_params_tag, std::vector< type::module > >
 		const chain_params("chain_params");
@@ -483,6 +487,10 @@ namespace disposer::parser{
 	struct component_tag;
 	x3::rule< component_tag, type::component > const
 		component("component");
+
+	struct component_config_tag;
+	x3::rule< component_config_tag, type::component > const
+		component_config("component_config");
 
 	struct component_list_tag;
 	x3::rule< component_list_tag, type::components > const
@@ -581,6 +589,10 @@ namespace disposer::parser{
 		chain_params
 	;
 
+	auto const chain_config_def = x3::no_skip[x3::expect[
+		space_lines >> -comment >> chain
+	]];
+
 	auto const chains_params_def =
 		x3::expect[+chain]
 	;
@@ -618,6 +630,11 @@ namespace disposer::parser{
 		("\t" > keyword > *space > '=' > *space > value > separator) >>
 		component_params_checked
 	;
+
+	auto const component_config_def = x3::no_skip[x3::expect[
+		space_lines >> -comment >> component
+	]];
+
 
 	auto const component_list_def =
 		x3::expect[+component]
@@ -892,6 +909,7 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(module)
 	BOOST_SPIRIT_DEFINE(chain_params)
 	BOOST_SPIRIT_DEFINE(chain)
+	BOOST_SPIRIT_DEFINE(chain_config)
 	BOOST_SPIRIT_DEFINE(id_generator)
 	BOOST_SPIRIT_DEFINE(chains_params)
 	BOOST_SPIRIT_DEFINE(chains)
@@ -901,6 +919,7 @@ namespace disposer::parser{
 	BOOST_SPIRIT_DEFINE(component_param_prevent)
 	BOOST_SPIRIT_DEFINE(component_param)
 	BOOST_SPIRIT_DEFINE(component)
+	BOOST_SPIRIT_DEFINE(component_config)
 	BOOST_SPIRIT_DEFINE(component_list)
 	BOOST_SPIRIT_DEFINE(component_list_checked)
 	BOOST_SPIRIT_DEFINE(components)
@@ -909,6 +928,10 @@ namespace disposer::parser{
 
 	auto const grammar = config;
 
+	auto const component_grammar = component_config;
+
+	auto const chain_grammar = chain_config;
+
 
 }
 
@@ -916,7 +939,11 @@ namespace disposer::parser{
 namespace disposer{
 
 
-	types::parse::config parse(std::istream& is){
+	template < typename Grammar >
+	typename Grammar::attribute_type parse(
+		std::istream& is,
+		Grammar const& grammar
+	){
 		namespace x3 = boost::spirit::x3;
 
 		std::string str{
@@ -924,7 +951,7 @@ namespace disposer{
 			std::istreambuf_iterator< char >{}
 		};
 
-		types::parse::config config;
+		typename Grammar::attribute_type config;
 
 		auto iter = str.begin();
 		auto end = str.end();
@@ -933,7 +960,7 @@ namespace disposer{
 
 		try{
 			bool const match =
-				phrase_parse(iter, end, parser::grammar, space, config);
+				phrase_parse(iter, end, grammar, space, config);
 
 			if(!match || iter != end){
 				auto const line_number = parser::line_count(str.begin(), iter);
@@ -961,6 +988,18 @@ namespace disposer{
 
 			throw std::runtime_error(os.str());
 		}
+	}
+
+	types::parse::config parse(std::istream& is){
+		return parse(is, parser::grammar);
+	}
+
+	types::parse::component parse_component(std::istream& is){
+		return parse(is, parser::component_grammar);
+	}
+
+	types::parse::chain parse_chain(std::istream& is){
+		return parse(is, parser::chain_grammar);
 	}
 
 
