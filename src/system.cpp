@@ -109,7 +109,7 @@ namespace disposer{
 	}
 
 
-	void system::load(std::string const& filename){
+	void system::load_config_file(std::string const& filename){
 		auto config = logsys::log([&](logsys::stdlogb& os){
 				os << "parsed '" << filename << "'";
 			}, [&]{ return parse(filename); });
@@ -130,7 +130,7 @@ namespace disposer{
 			});
 	}
 
-	void system::create_components(){
+	void system::update_config(){
 		for(auto& config_component: config_.components){
 			logsys::log([&config_component](logsys::stdlogb& os){
 				os << "component(" << config_component.name << ":"
@@ -147,9 +147,6 @@ namespace disposer{
 				);
 			});
 		}
-	}
-
-	void system::create_chains(){
 		std::tie(inactive_chains_, chains_, id_generators_) =
 			disposer::create_chains(directory_.module_maker_list_,
 				config_.chains);

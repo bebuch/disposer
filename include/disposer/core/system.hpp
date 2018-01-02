@@ -45,13 +45,11 @@ namespace disposer{
 
 
 		/// \brief Load and parse the config file
-		void load(std::string const& filename);
+		void load_config_file(std::string const& filename);
 
-		/// \brief Create components as in config_ defined
-		void create_components();
 
-		/// \brief Create chains as in config_ defined
-		void create_chains();
+		/// \brief Create components and chains as in config_ defined
+		void update_config();
 
 
 		/// \brief The directory object
