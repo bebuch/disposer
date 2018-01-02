@@ -44,12 +44,11 @@ namespace disposer{
 		system& operator=(system&&) = delete;
 
 
-		/// \brief Load and parse the config file
-		void load_config_file(std::string const& filename);
-
-
-		/// \brief Create components and chains as in config_ defined
-		void update_config();
+		/// \brief Load and parse the config file, create components and modules
+		///
+		/// This function must be executed only one time before any other load
+		/// function.
+		bool load_config_file(std::string const& filename);
 
 
 		/// \brief The directory object
@@ -72,6 +71,11 @@ namespace disposer{
 
 
 	private:
+		/// \brief true after construction, false after the first call of
+		///        \ref load_config_file()
+		std::atomic< bool > load_config_file_valid_ = true;
+
+
 		/// \brief Configuration data to create components and chains
 		types::embedded_config::config config_;
 
