@@ -109,9 +109,8 @@ namespace disposer{
 	}
 
 
-	bool system::load_config_file(std::string const& filename){
-		if(!logsys::exception_catching_log(
-			[](logsys::stdlogb& os){ os << "config file loaded"; },
+	void system::load_config_file(std::string const& filename){
+		logsys::log([](logsys::stdlogb& os){ os << "config file loaded"; },
 			[this, &filename]{
 				if(!load_config_file_valid_.exchange(false)){
 					throw std::logic_error(
@@ -137,10 +136,9 @@ namespace disposer{
 						set_output_use_count(result);
 						return result;
 					});
-			})) return false;
+			});
 
-		if(!logsys::exception_catching_log(
-			[](logsys::stdlogb& os){ os << "components created"; },
+		logsys::log([](logsys::stdlogb& os){ os << "components created"; },
 			[this]{
 				for(auto& config_component: config_.components){
 					logsys::log([&config_component](logsys::stdlogb& os){
@@ -158,17 +156,14 @@ namespace disposer{
 						);
 					});
 				}
-			})) return false;
+			});
 
-		if(!logsys::exception_catching_log(
-			[](logsys::stdlogb& os){ os << "chains created"; },
+		logsys::log([](logsys::stdlogb& os){ os << "chains created"; },
 			[this]{
 				std::tie(inactive_chains_, chains_, id_generators_) =
 					disposer::create_chains(directory_.module_maker_list_,
 						config_.chains);
-			})) return false;
-
-		return true;
+			});
 	}
 
 

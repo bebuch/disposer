@@ -48,7 +48,7 @@ namespace disposer{
 		///
 		/// This function must be executed only one time before any other load
 		/// function.
-		bool load_config_file(std::string const& filename);
+		void load_config_file(std::string const& filename);
 
 
 		/// \brief The directory object
