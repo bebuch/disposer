@@ -127,7 +127,10 @@ namespace disposer{
 		return hana::unpack(hana::range_c< std::size_t, 0, sizeof...(Ds) >,
 			[](auto ... n){
 				constexpr auto calc = [](auto n, auto dim)noexcept{
-						if constexpr(n.value == DI){
+						if constexpr(
+							constexpr std::size_t v = n.value;
+							v == DI
+						){
 							return dimension{dim.types[hana::size_c< I >]};
 						}else{
 							return dim;

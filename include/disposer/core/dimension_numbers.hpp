@@ -136,7 +136,7 @@ namespace disposer{
 			solved_dimensions< Ds ... > const& solved
 		): index{
 				[](auto const& old, auto const& solved, auto i, auto known){
-					if constexpr(known){
+					if constexpr(constexpr std::size_t k = known; k){
 						return old.index[i];
 					}else{
 						// return the deduced dimension or hana::nothing

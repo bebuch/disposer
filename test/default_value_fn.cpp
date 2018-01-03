@@ -242,21 +242,53 @@ BOOST_AUTO_TEST_CASE(test_copy){
 }
 
 BOOST_AUTO_TEST_CASE(test_7){
-	struct fnl1: fn1, fn2, fn3{};
+	struct fnl1: fn1, fn2, fn3{
+		using fn1::operator();
+		using fn2::operator();
+		using fn3::operator();
+	};
 	auto const f1 = default_value_fn(fnl1{});
-	struct fnl2: fn1_nothrow, fn2, fn3{};
+	struct fnl2: fn1_nothrow, fn2, fn3{
+		using fn1_nothrow::operator();
+		using fn2::operator();
+		using fn3::operator();
+	};
 	auto const f2 = default_value_fn(fnl2{});
-	struct fnl3: fn1, fn2_nothrow, fn3{};
+	struct fnl3: fn1, fn2_nothrow, fn3{
+		using fn1::operator();
+		using fn2_nothrow::operator();
+		using fn3::operator();
+	};
 	auto const f3 = default_value_fn(fnl3{});
-	struct fnl4: fn1_nothrow, fn2_nothrow, fn3{};
+	struct fnl4: fn1_nothrow, fn2_nothrow, fn3{
+		using fn1_nothrow::operator();
+		using fn2_nothrow::operator();
+		using fn3::operator();
+	};
 	auto const f4 = default_value_fn(fnl4{});
-	struct fnl5: fn1, fn2, fn3_nothrow{};
+	struct fnl5: fn1, fn2, fn3_nothrow{
+		using fn1::operator();
+		using fn2::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f5 = default_value_fn(fnl5{});
-	struct fnl6: fn1_nothrow, fn2, fn3_nothrow{};
+	struct fnl6: fn1_nothrow, fn2, fn3_nothrow{
+		using fn1_nothrow::operator();
+		using fn2::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f6 = default_value_fn(fnl6{});
-	struct fnl7: fn1, fn2_nothrow, fn3_nothrow{};
+	struct fnl7: fn1, fn2_nothrow, fn3_nothrow{
+		using fn1::operator();
+		using fn2_nothrow::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f7 = default_value_fn(fnl7{});
-	struct fnl8: fn1_nothrow, fn2_nothrow, fn3_nothrow{};
+	struct fnl8: fn1_nothrow, fn2_nothrow, fn3_nothrow{
+		using fn1_nothrow::operator();
+		using fn2_nothrow::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f8 = default_value_fn(fnl8{});
 
 	static_assert(!noexcept(f1(""sv, type, accessory{})));
@@ -279,13 +311,25 @@ BOOST_AUTO_TEST_CASE(test_7){
 }
 
 BOOST_AUTO_TEST_CASE(test_8){
-	struct fnl1: fn1, fn2{};
+	struct fnl1: fn1, fn2{
+		using fn1::operator();
+		using fn2::operator();
+	};
 	auto const f1 = default_value_fn(fnl1{});
-	struct fnl2: fn1_nothrow, fn2{};
+	struct fnl2: fn1_nothrow, fn2{
+		using fn1_nothrow::operator();
+		using fn2::operator();
+	};
 	auto const f2 = default_value_fn(fnl2{});
-	struct fnl3: fn1, fn2_nothrow{};
+	struct fnl3: fn1, fn2_nothrow{
+		using fn1::operator();
+		using fn2_nothrow::operator();
+	};
 	auto const f3 = default_value_fn(fnl3{});
-	struct fnl4: fn1_nothrow, fn2_nothrow{};
+	struct fnl4: fn1_nothrow, fn2_nothrow{
+		using fn1_nothrow::operator();
+		using fn2_nothrow::operator();
+	};
 	auto const f4 = default_value_fn(fnl4{});
 
 	static_assert(!noexcept(f1(""sv, type, accessory{})));
@@ -300,13 +344,25 @@ BOOST_AUTO_TEST_CASE(test_8){
 }
 
 BOOST_AUTO_TEST_CASE(test_9){
-	struct fnl1: fn2, fn3{};
+	struct fnl1: fn2, fn3{
+		using fn2::operator();
+		using fn3::operator();
+	};
 	auto const f1 = default_value_fn(fnl1{});
-	struct fnl2: fn2_nothrow, fn3{};
+	struct fnl2: fn2_nothrow, fn3{
+		using fn2_nothrow::operator();
+		using fn3::operator();
+	};
 	auto const f2 = default_value_fn(fnl2{});
-	struct fnl3: fn2, fn3_nothrow{};
+	struct fnl3: fn2, fn3_nothrow{
+		using fn2::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f3 = default_value_fn(fnl3{});
-	struct fnl4: fn2_nothrow, fn3_nothrow{};
+	struct fnl4: fn2_nothrow, fn3_nothrow{
+		using fn2_nothrow::operator();
+		using fn3_nothrow::operator();
+	};
 	auto const f4 = default_value_fn(fnl4{});
 
 	static_assert(!noexcept(f1(""sv, type, accessory{})));

@@ -93,6 +93,7 @@ namespace disposer{
 					if constexpr(
 						std::is_invocable_r_v< T, Fn const, std::string_view >
 					){
+						(void) type; // Silance GCC
 						return std::invoke(fn_, value);
 					}else if constexpr(std::is_invocable_r_v< T, Fn const,
 						std::string_view, hana::basic_type< T > >
@@ -136,7 +137,7 @@ namespace disposer{
 			std::string_view value,
 			hana::basic_type< T > type
 		)const{
-			if constexpr(type == hana::type_c< std::string >){
+			if constexpr(auto s = type == hana::type_c< std::string >; s){
 				return std::string(value);
 			}else{
 				std::istringstream is((std::string(value)));

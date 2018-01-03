@@ -94,7 +94,7 @@ namespace disposer{
 	template < typename Name, typename T >
 	struct exec_output_init_data{
 		exec_output_init_data(
-			output< Name, T >& output,
+			disposer::output< Name, T >& output,
 			output_map_type& output_map,
 			std::size_t const id,
 			std::string_view module_location
@@ -104,7 +104,7 @@ namespace disposer{
 			, id(id)
 			, module_location(module_location) {}
 
-		output< Name, T >& output;
+		disposer::output< Name, T >& output;
 		output_map_type& output_map;
 		std::size_t const id;
 		std::string_view module_location;

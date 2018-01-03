@@ -14,6 +14,9 @@
 #include "module_init_fn.hpp"
 #include "exec_fn.hpp"
 
+#include <mutex>
+#include <condition_variable>
+
 
 namespace disposer{
 
