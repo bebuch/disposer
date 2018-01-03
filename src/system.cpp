@@ -18,6 +18,8 @@
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
+#include <fstream>
+
 
 namespace disposer{ namespace{
 
@@ -110,16 +112,32 @@ namespace disposer{
 
 
 	void system::load_config_file(std::string const& filename){
+		std::ifstream is = logsys::log(
+			[&filename](logsys::stdlogb& os){
+				os << "open '" << filename << "'";
+			},
+			[&filename]{
+				std::ifstream is(filename.c_str());
+				if(!is.is_open()){
+					throw std::runtime_error("Can not open '" + filename + "'");
+				}
+				return is;
+			});
+
+		load_config(is);
+	}
+
+	void system::load_config(std::istream& content){
 		logsys::log([](logsys::stdlogb& os){ os << "config file loaded"; },
-			[this, &filename]{
+			[this, &content]{
 				if(!load_config_file_valid_.exchange(false)){
 					throw std::logic_error(
-						"system::load_config_file is called multiple times");
+						"system::load_config is called multiple times");
 				}
 
 				auto config = logsys::log([&](logsys::stdlogb& os){
-						os << "parsed '" << filename << "'";
-					}, [&]{ return parse(filename); });
+						os << "parsed content";
+					}, [&]{ return parse(content); });
 
 				logsys::log(
 					[](logsys::stdlogb& os){ os << "checked semantic"; },
@@ -165,6 +183,23 @@ namespace disposer{
 						config_.chains);
 			});
 	}
+
+	void system::remove_component(std::string const& name){
+		load_config_file_valid_ = false;
+	}
+
+	void system::load_component(std::istream& content){
+		load_config_file_valid_ = false;
+	}
+
+	void system::remove_chain(std::string const& name){
+		load_config_file_valid_ = false;
+	}
+
+	void system::load_chain(std::istream& content){
+		load_config_file_valid_ = false;
+	}
+
 
 
 	chain& system::get_chain(std::string const& chain){

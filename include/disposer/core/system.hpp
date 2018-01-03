@@ -44,11 +44,29 @@ namespace disposer{
 		system& operator=(system&&) = delete;
 
 
-		/// \brief Load and parse the config file, create components and modules
+		/// \brief Create components and modules by a config file
+		///
+		/// This function calls load_config(content).
+		void load_config_file(std::string const& filename);
+
+
+		/// \brief Create components and modules
 		///
 		/// This function must be executed only one time before any other load
-		/// function.
-		void load_config_file(std::string const& filename);
+		/// and remove function.
+		void load_config(std::istream& content);
+
+		/// \brief Remove a component
+		void remove_component(std::string const& name);
+
+		/// \brief Create a component
+		void load_component(std::istream& content);
+
+		/// \brief Remove a chain
+		void remove_chain(std::string const& name);
+
+		/// \brief Create a chain
+		void load_chain(std::istream& content);
 
 
 		/// \brief The directory object

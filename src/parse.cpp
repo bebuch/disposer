@@ -11,7 +11,7 @@
 #include <boost/spirit/home/x3.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
-#include <fstream>
+#include <istream>
 #include <map>
 
 
@@ -1000,16 +1000,6 @@ namespace disposer{
 
 	types::parse::chain parse_chain(std::istream& is){
 		return parse(is, parser::chain_grammar);
-	}
-
-
-	types::parse::config parse(std::string const& filename){
-		std::ifstream is(filename.c_str());
-		if(!is.is_open()){
-			throw std::runtime_error("Can not open '" + filename + "'");
-		}
-
-		return parse(is);
 	}
 
 
