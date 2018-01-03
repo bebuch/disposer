@@ -25,10 +25,10 @@ namespace disposer{ namespace{
 		{type_index::type_id< std::uint16_t >().pretty_name(), "uint16"},
 		{type_index::type_id< std::uint64_t >().pretty_name(), "uint64"},
 		{type_index::type_id< std::uint32_t >().pretty_name(), "uint32"},
-		{type_index::type_id< std::int8_t >().pretty_name(), "uint8"},
-		{type_index::type_id< std::int16_t >().pretty_name(), "uint16"},
-		{type_index::type_id< std::int64_t >().pretty_name(), "uint64"},
-		{type_index::type_id< std::int32_t >().pretty_name(), "uint32"}}};
+		{type_index::type_id< std::int8_t >().pretty_name(), "int8"},
+		{type_index::type_id< std::int16_t >().pretty_name(), "int16"},
+		{type_index::type_id< std::int64_t >().pretty_name(), "int64"},
+		{type_index::type_id< std::int32_t >().pretty_name(), "int32"}}};
 
 	inline std::optional< std::size_t > find_replace_index(
 		std::string_view source_text
@@ -36,7 +36,13 @@ namespace disposer{ namespace{
 		for(std::size_t i = 0; i < replace_table.size(); ++i){
 			auto const& from = replace_table[i].first;
 			if(source_text.size() < from.size()) continue;
-			if(from == source_text.substr(0, from.size())){
+			if(
+				from == source_text.substr(0, from.size()) &&
+				(
+					source_text.size() == from.size() ||
+					!is_name_char(source_text[from.size()])
+				)
+			){
 				return i;
 			}
 		}
@@ -72,11 +78,11 @@ namespace disposer{
 			}
 
 			std::string_view rest(&type[i], type.size() - i);
-			std::string abc(rest);
 			auto const index = find_replace_index(rest);
 
 			if(!index){
 				result += c;
+				test = false;
 				continue;
 			}
 

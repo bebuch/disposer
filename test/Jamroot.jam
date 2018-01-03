@@ -172,3 +172,11 @@ exe verify_value_fn
 	/disposer//disposer
 	/logsys//logsys
 	;
+
+
+exe ct_pretty_name
+	:
+	ct_pretty_name.cpp
+	/disposer//disposer
+	/logsys//logsys
+	;
