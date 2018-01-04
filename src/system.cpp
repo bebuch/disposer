@@ -134,7 +134,8 @@ namespace disposer{
 	}
 
 	void system::load_config(std::istream& content){
-		logsys::log([](logsys::stdlogb& os){ os << "config file loaded"; },
+		auto config = logsys::log(
+			[](logsys::stdlogb& os){ os << "config file loaded"; },
 			[this, &content]{
 				if(!load_config_file_valid_.exchange(false)){
 					throw std::logic_error(
@@ -153,7 +154,7 @@ namespace disposer{
 						os << "looked for unused stuff and warned about it";
 					}, [&config]{ unused_warnings(config); });
 
-				config_ = logsys::log(
+				return logsys::log(
 					[](logsys::stdlogb& os){ os << "created embedded config"; },
 					[&config]{
 						auto result = create_embedded_config(std::move(config));
@@ -163,8 +164,8 @@ namespace disposer{
 			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "components created"; },
-			[this]{
-				for(auto& config_component: config_.components){
+			[this, &config]{
+				for(auto& config_component: config.components){
 					logsys::log([&config_component](logsys::stdlogb& os){
 						os << "component(" << config_component.name << ":"
 							<< config_component.type_name << ") created";
@@ -183,10 +184,10 @@ namespace disposer{
 			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "chains created"; },
-			[this]{
+			[this, &config]{
 				std::tie(inactive_chains_, chains_, id_generators_) =
 					disposer::create_chains(directory_.module_maker_list_,
-						config_.chains);
+						config.chains);
 			});
 	}
 

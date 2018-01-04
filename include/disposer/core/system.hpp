@@ -94,10 +94,6 @@ namespace disposer{
 		std::atomic< bool > load_config_file_valid_ = true;
 
 
-		/// \brief Configuration data to create components and chains
-		types::embedded_config::config config_;
-
-
 		/// \brief Component and module generators
 		disposer::directory directory_;
 
