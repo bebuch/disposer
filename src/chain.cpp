@@ -30,6 +30,7 @@ namespace disposer{
 		, modules_(create_chain_modules(maker_list, config_chain))
 		, generate_id_(generate_id)
 		, enable_count_(0)
+		, locked_(false)
 		, exec_calls_count_(0) {}
 
 
@@ -272,7 +273,7 @@ namespace disposer{
 	void chain::enable(){
 		std::unique_lock< std::mutex > lock(enable_mutex_);
 
-		if(lock_count_ > 0){
+		if(locked_){
 			throw std::runtime_error("can not enable chain(" + name
 				+ ") while it is locked");
 		}
@@ -358,15 +359,17 @@ namespace disposer{
 			throw chain_not_lockable(name);
 		}
 
-		++lock_count_;
+		assert(!locked_);
+
+		locked_ = true;
 	}
 
 	void chain::unlock(){
 		std::unique_lock< std::mutex > lock(enable_mutex_);
 
-		assert(lock_count_ > 0);
+		assert(locked_);
 
-		--lock_count_;
+		locked_ = false;
 	}
 
 

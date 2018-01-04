@@ -93,9 +93,14 @@ namespace disposer{
 		/// \brief Forbid enable() calls until call of unlock()
 		///
 		/// \throw chain_not_lockable If chain is currently enabled
+		///
+		/// Any lock call must be followed by a unlock call, otherwise behavior
+		/// is undefined.
 		void lock();
 
 		/// \brief Undo lock() call
+		///
+		/// If chain wasn't locked, behavior is undefined.
 		void unlock();
 
 
@@ -122,7 +127,7 @@ namespace disposer{
 		std::atomic< std::size_t > enable_count_;
 
 		/// \brief Count of lock() calls minus count of unlock() calls
-		std::size_t lock_count_;
+		bool locked_;
 
 		/// \brief Count of running exec() calls
 		std::atomic< std::size_t > exec_calls_count_;
