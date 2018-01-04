@@ -200,8 +200,7 @@ namespace disposer{
 
 				auto success = true;
 				for(auto& exec: exec_list){
-					auto success_exec = exec.get();
-					success = success_exec && success;
+					success = exec.get() && success;
 				}
 
 				return success;
