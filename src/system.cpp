@@ -201,8 +201,7 @@ namespace disposer{
 	}
 
 
-
-	chain& system::get_chain(std::string const& chain){
+	enabled_chain system::enable_chain(std::string const& chain){
 		auto iter = chains_.find(chain);
 		if(iter != chains_.end()) return iter->second;
 		if(inactive_chains_.find(chain) != inactive_chains_.end()){

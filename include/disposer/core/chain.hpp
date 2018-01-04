@@ -115,25 +115,68 @@ namespace disposer{
 	};
 
 
+	/// \brief Thrown if chain pointer in enabled_chain is moved away
+	struct invalid_enabled_chain_error: std::logic_error{
+		invalid_enabled_chain_error()
+			: std::logic_error("invalid enabled_chain") {}
+	};
+
 	/// \brief A resource guard for chain enable/disable
-	class chain_enable_guard{
+	class enabled_chain{
 	public:
-		/// \brief Calls enable on the chain object
-		chain_enable_guard(chain& c)
-			: chain_(c)
-		{
-			chain_.enable();
+		/// \brief Move constructor
+		enabled_chain(enabled_chain&& o)noexcept
+			: chain_(o.chain_.exchange(nullptr)) {}
+
+		/// \brief Move assignment
+		enabled_chain& operator=(enabled_chain&& o)noexcept{
+			chain_ = o.chain_.exchange(nullptr);
+			return *this;
 		}
 
 		/// \brief Calls disable on the chain object
-		~chain_enable_guard(){
-			chain_.disable();
+		~enabled_chain(){
+			auto chain = chain_.exchange(nullptr);
+			if(chain) chain->disable();
+		}
+
+		/// \brief Exec chain
+		///
+		/// \throw invalid_enabled_chain_error if chain pointer is moved away
+		bool exec(){
+			auto chain = chain_.load();
+			if(chain){
+				return chain->exec();
+			}else{
+				throw invalid_enabled_chain_error();
+			}
+		}
+
+		/// \brief Get name of the chain
+		///
+		/// \throw invalid_enabled_chain_error if chain pointer is moved away
+		std::string name()const{
+			auto const chain = chain_.load();
+			if(chain){
+				return chain->name;
+			}else{
+				throw invalid_enabled_chain_error();
+			}
 		}
 
 
 	private:
+		/// \brief Calls enable on the chain object
+		enabled_chain(chain& c)
+			: chain_(&c)
+		{
+			c.enable();
+		}
+
 		/// \brief The chain object
-		chain& chain_;
+		std::atomic< chain* > chain_;
+
+	friend class system;
 	};
 
 

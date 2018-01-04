@@ -85,7 +85,7 @@ namespace disposer{
 
 
 		/// \brief Get a reference to the chain, throw if it does not exist
-		chain& get_chain(std::string const& chain);
+		enabled_chain enable_chain(std::string const& chain);
 
 
 	private:
