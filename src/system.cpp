@@ -110,7 +110,7 @@ namespace disposer{
 			auto& component = pair.second;
 			logsys::exception_catching_log(
 				[&name](logsys::stdlogb& os){
-					os << "shutdown component(" << name << ")";
+					os << "component(" << name << ") shutdown";
 				},
 				[&component]{ component->shutdown(); });
 		}
