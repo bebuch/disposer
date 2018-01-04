@@ -102,10 +102,8 @@ namespace disposer{
 		/// \brief Mutex for enable and disable
 		std::mutex enable_mutex_;
 
-		/// \brief true after successfull enable() call
-		///
-		/// Call disable() to set it to false.
-		std::atomic< bool > enabled_;
+		/// \brief Count of enable() calls minus count of disable() calls
+		std::atomic< std::size_t > enable_count_;
 
 		/// \brief Count of running exec() calls
 		std::atomic< std::size_t > exec_calls_count_;

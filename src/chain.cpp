@@ -29,7 +29,7 @@ namespace disposer{
 		: name(config_chain.name)
 		, modules_(create_chain_modules(maker_list, config_chain))
 		, generate_id_(generate_id)
-		, enabled_(false)
+		, enable_count_(0)
 		, exec_calls_count_(0) {}
 
 
@@ -245,7 +245,7 @@ namespace disposer{
 
 
 	bool chain::exec(){
-		if(!enabled_){
+		if(enable_count_ == 0){
 			throw std::logic_error("chain(" + name + ") is not enabled");
 		}
 
@@ -271,77 +271,78 @@ namespace disposer{
 
 
 	void chain::enable(){
-		// TODO: Prevent enable while disable is waiting on exec's
 		std::unique_lock< std::mutex > lock(enable_mutex_);
-		if(enabled_) return;
 
-		logsys::log(
-			[this](logsys::stdlogb& os){
-				os << "chain(" << name << ") enabled";
-			},
-			[this]{
-				std::size_t i = 0;
-				try{
-					// enable all modules
-					for(; i < modules_.modules.size(); ++i){
-						auto& module = modules_.modules[i].module;
-						logsys::log([this, &module](logsys::stdlogb& os){
-								os << "chain(" << name << ") module("
-									<< module->number << ":"
-									<< module->type_name
-									<< ") enabled";
-							}, [&module]{
-								module->enable();
-							});
+		if(enable_count_ == 0){
+			logsys::log(
+				[this](logsys::stdlogb& os){
+					os << "chain(" << name << ") enabled";
+				},
+				[this]{
+					std::size_t i = 0;
+					try{
+						// enable all modules
+						for(; i < modules_.modules.size(); ++i){
+							auto& module = modules_.modules[i].module;
+							logsys::log([this, &module](logsys::stdlogb& os){
+									os << "chain(" << name << ") module("
+										<< module->number << ":"
+										<< module->type_name
+										<< ") enabled";
+								}, [&module]{
+									module->enable();
+								});
+						}
+					}catch(...){
+						// disable all modules until the one who throw
+						for(std::size_t j = 0; j < i; ++j){
+							auto& module = modules_.modules[j].module;
+							logsys::log([this, i, &module](logsys::stdlogb& os){
+									os << "chain(" << name << ") module("
+										<< module->number
+										<< ") disabled because of exception "
+										<< "while enable module("
+										<< modules_.modules[i].module->number
+										<< ")";
+								}, [&module]{
+									module->disable();
+								});
+						}
+
+						// rethrow exception
+						throw;
 					}
-				}catch(...){
-					// disable all modules until the one who throw
-					for(std::size_t j = 0; j < i; ++j){
-						auto& module = modules_.modules[j].module;
-						logsys::log([this, i, &module](logsys::stdlogb& os){
-								os << "chain(" << name << ") module("
-									<< module->number
-									<< ") disabled because of exception while "
-									<< "enable module("
-									<< modules_.modules[i].module->number
-									<< ")";
-							}, [&module]{
-								module->disable();
-							});
-					}
+				});
+		}
 
-					// rethrow exception
-					throw;
-				}
-			});
-
-		enabled_ = true;
+		++enable_count_;
 	}
 
 
 	void chain::disable()noexcept{
 		std::unique_lock< std::mutex > lock(enable_mutex_);
-		if(!enabled_.exchange(false)) return;
 
-		enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
+		if(--enable_count_ == 0){
+			enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
 
-		logsys::log(
-			[this](logsys::stdlogb& os){
-				os << "chain(" << name << ") disabled";
-			},
-			[this]{
-				// disable all modules
-				for(std::size_t i = 0; i < modules_.modules.size(); ++i){
-					auto& module = modules_.modules[i].module;
-					logsys::log([this, &module](logsys::stdlogb& os){
-							os << "chain(" << name << ") module("
-								<< module->number << ":"
-								<< module->type_name << ") disabled";
-						}, [&module]{
-							module->disable();
-						});
-				}
-			});
+			logsys::log(
+				[this](logsys::stdlogb& os){
+					os << "chain(" << name << ") disabled";
+				},
+				[this]{
+					// disable all modules
+					for(std::size_t i = 0; i < modules_.modules.size(); ++i){
+						auto& module = modules_.modules[i].module;
+						logsys::log([this, &module](logsys::stdlogb& os){
+								os << "chain(" << name << ") module("
+									<< module->number << ":"
+									<< module->type_name << ") disabled";
+							}, [&module]{
+								module->disable();
+							});
+					}
+				});
+		}
 	}
 
 
