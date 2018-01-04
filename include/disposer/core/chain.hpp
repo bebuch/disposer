@@ -220,6 +220,16 @@ namespace disposer{
 			if(chain) chain->unlock();
 		}
 
+
+		/// \brief Don't unlock the chain
+		///
+		/// This is called if you wan't to destruct the chain object.
+		void release(){
+			auto chain = chain_.exchange(nullptr);
+			assert(chain != nullptr);
+		}
+
+
 	private:
 		/// \brief Calls lock on the chain object
 		locked_chain(chain& c)
