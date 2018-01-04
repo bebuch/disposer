@@ -21,6 +21,13 @@
 namespace disposer{
 
 
+	struct chain_not_lockable: std::runtime_error{
+		chain_not_lockable(std::string const& chain_name)
+			: std::runtime_error("chain(" + chain_name
+				+ ") is enabled, can't lock") {}
+	};
+
+
 	/// \brief A process chain
 	///
 	/// Properties:
@@ -83,6 +90,15 @@ namespace disposer{
 		void disable()noexcept;
 
 
+		/// \brief Forbid enable() calls until call of unlock()
+		///
+		/// \throw chain_not_lockable If chain is currently enabled
+		void lock();
+
+		/// \brief Undo lock() call
+		void unlock();
+
+
 		/// \brief Name of the chain
 		std::string const name;
 
@@ -104,6 +120,9 @@ namespace disposer{
 
 		/// \brief Count of enable() calls minus count of disable() calls
 		std::atomic< std::size_t > enable_count_;
+
+		/// \brief Count of lock() calls minus count of unlock() calls
+		std::size_t lock_count_;
 
 		/// \brief Count of running exec() calls
 		std::atomic< std::size_t > exec_calls_count_;
@@ -169,6 +188,39 @@ namespace disposer{
 			: chain_(&c)
 		{
 			c.enable();
+		}
+
+		/// \brief The chain object
+		std::atomic< chain* > chain_;
+
+	friend class system;
+	};
+
+	/// \brief A resource guard for chain lock/unlock
+	class locked_chain{
+	public:
+		/// \brief Move constructor
+		locked_chain(locked_chain&& o)noexcept
+			: chain_(o.chain_.exchange(nullptr)) {}
+
+		/// \brief Move assignment
+		locked_chain& operator=(locked_chain&& o)noexcept{
+			chain_ = o.chain_.exchange(nullptr);
+			return *this;
+		}
+
+		/// \brief Calls disable on the chain object
+		~locked_chain(){
+			auto chain = chain_.exchange(nullptr);
+			if(chain) chain->unlock();
+		}
+
+	private:
+		/// \brief Calls lock on the chain object
+		locked_chain(chain& c)
+			: chain_(&c)
+		{
+			c.lock();
 		}
 
 		/// \brief The chain object

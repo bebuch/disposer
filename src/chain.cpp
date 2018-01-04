@@ -272,6 +272,11 @@ namespace disposer{
 	void chain::enable(){
 		std::unique_lock< std::mutex > lock(enable_mutex_);
 
+		if(lock_count_ > 0){
+			throw std::runtime_error("can not enable chain(" + name
+				+ ") while it is locked");
+		}
+
 		if(enable_count_ == 0){
 			logsys::log(
 				[this](logsys::stdlogb& os){
@@ -317,9 +322,10 @@ namespace disposer{
 		++enable_count_;
 	}
 
-
 	void chain::disable()noexcept{
 		std::unique_lock< std::mutex > lock(enable_mutex_);
+
+		assert(enable_count_ > 0);
 
 		if(--enable_count_ == 0){
 			enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
@@ -342,6 +348,25 @@ namespace disposer{
 					}
 				});
 		}
+	}
+
+
+	void chain::lock(){
+		std::unique_lock< std::mutex > lock(enable_mutex_);
+
+		if(enable_count_ > 0){
+			throw chain_not_lockable(name);
+		}
+
+		++lock_count_;
+	}
+
+	void chain::unlock(){
+		std::unique_lock< std::mutex > lock(enable_mutex_);
+
+		assert(lock_count_ > 0);
+
+		--lock_count_;
 	}
 
 
