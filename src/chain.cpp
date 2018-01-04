@@ -35,7 +35,7 @@ namespace disposer{
 
 
 	chain::~chain(){
-		disable();
+		assert(enable_count_ == 0);
 	}
 
 
