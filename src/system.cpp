@@ -12,7 +12,7 @@
 
 #include <disposer/config/component_make_data.hpp>
 #include <disposer/config/check_semantic.hpp>
-#include <disposer/config/unused_warnings.hpp>
+#include <disposer/config/unused_parameter_set_warning.hpp>
 #include <disposer/config/set_output_use_count.hpp>
 
 #include <logsys/stdlogb.hpp>
@@ -152,7 +152,7 @@ namespace disposer{
 
 				logsys::log([](logsys::stdlogb& os){
 						os << "looked for unused stuff and warned about it";
-					}, [&config]{ unused_warnings(config); });
+					}, [&config]{ unused_parameter_set_warning(config); });
 
 				return logsys::log(
 					[](logsys::stdlogb& os){ os << "created embedded config"; },

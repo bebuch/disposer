@@ -6,7 +6,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#include <disposer/config/unused_warnings.hpp>
+#include <disposer/config/unused_parameter_set_warning.hpp>
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -17,7 +17,7 @@
 namespace disposer{
 
 
-	void unused_warnings(types::parse::config const& config){
+	void unused_parameter_set_warning(types::parse::config const& config){
 		std::map< std::string, bool > parameter_sets;
 		for(auto const& set: config.sets){
 			parameter_sets.emplace(set.name, false);
