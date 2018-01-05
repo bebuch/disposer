@@ -134,10 +134,12 @@ namespace disposer{
 	}
 
 	void system::load_config(std::istream& content){
+		std::lock_guard lock(change_mutex_);
+
 		auto config = logsys::log(
 			[](logsys::stdlogb& os){ os << "config file loaded"; },
 			[this, &content]{
-				if(!load_config_file_valid_.exchange(false)){
+				if(!load_config_file_valid_){
 					throw std::logic_error(
 						"system::load_config is called multiple times");
 				}
@@ -189,21 +191,31 @@ namespace disposer{
 					disposer::create_chains(directory_.module_maker_list_,
 						config.chains);
 			});
+
+		load_config_file_valid_ = false;
 	}
 
 	void system::remove_component(std::string const& name){
+		std::lock_guard lock(change_mutex_);
+
 		load_config_file_valid_ = false;
 	}
 
 	void system::load_component(std::istream& content){
+		std::lock_guard lock(change_mutex_);
+
 		load_config_file_valid_ = false;
 	}
 
 	void system::remove_chain(std::string const& name){
+		std::lock_guard lock(change_mutex_);
+
 		load_config_file_valid_ = false;
 	}
 
 	void system::load_chain(std::istream& content){
+		std::lock_guard lock(change_mutex_);
+
 		load_config_file_valid_ = false;
 	}
 

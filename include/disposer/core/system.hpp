@@ -89,9 +89,12 @@ namespace disposer{
 
 
 	private:
+		/// \brief Mutex for load and remove operations
+		std::mutex change_mutex_;
+
 		/// \brief true after construction, false after the first call of
-		///        \ref load_config_file()
-		std::atomic< bool > load_config_file_valid_ = true;
+		///        a load or remove function
+		bool load_config_file_valid_ = true;
 
 
 		/// \brief Component and module generators
