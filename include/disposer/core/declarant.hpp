@@ -32,20 +32,32 @@ namespace disposer{
 		declarant(declarant&&) = delete;
 
 
-		/// \brief Register a new module in the directory by mapping the
-		///        module name to the constructing init and help function
-		void operator()(std::string const& type_name, module_maker_fn&& fn);
+		/// \brief Register a new standalone module
+		///
+		/// This is done by mapping the module type name to the constructing
+		/// init and help function.
+		void operator()(
+			std::string const& type_name,
+			module_maker_fn&& fn,
+			std::string&& help_text);
 
-		/// \brief Register a new component in the directory by mapping the
-		///        component name to the constructing init and help function
-		void operator()(std::string const& type_name, component_maker_fn&& fn);
+		/// \brief Register a new component module
+		///
+		/// This is done by mapping the component name to a map from the module
+		/// type name to the constructing init function.
+		void operator()(
+			std::string const& component_name,
+			std::string const& module_type_name,
+			module_maker_fn&& fn);
 
-		/// \brief Register the help text of a new module in the directory
-		void module_help(std::string const& type_name, std::string&& text);
-
-		/// \brief Register the help text of a new component in the directory
-		void component_help(std::string const& type_name, std::string&& text);
-
+		/// \brief Register a new component
+		///
+		/// This is done by mapping the component type name to the constructing
+		/// init and help function.
+		void operator()(
+			std::string const& type_name,
+			component_maker_fn&& fn,
+			std::string&& text);
 
 
 	private:

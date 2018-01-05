@@ -25,13 +25,13 @@ namespace disposer{ namespace{
 
 
 	component_ptr create_component(
-		component_maker_list const& maker_list,
+		component_maker_list const& module_makers,
 		component_make_data const& data,
 		system& system
 	){
-		auto iter = maker_list.find(data.type_name);
+		auto iter = module_makers.find(data.type_name);
 
-		if(iter == maker_list.end()){
+		if(iter == module_makers.end()){
 			throw std::logic_error(
 				data.location() + "component type(" + data.type_name
 				+ ") is unknown!");
@@ -46,7 +46,8 @@ namespace disposer{ namespace{
 
 
 	auto create_chains(
-		module_maker_list const& maker_list,
+		module_maker_list const& module_makers,
+		component_module_makers_list& component_module_makers,
 		types::embedded_config::chains_config const& config
 	){
 		std::unordered_set< std::string > inactive_chains;
@@ -60,11 +61,14 @@ namespace disposer{ namespace{
 					if(!active || *active) return;
 					os << " and deactivated because it refers to at least one "
 						"unknown component module (WARNING)";
-				}, [&config_chain, &maker_list]{
+				}, [&config_chain, &component_module_makers]{
 					for(auto const& module: config_chain.modules){
 						auto const& name = module.type_name;
-						if(name.find("//") == std::string::npos) continue;
-						if(maker_list.find(name) != maker_list.end()) continue;
+						auto const pos = name.find("//");
+						if(pos == std::string::npos) continue;
+						auto const component_name = name.substr(0, pos);
+						if(component_module_makers.find(component_name)
+							!= component_module_makers.end()) continue;
 						return false;
 					}
 
@@ -82,7 +86,8 @@ namespace disposer{ namespace{
 				// emplace the new process chain
 				chains.try_emplace(
 					config_chain.name,
-					maker_list,
+					module_makers,
+					component_module_makers,
 					config_chain,
 					id_generators[config_chain.id_generator]
 				);
@@ -175,11 +180,14 @@ namespace disposer{
 						// emplace the new process chain
 						components_.emplace(
 							config_component.name,
-							create_component(directory_.component_maker_list_, {
+							create_component(
+								directory_.component_maker_list_,
+								{
 									config_component.name,
 									config_component.type_name,
 									config_component.parameters
-								}, *this)
+								},
+								*this)
 						);
 					});
 				}
@@ -188,7 +196,9 @@ namespace disposer{
 		logsys::log([](logsys::stdlogb& os){ os << "chains created"; },
 			[this, &config]{
 				std::tie(inactive_chains_, chains_, id_generators_) =
-					disposer::create_chains(directory_.module_maker_list_,
+					disposer::create_chains(
+						directory_.module_maker_list_,
+						directory_.component_module_maker_list_,
 						config.chains);
 			});
 

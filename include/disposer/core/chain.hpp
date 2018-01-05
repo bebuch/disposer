@@ -41,7 +41,8 @@ namespace disposer{
 		/// \param config_chain configuration data from config file
 		/// \param generate_id Reference to a id_generator
 		chain(
-			module_maker_list const& maker_list,
+			module_maker_list const& module_makers,
+			component_module_makers_list& component_module_makers,
 			types::embedded_config::chain const& config_chain,
 			id_generator& generate_id
 		);

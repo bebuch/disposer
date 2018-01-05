@@ -171,9 +171,7 @@ namespace disposer{
 			add(module_type, [maker = maker_]
 				(module_make_data const& data){
 					return maker(data);
-				});
-
-			add.module_help(module_type, maker_.help_text_fn(module_type));
+				}, maker_.help_text_fn(module_type));
 		}
 
 
@@ -185,7 +183,7 @@ namespace disposer{
 			declarant& add,
 			Component& component
 		)const{
-			add(module_type, [maker = maker_, &component]
+			add(component.name, module_type, [maker = maker_, &component]
 				(module_make_data const& data){
 					return maker(data, component);
 				});

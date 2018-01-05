@@ -32,27 +32,55 @@ namespace disposer{ namespace{
 	using variables_map = std::map< std::string, output_t >;
 
 	module_ptr create_module(
-		module_maker_list const& maker_list,
+		module_maker_list const& module_makers,
+		component_module_makers_list& component_module_makers,
 		module_make_data const& data
 	){
-		auto iter = maker_list.find(data.type_name);
+		auto const pos = data.type_name.find("//");
+		if(pos == std::string::npos){
+			auto iter = module_makers.find(data.type_name);
 
-		if(iter == maker_list.end()){
-			throw std::logic_error(
-				data.location() + "module type(" + data.type_name
-				+ ") is unknown!"
-			);
-		}
+			if(iter == module_makers.end()){
+				throw std::logic_error(
+					data.location() + "module type(" + data.type_name
+					+ ") is unknown!"
+				);
+			}
 
-		try{
-			return iter->second(data);
-		}catch(std::exception const& error){
-			throw std::runtime_error(
-				data.location() + error.what()
-			);
+			try{
+				return iter->second(data);
+			}catch(std::exception const& error){
+				throw std::runtime_error(
+					data.location() + error.what()
+				);
+			}
+		}else{
+			auto const component_name = data.type_name.substr(0, pos);
+			auto const module_type_name = data.type_name.substr(pos + 2);
+
+			auto& modules = component_module_makers.at(component_name);
+			auto const iter = modules.find(module_type_name);
+			if(iter == modules.end()){
+				throw std::logic_error(
+					data.location() + "component module type(" + data.type_name
+					+ ") is unknown!"
+				);
+			}
+
+			auto& module = iter->second;
+			try{
+				auto ptr = module.fn(data);
+				// BUG; TODO: return value must be a proxy which manages the
+				//            coutner, manuel control is error prone
+				++module.used_count;
+				return ptr;
+			}catch(std::exception const& error){
+				throw std::runtime_error(
+					data.location() + error.what()
+				);
+			}
 		}
 	}
-
 
 } }
 
@@ -61,7 +89,8 @@ namespace disposer{
 
 
 	chain_module_list create_chain_modules(
-		module_maker_list const& maker_list,
+		module_maker_list const& module_makers,
+		component_module_makers_list& component_module_makers,
 		types::embedded_config::chain const& config_chain
 	){
 		variables_map variables;
@@ -119,14 +148,17 @@ namespace disposer{
 
 				// create module (in a unique_ptr)
 				result.modules.push_back(
-					chain_module_data{create_module(maker_list, {
-						config_module.type_name,
-						config_chain.name,
-						i + 1,
-						std::move(config_inputs),
-						std::move(config_outputs),
-						config_module.parameters
-					}), config_module.inputs.size(), {}});
+					chain_module_data{create_module(
+						module_makers,
+						component_module_makers,
+						{
+							config_module.type_name,
+							config_chain.name,
+							i + 1,
+							std::move(config_inputs),
+							std::move(config_outputs),
+							config_module.parameters
+						}), config_module.inputs.size(), {}});
 
 				// get a reference to the new module
 				auto& module = *result.modules.back().module;

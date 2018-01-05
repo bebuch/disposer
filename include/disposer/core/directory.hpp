@@ -78,9 +78,12 @@ namespace disposer{
 		std::map< std::string, std::string > module_help_list_;
 
 
-		/// \brief List of components (map from component type name to maker
-		///        function)
+		/// \brief List of components
+		///        (map from component type name to maker function)
 		component_maker_list component_maker_list_;
+
+		/// \brief Map from component names to its module maker lists
+		component_module_makers_list component_module_maker_list_;
 
 		/// \brief List of modules (map from module type name to maker function)
 		module_maker_list module_maker_list_;

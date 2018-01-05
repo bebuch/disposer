@@ -90,10 +90,7 @@ namespace disposer{
 			add(component_type, [maker = maker_]
 				(component_make_data const& data, system& system){
 					return maker(data, system);
-				});
-
-			add.component_help(
-				component_type, maker_.help_text_fn(component_type));
+				}, maker_.help_text_fn(component_type));
 		}
 
 

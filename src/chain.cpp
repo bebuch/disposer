@@ -22,12 +22,14 @@ namespace disposer{
 
 
 	chain::chain(
-		module_maker_list const& maker_list,
+		module_maker_list const& module_makers,
+		component_module_makers_list& component_module_makers,
 		types::embedded_config::chain const& config_chain,
 		id_generator& generate_id
 	)
 		: name(config_chain.name)
-		, modules_(create_chain_modules(maker_list, config_chain))
+		, modules_(create_chain_modules(
+			module_makers, component_module_makers, config_chain))
 		, generate_id_(generate_id)
 		, enable_count_(0)
 		, locked_(false)
