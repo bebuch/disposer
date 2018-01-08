@@ -50,7 +50,8 @@ namespace disposer{
 			, accessory(type_list< Ts ... >{},
 				state_, data_.parameters, system, location)
 			, data_(std::move(ref_list))
-			, state_(component_fn(accessory_type(data_, system, location))) {}
+			, state_(component_fn(accessory_type(
+				data_, this->name, system, location))) {}
 
 
 		/// \brief Components are not copyable
