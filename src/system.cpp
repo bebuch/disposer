@@ -109,15 +109,13 @@ namespace disposer{
 
 
 	system::~system(){
-		// TODO: use structured bindungs as soon as clang fixed BUG 34749
-		for(auto& pair: components_){
-			auto& name = pair.first;
-			auto& component = pair.second;
+		for(auto& [name, component]: components_){
 			logsys::exception_catching_log(
-				[&name](logsys::stdlogb& os){
+				// TODO: clang BUG 34749
+				[&name = name](logsys::stdlogb& os){
 					os << "component(" << name << ") shutdown";
 				},
-				[&component]{ component->shutdown(); });
+				[&component = component]{ component->shutdown(); });
 		}
 	}
 
