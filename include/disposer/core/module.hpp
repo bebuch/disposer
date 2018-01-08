@@ -116,7 +116,17 @@ namespace disposer{
 			: module_base(chain, type_name, number)
 			, data_(std::move(ref_list))
 			, state_(module_init_fn, component)
-			, exec_fn_(exec_fn) {}
+			, exec_fn_(exec_fn) {
+				if constexpr(!std::is_void_v< Component >){
+					++state_.component.usage_count;
+				}
+			}
+
+		~module(){
+			if constexpr(!std::is_void_v< Component >){
+				--state_.component.usage_count;
+			}
+		}
 
 
 		/// \brief Calls the exec_fn

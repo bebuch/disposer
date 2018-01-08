@@ -69,11 +69,7 @@ namespace disposer{ namespace{
 
 			auto& module = iter->second;
 			try{
-				auto ptr = module.fn(data);
-				// BUG; TODO: return value must be a proxy which manages the
-				//            coutner, manuel control is error prone
-				++module.used_count;
-				return ptr;
+				return module.fn(data, module.usage_count);
 			}catch(std::exception const& error){
 				throw std::runtime_error(
 					data.location() + error.what()

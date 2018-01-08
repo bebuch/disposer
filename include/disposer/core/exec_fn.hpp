@@ -23,13 +23,19 @@ namespace disposer{
 	/// \brief Reference to a component or empty struct
 	template < typename Component >
 	struct optional_component{
-		constexpr optional_component(Component& component)noexcept
-			: component(component) {}
+		constexpr optional_component(
+			Component& component,
+			std::size_t& usage_count
+		)noexcept
+			: component(component)
+			, usage_count(usage_count) {}
 
 		constexpr optional_component(optional_component const& other)noexcept
-			: component(other.component) {}
+			: component(other.component)
+			, usage_count(other.usage_count) {}
 
 		Component& component;
+		std::size_t& usage_count;
 	};
 
 	/// \brief Empty struct

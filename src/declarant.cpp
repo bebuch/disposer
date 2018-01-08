@@ -47,7 +47,7 @@ namespace disposer{
 	void declarant::operator()(
 		std::string const& component_name,
 		std::string const& module_type_name,
-		module_maker_fn&& fn
+		component_module_maker_fn&& fn
 	){
 		logsys::log([&component_name](logsys::stdlogb& os){
 			os << "add component name '" << component_name << "'";

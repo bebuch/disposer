@@ -41,11 +41,18 @@ namespace disposer{
 		std::unordered_map< std::string, module_maker_fn >;
 
 
-	struct component_module_maker_entry{
-		component_module_maker_entry(module_maker_fn&& fn): fn(std::move(fn)) {}
+	/// \brief A init function which constructs a module
+	using component_module_maker_fn =
+		std::function< module_ptr(
+			module_make_data const&,
+			std::size_t& usage_count) >;
 
-		module_maker_fn fn;
-		std::size_t used_count = 0;
+	struct component_module_maker_entry{
+		component_module_maker_entry(component_module_maker_fn&& fn)
+			: fn(std::move(fn)) {}
+
+		component_module_maker_fn fn;
+		std::size_t usage_count = 0;
 	};
 
 	using component_module_maker_list =

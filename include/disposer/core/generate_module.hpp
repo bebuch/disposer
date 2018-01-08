@@ -184,8 +184,8 @@ namespace disposer{
 			Component& component
 		)const{
 			add(component.name, module_type, [maker = maker_, &component]
-				(module_make_data const& data){
-					return maker(data, component);
+				(module_make_data const& data, std::size_t& usage_count){
+					return maker(data, component, usage_count);
 				});
 		}
 

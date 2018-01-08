@@ -600,13 +600,14 @@ namespace disposer{
 		template < typename Component >
 		std::unique_ptr< module_base > operator()(
 			module_make_data const& data,
-			Component& component
+			Component& component,
+			std::size_t& usage_count
 		)const{
 			validate_iops(configuration, data);
 
 			return make_module_ptr(dimensions, configuration, data,
 				module_init, exec, hana::bool_c< CanRunConcurrent >,
-				optional_component{component});
+				optional_component{component, usage_count});
 		}
 	};
 

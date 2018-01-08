@@ -48,7 +48,7 @@ namespace disposer{
 		void operator()(
 			std::string const& component_name,
 			std::string const& module_type_name,
-			module_maker_fn&& fn);
+			component_module_maker_fn&& fn);
 
 		/// \brief Register a new component
 		///
