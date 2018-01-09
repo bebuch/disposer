@@ -27,16 +27,15 @@ namespace disposer{ namespace{
 	}
 
 
-	auto embedded_config_parameters(
-		param_sets_map const& sets,
-		types::parse::parameters&& params
+	parameter_list embedded_config_parameters(
+		std::vector< types::parse::parameter >&& params
 	){
 		using boost::adaptors::reverse;
 
 		parameter_list parameters;
 
 		// add all parameters from module
-		for(auto& parameter: reverse(params.parameters)){
+		for(auto& parameter: reverse(params)){
 			std::map< std::string, std::string, std::less<> >
 				specialized_values;
 			for(auto& specialization: parameter.specialized_values){
@@ -53,6 +52,19 @@ namespace disposer{ namespace{
 				}
 			);
 		}
+
+		return parameters;
+	}
+
+
+	parameter_list embedded_config_parameters(
+		param_sets_map const& sets,
+		types::parse::parameters&& params
+	){
+		using boost::adaptors::reverse;
+
+		parameter_list parameters =
+			embedded_config_parameters(std::move(params.parameters));
 
 		// add all parameters from the last to the first parameter set
 		// (skip already existing ones)
@@ -87,7 +99,7 @@ namespace disposer{ namespace{
 	}
 
 
-	auto embedded_config_components(
+	types::embedded_config::components_config embedded_config_components(
 		param_sets_map const& sets,
 		types::parse::components&& components
 	){
@@ -103,7 +115,7 @@ namespace disposer{ namespace{
 		return result;
 	}
 
-	auto embedded_config_chains(
+	types::embedded_config::chains_config embedded_config_chains(
 		param_sets_map const& sets,
 		types::parse::chains&& chains
 	){
@@ -184,14 +196,25 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
+	types::embedded_config::component create_embedded_config(
+		types::parse::component&& component
+	){
+		return {
+				std::move(component.name),
+				std::move(component.type_name),
+				embedded_config_parameters(
+					std::move(component.parameters.parameters))
+			};
+	}
+
 	types::embedded_config::config create_embedded_config(
 		types::parse::config&& config
 	){
 		auto sets = map_name_to_set(config.sets);
 		return {
-			embedded_config_components(sets, std::move(config.components)),
-			embedded_config_chains(sets, std::move(config.chains))
-		};
+				embedded_config_components(sets, std::move(config.components)),
+				embedded_config_chains(sets, std::move(config.chains))
+			};
 	}
 
 

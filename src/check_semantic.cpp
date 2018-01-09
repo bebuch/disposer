@@ -85,15 +85,11 @@ namespace disposer{ namespace{
 	};
 
 
-}}
-
-
-namespace disposer{
-
-
-	void check_semantic(types::parse::config const& config){
+	std::unordered_set< std::string > check_semantic(
+		types::parse::parameter_sets const& config
+	){
 		std::unordered_set< std::string > known_sets;
-		for(auto& set: config.sets){
+		for(auto& set: config){
 			if(!known_sets.insert(set.name).second){
 				throw std::logic_error(
 					"in parameter_set list: duplicate name '" + set.name + "'"
@@ -111,8 +107,15 @@ namespace disposer{
 			}
 		}
 
+		return known_sets;
+	}
+
+	void check_semantic(
+		types::parse::components const& config,
+		std::unordered_set< std::string > const& known_sets
+	){
 		std::unordered_set< std::string > components;
-		for(auto& component: config.components){
+		for(auto& component: config){
 			if(!components.insert(component.name).second){
 				throw std::logic_error(
 					"in component list: duplicate name '" + component.name + "'"
@@ -128,9 +131,14 @@ namespace disposer{
 				component.parameters.parameter_sets);
 			check_params(location, component.parameters.parameters);
 		}
+	}
 
+	void check_semantic(
+		types::parse::chains const& config,
+		std::unordered_set< std::string > const& known_sets
+	){
 		std::unordered_set< std::string > chains;
-		for(auto& chain: config.chains){
+		for(auto& chain: config){
 			if(!chains.insert(chain.name).second){
 				throw std::logic_error(
 					"in chain list: duplicate name '" + chain.name + "'"
@@ -218,6 +226,33 @@ namespace disposer{
 				throw std::logic_error(os.str());
 			}
 		}
+	}
+
+
+}}
+
+
+namespace disposer{
+
+
+	void check_semantic(types::parse::component const& component){
+		auto location = [&component]{
+			return "in component(" + component.name + ") of type("
+				+ component.type_name + "): ";
+		};
+
+		if(component.parameters.parameter_sets.size() > 0){
+			std::logic_error(location() + "when creating a single component, "
+				"the parsed config must not refer to any parameter_set's");
+		}
+
+		check_params(location, component.parameters.parameters);
+	}
+
+	void check_semantic(types::parse::config const& config){
+		auto const known_sets = check_semantic(config.sets);
+		check_semantic(config.components, known_sets);
+		check_semantic(config.chains, known_sets);
 	}
 
 

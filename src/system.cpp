@@ -137,7 +137,7 @@ namespace disposer{
 	}
 
 	void system::load_config(std::istream& content){
-		std::lock_guard lock(change_mutex_);
+		std::lock_guard lock(mutex_);
 
 		auto config = logsys::log(
 			[](logsys::stdlogb& os){ os << "config file loaded"; },
@@ -185,8 +185,7 @@ namespace disposer{
 									config_component.type_name,
 									config_component.parameters
 								},
-								*this)
-						);
+								*this));
 					});
 				}
 			});
@@ -204,31 +203,55 @@ namespace disposer{
 	}
 
 	void system::remove_component(std::string const& name){
-		std::lock_guard lock(change_mutex_);
+		std::lock_guard lock(mutex_);
 
 		load_config_file_valid_ = false;
 	}
 
 	void system::load_component(std::istream& content){
-		std::lock_guard lock(change_mutex_);
+		std::lock_guard lock(mutex_);
+
+		auto config = parse_component(content);
+
+		if(components_.find(config.name) != components_.end()){
+			throw std::logic_error("a component(" + config.name
+				+ ") already exists");
+		}
+
+		check_semantic(config);
+
+		auto embedded_config = create_embedded_config(std::move(config));
+
+		components_.emplace(
+			embedded_config.name,
+			create_component(
+				directory_.component_maker_list_,
+				{
+					embedded_config.name,
+					embedded_config.type_name,
+					embedded_config.parameters
+				},
+				*this));
 
 		load_config_file_valid_ = false;
 	}
 
 	void system::remove_chain(std::string const& name){
-		std::lock_guard lock(change_mutex_);
+		std::lock_guard lock(mutex_);
 
 		load_config_file_valid_ = false;
 	}
 
 	void system::load_chain(std::istream& content){
-		std::lock_guard lock(change_mutex_);
+		std::lock_guard lock(mutex_);
 
 		load_config_file_valid_ = false;
 	}
 
 
 	enabled_chain system::enable_chain(std::string const& chain){
+		std::lock_guard lock(mutex_);
+
 		auto iter = chains_.find(chain);
 		if(iter != chains_.end()) return iter->second;
 		if(inactive_chains_.find(chain) != inactive_chains_.end()){
@@ -239,6 +262,8 @@ namespace disposer{
 	}
 
 	std::unordered_set< std::string > system::chains()const{
+		std::lock_guard lock(mutex_);
+
 		std::unordered_set< std::string > result;
 		for(auto& chain: chains_) result.emplace(chain.first);
 		return result;

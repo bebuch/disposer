@@ -89,8 +89,8 @@ namespace disposer{
 
 
 	private:
-		/// \brief Mutex for load and remove operations
-		std::mutex change_mutex_;
+		/// \brief Mutex
+		mutable std::mutex mutex_;
 
 		/// \brief true after construction, false after the first call of
 		///        a load or remove function

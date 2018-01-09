@@ -80,6 +80,10 @@ namespace disposer{
 	}
 
 
+	types::embedded_config::component create_embedded_config(
+		types::parse::component&& config
+	);
+
 	types::embedded_config::config create_embedded_config(
 		types::parse::config&& config
 	);
