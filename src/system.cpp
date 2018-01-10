@@ -243,6 +243,15 @@ namespace disposer{
 	void system::remove_chain(std::string const& name){
 		std::lock_guard lock(mutex_);
 
+		auto const iter = chains_.find(name);
+		if(iter == chains_.end()){
+			throw std::logic_error("chain(" + name + ") doesn't exist");
+		}
+
+		locked_chain chain_lock(iter->second);
+		chains_.erase(iter);
+		chain_lock.release();
+
 		load_config_file_valid_ = false;
 	}
 
