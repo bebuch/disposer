@@ -18,6 +18,9 @@ namespace disposer{
 	/// \brief Set output use_count to the count of connected inputs
 	void set_output_use_count(types::embedded_config::config& config);
 
+	/// \brief Set output use_count to the count of connected inputs
+	void set_output_use_count(types::embedded_config::chain& config);
+
 
 }
 

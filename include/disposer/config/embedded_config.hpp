@@ -84,6 +84,10 @@ namespace disposer{
 		types::parse::component&& config
 	);
 
+	types::embedded_config::chain create_embedded_config(
+		types::parse::chain&& config
+	);
+
 	types::embedded_config::config create_embedded_config(
 		types::parse::config&& config
 	);

@@ -57,23 +57,23 @@ namespace disposer{ namespace{
 		for(auto& config_chain: config){
 			bool const chain_is_active = logsys::log(
 				[&config_chain](logsys::stdlogb& os, bool const* active){
-					os << "chain(" << config_chain.name << ") analysed";
-					if(!active || *active) return;
-					os << " and deactivated because it refers to at least one "
-						"unknown component module (WARNING)";
-				}, [&config_chain, &component_module_makers]{
-					for(auto const& module: config_chain.modules){
-						auto const& name = module.type_name;
-						auto const pos = name.find("//");
-						if(pos == std::string::npos) continue;
-						auto const component_name = name.substr(0, pos);
-						if(component_module_makers.find(component_name)
-							!= component_module_makers.end()) continue;
-						return false;
-					}
+						os << "chain(" << config_chain.name << ") analysed";
+						if(!active || *active) return;
+						os << " and deactivated because it refers to at least "
+							"one unknown component module (WARNING)";
+					}, [&config_chain, &component_module_makers]{
+						for(auto const& module: config_chain.modules){
+							auto const& name = module.type_name;
+							auto const pos = name.find("//");
+							if(pos == std::string::npos) continue;
+							auto const component_name = name.substr(0, pos);
+							if(component_module_makers.find(component_name)
+								!= component_module_makers.end()) continue;
+							return false;
+						}
 
-					return true;
-				});
+						return true;
+					});
 
 			if(!chain_is_active){
 				inactive_chains.emplace(config_chain.name);
@@ -81,17 +81,17 @@ namespace disposer{ namespace{
 			}
 
 			logsys::log([&config_chain](logsys::stdlogb& os){
-				os << "chain(" << config_chain.name << ") created";
-			}, [&]{
-				// emplace the new process chain
-				chains.try_emplace(
-					config_chain.name,
-					module_makers,
-					component_module_makers,
-					config_chain,
-					id_generators[config_chain.id_generator]
-				);
-			});
+					os << "chain(" << config_chain.name << ") created";
+				}, [&]{
+					// emplace the new process chain
+					chains.try_emplace(
+							config_chain.name,
+							module_makers,
+							component_module_makers,
+							config_chain,
+							id_generators[config_chain.id_generator]
+						);
+				});
 		}
 
 		return std::tuple(
@@ -172,21 +172,21 @@ namespace disposer{
 			[this, &config]{
 				for(auto& config_component: config.components){
 					logsys::log([&config_component](logsys::stdlogb& os){
-						os << "component(" << config_component.name << ":"
-							<< config_component.type_name << ") created";
-					}, [&]{
-						// emplace the new process chain
-						components_.emplace(
-							config_component.name,
-							create_component(
-								directory_.component_maker_list_,
-								{
-									config_component.name,
-									config_component.type_name,
-									config_component.parameters
-								},
-								*this));
-					});
+							os << "component(" << config_component.name << ":"
+								<< config_component.type_name << ") created";
+						}, [&]{
+							// emplace the new process chain
+							components_.emplace(
+								config_component.name,
+								create_component(
+									directory_.component_maker_list_,
+									{
+										config_component.name,
+										config_component.type_name,
+										config_component.parameters
+									},
+									*this));
+						});
 				}
 			});
 
@@ -222,16 +222,20 @@ namespace disposer{
 
 		auto embedded_config = create_embedded_config(std::move(config));
 
-		components_.emplace(
-			embedded_config.name,
-			create_component(
-				directory_.component_maker_list_,
-				{
+		logsys::log([&embedded_config](logsys::stdlogb& os){
+				os << "component(" << embedded_config.name << ") created";
+			}, [&]{
+				components_.emplace(
 					embedded_config.name,
-					embedded_config.type_name,
-					embedded_config.parameters
-				},
-				*this));
+					create_component(
+						directory_.component_maker_list_,
+						{
+							embedded_config.name,
+							embedded_config.type_name,
+							embedded_config.parameters
+						},
+						*this));
+			});
 
 		load_config_file_valid_ = false;
 	}
@@ -244,6 +248,37 @@ namespace disposer{
 
 	void system::load_chain(std::istream& content){
 		std::lock_guard lock(mutex_);
+
+		auto config = parse_chain(content);
+
+		if(chains_.find(config.name) != chains_.end()){
+			throw std::logic_error("a chain(" + config.name
+				+ ") already exists");
+		}
+
+		if(inactive_chains_.find(config.name) != inactive_chains_.end()){
+			throw std::logic_error("a chain(" + config.name
+				+ ") already exists even though it is inactive");
+		}
+
+		check_semantic(config);
+
+		auto embedded_config = create_embedded_config(std::move(config));
+
+		set_output_use_count(embedded_config);
+
+		logsys::log([&embedded_config](logsys::stdlogb& os){
+				os << "chain(" << embedded_config.name << ") created";
+			}, [&]{
+				// emplace the new process chain
+				chains_.try_emplace(
+						embedded_config.name,
+						directory_.module_maker_list_,
+						directory_.component_module_maker_list_,
+						embedded_config,
+						id_generators_[embedded_config.id_generator]
+					);
+			});
 
 		load_config_file_valid_ = false;
 	}

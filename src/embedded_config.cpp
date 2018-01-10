@@ -115,77 +115,88 @@ namespace disposer{ namespace{
 		return result;
 	}
 
+
+	types::embedded_config::chain embedded_config_chains(
+		param_sets_map const& sets,
+		types::parse::chain&& chain
+	){
+		types::embedded_config::chain result_chain(
+			types::embedded_config::chain{
+				std::move(chain.name),
+				chain.id_generator.value_or("default"),
+				{}
+			});
+
+		std::vector< std::string > module_types;
+		for(auto& module: chain.modules){
+			std::vector< std::size_t > wait_ons;
+			wait_ons.reserve(module.wait_ons.size());
+			for(auto& wait_on: module.wait_ons){
+				auto const module_number = module_types.size();
+
+				auto location = [&result_chain, &module, module_number]{
+					return "in chain(" + result_chain.name + ") module("
+						+ std::to_string(module_number) + ":"
+						+ module.type_name + "): ";
+				};
+
+				if(wait_on.number == 0){
+					throw std::logic_error(location() +
+						"wait_on number must not be 0");
+				}
+
+				if(wait_on.number > module_number){
+					throw std::logic_error(location() + "wait_on number "
+						+ std::to_string(wait_on.number)
+						+ " is greater than current module number");
+				}
+
+				if(wait_on.type_name != module_types[wait_on.number - 1]){
+					throw std::logic_error(location()
+						+ "wait_on referes to module("
+						+ std::to_string(wait_on.number) + ":"
+						+ wait_on.type_name +
+						+ ") but module " + std::to_string(wait_on.number)
+						+ "is of type " + module_types[wait_on.number - 1]);
+				}
+
+				wait_ons.push_back(wait_on.number - 1);
+			}
+
+			std::vector< types::embedded_config::out > outputs;
+			outputs.reserve(module.outputs.size());
+			for(auto& output: module.outputs){
+				outputs.push_back({
+					std::move(output.name),
+					std::move(output.variable),
+					0
+				});
+			}
+
+			result_chain.modules.push_back({
+				module.type_name,
+				std::move(wait_ons),
+				embedded_config_parameters(sets,
+					std::move(module.parameters)),
+				std::move(module.inputs),
+				std::move(outputs)
+			});
+
+			module_types.push_back(std::move(module.type_name));
+		}
+
+		return result_chain;
+	}
+
 	types::embedded_config::chains_config embedded_config_chains(
 		param_sets_map const& sets,
 		types::parse::chains&& chains
 	){
 		types::embedded_config::chains_config result;
 		for(auto& chain: chains){
-			auto& result_chain = result.emplace_back(
-				types::embedded_config::chain{
-					std::move(chain.name),
-					chain.id_generator.value_or("default"),
-					{}
-				});
-
-			std::vector< std::string > module_types;
-			for(auto& module: chain.modules){
-				std::vector< std::size_t > wait_ons;
-				wait_ons.reserve(module.wait_ons.size());
-				for(auto& wait_on: module.wait_ons){
-					auto const module_number = module_types.size();
-
-					auto location = [&result_chain, &module, module_number]{
-						return "in chain(" + result_chain.name + ") module("
-							+ std::to_string(module_number) + ":"
-							+ module.type_name + "): ";
-					};
-
-					if(wait_on.number == 0){
-						throw std::logic_error(location() +
-							"wait_on number must not be 0");
-					}
-
-					if(wait_on.number > module_number){
-						throw std::logic_error(location() + "wait_on number "
-							+ std::to_string(wait_on.number)
-							+ " is greater than current module number");
-					}
-
-					if(wait_on.type_name != module_types[wait_on.number - 1]){
-						throw std::logic_error(location()
-							+ "wait_on referes to module("
-							+ std::to_string(wait_on.number) + ":"
-							+ wait_on.type_name +
-							+ ") but module " + std::to_string(wait_on.number)
-							+ "is of type " + module_types[wait_on.number - 1]);
-					}
-
-					wait_ons.push_back(wait_on.number - 1);
-				}
-
-				std::vector< types::embedded_config::out > outputs;
-				outputs.reserve(module.outputs.size());
-				for(auto& output: module.outputs){
-					outputs.push_back({
-						std::move(output.name),
-						std::move(output.variable),
-						0
-					});
-				}
-
-				result_chain.modules.push_back({
-					module.type_name,
-					std::move(wait_ons),
-					embedded_config_parameters(sets,
-						std::move(module.parameters)),
-					std::move(module.inputs),
-					std::move(outputs)
-				});
-
-				module_types.push_back(std::move(module.type_name));
-			}
+			result.push_back(embedded_config_chains(sets, std::move(chain)));
 		}
+
 		return result;
 	}
 
@@ -205,6 +216,13 @@ namespace disposer{
 				embedded_config_parameters(
 					std::move(component.parameters.parameters))
 			};
+	}
+
+	types::embedded_config::chain create_embedded_config(
+		types::parse::chain&& chain
+	){
+		param_sets_map sets;
+		return embedded_config_chains(sets, std::move(chain));
 	}
 
 	types::embedded_config::config create_embedded_config(

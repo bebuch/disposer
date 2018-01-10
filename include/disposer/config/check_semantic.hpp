@@ -25,6 +25,11 @@ namespace disposer{
 	/// \throw std::logic_error If a semantic error is detected
 	void check_semantic(types::parse::component const& config);
 
+	/// \brief Check semantics of the parsed chain
+	///
+	/// \throw std::logic_error If a semantic error is detected
+	void check_semantic(types::parse::chain const& config);
+
 
 }
 

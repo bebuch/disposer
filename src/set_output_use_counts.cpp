@@ -15,29 +15,33 @@
 namespace disposer{
 
 
-	void set_output_use_count(types::embedded_config::config& config){
-		for(auto& chain: config.chains){
-			std::unordered_map< std::string, types::embedded_config::out* >
-				variables;
+	void set_output_use_count(types::embedded_config::chain& chain){
+		std::unordered_map< std::string, types::embedded_config::out* >
+			variables;
 
-			for(auto& module: chain.modules){
-				for(auto& input: module.inputs){
-					auto const iter = variables.find(input.variable);
-					assert(iter != variables.end());
+		for(auto& module: chain.modules){
+			for(auto& input: module.inputs){
+				auto const iter = variables.find(input.variable);
+				assert(iter != variables.end());
 
-					++iter->second->use_count;
+				++iter->second->use_count;
 
-					if(input.transfer == in_transfer::move){
-						variables.erase(iter);
-					}
-				}
-
-				for(auto& output: module.outputs){
-					variables.emplace(output.variable, &output);
+				if(input.transfer == in_transfer::move){
+					variables.erase(iter);
 				}
 			}
 
-			assert(variables.empty());
+			for(auto& output: module.outputs){
+				variables.emplace(output.variable, &output);
+			}
+		}
+
+		assert(variables.empty());
+	}
+
+	void set_output_use_count(types::embedded_config::config& config){
+		for(auto& chain: config.chains){
+			set_output_use_count(chain);
 		}
 	}
 

@@ -134,6 +134,92 @@ namespace disposer{ namespace{
 	}
 
 	void check_semantic(
+		types::parse::chain const& chain,
+		std::unordered_set< std::string > const& known_sets
+	){
+		std::unordered_map< std::string, connected > variables;
+		std::size_t module_number = 1;
+		for(auto& module: chain.modules){
+			auto location = [&chain, &module, module_number]{
+				return "in chain(" + chain.name + ") module("
+					+ std::to_string(module_number) + ":"
+					+ module.type_name + "): ";
+			};
+
+			check_param_sets(location, known_sets,
+				module.parameters.parameter_sets);
+			check_params(location, module.parameters.parameters);
+
+			std::unordered_set< std::string > inputs;
+			for(auto& input: module.inputs){
+				if(!inputs.insert(input.name).second){
+					throw std::logic_error(
+						location() + "duplicate input '" + input.name + "'"
+					);
+				}
+			}
+
+			for(auto& input: module.inputs){
+				auto const iter = variables.find(input.variable);
+				if(iter == variables.end()){
+					throw std::logic_error(
+						location() + "unknown variable '" +
+						input.variable + "' as input of '" + input.name +
+						"'"
+					);
+				}
+
+				if(input.transfer == in_transfer::move){
+					variables.erase(iter);
+				}
+			}
+
+			std::unordered_set< std::string > outputs;
+			for(auto& output: module.outputs){
+				if(!outputs.insert(output.name).second){
+					throw std::logic_error(
+						location() + "duplicate output '" +
+						output.name + "'"
+					);
+				}
+
+				if(!variables.try_emplace(
+						output.variable,
+						chain.name,
+						module.type_name,
+						module_number,
+						output.name
+					).second
+				){
+					throw std::logic_error(
+						location() + "duplicate use of variable '" +
+						output.variable + "' as output of '" +
+						output.name + "'"
+					);
+				}
+			}
+
+			++module_number;
+		}
+
+		if(!variables.empty()){
+			std::ostringstream os;
+			os << "Some variables are never finally used: ";
+			bool first = true;
+			for(auto const& [name, data]: variables){
+				if(first){ first = false; }else{ os << ", "; }
+				os << "variable(" << name << ") from chain("
+					<< data.chain_name << ") module("
+					<< data.module_number << ":"
+					<< data.module_type_name << ") output("
+					<< data.output_name << ")";
+			}
+
+			throw std::logic_error(os.str());
+		}
+	}
+
+	void check_semantic(
 		types::parse::chains const& config,
 		std::unordered_set< std::string > const& known_sets
 	){
@@ -145,86 +231,7 @@ namespace disposer{ namespace{
 				);
 			}
 
-			std::unordered_map< std::string, connected > variables;
-			std::size_t module_number = 1;
-			for(auto& module: chain.modules){
-				auto location = [&chain, &module, module_number]{
-					return "in chain(" + chain.name + ") module("
-						+ std::to_string(module_number) + ":"
-						+ module.type_name + "): ";
-				};
-
-				check_param_sets(location, known_sets,
-					module.parameters.parameter_sets);
-				check_params(location, module.parameters.parameters);
-
-				std::unordered_set< std::string > inputs;
-				for(auto& input: module.inputs){
-					if(!inputs.insert(input.name).second){
-						throw std::logic_error(
-							location() + "duplicate input '" + input.name + "'"
-						);
-					}
-				}
-
-				for(auto& input: module.inputs){
-					auto const iter = variables.find(input.variable);
-					if(iter == variables.end()){
-						throw std::logic_error(
-							location() + "unknown variable '" +
-							input.variable + "' as input of '" + input.name +
-							"'"
-						);
-					}
-
-					if(input.transfer == in_transfer::move){
-						variables.erase(iter);
-					}
-				}
-
-				std::unordered_set< std::string > outputs;
-				for(auto& output: module.outputs){
-					if(!outputs.insert(output.name).second){
-						throw std::logic_error(
-							location() + "duplicate output '" +
-							output.name + "'"
-						);
-					}
-
-					if(!variables.try_emplace(
-							output.variable,
-							chain.name,
-							module.type_name,
-							module_number,
-							output.name
-						).second
-					){
-						throw std::logic_error(
-							location() + "duplicate use of variable '" +
-							output.variable + "' as output of '" +
-							output.name + "'"
-						);
-					}
-				}
-
-				++module_number;
-			}
-
-			if(!variables.empty()){
-				std::ostringstream os;
-				os << "Some variables are never finally used: ";
-				bool first = true;
-				for(auto const& [name, data]: variables){
-					if(first){ first = false; }else{ os << ", "; }
-					os << "variable(" << name << ") from chain("
-						<< data.chain_name << ") module("
-						<< data.module_number << ":"
-						<< data.module_type_name << ") output("
-						<< data.output_name << ")";
-				}
-
-				throw std::logic_error(os.str());
-			}
+			check_semantic(chain, known_sets);
 		}
 	}
 
@@ -247,6 +254,11 @@ namespace disposer{
 		}
 
 		check_params(location, component.parameters.parameters);
+	}
+
+	void check_semantic(types::parse::chain const& chain){
+		static std::unordered_set< std::string > const known_sets;
+		check_semantic(chain, known_sets);
 	}
 
 	void check_semantic(types::parse::config const& config){
