@@ -205,6 +205,26 @@ namespace disposer{
 	void system::remove_component(std::string const& name){
 		std::lock_guard lock(mutex_);
 
+		auto const iter = components_.find(name);
+		if(iter == components_.end()){
+			throw std::logic_error("component(" + name + ") doesn't exist");
+		}
+
+		auto maker_iter = directory_.component_module_maker_list_.find(name);
+		if(maker_iter != directory_.component_module_maker_list_.end()){
+			auto& [component_name, component] = *maker_iter;
+			for(auto& [module_name, module]: component){
+				if(module.usage_count > 0){
+					throw std::logic_error("can't remove component("
+						+ component_name + ") because its module("
+						+ module_name + ") is still in use");
+				}
+			}
+		}
+
+		directory_.component_module_maker_list_.erase(maker_iter);
+		components_.erase(iter);
+
 		load_config_file_valid_ = false;
 	}
 

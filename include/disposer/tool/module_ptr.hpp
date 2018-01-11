@@ -62,9 +62,6 @@ namespace disposer{
 		std::unordered_map< std::string, component_module_maker_list >;
 
 
-
-
-
 }
 
 
