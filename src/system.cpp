@@ -268,9 +268,12 @@ namespace disposer{
 			throw std::logic_error("chain(" + name + ") doesn't exist");
 		}
 
-		locked_chain chain_lock(iter->second);
+		if(iter->second.is_enabled()){
+			throw std::logic_error("chain(" + name +
+				") is currently in use and therefore cannot be deleted");
+		}
+
 		chains_.erase(iter);
-		chain_lock.release();
 
 		load_config_file_valid_ = false;
 	}

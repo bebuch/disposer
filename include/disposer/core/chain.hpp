@@ -91,18 +91,10 @@ namespace disposer{
 		void disable()noexcept;
 
 
-		/// \brief Forbid enable() calls until call of unlock()
-		///
-		/// \throw chain_not_lockable If chain is currently enabled
-		///
-		/// Any lock call must be followed by a unlock call, otherwise behavior
-		/// is undefined.
-		void lock();
-
-		/// \brief Undo lock() call
-		///
-		/// If chain wasn't locked, behavior is undefined.
-		void unlock();
+		/// \brief true if enable was more often called than disable
+		bool is_enabled()const{
+			return enable_count_ > 0;
+		}
 
 
 		/// \brief Name of the chain
@@ -127,8 +119,6 @@ namespace disposer{
 		/// \brief Count of enable() calls minus count of disable() calls
 		std::atomic< std::size_t > enable_count_;
 
-		/// \brief Count of lock() calls minus count of unlock() calls
-		bool locked_;
 
 		/// \brief Count of running exec() calls
 		std::atomic< std::size_t > exec_calls_count_;
@@ -194,49 +184,6 @@ namespace disposer{
 			: chain_(&c)
 		{
 			c.enable();
-		}
-
-		/// \brief The chain object
-		std::atomic< chain* > chain_;
-
-	friend class system;
-	};
-
-	/// \brief A resource guard for chain lock/unlock
-	class locked_chain{
-	public:
-		/// \brief Move constructor
-		locked_chain(locked_chain&& o)noexcept
-			: chain_(o.chain_.exchange(nullptr)) {}
-
-		/// \brief Move assignment
-		locked_chain& operator=(locked_chain&& o)noexcept{
-			chain_ = o.chain_.exchange(nullptr);
-			return *this;
-		}
-
-		/// \brief Calls disable on the chain object
-		~locked_chain(){
-			auto chain = chain_.exchange(nullptr);
-			if(chain) chain->unlock();
-		}
-
-
-		/// \brief Don't unlock the chain
-		///
-		/// This is called if you wan't to destruct the chain object.
-		void release(){
-			auto chain = chain_.exchange(nullptr);
-			assert(chain != nullptr);
-		}
-
-
-	private:
-		/// \brief Calls lock on the chain object
-		locked_chain(chain& c)
-			: chain_(&c)
-		{
-			c.lock();
 		}
 
 		/// \brief The chain object
