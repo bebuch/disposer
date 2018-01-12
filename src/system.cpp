@@ -159,18 +159,20 @@ namespace disposer{
 						os << "looked for unused stuff and warned about it";
 					}, [&config]{ unused_parameter_set_warning(config); });
 
-				return logsys::log(
-					[](logsys::stdlogb& os){ os << "created embedded config"; },
-					[&config]{
-						auto result = create_embedded_config(std::move(config));
-						set_output_use_count(result);
-						return result;
-					});
+				return config;
+			});
+
+		auto const embedded_config = logsys::log(
+			[](logsys::stdlogb& os){ os << "created embedded config"; },
+			[&config]{
+				auto result = create_embedded_config(config);
+				set_output_use_count(result);
+				return result;
 			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "components created"; },
-			[this, &config]{
-				for(auto& config_component: config.components){
+			[this, &embedded_config]{
+				for(auto& config_component: embedded_config.components){
 					logsys::log([&config_component](logsys::stdlogb& os){
 							os << "component(" << config_component.name << ":"
 								<< config_component.type_name << ") created";
@@ -191,12 +193,13 @@ namespace disposer{
 			});
 
 		logsys::log([](logsys::stdlogb& os){ os << "chains created"; },
-			[this, &config]{
+			[this, &embedded_config, &config]{
 				std::tie(inactive_chains_, chains_, id_generators_) =
 					disposer::create_chains(
 						directory_.module_maker_list_,
 						directory_.component_module_maker_list_,
-						config.chains);
+						embedded_config.chains);
+				config_ = std::move(config);
 			});
 
 		load_config_file_valid_ = false;
@@ -238,9 +241,10 @@ namespace disposer{
 				+ ") already exists");
 		}
 
-		check_semantic(config);
+		check_semantic(config_.sets, config);
 
-		auto embedded_config = create_embedded_config(std::move(config));
+		auto const embedded_config =
+			create_embedded_config(config_.sets, config);
 
 		logsys::log([&embedded_config](logsys::stdlogb& os){
 				os << "component(" << embedded_config.name << ") created";
@@ -255,6 +259,8 @@ namespace disposer{
 							embedded_config.parameters
 						},
 						*this));
+
+				config_.components.push_back(std::move(config));
 			});
 
 		load_config_file_valid_ = false;
@@ -293,9 +299,9 @@ namespace disposer{
 				+ ") already exists even though it is inactive");
 		}
 
-		check_semantic(config);
+		check_semantic(config_.sets, config);
 
-		auto embedded_config = create_embedded_config(std::move(config));
+		auto embedded_config = create_embedded_config(config_.sets, config);
 
 		set_output_use_count(embedded_config);
 
@@ -310,6 +316,8 @@ namespace disposer{
 						embedded_config,
 						id_generators_[embedded_config.id_generator]
 					);
+
+				config_.chains.push_back(std::move(config));
 			});
 
 		load_config_file_valid_ = false;

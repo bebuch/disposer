@@ -81,15 +81,17 @@ namespace disposer{
 
 
 	types::embedded_config::component create_embedded_config(
-		types::parse::component&& config
+		types::parse::parameter_sets const& sets,
+		types::parse::component const& config
 	);
 
 	types::embedded_config::chain create_embedded_config(
-		types::parse::chain&& config
+		types::parse::parameter_sets const& sets,
+		types::parse::chain const& config
 	);
 
 	types::embedded_config::config create_embedded_config(
-		types::parse::config&& config
+		types::parse::config const& config
 	);
 
 

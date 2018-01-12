@@ -85,7 +85,7 @@ namespace disposer{ namespace{
 	};
 
 
-	std::unordered_set< std::string > check_semantic(
+	std::unordered_set< std::string > check_semantic_impl(
 		types::parse::parameter_sets const& config
 	){
 		std::unordered_set< std::string > known_sets;
@@ -110,9 +110,9 @@ namespace disposer{ namespace{
 		return known_sets;
 	}
 
-	void check_semantic(
-		types::parse::components const& config,
-		std::unordered_set< std::string > const& known_sets
+	void check_semantic_impl(
+		std::unordered_set< std::string > const& known_sets,
+		types::parse::components const& config
 	){
 		std::unordered_set< std::string > components;
 		for(auto& component: config){
@@ -133,9 +133,9 @@ namespace disposer{ namespace{
 		}
 	}
 
-	void check_semantic(
-		types::parse::chain const& chain,
-		std::unordered_set< std::string > const& known_sets
+	void check_semantic_impl(
+		std::unordered_set< std::string > const& known_sets,
+		types::parse::chain const& chain
 	){
 		std::unordered_map< std::string, connected > variables;
 		std::size_t module_number = 1;
@@ -219,9 +219,9 @@ namespace disposer{ namespace{
 		}
 	}
 
-	void check_semantic(
-		types::parse::chains const& config,
-		std::unordered_set< std::string > const& known_sets
+	void check_semantic_impl(
+		std::unordered_set< std::string > const& known_sets,
+		types::parse::chains const& config
 	){
 		std::unordered_set< std::string > chains;
 		for(auto& chain: config){
@@ -231,7 +231,7 @@ namespace disposer{ namespace{
 				);
 			}
 
-			check_semantic(chain, known_sets);
+			check_semantic_impl(known_sets, chain);
 		}
 	}
 
@@ -242,29 +242,41 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	void check_semantic(types::parse::component const& component){
+	void check_semantic(
+		types::parse::parameter_sets const& sets,
+		types::parse::component const& component
+	){
 		auto location = [&component]{
 			return "in component(" + component.name + ") of type("
 				+ component.type_name + "): ";
 		};
 
-		if(component.parameters.parameter_sets.size() > 0){
-			std::logic_error(location() + "when creating a single component, "
-				"the parsed config must not refer to any parameter_set's");
+		std::unordered_set< std::string > known_sets;
+		for(auto& set: sets){
+			known_sets.insert(set.name);
 		}
 
+		check_param_sets(location, known_sets,
+			component.parameters.parameter_sets);
 		check_params(location, component.parameters.parameters);
 	}
 
-	void check_semantic(types::parse::chain const& chain){
-		static std::unordered_set< std::string > const known_sets;
-		check_semantic(chain, known_sets);
+	void check_semantic(
+		types::parse::parameter_sets const& sets,
+		types::parse::chain const& chain
+	){
+		std::unordered_set< std::string > known_sets;
+		for(auto& set: sets){
+			known_sets.insert(set.name);
+		}
+
+		check_semantic_impl(known_sets, chain);
 	}
 
 	void check_semantic(types::parse::config const& config){
-		auto const known_sets = check_semantic(config.sets);
-		check_semantic(config.components, known_sets);
-		check_semantic(config.chains, known_sets);
+		auto const known_sets = check_semantic_impl(config.sets);
+		check_semantic_impl(known_sets, config.components);
+		check_semantic_impl(known_sets, config.chains);
 	}
 
 

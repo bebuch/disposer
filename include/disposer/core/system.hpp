@@ -12,7 +12,7 @@
 #include "directory.hpp"
 #include "chain.hpp"
 
-#include "../config/embedded_config.hpp"
+#include "../config/parse_config.hpp"
 
 #include <unordered_set>
 
@@ -99,6 +99,10 @@ namespace disposer{
 
 		/// \brief Component and module generators
 		disposer::directory directory_;
+
+
+		/// \brief Currect configuration
+		types::parse::config config_;
 
 
 		/// \brief List of all components (map from name to object)

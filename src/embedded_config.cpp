@@ -28,43 +28,31 @@ namespace disposer{ namespace{
 
 
 	parameter_list embedded_config_parameters(
-		std::vector< types::parse::parameter >&& params
+		param_sets_map const& sets,
+		types::parse::parameters const& params
 	){
 		using boost::adaptors::reverse;
 
 		parameter_list parameters;
 
 		// add all parameters from module
-		for(auto& parameter: reverse(params)){
+		for(auto& parameter: reverse(params.parameters)){
 			std::map< std::string, std::string, std::less<> >
 				specialized_values;
 			for(auto& specialization: parameter.specialized_values){
 				specialized_values.emplace(
-					std::move(specialization.type),
-					std::move(specialization.value)
+					specialization.type,
+					specialization.value
 				);
 			}
 
 			parameters.emplace(
-				std::move(parameter.key), parameter_data{
-					std::move(parameter.generic_value),
+				parameter.key, parameter_data{
+					parameter.generic_value,
 					std::move(specialized_values)
 				}
 			);
 		}
-
-		return parameters;
-	}
-
-
-	parameter_list embedded_config_parameters(
-		param_sets_map const& sets,
-		types::parse::parameters&& params
-	){
-		using boost::adaptors::reverse;
-
-		parameter_list parameters =
-			embedded_config_parameters(std::move(params.parameters));
 
 		// add all parameters from the last to the first parameter set
 		// (skip already existing ones)
@@ -101,15 +89,14 @@ namespace disposer{ namespace{
 
 	types::embedded_config::components_config embedded_config_components(
 		param_sets_map const& sets,
-		types::parse::components&& components
+		types::parse::components const& components
 	){
 		types::embedded_config::components_config result;
 		for(auto& component: components){
 			result.push_back({
-				std::move(component.name),
-				std::move(component.type_name),
-				embedded_config_parameters(sets,
-					std::move(component.parameters))
+				component.name,
+				component.type_name,
+				embedded_config_parameters(sets, component.parameters)
 			});
 		}
 		return result;
@@ -118,11 +105,11 @@ namespace disposer{ namespace{
 
 	types::embedded_config::chain embedded_config_chains(
 		param_sets_map const& sets,
-		types::parse::chain&& chain
+		types::parse::chain const& chain
 	){
 		types::embedded_config::chain result_chain(
 			types::embedded_config::chain{
-				std::move(chain.name),
+				chain.name,
 				chain.id_generator.value_or("default"),
 				{}
 			});
@@ -167,8 +154,8 @@ namespace disposer{ namespace{
 			outputs.reserve(module.outputs.size());
 			for(auto& output: module.outputs){
 				outputs.push_back({
-					std::move(output.name),
-					std::move(output.variable),
+					output.name,
+					output.variable,
 					0
 				});
 			}
@@ -176,13 +163,12 @@ namespace disposer{ namespace{
 			result_chain.modules.push_back({
 				module.type_name,
 				std::move(wait_ons),
-				embedded_config_parameters(sets,
-					std::move(module.parameters)),
-				std::move(module.inputs),
+				embedded_config_parameters(sets, module.parameters),
+				module.inputs,
 				std::move(outputs)
 			});
 
-			module_types.push_back(std::move(module.type_name));
+			module_types.push_back(module.type_name);
 		}
 
 		return result_chain;
@@ -190,11 +176,11 @@ namespace disposer{ namespace{
 
 	types::embedded_config::chains_config embedded_config_chains(
 		param_sets_map const& sets,
-		types::parse::chains&& chains
+		types::parse::chains const& chains
 	){
 		types::embedded_config::chains_config result;
 		for(auto& chain: chains){
-			result.push_back(embedded_config_chains(sets, std::move(chain)));
+			result.push_back(embedded_config_chains(sets, chain));
 		}
 
 		return result;
@@ -208,30 +194,31 @@ namespace disposer{
 
 
 	types::embedded_config::component create_embedded_config(
-		types::parse::component&& component
+		types::parse::parameter_sets const& sets,
+		types::parse::component const& component
 	){
 		return {
-				std::move(component.name),
-				std::move(component.type_name),
+				component.name,
+				component.type_name,
 				embedded_config_parameters(
-					std::move(component.parameters.parameters))
+					map_name_to_set(sets), component.parameters)
 			};
 	}
 
 	types::embedded_config::chain create_embedded_config(
-		types::parse::chain&& chain
+		types::parse::parameter_sets const& sets,
+		types::parse::chain const& chain
 	){
-		param_sets_map sets;
-		return embedded_config_chains(sets, std::move(chain));
+		return embedded_config_chains(map_name_to_set(sets), chain);
 	}
 
 	types::embedded_config::config create_embedded_config(
-		types::parse::config&& config
+		types::parse::config const& config
 	){
 		auto sets = map_name_to_set(config.sets);
 		return {
-				embedded_config_components(sets, std::move(config.components)),
-				embedded_config_chains(sets, std::move(config.chains))
+				embedded_config_components(sets, config.components),
+				embedded_config_chains(sets, config.chains)
 			};
 	}
 
