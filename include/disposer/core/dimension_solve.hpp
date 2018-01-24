@@ -84,12 +84,12 @@ namespace disposer{
 			}else if constexpr(is_deducible){
 				return hana::unpack(unknown_dim_indexes, [&ti](auto ... udis){
 					using solved_type =
-						solved_dimensions< std::size_t(udis) ... >;
+						solved_dimensions< decltype(udis)::value ... >;
 
 					auto const calc_idx = [udis ...](auto idx){
 							(void)idx; // Silance GCC if udis is empty
 							return solved_type{
-								index_component< std::size_t(decltype(udis){}) >
+								index_component< decltype(udis)::value >
 									{idx[pos(udis)]} ...};
 						};
 
