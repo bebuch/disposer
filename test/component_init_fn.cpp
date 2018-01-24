@@ -8,7 +8,7 @@ disposer::system d;
 template < typename Fn >
 void test(Fn const& fn){
 	fn(component_init_accessory{
-		component_data< void, hana::tuple<> >{hana::make_tuple()}, d, ""});
+		component_data< void, hana::tuple<> >{hana::make_tuple()}, "", d, ""});
 }
 
 
