@@ -350,6 +350,7 @@ namespace disposer{
 			hana::basic_type< T > type,
 			Accessory accessory
 		)const noexcept(calc_noexcept< T, Accessory >()){
+			(void)type; // Silance GCC
 			return accessory.log(
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") ";
