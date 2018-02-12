@@ -26,6 +26,7 @@ project disposer
 
 	<toolset>gcc:<cxxflags>-std=gnu++1z
 	<toolset>gcc:<cxxflags>-fconstexpr-depth=1024
+	<toolset>gcc:<cxxflags>-Wno-parentheses
 	<toolset>gcc:<linkflags>-lpthread
 
 	<toolset>clang:<cxxflags>-std=c++1z
