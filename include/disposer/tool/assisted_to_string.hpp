@@ -57,6 +57,7 @@ namespace disposer{
 		T const& v,
 		hana::bool_< Assert > assert_ = hana::false_c
 	){
+		(void)assert_; // Silance GCC
 		using std::begin;
 		using std::end;
 
