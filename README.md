@@ -5,8 +5,8 @@ A dynamic module management system
 
 ## Supported Compilers
 
-- GCC 7.1 and higher
-- LLVM 5.0 and higher
+- GCC 8.0
+- LLVM 6.0
 
 ## Direct dependencies
 
@@ -55,7 +55,7 @@ A sequence of modules is called <i>process chain</i>. Each process chain also ge
 
 The disposer manages the process chains and their modules. This is done through a configuration file that is read at runtime.
 
-## Config-File
+## Config-File (this section is outdated)
 
 The configuration file has a special file format, which is explained below. There is no standardized file extension, but is is recommended to use '\*.ini' to get syntax highlighting in text editors. It is also recommended to use a text editor which can show whitespaces, because tabulators are important for the file format.
 
