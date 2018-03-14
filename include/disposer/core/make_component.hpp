@@ -277,7 +277,6 @@ namespace disposer{
 				hana::for_each(module_maker_list.module_maker_list,
 					[this, &component](auto const& component_module_maker){
 						component_module_maker.generate_module_fn(
-							data.name + "//" +
 							std::string(component_module_maker.name),
 							system.directory().declarant(), component);
 					});

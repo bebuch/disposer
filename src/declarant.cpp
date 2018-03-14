@@ -61,15 +61,17 @@ namespace disposer{
 					+ "' has been added more than one time!");
 			}
 
-			logsys::log([&module_type_name](logsys::stdlogb& os){
-				os << "add module type name '" << module_type_name << "'";
-			// TODO: module_list = module_list -> clang Bug 29161
-			}, [module_list = module_list, &module_type_name, &fn]{
-				[[maybe_unused]] auto [i, success] = module_list->second
-					.emplace(module_type_name, std::move(fn));
+			logsys::log([&component_name, &module_type_name](
+					logsys::stdlogb& os
+				){
+					os << "add component module type name '"
+						<< component_name << "//" << module_type_name << "'";
+				}, [module_list = module_list, &module_type_name, &fn]{
+					[[maybe_unused]] auto [i, success] = module_list->second
+						.emplace(module_type_name, std::move(fn));
 
-				assert(success);
-			});
+					assert(success);
+				});
 		});
 	}
 
