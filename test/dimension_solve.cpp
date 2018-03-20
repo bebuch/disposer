@@ -2,7 +2,7 @@
 
 #include <boost/hana/string.hpp>
 
-#define BOOST_TEST_MODULE dimension solve
+#define BOOST_TEST_MODULE disposer dimension_solve
 #include <boost/test/included/unit_test.hpp>
 
 

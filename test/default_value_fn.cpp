@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-#define BOOST_TEST_MODULE dimension solve
+#define BOOST_TEST_MODULE disposer default_value_fn
 #include <boost/test/included/unit_test.hpp>
 
 

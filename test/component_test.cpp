@@ -1,6 +1,6 @@
 #include <disposer/core/component.hpp>
 
-#define BOOST_TEST_MODULE dimension solve
+#define BOOST_TEST_MODULE disposer component_test
 #include <boost/test/included/unit_test.hpp>
 
 

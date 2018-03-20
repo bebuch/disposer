@@ -1,7 +1,7 @@
 #include <disposer/core/generate_module.hpp>
 #include <disposer/core/directory.hpp>
 
-#define BOOST_TEST_MODULE dimension solve
+#define BOOST_TEST_MODULE disposer module_register
 #include <boost/test/included/unit_test.hpp>
 
 
