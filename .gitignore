@@ -3,3 +3,4 @@ bin
 test/bin
 **.tmp
 doc/html
+**stdcerr
