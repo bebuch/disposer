@@ -49,29 +49,18 @@ namespace disposer{
 		std::string const& module_type_name,
 		component_module_maker_fn&& fn
 	){
-		logsys::log([&component_name](logsys::stdlogb& os){
-			os << "add component name '" << component_name << "'";
+		logsys::log([&component_name, &module_type_name](logsys::stdlogb& os){
+			os << "add component module type name '"
+				<< component_name << "//" << module_type_name << "'";
 		}, [&]{
-			auto [module_list, success] = directory_
+			auto [module_list, unused] = directory_
 				.component_module_maker_list_.try_emplace(component_name);
+			(void)unused;
 
-			if(!success){
-				throw std::logic_error(
-					"component name '" + component_name
-					+ "' has been added more than one time!");
-			}
+			[[maybe_unused]] auto [i, success] = module_list->second
+				.emplace(module_type_name, std::move(fn));
 
-			logsys::log([&component_name, &module_type_name](
-					logsys::stdlogb& os
-				){
-					os << "add component module type name '"
-						<< component_name << "//" << module_type_name << "'";
-				}, [module_list = module_list, &module_type_name, &fn]{
-					[[maybe_unused]] auto [i, success] = module_list->second
-						.emplace(module_type_name, std::move(fn));
-
-					assert(success);
-				});
+			assert(success);
 		});
 	}
 
