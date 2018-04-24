@@ -17,8 +17,8 @@
 namespace disposer{
 
 
-	/// \brief Same interface as system, but with a check that the component
-	///        does not remove itself and without load_config
+	/// \brief Same interface as system, but without load_config and with a
+	///        check that the component does not remove itself
 	class component_system_proxy{
 	public:
 		component_system_proxy(
