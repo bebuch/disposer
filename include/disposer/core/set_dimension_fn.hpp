@@ -33,6 +33,9 @@ namespace disposer{
 		/// \brief Hana tag to identify set_dimension_fn
 		using hana_tag = set_dimension_fn_tag;
 
+		/// \brief A set_dimension_fn always solves a dimension
+		static constexpr bool is_free_type = false;
+
 
 		/// \brief Default construtor
 		constexpr set_dimension_fn()

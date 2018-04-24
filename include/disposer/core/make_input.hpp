@@ -37,8 +37,15 @@ namespace disposer{
 		/// \brief Tag for boost::hana
 		using hana_tag = input_maker_tag;
 
+		/// \brief Dimension dependence of the type
+		using dimension_referrer = DimensionReferrer;
+
 		/// \brief input_name object
 		static constexpr auto name = Name{};
+
+		/// \brief True if is type is not dependet on anything
+		static constexpr bool is_free_type = DimensionReferrer::is_free_type;
+
 
 		/// \brief Description of the input
 		template < typename ... DTs >

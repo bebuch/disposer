@@ -392,6 +392,23 @@ namespace disposer{
 	};
 
 
+	template < typename ... Config >
+	constexpr auto init_accessory_of(
+		component_configure< Config ... > const&
+	)noexcept{
+		static_assert(hana::and_(hana::true_c, hana::and_(
+				hana::is_a< parameter_maker_tag, Config >(),
+				Config::is_free_type) ...),
+			"init_accessory_of requires all component_configure entries"
+			"to be parameters with a free_type_c");
+
+		return hana::type_c< component_init_accessory< type_list<>, hana::tuple<
+				parameter< std::remove_const_t< decltype(Config::name) >,
+					typename Config::dimension_referrer::template
+						type< dimension_list<> > > ... > > >;
+	}
+
+
 }
 
 

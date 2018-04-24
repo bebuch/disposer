@@ -27,6 +27,9 @@ namespace disposer{
 	///           number of Dimension's in a dimension_list
 	template < template < typename ... > typename Template, std::size_t ... Ds >
 	struct dimension_referrer{
+		/// \brief True if result type is not dependet on anything
+		static constexpr bool is_free_type = sizeof...(Ds) == 0;
+
 		/// \brief Converts between packed indexes and corresponding types
 		template < typename DimensionList >
 		static constexpr auto convert
