@@ -392,6 +392,11 @@ namespace disposer{
 	};
 
 
+	/// \brief Calculate the component_init_accessory type for components
+	///        without dimensions
+	///
+	/// If your component has dimensions the function will fail by a
+	/// static_assert.
 	template < typename ... Config >
 	constexpr auto init_accessory_of(
 		component_configure< Config ... > const&
