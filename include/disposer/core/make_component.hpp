@@ -181,8 +181,9 @@ namespace disposer{
 			typename ... Config,
 			typename ... IOPs >
 		std::unique_ptr< component_base > exec_make_parameter(
-			parameter_maker< Name, DimensionReferrer,
-				ParserFn, DefaultValueFn, DefaultValueHelpFn, VerfiyValueFn > const& maker,
+			parameter_maker< Name, DimensionReferrer, ParserFn,
+					DefaultValueFn, DefaultValueHelpFn, VerfiyValueFn
+				> const& maker,
 			dimension_list< Ds ... > dims,
 			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
