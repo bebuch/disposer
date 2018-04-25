@@ -414,6 +414,13 @@ namespace disposer{
 	}
 
 
+	/// \brief Type of component_init_accessory type for components
+	///        without dimensions
+	template < typename Configure >
+	using init_accessory_t = typename
+		decltype(init_accessory_of(std::declval< Configure >()))::type;
+
+
 }
 
 
