@@ -100,7 +100,7 @@ namespace disposer{
 		typename DimensionList,
 		typename ... RefList >
 	class module_make_accessory
-		: public optional_component_accessory< Component >
+		: public optional_component< Component >
 		, public add_log<
 			module_make_accessory< Component, DimensionList, RefList ... > >{
 	public:
@@ -112,12 +112,12 @@ namespace disposer{
 			iops_ref< RefList ... > const& list,
 			std::string_view location
 		)noexcept
-			: optional_component_accessory< Component >(component)
+			: optional_component< Component >(component)
 			, location(location)
 			, list_(list) {}
 
 		module_make_accessory(module_make_accessory const& other)noexcept
-			: optional_component_accessory< Component >(other)
+			: optional_component< Component >(other)
 			, location(other.location)
 			, list_(other.list_) {}
 

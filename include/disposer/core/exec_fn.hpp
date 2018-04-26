@@ -21,39 +21,31 @@ namespace disposer{
 
 
 	/// \brief Reference to a component or empty struct
-	template < typename Component >
+	template < typename ComponentAccessory >
 	struct optional_component{
 		constexpr optional_component(
-			Component& component,
+			ComponentAccessory& accessory,
 			std::size_t& usage_count
 		)noexcept
-			: component(component)
+			: component(accessory)
 			, usage_count(usage_count) {}
 
 		constexpr optional_component(optional_component const& other)noexcept
 			: component(other.component)
 			, usage_count(other.usage_count) {}
 
-		Component& component;
+
+		using accessory_type = ComponentAccessory;
+
+		accessory_type component;
+
 		std::size_t& usage_count;
 	};
 
 	/// \brief Empty struct
 	template <>
-	struct optional_component< void >{};
-
-
-	template < typename Component >
-	struct optional_component_accessory{
-		optional_component_accessory(optional_component< Component > c)
-			: component(c.component.accessory){}
-
-		decltype(std::declval< Component >().accessory) component;
-	};
-
-	template <>
-	struct optional_component_accessory< void >{
-		optional_component_accessory(optional_component< void >){}
+	struct optional_component< void >{
+		using accessory_type = void;
 	};
 
 
@@ -66,7 +58,7 @@ namespace disposer{
 		typename Parameters,
 		typename Component >
 	class module_accessory
-		: public optional_component_accessory< Component >
+		: public optional_component< Component >
 		, public add_log< module_accessory<
 			TypeList, State, ExecInputs, ExecOutputs, Parameters, Component > >
 	{
@@ -82,7 +74,7 @@ namespace disposer{
 			std::string_view location,
 			optional_component< Component > component
 		)noexcept
-			: optional_component_accessory< Component >(component)
+			: optional_component< Component >(component)
 			, id_(id)
 			, state_(state)
 			, inputs_(inputs)

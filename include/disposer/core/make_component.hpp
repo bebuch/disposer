@@ -398,27 +398,30 @@ namespace disposer{
 	/// If your component has dimensions the function will fail by a
 	/// static_assert.
 	template < typename ... Config >
-	constexpr auto init_accessory_of(
-		component_configure< Config ... > const&
+	constexpr auto parameter_tuple_of(
+		hana::basic_type< component_configure< Config ... > >
 	)noexcept{
 		static_assert(hana::and_(hana::true_c, hana::and_(
 				hana::is_a< parameter_maker_tag, Config >(),
 				Config::is_free_type) ...),
-			"init_accessory_of requires all component_configure entries"
+			"init_accessory_of requires all component_configure entries "
 			"to be parameters with a free_type_c");
 
-		return hana::type_c< component_init_accessory< type_list<>, hana::tuple<
-				parameter< std::remove_const_t< decltype(Config::name) >,
-					typename Config::dimension_referrer::template
-						type< dimension_list<> > > ... > > >;
+		return hana::type_c< hana::tuple< config_t< Config > ... > >;
 	}
 
 
-	/// \brief Type of component_init_accessory type for components
-	///        without dimensions
+	/// \brief Type of init_accessory for components without dimensions
 	template < typename Configure >
-	using init_accessory_t = typename
-		decltype(init_accessory_of(std::declval< Configure >()))::type;
+	using component_init_accessory_t = component_init_accessory< type_list<>,
+		typename decltype(parameter_tuple_of(
+			hana::type_c< Configure >))::type >;
+
+	/// \brief Type of accessory for components without dimensions
+	template < typename Configure, typename StateType >
+	using component_accessory_t = component_accessory< type_list<>, StateType,
+		typename decltype(parameter_tuple_of(
+			hana::type_c< Configure >))::type >;
 
 
 }

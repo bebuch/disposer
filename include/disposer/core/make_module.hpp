@@ -607,9 +607,175 @@ namespace disposer{
 
 			return make_module_ptr(dimensions, configuration, data,
 				module_init, exec, hana::bool_c< CanRunConcurrent >,
-				optional_component{component, usage_count});
+				optional_component{component.accessory, usage_count});
 		}
 	};
+
+
+	template < typename Config >
+	struct config_type;
+
+	template < typename Name, typename DimensionReferrer, bool IsRequired >
+	struct config_type< input_maker< Name, DimensionReferrer, IsRequired > >{
+		using type = input< Name,
+			typename input_maker< Name, DimensionReferrer, IsRequired >
+			::dimension_referrer::template type< dimension_list<> >,
+			IsRequired >;
+	};
+
+	template < typename Name, typename DimensionReferrer >
+	struct config_type< output_maker< Name, DimensionReferrer > >{
+		using type = output< Name,
+			typename output_maker< Name, DimensionReferrer >
+			::dimension_referrer::template type< dimension_list<> > >;
+	};
+
+	template <
+		typename Name,
+		typename DimensionReferrer,
+		typename ParserFn,
+		typename DefaultValueFn,
+		typename DefaultValueHelpFn,
+		typename VerfiyValueFn >
+	struct config_type< parameter_maker< Name, DimensionReferrer, ParserFn,
+		DefaultValueFn, DefaultValueHelpFn, VerfiyValueFn > >
+	{
+		using type = parameter< Name,
+			typename parameter_maker< Name, DimensionReferrer, ParserFn,
+			DefaultValueFn, DefaultValueHelpFn, VerfiyValueFn >
+			::dimension_referrer::template type< dimension_list<> > >;
+	};
+
+	template < typename Config >
+	using config_t = typename config_type< Config >::type;
+
+
+
+	template < typename Config >
+	struct exec_config_type;
+
+	template < typename Name, typename DimensionReferrer, bool IsRequired >
+	struct exec_config_type<
+		input_maker< Name, DimensionReferrer, IsRequired >
+	>{
+		using type = exec_input< Name,
+			typename input_maker< Name, DimensionReferrer, IsRequired >
+			::dimension_referrer::template type< dimension_list<> >,
+			IsRequired >;
+	};
+
+	template < typename Name, typename DimensionReferrer >
+	struct exec_config_type< output_maker< Name, DimensionReferrer > >{
+		using type = exec_output< Name,
+			typename output_maker< Name, DimensionReferrer >
+			::dimension_referrer::template type< dimension_list<> > >;
+	};
+
+	template < typename Config >
+	using exec_config_t = typename exec_config_type< Config >::type;
+
+
+	/// \brief Calculate the module_init_accessory type for modules
+	///        without dimensions
+	///
+	/// If your module has dimensions the function will fail by a
+	/// static_assert.
+	template < typename ... Config >
+	constexpr auto config_tuples_of(
+		hana::basic_type< module_configure< Config ... > >
+	)noexcept{
+		static_assert(hana::and_(hana::true_c, hana::and_(
+				hana::or_(
+					hana::is_a< input_maker_tag, Config >(),
+					hana::is_a< output_maker_tag, Config >(),
+					hana::is_a< parameter_maker_tag, Config >()
+				), Config::is_free_type) ...),
+			"init_accessory_of requires all module_configure entries "
+			"to be parameters with a free_type_c");
+
+		return hana::tuple_t<
+			decltype(hana::filter(
+				std::declval< hana::tuple< Config ... > >(),
+				hana::is_a< input_maker_tag >)),
+			decltype(hana::filter(
+				std::declval< hana::tuple< Config ... > >(),
+				hana::is_a< output_maker_tag >)),
+			decltype(hana::filter(
+				std::declval< hana::tuple< Config ... > >(),
+				hana::is_a< parameter_maker_tag >)) >;
+	}
+
+	template < typename ... Config >
+	constexpr auto config_of(
+		hana::basic_type< hana::tuple< Config ... > >
+	)noexcept{
+		return hana::type_c< hana::tuple< config_t< Config > ... > >;
+	}
+
+	template < typename ... Config >
+	constexpr auto exec_config_of(
+		hana::basic_type< hana::tuple< Config ... > >
+	)noexcept{
+		return hana::type_c< hana::tuple< exec_config_t< Config > ... > >;
+	}
+
+
+	template <
+		typename Configure,
+		typename ComponentAccessory >
+	struct module_init_accessory_type{
+		static constexpr auto IOP =
+			config_tuples_of(hana::type_c< Configure >);
+
+		using type = module_init_accessory< type_list<>,
+			typename decltype(config_of(IOP[hana::size_c< 0 >]))::type,
+			typename decltype(config_of(IOP[hana::size_c< 1 >]))::type,
+			typename decltype(config_of(IOP[hana::size_c< 2 >]))::type,
+			ComponentAccessory >;
+	};
+
+
+	template <
+		typename Configure,
+		typename StateType,
+		typename ComponentAccessory >
+	struct module_accessory_type{
+		static constexpr auto IOP =
+			config_tuples_of(hana::type_c< Configure >);
+
+		using type = module_accessory< type_list<>, StateType,
+			typename decltype(exec_config_of(IOP[hana::size_c< 0 >]))::type,
+			typename decltype(exec_config_of(IOP[hana::size_c< 1 >]))::type,
+			typename decltype(config_of(IOP[hana::size_c< 2 >]))::type,
+			ComponentAccessory >;
+	};
+
+
+	/// \brief Type of init_accessory for modules without dimensions
+	template < typename Configure >
+	using module_init_accessory_t = typename
+		module_init_accessory_type< Configure, void >::type;
+
+	/// \brief Type of init_accessory for component modules without dimensions
+	template <
+		typename Configure,
+		typename ComponentAccessory >
+	using component_module_init_accessory_t = typename
+		module_init_accessory_type< Configure, ComponentAccessory >::type;
+
+
+	/// \brief Type of accessory for modules without dimensions
+	template < typename Configure, typename StateType >
+	using module_accessory_t = typename
+		module_accessory_type< Configure, StateType, void >::type;
+
+	/// \brief Type of accessory for component modules without dimensions
+	template <
+		typename Configure,
+		typename StateType,
+		typename ComponentAccessory >
+	using component_module_accessory_t = typename
+		module_accessory_type< Configure, StateType, ComponentAccessory >::type;
 
 
 }
