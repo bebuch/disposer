@@ -24,7 +24,7 @@ namespace disposer{
 		typename ComponentRef >
 	class module_init_ref
 		: public optional_component< ComponentRef >
-		, public add_log{
+		, public log_ref{
 	public:
 		/// \brief Constructor
 		module_init_ref(
@@ -33,7 +33,7 @@ namespace disposer{
 			optional_component< ComponentRef > component
 		)
 			: optional_component< ComponentRef >(component)
-			, add_log(location)
+			, log_ref(location)
 			, data_(data) {}
 
 

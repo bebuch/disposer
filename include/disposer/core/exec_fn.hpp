@@ -13,7 +13,7 @@
 #include "output_name.hpp"
 #include "parameter_name.hpp"
 
-#include "../tool/add_log.hpp"
+#include "../tool/log_ref.hpp"
 #include "../tool/false_c.hpp"
 
 
@@ -59,7 +59,7 @@ namespace disposer{
 		typename Component >
 	class module_ref
 		: public optional_component< Component >
-		, public add_log
+		, public log_ref
 	{
 	public:
 		/// \brief Constructor
@@ -74,7 +74,7 @@ namespace disposer{
 			optional_component< Component > component
 		)noexcept
 			: optional_component< Component >(component)
-			, add_log(location)
+			, log_ref(location)
 			, id_(id)
 			, state_(state)
 			, inputs_(inputs)

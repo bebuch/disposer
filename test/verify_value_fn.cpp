@@ -11,8 +11,8 @@ using namespace disposer;
 using namespace std::literals::string_view_literals;
 
 
-struct ref: add_log{
-	ref()noexcept: add_log("") {}
+struct ref: log_ref{
+	ref()noexcept: log_ref("") {}
 };
 
 

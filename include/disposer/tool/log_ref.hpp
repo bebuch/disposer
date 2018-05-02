@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__tool__add_log__hpp_INCLUDED_
-#define _disposer__tool__add_log__hpp_INCLUDED_
+#ifndef _disposer__tool__log_ref__hpp_INCLUDED_
+#define _disposer__tool__log_ref__hpp_INCLUDED_
 
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
@@ -32,7 +32,7 @@ namespace disposer{
 		std::is_invocable_v< LogF, logsys::stdlogb&, T >;
 
 
-	class add_log{
+	class log_ref{
 	public:
 		/// \brief Add a line to the log
 		template < typename LogF >
@@ -106,7 +106,7 @@ namespace disposer{
 		}
 
 	protected:
-		add_log(std::string_view location)noexcept
+		log_ref(std::string_view location)noexcept
 			: location_(location) {}
 
 	private:

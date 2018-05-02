@@ -15,7 +15,7 @@
 #include "dimension.hpp"
 #include "exec_fn.hpp"
 
-#include "../tool/add_log.hpp"
+#include "../tool/log_ref.hpp"
 #include "../tool/extract.hpp"
 #include "../tool/false_c.hpp"
 #include "../tool/to_std_string.hpp"
@@ -101,7 +101,7 @@ namespace disposer{
 		typename ... RefList >
 	class module_make_ref
 		: public optional_component< Component >
-		, public add_log{
+		, public log_ref{
 	public:
 		using dimension_list = DimensionList;
 
@@ -112,12 +112,12 @@ namespace disposer{
 			std::string_view location
 		)noexcept
 			: optional_component< Component >(component)
-			, add_log(location)
+			, log_ref(location)
 			, list_(list) {}
 
 		module_make_ref(module_make_ref const& other)noexcept
 			: optional_component< Component >(other)
-			, add_log(other)
+			, log_ref(other)
 			, list_(other.list_) {}
 
 
@@ -164,7 +164,7 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class component_make_ref: public add_log{
+	class component_make_ref: public log_ref{
 	public:
 		using dimension_list = DimensionList;
 
@@ -173,11 +173,11 @@ namespace disposer{
 			iops_ref< RefList ... > const& list,
 			std::string_view location
 		)noexcept
-			: add_log(location)
+			: log_ref(location)
 			, list_(list) {}
 
 		component_make_ref(component_make_ref const& other)noexcept
-			: add_log(other)
+			: log_ref(other)
 			, list_(other.list_) {}
 
 

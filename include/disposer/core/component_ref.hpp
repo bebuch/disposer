@@ -11,7 +11,7 @@
 
 #include "system.hpp"
 
-#include "../tool/add_log.hpp"
+#include "../tool/log_ref.hpp"
 #include "../tool/false_c.hpp"
 
 #include <boost/hana/core/is_a.hpp>
@@ -29,7 +29,7 @@ namespace disposer{
 		typename TypeList,
 		typename State,
 		typename Parameters >
-	class component_ref: public add_log{
+	class component_ref: public log_ref{
 	public:
 		/// \brief Constructor
 		component_ref(
@@ -39,7 +39,7 @@ namespace disposer{
 			disposer::system& system,
 			std::string_view location
 		)noexcept
-			: add_log(location)
+			: log_ref(location)
 			, state_(state)
 			, parameters_(parameters)
 			, system_(system) {}
