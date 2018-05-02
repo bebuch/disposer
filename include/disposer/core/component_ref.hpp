@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__component_accessory__hpp_INCLUDED_
-#define _disposer__core__component_accessory__hpp_INCLUDED_
+#ifndef _disposer__core__component_ref__hpp_INCLUDED_
+#define _disposer__core__component_ref__hpp_INCLUDED_
 
 #include "system.hpp"
 
@@ -24,17 +24,17 @@ namespace disposer{
 
 	struct parameter_name_tag;
 
-	/// \brief Accessory of a component in component modules
+	/// \brief Ref of a component in component modules
 	template <
 		typename TypeList,
 		typename State,
 		typename Parameters >
-	class component_accessory
-		: public add_log< component_accessory< TypeList, State, Parameters > >
+	class component_ref
+		: public add_log< component_ref< TypeList, State, Parameters > >
 	{
 	public:
 		/// \brief Constructor
-		component_accessory(
+		component_ref(
 			TypeList,
 			State& state,
 			Parameters const& parameters,

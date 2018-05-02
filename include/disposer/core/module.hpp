@@ -137,14 +137,14 @@ namespace disposer{
 			to_exec_list_t< Outputs >& outputs,
 			std::string_view location
 		)noexcept{
-			module_accessory accessory{id, TypeList{}, state_.object(),
+			module_ref ref{id, TypeList{}, state_.object(),
 				inputs, outputs, data_.parameters, location, state_.component};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
 				manager(*this, exec_id);
 			return logsys::exception_catching_log(
 				[this, id](logsys::stdlogb& os){
 					os << "id(" << id << ") " << this->location << "exec";
-				}, [this, &accessory]{ exec_fn_(accessory); });
+				}, [this, &ref]{ exec_fn_(ref); });
 		}
 
 

@@ -35,21 +35,21 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename Accessory >
+		template < typename Ref >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_v< Fn const, Accessory >,
+			static_assert(std::is_invocable_v< Fn const, Ref >,
 				"Wrong function signature for verify_fn, expected:\n"
-				"void function(auto accessory)");
+				"void function(auto ref)");
 
-			return std::is_nothrow_invocable_v< Fn const, Accessory >;
+			return std::is_nothrow_invocable_v< Fn const, Ref >;
 		}
 
-		template < typename Accessory >
-		void operator()(Accessory const& accessory)const
-		noexcept(calc_noexcept< Accessory >()){
-			accessory.log([](logsys::stdlogb& os){
+		template < typename Ref >
+		void operator()(Ref const& ref)const
+		noexcept(calc_noexcept< Ref >()){
+			ref.log([](logsys::stdlogb& os){
 					os << "verfiy";
-				}, [&]{ std::invoke(fn_, accessory); });
+				}, [&]{ std::invoke(fn_, ref); });
 		}
 
 	private:

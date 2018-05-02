@@ -9,7 +9,7 @@
 #ifndef _disposer__core__module_data__hpp_INCLUDED_
 #define _disposer__core__module_data__hpp_INCLUDED_
 
-#include "accessory.hpp"
+#include "ref.hpp"
 #include "input.hpp"
 #include "output.hpp"
 #include "parameter.hpp"
@@ -25,7 +25,7 @@ namespace disposer{
 	struct parameter_name_tag;
 
 
-	/// \brief Accessory of a \ref module without log
+	/// \brief Ref of a \ref module without log
 	template <
 		typename TypeList,
 		typename Inputs,

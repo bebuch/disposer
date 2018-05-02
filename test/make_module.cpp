@@ -1269,27 +1269,27 @@ BOOST_AUTO_TEST_CASE(input_auto_2){
 
 
 struct module_2_module_init_fn{
-	template < typename Accessory >
-	constexpr auto operator()(Accessory const& accessory)const{
-		decltype(auto) i1 = accessory("i1"_in);
+	template < typename Ref >
+	constexpr auto operator()(Ref const& ref)const{
+		decltype(auto) i1 = ref("i1"_in);
 		static_assert(std::is_same_v< decltype(i1), bool >);
 
-		decltype(auto) o1 = accessory("o1"_out);
+		decltype(auto) o1 = ref("o1"_out);
 		static_assert(std::is_same_v< decltype(o1), bool >);
 
-		decltype(auto) p1 = accessory("p1"_param);
+		decltype(auto) p1 = ref("p1"_param);
 		static_assert(
 			std::is_same_v< decltype(p1), double const& > ||
 			std::is_same_v< decltype(p1), char const& > ||
 			std::is_same_v< decltype(p1), float const& >);
 
-		auto dim1 = accessory.dimension(hana::size_c< 0 >);
+		auto dim1 = ref.dimension(hana::size_c< 0 >);
 		static_assert(
 			dim1 == hana::type_c< double > ||
 			dim1 == hana::type_c< char > ||
 			dim1 == hana::type_c< float >);
 
-		auto dim2 = accessory.dimension(hana::size_c< 1 >);
+		auto dim2 = ref.dimension(hana::size_c< 1 >);
 		static_assert(
 			dim2 == hana::type_c< int > ||
 			dim2 == hana::type_c< bool >);
@@ -1299,9 +1299,9 @@ struct module_2_module_init_fn{
 };
 
 struct module_2_exec{
-	template < typename Accessory >
-	constexpr void operator()(Accessory& accessory){
-		decltype(auto) i1 = accessory("i1"_in);
+	template < typename Ref >
+	constexpr void operator()(Ref& ref){
+		decltype(auto) i1 = ref("i1"_in);
 		static_assert(
 			std::is_same_v< decltype(i1),
 				exec_input< decltype("i1"_in), double, false >& > ||
@@ -1310,7 +1310,7 @@ struct module_2_exec{
 			std::is_same_v< decltype(i1),
 				exec_input< decltype("i1"_in), float, false >& >);
 
-		decltype(auto) o1 = accessory("o1"_out);
+		decltype(auto) o1 = ref("o1"_out);
 		static_assert(
 			std::is_same_v< decltype(o1),
 				exec_output< decltype("o1"_out), double >& > ||
@@ -1319,19 +1319,19 @@ struct module_2_exec{
 			std::is_same_v< decltype(o1),
 				exec_output< decltype("o1"_out), float >& >);
 
-		decltype(auto) p1 = accessory("p1"_param);
+		decltype(auto) p1 = ref("p1"_param);
 		static_assert(
 			std::is_same_v< decltype(p1), double const& > ||
 			std::is_same_v< decltype(p1), char const& > ||
 			std::is_same_v< decltype(p1), float const& >);
 
-		auto dim1 = accessory.dimension(hana::size_c< 0 >);
+		auto dim1 = ref.dimension(hana::size_c< 0 >);
 		static_assert(
 			dim1 == hana::type_c< double > ||
 			dim1 == hana::type_c< char > ||
 			dim1 == hana::type_c< float >);
 
-		auto dim2 = accessory.dimension(hana::size_c< 1 >);
+		auto dim2 = ref.dimension(hana::size_c< 1 >);
 		static_assert(
 			dim2 == hana::type_c< int > ||
 			dim2 == hana::type_c< bool >);
@@ -1356,22 +1356,22 @@ BOOST_AUTO_TEST_CASE(module_2){
 			make("i1"_in, type_ref_c< 0 >, "description", not_required),
 			make("o1"_out, type_ref_c< 0 >, "description"),
 			make("p1"_param, type_ref_c< 0 >, "description", default_value()),
-			set_dimension_fn([](auto const& accessory){
-				decltype(auto) i1 = accessory("i1"_in);
+			set_dimension_fn([](auto const& ref){
+				decltype(auto) i1 = ref("i1"_in);
 				static_assert(std::is_same_v< decltype(i1), bool >);
 				BOOST_TEST(!i1);
 
-				decltype(auto) o1 = accessory("o1"_out);
+				decltype(auto) o1 = ref("o1"_out);
 				static_assert(std::is_same_v< decltype(o1), bool >);
 				BOOST_TEST(!o1);
 
-				decltype(auto) p1 = accessory("p1"_param);
+				decltype(auto) p1 = ref("p1"_param);
 				static_assert(
 					std::is_same_v< decltype(p1), double const& > ||
 					std::is_same_v< decltype(p1), char const& > ||
 					std::is_same_v< decltype(p1), float const& >);
 
-				auto dim1 = accessory.dimension(hana::size_c< 0 >);
+				auto dim1 = ref.dimension(hana::size_c< 0 >);
 				static_assert(
 					dim1 == hana::type_c< double > ||
 					dim1 == hana::type_c< char > ||

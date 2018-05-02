@@ -155,11 +155,11 @@ namespace disposer{
 						"default_value_fn doesn't have the signature:\n"
 						"  R function()\n"
 						"  R function(hana::basic_type< T > type)\n"
-						"its signature is invalid or depends on Accessory by "
+						"its signature is invalid or depends on Ref by "
 						"signature:\n"
 						"  R function(hana::basic_type< T > type, "
-						"auto accessory)\n"
-						"if it depends on Accessory, default_value_help_fn "
+						"auto ref)\n"
+						"if it depends on Ref, default_value_help_fn "
 						"must have one of these signatures\n"
 						"  H function()\n"
 						"  H function(no_value, hana::basic_type< T > "
@@ -264,23 +264,23 @@ namespace disposer{
 			, help_fn(std::move(help_fn)) {}
 
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr bool is_invocable_v()noexcept{
 			return
 				std::is_invocable_v< Fn const, hana::basic_type< T >,
-					Accessory > ||
+					Ref > ||
 				std::is_invocable_v< Fn const, hana::basic_type< T > > ||
 				std::is_invocable_v< Fn const >;
 		}
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr auto invoke_result_type()noexcept{
-			static_assert(is_invocable_v< T, Accessory >(),
+			static_assert(is_invocable_v< T, Ref >(),
 				"Wrong function signature for default_value_fn, expected one "
 				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
-				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"  R function(hana::basic_type< T > type, auto ref)\n"
 				"where R is void or convertible to T");
 
 			auto type = []{
@@ -293,7 +293,7 @@ namespace disposer{
 							hana::basic_type< T > > >;
 					}else{
 						return hana::type_c< std::invoke_result_t< Fn const,
-							hana::basic_type< T >, Accessory > >;
+							hana::basic_type< T >, Ref > >;
 					}
 				}();
 
@@ -305,7 +305,7 @@ namespace disposer{
 				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
-				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"  R function(hana::basic_type< T > type, auto ref)\n"
 				"where R must be void or convertible to T");
 
 			return type;
@@ -313,21 +313,21 @@ namespace disposer{
 
 		/// \brief true if correctly invocable and return type void,
 		///        false otherwise
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr auto is_void_r(
-			hana::basic_type< T >, Accessory
+			hana::basic_type< T >, Ref
 		)noexcept{
-			return hana::traits::is_void(invoke_result_type< T, Accessory >());
+			return hana::traits::is_void(invoke_result_type< T, Ref >());
 		}
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(is_invocable_v< T, Accessory >(),
+			static_assert(is_invocable_v< T, Ref >(),
 				"Wrong function signature for default_value_fn, expected one "
 				"of:\n"
 				"  R function()\n"
 				"  R function(hana::basic_type< T > type)\n"
-				"  R function(hana::basic_type< T > type, auto accessory)\n"
+				"  R function(hana::basic_type< T > type, auto ref)\n"
 				"where R is void or convertible to T");
 
 			if constexpr(std::is_invocable_v< Fn const >){
@@ -339,19 +339,19 @@ namespace disposer{
 					hana::basic_type< T > >;
 			}else{
 				return std::is_nothrow_invocable_v< Fn const,
-					hana::basic_type< T >, Accessory >;
+					hana::basic_type< T >, Ref >;
 			}
 		}
 
 		/// \brief Generate a value via the user defined function
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		T operator()(
 			std::string_view parameter_name,
 			hana::basic_type< T > type,
-			Accessory accessory
-		)const noexcept(calc_noexcept< T, Accessory >()){
+			Ref ref
+		)const noexcept(calc_noexcept< T, Ref >()){
 			(void)type; // Silance GCC
-			return accessory.log(
+			return ref.log(
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") ";
 					if(value){
@@ -361,7 +361,7 @@ namespace disposer{
 						os << "no default value generated";
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
-				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
+				}, [&]()noexcept(calc_noexcept< T, Ref >())->T{
 					if constexpr(std::is_invocable_v< Fn const >){
 						return std::invoke(fn_);
 					}else if constexpr(
@@ -369,7 +369,7 @@ namespace disposer{
 					){
 						return std::invoke(fn_, type);
 					}else{
-						return std::invoke(fn_, type, accessory);
+						return std::invoke(fn_, type, ref);
 					}
 				});
 		}

@@ -41,7 +41,7 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr bool calc_noexcept()noexcept{
 			static_assert(
 				std::is_invocable_r_v< T, Fn const,
@@ -49,13 +49,13 @@ namespace disposer{
 				std::is_invocable_r_v< T, Fn const,
 					std::string_view, hana::basic_type< T > > ||
 				std::is_invocable_r_v< T, Fn const,
-					std::string_view, hana::basic_type< T >, Accessory >,
+					std::string_view, hana::basic_type< T >, Ref >,
 				"Wrong function signature for parser_fn, expected one of:\n"
 				"  R function(std::string_view value)\n"
 				"  R function(std::string_view value, "
 				"hana::basic_type< T > type)\n"
 				"  R function(std::string_view value, "
-				"hana::basic_type< T > type, auto accessory)\n"
+				"hana::basic_type< T > type, auto ref)\n"
 				"where R is convertible to T"
 			);
 
@@ -71,25 +71,25 @@ namespace disposer{
 					std::string_view, hana::basic_type< T > >;
 			}else{
 				return std::is_nothrow_invocable_r_v< T, Fn const,
-					std::string_view, hana::basic_type< T >, Accessory >;
+					std::string_view, hana::basic_type< T >, Ref >;
 			}
 		}
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		T operator()(
 			std::string_view parameter_name,
 			std::string_view value,
 			hana::basic_type< T > type,
-			Accessory const& accessory
-		)const noexcept(calc_noexcept< T, Accessory >()){
-			return accessory.log(
+			Ref const& ref
+		)const noexcept(calc_noexcept< T, Ref >()){
+			return ref.log(
 				[parameter_name](logsys::stdlogb& os, T const* value){
 					os << "parameter(" << parameter_name << ") parsed value";
 					if(value){
 						os << ": " << assisted_to_string(*value);
 					}
 					os << " [" << ct_pretty_name< T >() << "]";
-				}, [&]()noexcept(calc_noexcept< T, Accessory >())->T{
+				}, [&]()noexcept(calc_noexcept< T, Ref >())->T{
 					if constexpr(
 						std::is_invocable_r_v< T, Fn const, std::string_view >
 					){
@@ -100,7 +100,7 @@ namespace disposer{
 					){
 						return std::invoke(fn_, value, type);
 					}else{
-						return std::invoke(fn_, value, type, accessory);
+						return std::invoke(fn_, value, type, ref);
 					}
 				});
 		}

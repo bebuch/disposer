@@ -40,38 +40,38 @@ namespace disposer{
 			: fn_(std::move(fn)) {}
 
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		static constexpr bool calc_noexcept()noexcept{
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
 				static_assert(
 					std::is_invocable_v< Fn const, T const& > ||
-					std::is_invocable_v< Fn const, T const&, Accessory >,
+					std::is_invocable_v< Fn const, T const&, Ref >,
 					"Wrong function signature for verify_value_fn, expected "
 					"one of:\n"
 					"  void function(T const& value)\n"
-					"  void function(T const& value, auto accessory)"
+					"  void function(T const& value, auto ref)"
 				);
 
 				if constexpr(std::is_invocable_v< Fn const, T const& >){
 					return std::is_nothrow_invocable_v< Fn const, T const& >;
 				}else{
 					return std::is_nothrow_invocable_v<
-						Fn const, T const&, Accessory >;
+						Fn const, T const&, Ref >;
 				}
 			}else{
 				return true;
 			}
 		}
 
-		template < typename T, typename Accessory >
+		template < typename T, typename Ref >
 		void operator()(
 			std::string_view parameter_name,
 			T const& value,
-			Accessory const& accessory
-		)const noexcept(calc_noexcept< T, Accessory >()){
-			(void)parameter_name; (void)value; (void)accessory; // Silance GCC
+			Ref const& ref
+		)const noexcept(calc_noexcept< T, Ref >()){
+			(void)parameter_name; (void)value; (void)ref; // Silance GCC
 			if constexpr(!std::is_same_v< Fn, verify_value_always_t >){
-				accessory.log([parameter_name](logsys::stdlogb& os){
+				ref.log([parameter_name](logsys::stdlogb& os){
 						os << "parameter(" << parameter_name
 							<< ") verified value of type ["
 							<< ct_pretty_name< T >() << "]";
@@ -79,7 +79,7 @@ namespace disposer{
 						if constexpr(std::is_invocable_v< Fn const, T const& >){
 							std::invoke(fn_, value);
 						}else{
-							std::invoke(fn_, value, accessory);
+							std::invoke(fn_, value, ref);
 						}
 					});
 			}

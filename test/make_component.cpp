@@ -838,21 +838,21 @@ BOOST_AUTO_TEST_CASE(param_1){
 
 
 struct component_2_component_init_fn{
-	template < typename Accessory >
-	constexpr auto operator()(Accessory const& accessory)const{
-		decltype(auto) p1 = accessory("p1"_param);
+	template < typename Ref >
+	constexpr auto operator()(Ref const& ref)const{
+		decltype(auto) p1 = ref("p1"_param);
 		static_assert(
 			std::is_same_v< decltype(p1), double const& > ||
 			std::is_same_v< decltype(p1), char const& > ||
 			std::is_same_v< decltype(p1), float const& >);
 
-		auto dim1 = accessory.dimension(hana::size_c< 0 >);
+		auto dim1 = ref.dimension(hana::size_c< 0 >);
 		static_assert(
 			dim1 == hana::type_c< double > ||
 			dim1 == hana::type_c< char > ||
 			dim1 == hana::type_c< float >);
 
-		auto dim2 = accessory.dimension(hana::size_c< 1 >);
+		auto dim2 = ref.dimension(hana::size_c< 1 >);
 		static_assert(
 			dim2 == hana::type_c< int > ||
 			dim2 == hana::type_c< bool >);
@@ -875,14 +875,14 @@ BOOST_AUTO_TEST_CASE(component_2){
 				return solved_dimensions{ic< 0 >{2}};
 			}),
 			make("p1"_param, type_ref_c< 0 >, "description", default_value()),
-			set_dimension_fn([](auto const& accessory){
-				decltype(auto) p1 = accessory("p1"_param);
+			set_dimension_fn([](auto const& ref){
+				decltype(auto) p1 = ref("p1"_param);
 				static_assert(
 					std::is_same_v< decltype(p1), double const& > ||
 					std::is_same_v< decltype(p1), char const& > ||
 					std::is_same_v< decltype(p1), float const& >);
 
-				auto dim1 = accessory.dimension(hana::size_c< 0 >);
+				auto dim1 = ref.dimension(hana::size_c< 0 >);
 				static_assert(
 					dim1 == hana::type_c< double > ||
 					dim1 == hana::type_c< char > ||

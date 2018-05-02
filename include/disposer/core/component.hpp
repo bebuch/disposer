@@ -11,7 +11,7 @@
 
 #include "component_base.hpp"
 #include "component_init_fn.hpp"
-#include "component_accessory.hpp"
+#include "component_ref.hpp"
 #include "module_name.hpp"
 
 #include "../config/component_make_data.hpp"
@@ -29,11 +29,11 @@ namespace disposer{
 	class component: public component_base{
 	public:
 		/// \brief Type for exec_fn
-		using accessory_type = component_init_accessory< TypeList, Parameters >;
+		using ref_type = component_init_ref< TypeList, Parameters >;
 
 		/// \brief Actual user defined component object
 		using state_type = std::invoke_result_t<
-			component_init_fn< ComponentInitFn > const, accessory_type >;
+			component_init_fn< ComponentInitFn > const, ref_type >;
 
 
 		/// \brief Constructor
@@ -47,10 +47,10 @@ namespace disposer{
 			component_init_fn< ComponentInitFn > const& component_fn
 		)
 			: component_base(name, type_name)
-			, accessory(type_list< Ts ... >{},
+			, ref(type_list< Ts ... >{},
 				state_, data_.parameters, system, location)
 			, data_(std::move(ref_list))
-			, state_(component_fn(accessory_type(
+			, state_(component_fn(ref_type(
 				data_, this->name, system, location))) {}
 
 
@@ -61,8 +61,8 @@ namespace disposer{
 		component(component&&) = delete;
 
 
-		/// \brief Accessory object in component modules
-		component_accessory< TypeList, state_type, Parameters > accessory;
+		/// \brief Ref object in component modules
+		component_ref< TypeList, state_type, Parameters > ref;
 
 
 	private:

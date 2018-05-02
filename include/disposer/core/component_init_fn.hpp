@@ -86,13 +86,13 @@ namespace disposer{
 	};
 
 
-	/// \brief Accessory of a component
+	/// \brief Ref of a component
 	template < typename TypeList, typename Parameters >
-	class component_init_accessory
-		: public add_log< component_init_accessory< TypeList, Parameters > >{
+	class component_init_ref
+		: public add_log< component_init_ref< TypeList, Parameters > >{
 	public:
 		/// \brief Constructor
-		component_init_accessory(
+		component_init_ref(
 			component_data< TypeList, Parameters > const& data,
 			std::string_view component_name,
 			disposer::system& system,
@@ -177,27 +177,27 @@ namespace disposer{
 
 		template < typename TypeList, typename Parameters >
 		auto operator()(
-			component_init_accessory< TypeList, Parameters >&& accessory
+			component_init_ref< TypeList, Parameters >&& ref
 		)const{
 			// TODO: calulate noexcept
 			if constexpr(std::is_invocable_v< Fn const,
-				component_init_accessory< TypeList, Parameters > >
+				component_init_ref< TypeList, Parameters > >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					Fn const, component_init_accessory< TypeList,
+					Fn const, component_init_ref< TypeList,
 						Parameters > > >,
 					"Fn must not return void");
-				return std::invoke(fn_, std::move(accessory));
+				return std::invoke(fn_, std::move(ref));
 			}else if constexpr(std::is_invocable_v< Fn const >){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const > >,
 					"Fn must not return void");
-				(void)accessory; // silance GCC
+				(void)ref; // silance GCC
 				return std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be const invokable with "
-					"component_init_accessory or without an argument");
+					"component_init_ref or without an argument");
 			}
 		}
 

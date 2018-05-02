@@ -169,7 +169,7 @@ namespace disposer{
 		typename DefaultValueFn,
 		typename DefaultValueHelpFn,
 		typename VerfiyValueFn,
-		typename Accessory >
+		typename Ref >
 	static T get_parameter_value(
 		std::string_view parameter_name,
 		DimensionList const&,
@@ -177,21 +177,21 @@ namespace disposer{
 		default_value_fn< DefaultValueFn, DefaultValueHelpFn > const&
 			default_value_generator,
 		verify_value_fn< VerfiyValueFn > const& verify_value,
-		Accessory const& accessory,
+		Ref const& ref,
 		parameter_data const* param_data_ptr
 	){
 		if(param_data_ptr != nullptr && param_data_ptr->generic_value){
 			T result(parser(parameter_name,
-				*param_data_ptr->generic_value, hana::type_c< T >, accessory));
+				*param_data_ptr->generic_value, hana::type_c< T >, ref));
 
-			verify_value(parameter_name, result, accessory);
+			verify_value(parameter_name, result, ref);
 
 			return result;
 		}
 
 		if constexpr(
 			auto const is_void_r = default_value_generator
-				.is_void_r(hana::type_c< T >, accessory);
+				.is_void_r(hana::type_c< T >, ref);
 			is_void_r
 		){
 			throw std::runtime_error(io_tools::make_string(
@@ -199,7 +199,7 @@ namespace disposer{
 				ct_pretty_name< T >(), "]"));
 		}else{
 			return default_value_generator(
-				parameter_name, hana::type_c< T >, accessory);
+				parameter_name, hana::type_c< T >, ref);
 		}
 	}
 

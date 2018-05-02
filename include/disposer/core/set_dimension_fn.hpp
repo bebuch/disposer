@@ -80,11 +80,11 @@ namespace disposer{
 		template < typename DimensionList, typename ResultType >
 		static constexpr void check_result_type()noexcept{
 			static_assert(is_solved_dimensions_v< ResultType >,
-				"result of Fn(auto accessory) in set_dimension_fn must "
+				"result of Fn(auto ref) in set_dimension_fn must "
 				"be solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 
 			static_assert(ResultType::index_count > 0,
-				"result of Fn(auto accessory) in set_dimension_fn must "
+				"result of Fn(auto ref) in set_dimension_fn must "
 				"solve at least one dimension, you must return an object of "
 				"solved_dimensions< Ds ... > with sizeof...(Ds) > 0");
 
@@ -100,23 +100,23 @@ namespace disposer{
 		}
 
 		/// \brief Helper for noexcept of operator()
-		template < typename Accessory >
+		template < typename Ref >
 		static constexpr bool calc_noexcept()noexcept{
-			static_assert(std::is_invocable_v< Fn const, Accessory >,
+			static_assert(std::is_invocable_v< Fn const, Ref >,
 				"Wrong function signature for set_dimension_fn, expected:\n"
-				"solved_dimensions< Ds ... > function(auto accessory)");
+				"solved_dimensions< Ds ... > function(auto ref)");
 
-			check_result_type< typename Accessory::dimension_list,
-				std::invoke_result_t< Fn const, Accessory > >();
-			return std::is_nothrow_invocable_v< Fn const, Accessory >;
+			check_result_type< typename Ref::dimension_list,
+				std::invoke_result_t< Fn const, Ref > >();
+			return std::is_nothrow_invocable_v< Fn const, Ref >;
 		}
 
 		/// \brief Calls the actual function
-		template < typename Accessory >
-		auto operator()(Accessory const& accessory)const
-		noexcept(calc_noexcept< Accessory >()){
+		template < typename Ref >
+		auto operator()(Ref const& ref)const
+		noexcept(calc_noexcept< Ref >()){
 			auto const types = [](auto ic){
-				return Accessory::dimension_list
+				return Ref::dimension_list
 					::dimensions[hana::size_c< ic.d >];
 			};
 
@@ -124,7 +124,7 @@ namespace disposer{
 				return hana::size(types(ic));
 			};
 
-			return accessory.log(
+			return ref.log(
 				[types](logsys::stdlogb& os, auto* solved_dims_ptr){
 					os << "set dimension number";
 
@@ -150,7 +150,7 @@ namespace disposer{
 								detail::get_type_name(ic.i, types(ic))) ...);
 						});
 				}, [&]{
-					auto solved_dims = std::invoke(fn_, accessory);
+					auto solved_dims = std::invoke(fn_, ref);
 
 					hana::unpack(solved_dims.indexes, [type_count](auto ... ic){
 						if(((ic.i < type_count(ic)) && ...)) return;

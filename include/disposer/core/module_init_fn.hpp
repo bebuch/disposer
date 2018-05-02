@@ -15,25 +15,25 @@
 namespace disposer{
 
 
-	/// \brief Accessory of a module during enable/disable calls
+	/// \brief Ref of a module during enable/disable calls
 	template <
 		typename TypeList,
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename ComponentAccessory >
-	class module_init_accessory
-		: public optional_component< ComponentAccessory >
-		, public add_log< module_init_accessory< TypeList, Inputs, Outputs,
-			Parameters, ComponentAccessory > >{
+		typename ComponentRef >
+	class module_init_ref
+		: public optional_component< ComponentRef >
+		, public add_log< module_init_ref< TypeList, Inputs, Outputs,
+			Parameters, ComponentRef > >{
 	public:
 		/// \brief Constructor
-		module_init_accessory(
+		module_init_ref(
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			std::string_view location,
-			optional_component< ComponentAccessory > component
+			optional_component< ComponentRef > component
 		)
-			: optional_component< ComponentAccessory >(
+			: optional_component< ComponentRef >(
 				component)
 			, data_(data)
 			, location_(location) {}
@@ -119,30 +119,30 @@ namespace disposer{
 			typename Inputs,
 			typename Outputs,
 			typename Parameters,
-			typename ComponentAccessory >
+			typename ComponentRef >
 		auto operator()(
-			module_init_accessory< TypeList, Inputs, Outputs, Parameters,
-				ComponentAccessory > accessory
+			module_init_ref< TypeList, Inputs, Outputs, Parameters,
+				ComponentRef > ref
 		)const{
 			// TODO: calulate noexcept
-			if constexpr(std::is_invocable_v< Fn const, module_init_accessory<
-				TypeList, Inputs, Outputs, Parameters, ComponentAccessory > >
+			if constexpr(std::is_invocable_v< Fn const, module_init_ref<
+				TypeList, Inputs, Outputs, Parameters, ComponentRef > >
 			){
 				static_assert(!std::is_void_v< std::invoke_result_t<
-					Fn const, module_init_accessory< TypeList,
-						Inputs, Outputs, Parameters, ComponentAccessory > > >,
+					Fn const, module_init_ref< TypeList,
+						Inputs, Outputs, Parameters, ComponentRef > > >,
 					"Fn must not return void");
-				return std::invoke(fn_, accessory);
+				return std::invoke(fn_, ref);
 			}else if constexpr(std::is_invocable_v< Fn const >){
 				static_assert(!std::is_void_v< std::invoke_result_t<
 					Fn const > >,
 					"Fn must not return void");
-				(void)accessory; // silance GCC
+				(void)ref; // silance GCC
 				return std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< Fn >,
 					"Fn function must be const invokable with "
-					"module_init_accessory or without an argument");
+					"module_init_ref or without an argument");
 			}
 		}
 
@@ -163,20 +163,20 @@ namespace disposer{
 		typename Outputs,
 		typename Parameters,
 		typename ModuleInitFn,
-		typename ComponentAccessory >
+		typename ComponentRef >
 	class module_state{
 	public:
 		/// \brief Type of the module state object
 		using state_type = std::invoke_result_t<
 			module_init_fn< ModuleInitFn >,
-			module_init_accessory< TypeList, Inputs, Outputs, Parameters,
-				ComponentAccessory > >;
+			module_init_ref< TypeList, Inputs, Outputs, Parameters,
+				ComponentRef > >;
 
 
 		/// \brief Constructor
 		module_state(
 			module_init_fn< ModuleInitFn > const& module_init_fn,
-			optional_component< ComponentAccessory > component
+			optional_component< ComponentRef > component
 		)noexcept
 			: component(component)
 			, module_init_fn_(module_init_fn) {}
@@ -188,8 +188,8 @@ namespace disposer{
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			std::string_view location
 		){
-			state_.emplace(module_init_fn_(module_init_accessory< TypeList,
-				Inputs, Outputs, Parameters, ComponentAccessory >(
+			state_.emplace(module_init_fn_(module_init_ref< TypeList,
+				Inputs, Outputs, Parameters, ComponentRef >(
 					data, location, component)));
 		}
 
@@ -206,7 +206,7 @@ namespace disposer{
 
 
 		/// \brief Reference to component or empty struct
-		optional_component< ComponentAccessory > component;
+		optional_component< ComponentRef > component;
 
 
 	private:
@@ -224,9 +224,9 @@ namespace disposer{
 		typename Inputs,
 		typename Outputs,
 		typename Parameters,
-		typename ComponentAccessory >
+		typename ComponentRef >
 	class module_state<
-		TypeList, Inputs, Outputs, Parameters, void, ComponentAccessory
+		TypeList, Inputs, Outputs, Parameters, void, ComponentRef
 	>{
 	public:
 		/// \brief Type of the module state object
@@ -235,7 +235,7 @@ namespace disposer{
 		/// \brief Constructor
 		module_state(
 			module_init_fn< void > const&,
-			optional_component< ComponentAccessory > component
+			optional_component< ComponentRef > component
 		)noexcept
 			: component(component) {}
 
@@ -253,7 +253,7 @@ namespace disposer{
 
 
 		/// \brief Reference to component or empty struct
-		optional_component< ComponentAccessory > component;
+		optional_component< ComponentRef > component;
 	};
 
 

@@ -9,7 +9,7 @@
 #ifndef _disposer__core__component_data__hpp_INCLUDED_
 #define _disposer__core__component_data__hpp_INCLUDED_
 
-#include "accessory.hpp"
+#include "ref.hpp"
 #include "parameter.hpp"
 
 
@@ -19,7 +19,7 @@ namespace disposer{
 	struct parameter_name_tag;
 
 
-	/// \brief Accessory of a \ref component without log
+	/// \brief Ref of a \ref component without log
 	template < typename TypeList, typename Parameters >
 	struct component_data{
 		/// \brief Constructor

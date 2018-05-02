@@ -367,7 +367,7 @@ namespace disposer{
 						maker.parser,
 						maker.default_value_generator,
 						maker.verify_value,
-						module_make_accessory{
+						module_make_ref{
 							component, dims, iops, data.location()},
 						param_data_ptr
 					)};
@@ -389,7 +389,7 @@ namespace disposer{
 			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			fn(module_make_accessory{component, dims, iops, data.location()});
+			fn(module_make_ref{component, dims, iops, data.location()});
 			return make_module(dims, configs, std::move(iops));
 		}
 
@@ -409,7 +409,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops), fn(
-				module_make_accessory{component, dims, iops, data.location()}));
+				module_make_ref{component, dims, iops, data.location()}));
 		}
 
 
@@ -607,7 +607,7 @@ namespace disposer{
 
 			return make_module_ptr(dimensions, configuration, data,
 				module_init, exec, hana::bool_c< CanRunConcurrent >,
-				optional_component{component.accessory, usage_count});
+				optional_component{component.ref, usage_count});
 		}
 	};
 
@@ -675,7 +675,7 @@ namespace disposer{
 	using exec_config_t = typename exec_config_type< Config >::type;
 
 
-	/// \brief Calculate the module_init_accessory type for modules
+	/// \brief Calculate the module_init_ref type for modules
 	///        without dimensions
 	///
 	/// If your module has dimensions the function will fail by a
@@ -690,7 +690,7 @@ namespace disposer{
 					hana::is_a< output_maker_tag, Config >(),
 					hana::is_a< parameter_maker_tag, Config >()
 				), Config::is_free_type) ...),
-			"init_accessory_of requires all module_configure entries "
+			"init_ref_of requires all module_configure entries "
 			"to be parameters with a free_type_c");
 
 		return hana::tuple_t<
@@ -722,60 +722,60 @@ namespace disposer{
 
 	template <
 		typename Configure,
-		typename ComponentAccessory >
-	struct module_init_accessory_type{
+		typename ComponentRef >
+	struct module_init_ref_type{
 		static constexpr auto IOP =
 			config_tuples_of(hana::type_c< Configure >);
 
-		using type = module_init_accessory< type_list<>,
+		using type = module_init_ref< type_list<>,
 			typename decltype(config_of(IOP[hana::size_c< 0 >]))::type,
 			typename decltype(config_of(IOP[hana::size_c< 1 >]))::type,
 			typename decltype(config_of(IOP[hana::size_c< 2 >]))::type,
-			ComponentAccessory >;
+			ComponentRef >;
 	};
 
 
 	template <
 		typename Configure,
 		typename StateType,
-		typename ComponentAccessory >
-	struct module_accessory_type{
+		typename ComponentRef >
+	struct module_ref_type{
 		static constexpr auto IOP =
 			config_tuples_of(hana::type_c< Configure >);
 
-		using type = module_accessory< type_list<>, StateType,
+		using type = module_ref< type_list<>, StateType,
 			typename decltype(exec_config_of(IOP[hana::size_c< 0 >]))::type,
 			typename decltype(exec_config_of(IOP[hana::size_c< 1 >]))::type,
 			typename decltype(config_of(IOP[hana::size_c< 2 >]))::type,
-			ComponentAccessory >;
+			ComponentRef >;
 	};
 
 
-	/// \brief Type of init_accessory for modules without dimensions
+	/// \brief Type of init_ref for modules without dimensions
 	template < typename Configure >
-	using module_init_accessory_t = typename
-		module_init_accessory_type< Configure, void >::type;
+	using module_init_ref_t = typename
+		module_init_ref_type< Configure, void >::type;
 
-	/// \brief Type of init_accessory for component modules without dimensions
+	/// \brief Type of init_ref for component modules without dimensions
 	template <
 		typename Configure,
-		typename ComponentAccessory >
-	using component_module_init_accessory_t = typename
-		module_init_accessory_type< Configure, ComponentAccessory >::type;
+		typename ComponentRef >
+	using component_module_init_ref_t = typename
+		module_init_ref_type< Configure, ComponentRef >::type;
 
 
-	/// \brief Type of accessory for modules without dimensions
+	/// \brief Type of ref for modules without dimensions
 	template < typename Configure, typename StateType >
-	using module_accessory_t = typename
-		module_accessory_type< Configure, StateType, void >::type;
+	using module_ref_t = typename
+		module_ref_type< Configure, StateType, void >::type;
 
-	/// \brief Type of accessory for component modules without dimensions
+	/// \brief Type of ref for component modules without dimensions
 	template <
 		typename Configure,
 		typename StateType,
-		typename ComponentAccessory >
-	using component_module_accessory_t = typename
-		module_accessory_type< Configure, StateType, ComponentAccessory >::type;
+		typename ComponentRef >
+	using component_module_ref_t = typename
+		module_ref_type< Configure, StateType, ComponentRef >::type;
 
 
 }

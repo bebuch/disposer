@@ -21,13 +21,13 @@ namespace disposer{
 
 
 	/// \brief Reference to a component or empty struct
-	template < typename ComponentAccessory >
+	template < typename ComponentRef >
 	struct optional_component{
 		constexpr optional_component(
-			ComponentAccessory& accessory,
+			ComponentRef& ref,
 			std::size_t& usage_count
 		)noexcept
-			: component(accessory)
+			: component(ref)
 			, usage_count(usage_count) {}
 
 		constexpr optional_component(optional_component const& other)noexcept
@@ -35,9 +35,9 @@ namespace disposer{
 			, usage_count(other.usage_count) {}
 
 
-		using accessory_type = ComponentAccessory;
+		using ref_type = ComponentRef;
 
-		accessory_type component;
+		ref_type component;
 
 		std::size_t& usage_count;
 	};
@@ -45,11 +45,11 @@ namespace disposer{
 	/// \brief Empty struct
 	template <>
 	struct optional_component< void >{
-		using accessory_type = void;
+		using ref_type = void;
 	};
 
 
-	/// \brief Accessory of a module during exec calls
+	/// \brief Ref of a module during exec calls
 	template <
 		typename TypeList,
 		typename State,
@@ -57,14 +57,14 @@ namespace disposer{
 		typename ExecOutputs,
 		typename Parameters,
 		typename Component >
-	class module_accessory
+	class module_ref
 		: public optional_component< Component >
-		, public add_log< module_accessory<
+		, public add_log< module_ref<
 			TypeList, State, ExecInputs, ExecOutputs, Parameters, Component > >
 	{
 	public:
 		/// \brief Constructor
-		module_accessory(
+		module_ref(
 			std::size_t id,
 			TypeList,
 			State* state,
@@ -203,21 +203,21 @@ namespace disposer{
 			typename Parameters,
 			typename Component >
 		void operator()(
-			module_accessory< TypeList, State, ExecInputs, ExecOutputs,
-				Parameters, Component >& accessory
+			module_ref< TypeList, State, ExecInputs, ExecOutputs,
+				Parameters, Component >& ref
 		){
 			// TODO: calulate noexcept
 			if constexpr(
-				std::is_invocable_v< Fn, module_accessory< TypeList, State,
+				std::is_invocable_v< Fn, module_ref< TypeList, State,
 					ExecInputs, ExecOutputs, Parameters, Component >& >
 			){
-				std::invoke(fn_, accessory);
+				std::invoke(fn_, ref);
 			}else if constexpr(std::is_invocable_v< Fn >){
-				(void)accessory; // silance GCC
+				(void)ref; // silance GCC
 				std::invoke(fn_);
 			}else{
 				static_assert(detail::false_c< State >,
-					"Fn must be invokable with module_accessory& or "
+					"Fn must be invokable with module_ref& or "
 					"without arguments");
 			}
 		}

@@ -6,8 +6,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt)
 //-----------------------------------------------------------------------------
-#ifndef _disposer__core__accessory__hpp_INCLUDED_
-#define _disposer__core__accessory__hpp_INCLUDED_
+#ifndef _disposer__core__ref__hpp_INCLUDED_
+#define _disposer__core__ref__hpp_INCLUDED_
 
 #include "input_name.hpp"
 #include "output_name.hpp"
@@ -99,14 +99,14 @@ namespace disposer{
 		typename Component,
 		typename DimensionList,
 		typename ... RefList >
-	class module_make_accessory
+	class module_make_ref
 		: public optional_component< Component >
 		, public add_log<
-			module_make_accessory< Component, DimensionList, RefList ... > >{
+			module_make_ref< Component, DimensionList, RefList ... > >{
 	public:
 		using dimension_list = DimensionList;
 
-		module_make_accessory(
+		module_make_ref(
 			optional_component< Component > component,
 			DimensionList,
 			iops_ref< RefList ... > const& list,
@@ -116,7 +116,7 @@ namespace disposer{
 			, location(location)
 			, list_(list) {}
 
-		module_make_accessory(module_make_accessory const& other)noexcept
+		module_make_ref(module_make_ref const& other)noexcept
 			: optional_component< Component >(other)
 			, location(other.location)
 			, list_(other.list_) {}
@@ -174,19 +174,19 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class component_make_accessory
+	class component_make_ref
 		: public add_log<
-			component_make_accessory< DimensionList, RefList ... > >{
+			component_make_ref< DimensionList, RefList ... > >{
 	public:
 		using dimension_list = DimensionList;
 
-		component_make_accessory(
+		component_make_ref(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view location
 		)noexcept: location(location), list_(list) {}
 
-		component_make_accessory(component_make_accessory const& other)noexcept
+		component_make_ref(component_make_ref const& other)noexcept
 			: location(other.location)
 			, list_(other.list_) {}
 
