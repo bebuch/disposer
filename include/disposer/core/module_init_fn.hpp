@@ -24,8 +24,7 @@ namespace disposer{
 		typename ComponentRef >
 	class module_init_ref
 		: public optional_component< ComponentRef >
-		, public add_log< module_init_ref< TypeList, Inputs, Outputs,
-			Parameters, ComponentRef > >{
+		, public add_log{
 	public:
 		/// \brief Constructor
 		module_init_ref(
@@ -33,10 +32,9 @@ namespace disposer{
 			std::string_view location,
 			optional_component< ComponentRef > component
 		)
-			: optional_component< ComponentRef >(
-				component)
-			, data_(data)
-			, location_(location) {}
+			: optional_component< ComponentRef >(component)
+			, add_log(location)
+			, data_(data) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
@@ -83,18 +81,9 @@ namespace disposer{
 		}
 
 
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << location_;
-		}
-
-
 	private:
 		/// \brief Reference to the module object
 		module_data< TypeList, Inputs, Outputs, Parameters > const& data_;
-
-		/// \brief Location for log messages
-		std::string_view location_;
 	};
 
 

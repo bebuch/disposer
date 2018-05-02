@@ -14,26 +14,13 @@
 
 #include <boost/hana/type.hpp>
 
+#include <string_view>
+
 
 namespace disposer{
 
 
 	namespace hana = boost::hana;
-
-
-	template < typename Derived >
-	class add_log;
-
-
-	/// \brief Access key
-	struct log_key{
-	private:
-		/// \brief Constructor
-		constexpr log_key()noexcept = default;
-
-		template < typename Derived >
-		friend class add_log;
-	};
 
 
 	template < typename LogF >
@@ -45,7 +32,6 @@ namespace disposer{
 		std::is_invocable_v< LogF, logsys::stdlogb&, T >;
 
 
-	template < typename Derived >
 	class add_log{
 	public:
 		/// \brief Add a line to the log
@@ -120,29 +106,15 @@ namespace disposer{
 		}
 
 	protected:
-		add_log()noexcept{
-			static_assert(std::is_base_of_v< add_log, Derived >);
-
-			auto log_prefix_implemented =
-				hana::is_valid([](auto derived_type)->decltype(
-					std::declval< typename decltype(derived_type)::type >()
-					.log_prefix(log_key(), std::declval< logsys::stdlogb& >())
-				){})(hana::type_c< Derived const >);
-			static_assert(log_prefix_implemented,
-				"Derived must implement log_prefix function");
-		}
+		add_log(std::string_view location)noexcept
+			: location_(location) {}
 
 	private:
-		template < typename Log >
-		void add_prefix(Log& os)const{
-			static_cast< Derived const& >(*this).log_prefix(log_key(), os);
-		}
-
 		/// \brief Helper for log message functions
 		template < typename LogF >
 		auto simple_impl(LogF& log)const{
 			return [&](logsys::stdlogb& os){
-				add_prefix(os);
+				os << location_;
 				log(os);
 			};
 		}
@@ -151,10 +123,13 @@ namespace disposer{
 		template < typename T, typename LogF >
 		auto extended_impl(LogF& log)const{
 			return [&](logsys::stdlogb& os, T result){
-				add_prefix(os);
+				os << location_;
 				log(os, result);
 			};
 		}
+
+		/// \brief Location for log messages
+		std::string_view location_;
 	};
 
 

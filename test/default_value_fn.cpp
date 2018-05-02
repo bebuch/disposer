@@ -11,10 +11,8 @@ using namespace disposer;
 using namespace std::literals::string_view_literals;
 
 
-struct ref: add_log< ref >{
-	ref()noexcept{}
-
-	void log_prefix(log_key&&, logsys::stdlogb&)const{}
+struct ref: add_log{
+	ref()noexcept: add_log("") {}
 };
 
 

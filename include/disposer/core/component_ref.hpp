@@ -29,9 +29,7 @@ namespace disposer{
 		typename TypeList,
 		typename State,
 		typename Parameters >
-	class component_ref
-		: public add_log< component_ref< TypeList, State, Parameters > >
-	{
+	class component_ref: public add_log{
 	public:
 		/// \brief Constructor
 		component_ref(
@@ -41,10 +39,10 @@ namespace disposer{
 			disposer::system& system,
 			std::string_view location
 		)noexcept
-			: state_(state)
+			: add_log(location)
+			, state_(state)
 			, parameters_(parameters)
-			, system_(system)
-			, location_(location) {}
+			, system_(system) {}
 
 
 		/// \brief Get reference to a parameter-object via
@@ -90,12 +88,6 @@ namespace disposer{
 		}
 
 
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << location_;
-		}
-
-
 	private:
 		template < typename This, typename Name >
 		static auto& get(This& this_, Name const& name)noexcept{
@@ -123,9 +115,6 @@ namespace disposer{
 
 		/// \brief Reference to the system object
 		disposer::system& system_;
-
-		/// \brief Prefix for log messages
-		std::string_view location_;
 	};
 
 

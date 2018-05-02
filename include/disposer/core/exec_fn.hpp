@@ -59,8 +59,7 @@ namespace disposer{
 		typename Component >
 	class module_ref
 		: public optional_component< Component >
-		, public add_log< module_ref<
-			TypeList, State, ExecInputs, ExecOutputs, Parameters, Component > >
+		, public add_log
 	{
 	public:
 		/// \brief Constructor
@@ -75,12 +74,12 @@ namespace disposer{
 			optional_component< Component > component
 		)noexcept
 			: optional_component< Component >(component)
+			, add_log(location)
 			, id_(id)
 			, state_(state)
 			, inputs_(inputs)
 			, outputs_(outputs)
-			, parameters_(parameters)
-			, location_(location) {}
+			, parameters_(parameters) {}
 
 
 		/// \brief Get reference to an input-, output- or parameter-object via
@@ -113,12 +112,6 @@ namespace disposer{
 
 		/// \brief ID of this exec
 		std::size_t id()noexcept{ return id_; }
-
-
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << location_;
-		}
 
 
 	private:
@@ -172,9 +165,6 @@ namespace disposer{
 
 		/// \brief hana::tuple of parameters
 		Parameters const& parameters_;
-
-		/// \brief Prefix for log messages
-		std::string_view location_;
 	};
 
 

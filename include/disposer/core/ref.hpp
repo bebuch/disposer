@@ -101,8 +101,7 @@ namespace disposer{
 		typename ... RefList >
 	class module_make_ref
 		: public optional_component< Component >
-		, public add_log<
-			module_make_ref< Component, DimensionList, RefList ... > >{
+		, public add_log{
 	public:
 		using dimension_list = DimensionList;
 
@@ -113,12 +112,12 @@ namespace disposer{
 			std::string_view location
 		)noexcept
 			: optional_component< Component >(component)
-			, location(location)
+			, add_log(location)
 			, list_(list) {}
 
 		module_make_ref(module_make_ref const& other)noexcept
 			: optional_component< Component >(other)
-			, location(other.location)
+			, add_log(other)
 			, list_(other.list_) {}
 
 
@@ -158,15 +157,6 @@ namespace disposer{
 		}
 
 
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << location;
-		}
-
-		/// \brief Log location
-		std::string_view location;
-
-
 	private:
 		/// \brief References to all previous IOPs
 		iops_ref< RefList ... > const& list_;
@@ -174,9 +164,7 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class component_make_ref
-		: public add_log<
-			component_make_ref< DimensionList, RefList ... > >{
+	class component_make_ref: public add_log{
 	public:
 		using dimension_list = DimensionList;
 
@@ -184,10 +172,12 @@ namespace disposer{
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			std::string_view location
-		)noexcept: location(location), list_(list) {}
+		)noexcept
+			: add_log(location)
+			, list_(list) {}
 
 		component_make_ref(component_make_ref const& other)noexcept
-			: location(other.location)
+			: add_log(other)
 			, list_(other.list_) {}
 
 
@@ -221,15 +211,6 @@ namespace disposer{
 				"component dimension DI is already solved");
 			return DimensionList::dimensions[i];
 		}
-
-
-		/// \brief Implementation of the log prefix
-		void log_prefix(log_key&&, logsys::stdlogb& os)const{
-			os << location;
-		}
-
-		/// \brief Log location
-		std::string_view location;
 
 
 	private:
