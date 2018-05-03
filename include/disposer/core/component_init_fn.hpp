@@ -11,79 +11,10 @@
 
 #include "component_base.hpp"
 #include "component_data.hpp"
-#include "system.hpp"
+#include "system_ref.hpp"
 
 
 namespace disposer{
-
-
-	/// \brief Same interface as system, but without load_config and with a
-	///        check that the component does not remove itself
-	class component_system_proxy{
-	public:
-		component_system_proxy(
-			system& system,
-			std::string_view component_name
-		)
-			: system_(system)
-			, component_name_(component_name) {}
-
-
-		/// \brief Remove a component
-		void remove_component(std::string const& name){
-			if(name == component_name_){
-				throw std::logic_error("component(" + name
-					+ ") tried to remove itself");
-			}
-			system_.remove_component(name);
-		}
-
-		/// \brief Create a component
-		void load_component(std::istream& content){
-			system_.load_component(content);
-		}
-
-		/// \brief Remove a chain
-		void remove_chain(std::string const& name){
-			system_.remove_chain(name);
-		}
-
-		/// \brief Create a chain
-		void load_chain(std::istream& content){
-			system_.load_chain(content);
-		}
-
-
-		/// \brief The directory object
-		disposer::directory& directory(){
-			return system_.directory();
-		}
-
-		/// \brief The directory object
-		disposer::directory const& directory()const{
-			return system_.directory();
-		}
-
-
-		/// \brief List of all chaines
-		std::unordered_set< std::string > chains()const{
-			return system_.chains();
-		}
-
-
-		/// \brief Get a reference to the chain, throw if it does not exist
-		enabled_chain enable_chain(std::string const& chain){
-			return system_.enable_chain(chain);
-		}
-
-
-	private:
-		/// \brief Reference to the actual system
-		system& system_;
-
-		/// \brief Name of the component
-		std::string_view component_name_;
-	};
 
 
 	/// \brief Ref of a component
@@ -130,12 +61,7 @@ namespace disposer{
 		}
 
 		/// \brief Get reference to the system object
-		component_system_proxy& system()noexcept{
-			return system_;
-		}
-
-		/// \brief Get const reference to the system object
-		component_system_proxy const& system()const noexcept{
+		system_ref system()const noexcept{
 			return system_;
 		}
 
@@ -145,7 +71,7 @@ namespace disposer{
 		component_data< TypeList, Parameters > const& data_;
 
 		/// \brief Reference to the system object
-		component_system_proxy system_;
+		system_ref system_;
 	};
 
 

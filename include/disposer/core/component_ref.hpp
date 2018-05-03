@@ -36,13 +36,14 @@ namespace disposer{
 			TypeList,
 			State& state,
 			Parameters const& parameters,
+			std::string_view component_name,
 			disposer::system& system,
 			std::string_view location
 		)noexcept
 			: log_ref(location)
 			, state_(state)
 			, parameters_(parameters)
-			, system_(system) {}
+			, system_(system, component_name) {}
 
 
 		/// \brief Get reference to a parameter-object via
@@ -78,12 +79,7 @@ namespace disposer{
 		}
 
 		/// \brief Get reference to the system object
-		disposer::system& system()noexcept{
-			return system_;
-		}
-
-		/// \brief Get const reference to the system object
-		disposer::system const& system()const noexcept{
+		system_ref system()const noexcept{
 			return system_;
 		}
 
@@ -114,7 +110,7 @@ namespace disposer{
 		Parameters const& parameters_;
 
 		/// \brief Reference to the system object
-		disposer::system& system_;
+		disposer::system_ref system_;
 	};
 
 
