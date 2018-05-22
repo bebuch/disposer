@@ -17,16 +17,18 @@
 namespace disposer{
 
 
-	template < typename Container >
-	std::string type_list_as_string(Container const& c){
+	inline std::string type_list_as_string(
+		std::unordered_set< type_index > const& list
+	){
 		std::ostringstream os;
-		auto iter = c.begin();
-		if(iter != c.end()){
-			os << '[' << *iter << ']';
+		auto iter = begin(list);
+		auto const e = end(list);
+		if(iter != e){
+			os << '[' << iter->pretty_name() << ']';
 			++iter;
 		}
-		for(; iter != c.end(); ++iter){
-			os << ", [" << *iter << ']';
+		for(; iter != e; ++iter){
+			os << ", [" << iter->pretty_name() << ']';
 		}
 		return os.str();
 	}
