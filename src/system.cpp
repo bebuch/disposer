@@ -324,7 +324,7 @@ namespace disposer{
 	}
 
 
-	enabled_chain system::enable_chain(std::string const& chain){
+	chain& system::get_chain(std::string const& chain){
 		std::lock_guard lock(mutex_);
 
 		auto iter = chains_.find(chain);

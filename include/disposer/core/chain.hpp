@@ -128,40 +128,6 @@ namespace disposer{
 	};
 
 
-	/// \brief A resource guard for chain enable/disable
-	class enabled_chain{
-	public:
-		/// \brief Calls disable on the chain object
-		~enabled_chain(){
-			chain_.disable();
-		}
-
-		/// \brief Exec chain
-		bool exec(){
-			return chain_.exec();
-		}
-
-		/// \brief Get name of the chain
-		std::string const& name()const{
-			return chain_.name;
-		}
-
-
-	private:
-		/// \brief Calls enable on the chain object
-		enabled_chain(chain& c)
-			: chain_(c)
-		{
-			chain_.enable();
-		}
-
-		/// \brief The chain object
-		chain& chain_;
-
-	friend class system;
-	};
-
-
 }
 
 
