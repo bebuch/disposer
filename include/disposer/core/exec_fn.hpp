@@ -13,8 +13,9 @@
 #include "output_name.hpp"
 #include "parameter_name.hpp"
 
-#include "../tool/log_ref.hpp"
 #include "../tool/false_c.hpp"
+
+#include <logsys/log_ref.hpp>
 
 
 namespace disposer{
@@ -59,7 +60,7 @@ namespace disposer{
 		typename Component >
 	class module_ref
 		: public optional_component< Component >
-		, public log_ref
+		, public logsys::log_ref
 	{
 	public:
 		/// \brief Constructor
@@ -74,7 +75,7 @@ namespace disposer{
 			optional_component< Component > component
 		)noexcept
 			: optional_component< Component >(component)
-			, log_ref(location)
+			, logsys::log_ref(location)
 			, id_(id)
 			, state_(state)
 			, inputs_(inputs)
