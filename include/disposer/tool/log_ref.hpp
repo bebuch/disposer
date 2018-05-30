@@ -12,15 +12,10 @@
 #include <logsys/stdlogb.hpp>
 #include <logsys/log.hpp>
 
-#include <boost/hana/type.hpp>
-
 #include <string_view>
 
 
 namespace disposer{
-
-
-	namespace hana = boost::hana;
 
 
 	template < typename LogF >
