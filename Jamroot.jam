@@ -4,15 +4,6 @@ local io_tools = ../io_tools ;
 local logsys = ../logsys ;
 
 
-use-project /boost
-	: $(boost)
-	;
-
-use-project /logsys
-	: $(logsys)
-	;
-
-
 project disposer
 	:
 	source-location src
