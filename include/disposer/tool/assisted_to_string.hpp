@@ -39,7 +39,7 @@ namespace disposer{
 		std::enable_if_t< logsys::is_valid< T >(detail::valid_output_expr) > >
 	std::string to_string(T const& v){
 		std::ostringstream os;
-		os << v;
+		os << std::boolalpha << v;
 		return os.str();
 	}
 
