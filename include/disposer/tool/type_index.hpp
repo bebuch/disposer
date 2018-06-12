@@ -10,7 +10,7 @@
 #define _disposer__tool__type_index__hpp_INCLUDED_
 
 #include <boost/functional/hash.hpp>
-#include <boost/type_index/ctti_type_index.hpp>
+#include <boost/type_index.hpp>
 
 #include <string>
 
@@ -18,8 +18,8 @@
 namespace std{
 
 	// make ctti_type_index hashable for unordered_map and unordered_set
-	template <> struct hash< boost::typeindex::ctti_type_index >:
-		boost::hash< boost::typeindex::ctti_type_index >{};
+	template <> struct hash< boost::typeindex::type_index >:
+		boost::hash< boost::typeindex::type_index >{};
 
 }
 
@@ -27,7 +27,7 @@ namespace std{
 namespace disposer{
 
 
-	using type_index = boost::typeindex::ctti_type_index;
+	using type_index = boost::typeindex::type_index;
 
 
 }

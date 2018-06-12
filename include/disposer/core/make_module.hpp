@@ -165,7 +165,7 @@ namespace disposer{
 							std::move(iops));
 					}else{
 						if(IsRequired || output_ptr != nullptr){
-							constexpr auto active_ti
+							auto const active_ti
 								= type_index::type_id< type >();
 							auto const output_ti = output_ptr->get_type();
 
