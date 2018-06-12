@@ -53,6 +53,15 @@ BOOST_AUTO_TEST_CASE(self){
 	BOOST_TEST(ptp(name< std::int16_t >) == "int16");
 	BOOST_TEST(ptp(name< std::int32_t >) == "int32");
 	BOOST_TEST(ptp(name< std::int64_t >) == "int64");
+
+	BOOST_TEST(pn< std::uint8_t > == "uint8");
+	BOOST_TEST(pn< std::uint16_t > == "uint16");
+	BOOST_TEST(pn< std::uint32_t > == "uint32");
+	BOOST_TEST(pn< std::uint64_t > == "uint64");
+	BOOST_TEST(pn< std::int8_t > == "int8");
+	BOOST_TEST(pn< std::int16_t > == "int16");
+	BOOST_TEST(pn< std::int32_t > == "int32");
+	BOOST_TEST(pn< std::int64_t > == "int64");
 }
 
 struct _float{};
@@ -138,9 +147,75 @@ BOOST_AUTO_TEST_CASE(string){
 BOOST_AUTO_TEST_CASE(vector){
 	BOOST_TEST(pn< std::vector< char > > == "std::vector<char>");
 	BOOST_TEST(pn< std::vector< A > > == "std::vector<A>");
+
+	BOOST_TEST(pn< std::vector< std::uint8_t > >  == "std::vector<uint8>");
+	BOOST_TEST(pn< std::vector< std::uint16_t > > == "std::vector<uint16>");
+	BOOST_TEST(pn< std::vector< std::uint32_t > > == "std::vector<uint32>");
+	BOOST_TEST(pn< std::vector< std::uint64_t > > == "std::vector<uint64>");
+	BOOST_TEST(pn< std::vector< std::int8_t > >   == "std::vector<int8>");
+	BOOST_TEST(pn< std::vector< std::int16_t > >  == "std::vector<int16>");
+	BOOST_TEST(pn< std::vector< std::int32_t > >  == "std::vector<int32>");
+	BOOST_TEST(pn< std::vector< std::int64_t > >  == "std::vector<int64>");
 }
 
 BOOST_AUTO_TEST_CASE(optional){
 	BOOST_TEST(pn< std::optional< char > > == "std::optional<char>");
 	BOOST_TEST(pn< std::optional< A > > == "std::optional<A>");
+
+	BOOST_TEST(pn< std::optional< std::uint8_t > >  == "std::optional<uint8>");
+	BOOST_TEST(pn< std::optional< std::uint16_t > > == "std::optional<uint16>");
+	BOOST_TEST(pn< std::optional< std::uint32_t > > == "std::optional<uint32>");
+	BOOST_TEST(pn< std::optional< std::uint64_t > > == "std::optional<uint64>");
+	BOOST_TEST(pn< std::optional< std::int8_t > >   == "std::optional<int8>");
+	BOOST_TEST(pn< std::optional< std::int16_t > >  == "std::optional<int16>");
+	BOOST_TEST(pn< std::optional< std::int32_t > >  == "std::optional<int32>");
+	BOOST_TEST(pn< std::optional< std::int64_t > >  == "std::optional<int64>");
+}
+
+BOOST_AUTO_TEST_CASE(vector_optional){
+	BOOST_TEST(pn< std::vector< std::optional< char > > > == \
+		"std::vector<std::optional<char>>");
+	BOOST_TEST(pn< std::vector< std::optional< A > > > == \
+		"std::vector<std::optional<A>>");
+
+	BOOST_TEST(pn< std::vector< std::optional< std::uint8_t > > >  == \
+		"std::vector<std::optional<uint8>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::uint16_t > > > == \
+		"std::vector<std::optional<uint16>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::uint32_t > > > == \
+		"std::vector<std::optional<uint32>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::uint64_t > > > == \
+		"std::vector<std::optional<uint64>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::int8_t > > >   == \
+		"std::vector<std::optional<int8>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::int16_t > > >  == \
+		"std::vector<std::optional<int16>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::int32_t > > >  == \
+		"std::vector<std::optional<int32>>");
+	BOOST_TEST(pn< std::vector< std::optional< std::int64_t > > >  == \
+		"std::vector<std::optional<int64>>");
+}
+
+BOOST_AUTO_TEST_CASE(optional_vector){
+	BOOST_TEST(pn< std::optional< std::vector< char > > > == \
+		"std::optional<std::vector<char>>");
+	BOOST_TEST(pn< std::optional< std::vector< A > > > == \
+		"std::optional<std::vector<A>>");
+
+	BOOST_TEST(pn< std::optional< std::vector< std::uint8_t > > >  == \
+		"std::optional<std::vector<uint8>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::uint16_t > > > == \
+		"std::optional<std::vector<uint16>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::uint32_t > > > == \
+		"std::optional<std::vector<uint32>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::uint64_t > > > == \
+		"std::optional<std::vector<uint64>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::int8_t > > >   == \
+		"std::optional<std::vector<int8>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::int16_t > > >  == \
+		"std::optional<std::vector<int16>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::int32_t > > >  == \
+		"std::optional<std::vector<int32>>");
+	BOOST_TEST(pn< std::optional< std::vector< std::int64_t > > >  == \
+		"std::optional<std::vector<int64>>");
 }
