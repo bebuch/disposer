@@ -171,9 +171,10 @@ namespace disposer{
 
 							if(output_ti != active_ti){
 								throw std::logic_error("type of input is ["
-									+ active_ti.pretty_name()
+									+ type_print(active_ti)
 									+ "] but connected output is of type ["
-									+ output_ti.pretty_name() + "]");
+									+ type_print(output_ti)
+									+ "]");
 							}
 						}
 

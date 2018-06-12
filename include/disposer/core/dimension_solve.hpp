@@ -114,7 +114,7 @@ namespace disposer{
 
 					throw std::logic_error(
 						"type of connected output which is ["
-						+ ti.pretty_name()
+						+ type_print(ti)
 						+ "] is not compatible with input("
 						+ detail::to_std_string(Name{})
 						+ "), valid types are: "

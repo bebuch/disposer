@@ -9,7 +9,7 @@
 #ifndef _disposer__tool__type_list_as_string__hpp_INCLUDED_
 #define _disposer__tool__type_list_as_string__hpp_INCLUDED_
 
-#include "type_index.hpp"
+#include "ct_pretty_name.hpp"
 
 #include <sstream>
 
@@ -24,11 +24,11 @@ namespace disposer{
 		auto iter = begin(list);
 		auto const e = end(list);
 		if(iter != e){
-			os << '[' << iter->pretty_name() << ']';
+			os << '[' << type_print(*iter) << ']';
 			++iter;
 		}
 		for(; iter != e; ++iter){
-			os << ", [" << iter->pretty_name() << ']';
+			os << ", [" << type_print(*iter) << ']';
 		}
 		return os.str();
 	}

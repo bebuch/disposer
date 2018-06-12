@@ -18,13 +18,15 @@
 namespace disposer{
 
 
-	std::string purify_type_print(std::string const& type);
+	std::string type_print(std::string const& type);
+
+	std::string type_print(type_index const& type);
 
 
 	template < typename T >
 	struct ct_pretty_name_t{
 		std::string operator()()const{
-			return purify_type_print(type_index::type_id< T >().pretty_name());
+			return type_print(type_index::type_id< T >().pretty_name());
 		}
 	};
 

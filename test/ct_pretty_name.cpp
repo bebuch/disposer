@@ -1,19 +1,27 @@
 #include <disposer/tool/ct_pretty_name.hpp>
-#include <disposer/tool/type_index.hpp>
 
 #define BOOST_TEST_MODULE disposer ct_pretty_name
 #include <boost/test/included/unit_test.hpp>
+
+#include <vector>
+#include <string>
+
+
+struct A{};
 
 
 using namespace disposer;
 
 std::string ptp(std::string const& value){
-	return purify_type_print(value);
+	return type_print(value);
 }
 
 
 template < typename T >
 std::string name = type_index::type_id< T >().pretty_name();
+
+template < typename T >
+std::string pn = ct_pretty_name< T >();
 
 using std::uint8_t;
 using std::uint16_t;
@@ -117,4 +125,22 @@ BOOST_AUTO_TEST_CASE(prevent_by_both){
 	BOOST_TEST(ptp(name< _unsigned_ >) == "_unsigned_");
 	BOOST_TEST(ptp(name< _const_ >) == "_const_");
 	BOOST_TEST(ptp(name< _volatile_ >) == "_volatile_");
+}
+
+BOOST_AUTO_TEST_CASE(struct_A){
+	BOOST_TEST(pn< A > == "A");
+}
+
+BOOST_AUTO_TEST_CASE(string){
+	BOOST_TEST(pn< std::string > == "std::string");
+}
+
+BOOST_AUTO_TEST_CASE(vector){
+	BOOST_TEST(pn< std::vector< char > > == "std::vector<char>");
+	BOOST_TEST(pn< std::vector< A > > == "std::vector<A>");
+}
+
+BOOST_AUTO_TEST_CASE(optional){
+	BOOST_TEST(pn< std::optional< char > > == "std::optional<char>");
+	BOOST_TEST(pn< std::optional< A > > == "std::optional<A>");
 }

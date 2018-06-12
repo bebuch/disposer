@@ -102,7 +102,7 @@ namespace disposer{ namespace{
 namespace disposer{
 
 
-	std::string purify_type_print(std::string const& type){
+	std::string type_print(std::string const& type){
 		std::string result = "";
 		result.reserve(type.size());
 
@@ -140,6 +140,10 @@ namespace disposer{
 		}
 
 		return result;
+	}
+
+	std::string type_print(type_index const& type){
+		return type.pretty_name();
 	}
 
 

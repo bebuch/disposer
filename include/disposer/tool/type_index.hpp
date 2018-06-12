@@ -30,46 +30,6 @@ namespace disposer{
 	using type_index = boost::typeindex::ctti_type_index;
 
 
-
-	template < typename T >
-	std::string type_name(T&& value){
-		try{
-			return type_index::type_id_runtime(value).pretty_name();
-		}catch(std::exception const& e){
-			using namespace std::literals::string_literals;
-			return "could not find type: "s + e.what();
-		}catch(...){
-			return "could not find type";
-		}
-	}
-
-
-	template < typename T >
-	std::string type_name(){
-		try{
-			return type_index::type_id< T >().pretty_name();
-		}catch(std::exception const& e){
-			using namespace std::literals::string_literals;
-			return "could not find type: "s + e.what();
-		}catch(...){
-			return "could not find type";
-		}
-	}
-
-
-	template < typename T >
-	std::string type_name_with_cvr(){
-		try{
-			return type_index::type_id_with_cvr< T >().pretty_name();
-		}catch(std::exception const& e){
-			using namespace std::literals::string_literals;
-			return "could not find type: "s + e.what();
-		}catch(...){
-			return "could not find type";
-		}
-	}
-
-
 }
 
 
