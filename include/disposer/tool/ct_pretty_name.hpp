@@ -26,7 +26,7 @@ namespace disposer{
 	template < typename T >
 	struct ct_pretty_name_t{
 		std::string operator()()const{
-			return type_print(type_index::type_id< T >().pretty_name());
+			return type_print(type_index::type_id< T >());
 		}
 	};
 
