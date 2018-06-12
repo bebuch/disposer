@@ -143,7 +143,7 @@ namespace disposer{
 	}
 
 	std::string type_print(type_index const& type){
-		return type.pretty_name();
+		return type_print(type.pretty_name());
 	}
 
 
