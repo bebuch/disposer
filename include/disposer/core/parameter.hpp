@@ -26,6 +26,10 @@ namespace disposer{
 		static_assert(hana::is_a< parameter_name_tag, Name >);
 #endif
 
+		/// \brief The actual type
+		using type = T;
+
+
 		/// \brief Hana tag to identify parameters
 		using hana_tag = parameter_tag;
 

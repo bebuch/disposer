@@ -25,7 +25,12 @@ namespace disposer{
 	template < typename Name, typename T >
 	class output: public output_base{
 	public:
+#ifdef DISPOSER_CONFIG_ENABLE_DEBUG_MODE
 		static_assert(hana::is_a< output_name_tag, Name >);
+#endif
+
+		/// \brief The actual type
+		using type = T;
 
 
 		/// \brief Hana tag to identify outputs

@@ -33,6 +33,10 @@ namespace disposer{
 	template < typename T >
 	class unnamed_exec_output: public exec_output_base{
 	public:
+		/// \brief The actual type
+		using type = T;
+
+
 		/// \brief Constructor
 		unnamed_exec_output(
 			std::size_t const id,

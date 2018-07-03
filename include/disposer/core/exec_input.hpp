@@ -22,6 +22,13 @@ namespace disposer{
 	template < typename Name, typename T, bool IsRequired >
 	class exec_input: public exec_input_base{
 	public:
+		/// \brief The actual type
+		using type = T;
+
+		/// \brief Whether the input must always be connected with an output
+		static constexpr auto is_required = std::bool_constant< IsRequired >();
+
+
 		/// \brief Compile time name of the input
 		using name_type = Name;
 

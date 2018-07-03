@@ -29,12 +29,15 @@ namespace disposer{
 		static_assert(hana::is_a< input_name_tag, Name >);
 #endif
 
-		/// \brief Hana tag to identify inputs
-		using hana_tag = input_tag;
-
+		/// \brief The actual type
+		using type = T;
 
 		/// \brief Whether the input must always be connected with an output
 		static constexpr auto is_required = std::bool_constant< IsRequired >();
+
+
+		/// \brief Hana tag to identify inputs
+		using hana_tag = input_tag;
 
 
 		/// \brief Compile time name of the input
