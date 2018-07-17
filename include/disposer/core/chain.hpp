@@ -28,6 +28,25 @@ namespace disposer{
 	};
 
 
+	/// \brief Returned by an exec call
+	struct exec_info{
+		/// \brief true if exec was successfully executed, false otherwise
+		bool success;
+
+		/// \brief Disposer global execution ID
+		std::size_t id;
+
+		/// \brief Chain local execution ID
+		std::size_t exec_id;
+
+
+		/// \brief Implicit conversion to bool
+		constexpr operator bool()const noexcept{
+			return success;
+		}
+	};
+
+
 	/// \brief A process chain
 	///
 	/// Properties:
@@ -69,7 +88,7 @@ namespace disposer{
 		/// \brief Execute the proccess chain
 		///
 		/// The chain must be enabled, otherwise an exception is thrown.
-		bool exec();
+		exec_info exec();
 
 
 		/// \brief Enables the chain for exec calls

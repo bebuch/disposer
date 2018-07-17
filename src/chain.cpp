@@ -245,7 +245,7 @@ namespace disposer{
 	}
 
 
-	bool chain::exec(){
+	exec_info chain::exec(){
 		if(enable_count_ == 0){
 			throw std::logic_error("chain(" + name + ") is not enabled");
 		}
@@ -266,7 +266,7 @@ namespace disposer{
 					return make_exec_modules(modules_, id, exec_id);
 				});
 
-			return modules.exec();
+			return exec_info{modules.exec(), id, exec_id};
 		});
 	}
 
