@@ -142,17 +142,13 @@ namespace disposer{
 
 
 		/// \brief Calls the exec_fn
-		bool exec(
-			std::size_t id,
-			std::size_t exec_id,
-			to_exec_list_t< Inputs >& inputs,
-			to_exec_list_t< Outputs >& outputs,
-			std::string_view location
-		)noexcept{
+		bool exec(exec_module_type& exec_module)noexcept{
+			auto const id = exec_module.id_;
 			module_ref ref{id, TypeList{}, state_.object(),
-				inputs, outputs, data_.parameters, location, state_.component};
+				exec_module.inputs_, exec_module.outputs_, data_.parameters,
+				exec_module.location_, state_.component};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
-				manager(*this, exec_id);
+				manager(*this, exec_module.exec_id_);
 			return logsys::exception_catching_log(
 				[this, id](logsys::stdlogb& os){
 					os << "id(" << id << ") " << this->location << "exec";

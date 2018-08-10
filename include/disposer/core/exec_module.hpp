@@ -40,11 +40,14 @@ namespace disposer{
 		bool CanRunConcurrent,
 		typename Component >
 	class exec_module: public exec_module_base{
+		/// \brief Type of the module
+		using module_type = module< TypeList, Inputs, Outputs, Parameters,
+			ModuleInitFn, ExecFn, CanRunConcurrent, Component >;
+
 	public:
 		/// \brief Constructor
 		exec_module(
-			module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn,
-				ExecFn, CanRunConcurrent, Component >& module,
+			module_type& module,
 			to_exec_init_list_t< Inputs > const& inputs,
 			to_exec_init_list_t< Outputs > const& outputs,
 			std::size_t id,
@@ -81,8 +84,7 @@ namespace disposer{
 
 	private:
 		/// \brief Reference to the module
-		module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn, ExecFn,
-			CanRunConcurrent, Component >& module_;
+		module_type& module_;
 
 		/// \brief Current id
 		///
@@ -106,13 +108,15 @@ namespace disposer{
 
 		/// \brief The actual worker function called one times per trigger
 		virtual bool exec()noexcept override{
-			return module_.exec(id_, exec_id_, inputs_, outputs_, location_);
+			return module_.exec(*this);
 		}
 
 		/// \brief Cleanup inputs and connected outputs if appropriate
 		virtual void cleanup()noexcept override{
 			hana::for_each(inputs_, [](auto& input){ input.cleanup(); });
 		}
+
+		friend module_type;
 	};
 
 
