@@ -61,6 +61,24 @@ namespace disposer{
 				+ module_.type_name + ") exec: ") {}
 
 
+		/// \brief Name of the process chain in config file section 'chain'
+		std::string_view chain(){
+			return module_.chain;
+		}
+
+		/// \brief Name of the module type given via class declarant
+		std::string_view type_name(){
+			return module_.type_name;
+		}
+
+		/// \brief Position of the module in the process chain
+		///
+		/// The first module has number 1.
+		std::size_t number(){
+			return module_.type_name;
+		}
+
+
 	private:
 		/// \brief Reference to the module
 		module< TypeList, Inputs, Outputs, Parameters, ModuleInitFn, ExecFn,
