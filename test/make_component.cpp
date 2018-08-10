@@ -10,7 +10,7 @@ using namespace disposer::literals;
 using namespace std::literals::string_view_literals;
 
 
-using type_index = boost::typeindex::ctti_type_index;
+using type_index = boost::typeindex::type_index;
 
 template < std::size_t D >
 using ic = index_component< D >;
