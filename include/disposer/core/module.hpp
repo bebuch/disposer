@@ -91,13 +91,25 @@ namespace disposer{
 		: public concurrency_manager< CanRunConcurrent >
 		, public module_base
 	{
+		/// \brief Type of the module data
+		using module_data_type =
+			module_data< TypeList, Inputs, Outputs, Parameters >;
+
+		/// \brief Type of the user defined state object
+		using module_state_type = module_state< TypeList,
+			Inputs, Outputs, Parameters, ModuleInitFn, Component >;
+
+		/// \brief Type of exec_module
+		using exec_module_type = exec_module< TypeList, Inputs, Outputs,
+			Parameters, ModuleInitFn, ExecFn, CanRunConcurrent,
+			Component >;
+
 	public:
 		/// \brief State maker function or void for stateless modules
 		using module_init_fn_type = ModuleInitFn;
 
 		/// \brief Type of the module state object
-		using state_type = typename module_state< TypeList, Inputs, Outputs,
-			Parameters, ModuleInitFn, Component >::state_type;
+		using state_type = typename module_state_type::state_type;
 
 
 		/// \brief Constructor
@@ -152,8 +164,8 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		virtual void enable()override{
-			state_.enable(static_cast< module_data< TypeList, Inputs, Outputs,
-				Parameters > const& >(data_), this->location);
+			state_.enable(
+				static_cast< module_data_type const& >(data_), this->location);
 		}
 
 		/// \brief Disables the module for exec calls
@@ -168,10 +180,7 @@ namespace disposer{
 			std::size_t const exec_id,
 			output_map_type& output_map
 		)override{
-			return std::make_unique< exec_module< TypeList, Inputs, Outputs,
-					Parameters, ModuleInitFn, ExecFn, CanRunConcurrent,
-					Component
-				> >(*this,
+			return std::make_unique< exec_module_type >(*this,
 					hana::transform(data_.inputs,
 						[&output_map](auto const& input){
 							return hana::tuple
@@ -199,11 +208,10 @@ namespace disposer{
 
 	private:
 		/// \brief inputs, outputs and parameters
-		module_data< TypeList, Inputs, Outputs, Parameters > data_;
+		module_data_type data_;
 
 		/// \brief The user defined state object
-		module_state< TypeList, Inputs, Outputs, Parameters, ModuleInitFn,
-			Component > state_;
+		module_state_type state_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;
