@@ -15,6 +15,8 @@
 #include "dimension.hpp"
 #include "exec_fn.hpp"
 
+#include "../config/module_make_data.hpp"
+
 #include "../tool/extract.hpp"
 #include "../tool/false_c.hpp"
 #include "../tool/to_std_string.hpp"
@@ -110,15 +112,17 @@ namespace disposer{
 			optional_component< Component > component,
 			DimensionList,
 			iops_ref< RefList ... > const& list,
-			std::string_view location
+			module_make_data const& data
 		)noexcept
 			: optional_component< Component >(component)
-			, logsys::log_ref(location)
+			, logsys::log_ref(data.location())
+			, data_(data)
 			, list_(list) {}
 
 		module_make_ref(module_make_ref const& other)noexcept
 			: optional_component< Component >(other)
 			, logsys::log_ref(other)
+			, data_(other.data_)
 			, list_(other.list_) {}
 
 
@@ -158,7 +162,34 @@ namespace disposer{
 		}
 
 
+		/// \brief Location for log messages
+		std::string_view location()const noexcept{
+			return data_.location();
+		}
+
+
+		/// \brief Name of the process chain in config file section 'chain'
+		std::string_view chain()const noexcept{
+			return data_.chain;
+		}
+
+		/// \brief Name of the module type given via class declarant
+		std::string_view type_name()const noexcept{
+			return data_.type_name;
+		}
+
+		/// \brief Position of the module in the process chain
+		///
+		/// The first module has number 1.
+		std::size_t number()const noexcept{
+			return data_.number;
+		}
+
+
 	private:
+		/// \brief Provides data about the module and its chain
+		module_make_data const& data_;
+
 		/// \brief References to all previous IOPs
 		iops_ref< RefList ... > const& list_;
 	};

@@ -31,9 +31,10 @@ namespace disposer{
 	struct component_configure{
 		static_assert(hana::and_(hana::true_c, hana::or_(
 			hana::is_a< parameter_maker_tag, Config >(),
-			hana::is_a< set_dimension_fn_tag, Config >()) ...),
+			hana::is_a< set_dimension_fn_tag, Config >(),
+			hana::is_a< verify_fn_tag , Config >()) ...),
 			"at least one of the component_configure arguments is not "
-			"a parameter maker or a set_dimension_fn");
+			"a parameter maker, a set_dimension_fn or a verify_fn");
 
 		/// \brief The data
 		hana::tuple< Config ... > config_list;
@@ -343,8 +344,7 @@ namespace disposer{
 			help << "  * component: " << component_type << "\n";
 			help << help_text << "\n";
 			hana::for_each(configuration.config_list, [&help](auto const& iop){
-					auto const is_iop =
-						!hana::is_a< set_dimension_fn_tag >(iop);
+					auto const is_iop = hana::is_a< parameter_tag >(iop);
 					if constexpr(is_iop){
 						help << iop.help_text_fn(DimensionList{});
 					}

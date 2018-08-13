@@ -85,6 +85,12 @@ namespace disposer{
 		}
 
 
+		/// \brief Name of the component
+		std::string_view name()const noexcept{
+			return system_.component_name();
+		}
+
+
 	private:
 		template < typename This, typename Name >
 		static auto& get(This& this_, Name const& name)noexcept{

@@ -76,6 +76,12 @@ namespace disposer{
 		}
 
 
+		/// \brief Name of the component
+		std::string_view component_name()const noexcept{
+			return component_name_;
+		}
+
+
 	private:
 		/// \brief Reference to the actual system
 		system& system_;

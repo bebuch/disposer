@@ -13,7 +13,8 @@ constexpr solved_dimensions result{index_component< 0 >{0}};
 template < typename Fn >
 void test(Fn const& fn){
 	fn(module_make_ref{optional_component< void >{},
-		dimension_list{dimension_c< int, char >}, iops_ref{}, ""});
+		dimension_list{dimension_c< int, char >}, iops_ref{},
+		module_make_data{}});
 }
 
 

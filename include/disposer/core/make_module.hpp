@@ -31,10 +31,11 @@ namespace disposer{
 			hana::is_a< input_maker_tag, Config >(),
 			hana::is_a< output_maker_tag, Config >(),
 			hana::is_a< parameter_maker_tag, Config >(),
-			hana::is_a< set_dimension_fn_tag, Config >()) ...),
+			hana::is_a< set_dimension_fn_tag, Config >(),
+			hana::is_a< verify_fn_tag , Config >()) ...),
 			"at least one of the module_configure arguments is not "
-			"an input maker, an output maker, a parameter maker or "
-			"a set_dimension_fn");
+			"an input maker, an output maker, a parameter maker, "
+			"a set_dimension_fn or a verify_fn");
 
 		/// \brief The data
 		hana::tuple< Config ... > config_list;
@@ -368,8 +369,7 @@ namespace disposer{
 						maker.parser,
 						maker.default_value_generator,
 						maker.verify_value,
-						module_make_ref{
-							component, dims, iops, data.location()},
+						module_make_ref{component, dims, iops, data},
 						param_data_ptr
 					)};
 
@@ -390,7 +390,7 @@ namespace disposer{
 			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			fn(module_make_ref{component, dims, iops, data.location()});
+			fn(module_make_ref{component, dims, iops, data});
 			return make_module(dims, configs, std::move(iops));
 		}
 
@@ -410,7 +410,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops), fn(
-				module_make_ref{component, dims, iops, data.location()}));
+				module_make_ref{component, dims, iops, data}));
 		}
 
 
@@ -561,7 +561,10 @@ namespace disposer{
 			help << generate_dims_help(DimensionList{});
 
 			hana::for_each(configuration.config_list, [&help](auto const& iop){
-				auto const is_iop = !hana::is_a< set_dimension_fn_tag >(iop);
+				auto const is_iop =
+					hana::is_a< input_tag >(iop) ||
+					hana::is_a< output_tag >(iop) ||
+					hana::is_a< parameter_tag >(iop);
 				if constexpr(is_iop){
 					help << iop.help_text_fn(DimensionList{});
 				}
