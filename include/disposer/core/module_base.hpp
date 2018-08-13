@@ -9,23 +9,15 @@
 #ifndef _disposer__core__module_base__hpp_INCLUDED_
 #define _disposer__core__module_base__hpp_INCLUDED_
 
-#include "exec_module_base.hpp"
+#include "output_name_to_ptr_type.hpp"
+#include "output_map_type.hpp"
 #include "output_base.hpp"
 #include "input_base.hpp"
 
 #include "../tool/module_ptr.hpp"
 
-#include <unordered_map>
-
 
 namespace disposer{
-
-
-	using output_map_type
-		= std::unordered_map< output_base*, exec_output_base* >;
-
-	using output_name_to_ptr_type
-		= std::unordered_map< std::string, output_base* >;
 
 
 	/// \brief Base class for all modules

@@ -10,6 +10,7 @@
 #define _disposer__core__exec_output__hpp_INCLUDED_
 
 #include "exec_output_base.hpp"
+#include "output_map_type.hpp"
 #include "output.hpp"
 
 #include "../tool/input_data.hpp"

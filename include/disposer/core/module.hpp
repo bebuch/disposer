@@ -9,6 +9,7 @@
 #ifndef _disposer__core__module__hpp_INCLUDED_
 #define _disposer__core__module__hpp_INCLUDED_
 
+#include "output_name_to_ptr_type.hpp"
 #include "module_base.hpp"
 #include "exec_module.hpp"
 #include "module_init_fn.hpp"
@@ -20,9 +21,6 @@
 
 namespace disposer{
 
-
-	using output_name_to_ptr_type
-		= std::unordered_map< std::string, output_base* >;
 
 	template < bool CanRunConcurrent >
 	class concurrency_manager{
@@ -77,6 +75,22 @@ namespace disposer{
 	};
 
 
+	template < typename ModuleInitFn, typename ModuleInitRef >
+	struct module_init_fn_result{
+		using type = std::invoke_result_t<
+			module_init_fn< ModuleInitFn >, ModuleInitRef >;
+	};
+
+	template < typename ModuleInitRef >
+	struct module_init_fn_result< void, ModuleInitRef >{
+		using type = void;
+	};
+
+	template < typename ModuleInitFn, typename ModuleInitRef >
+	using module_init_fn_result_t =
+		typename module_init_fn_result< ModuleInitFn, ModuleInitRef >::type;
+
+
 	/// \brief The actual module type
 	template <
 		typename TypeList,
@@ -91,27 +105,28 @@ namespace disposer{
 		: public concurrency_manager< CanRunConcurrent >
 		, public module_base
 	{
+		/// \brief State maker function or void for stateless modules
+		using module_init_fn_type = ModuleInitFn;
+
+		/// \brief Type of the module state object
+		using state_type = module_init_fn_result_t<
+			ModuleInitFn, module_init_ref<
+				TypeList, Inputs, Outputs, Parameters, Component > >;
+
 		/// \brief Type of the module data
 		using module_data_type =
 			module_data< TypeList, Inputs, Outputs, Parameters >;
 
 		/// \brief Type of the user defined state object
-		using module_state_type = module_state< TypeList,
-			Inputs, Outputs, Parameters, ModuleInitFn, Component >;
+		using module_state_type = module_state< state_type, ModuleInitFn >;
 
 		/// \brief Type of exec_module
 		using exec_module_type = exec_module< TypeList, Inputs, Outputs,
 			Parameters, ModuleInitFn, ExecFn, CanRunConcurrent,
 			Component >;
 
+
 	public:
-		/// \brief State maker function or void for stateless modules
-		using module_init_fn_type = ModuleInitFn;
-
-		/// \brief Type of the module state object
-		using state_type = typename module_state_type::state_type;
-
-
 		/// \brief Constructor
 		template < typename ... Ts, typename ... RefList >
 		module(
@@ -127,28 +142,27 @@ namespace disposer{
 		)
 			: module_base(chain, type_name, number)
 			, data_(std::move(ref_list))
-			, state_(module_init_fn, component)
+			, state_(module_init_fn)
+			, component_(component)
 			, exec_fn_(exec_fn) {
 				if constexpr(!std::is_void_v< Component >){
-					++state_.component.usage_count;
+					++component_.usage_count;
 				}
 			}
 
 		~module(){
 			if constexpr(!std::is_void_v< Component >){
-				--state_.component.usage_count;
+				--component_.usage_count;
 			}
 		}
 
 
 		/// \brief Calls the exec_fn
 		bool exec(exec_module_type& exec_module)noexcept{
-			auto const id = exec_module.id_;
-			module_ref ref{id, TypeList{}, state_.object(),
-				exec_module.inputs_, exec_module.outputs_, data_.parameters,
-				exec_module.location_, state_.component};
+			auto const id = exec_module.id();
+			module_ref ref{exec_module, state_.object()};
 			concurrency_manager_guard< concurrency_manager< CanRunConcurrent > >
-				manager(*this, exec_module.exec_id_);
+				manager(*this, exec_module.exec_id());
 			return logsys::exception_catching_log(
 				[this, id](logsys::stdlogb& os){
 					os << "id(" << id << ") " << this->location << "exec";
@@ -160,8 +174,8 @@ namespace disposer{
 		///
 		/// Build a users state object.
 		virtual void enable()override{
-			state_.enable(
-				static_cast< module_data_type const& >(data_), this->location);
+			state_.enable(static_cast< module_data_type const& >(data_),
+				component_, this->location);
 		}
 
 		/// \brief Disables the module for exec calls
@@ -202,12 +216,27 @@ namespace disposer{
 		}
 
 
+		/// \brief hana::tuple of parameters
+		Parameters const& parameters()const{
+			return data_.parameters;
+		}
+
+
+		/// \brief Reference to component or empty struct
+		optional_component< Component >& component(){
+			return component_;
+		}
+
+
 	private:
 		/// \brief inputs, outputs and parameters
 		module_data_type data_;
 
 		/// \brief The user defined state object
 		module_state_type state_;
+
+		/// \brief Reference to component or empty struct
+		optional_component< Component > component_;
 
 		/// \brief The function called on exec
 		exec_fn< ExecFn > exec_fn_;

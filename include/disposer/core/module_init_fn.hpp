@@ -146,35 +146,27 @@ namespace disposer{
 
 
 	/// \brief Holds the user defined state object of a module
-	template <
-		typename TypeList,
-		typename Inputs,
-		typename Outputs,
-		typename Parameters,
-		typename ModuleInitFn,
-		typename ComponentRef >
+	template < typename StateType, typename ModuleInitFn >
 	class module_state{
 	public:
-		/// \brief Type of the module state object
-		using state_type = std::invoke_result_t<
-			module_init_fn< ModuleInitFn >,
-			module_init_ref< TypeList, Inputs, Outputs, Parameters,
-				ComponentRef > >;
-
-
 		/// \brief Constructor
 		module_state(
-			module_init_fn< ModuleInitFn > const& module_init_fn,
-			optional_component< ComponentRef > component
+			module_init_fn< ModuleInitFn > const& module_init_fn
 		)noexcept
-			: component(component)
-			, module_init_fn_(module_init_fn) {}
+			: module_init_fn_(module_init_fn) {}
 
 		/// \brief Enables the module for exec calls
 		///
 		/// Build a users state object.
+		template <
+			typename TypeList,
+			typename Inputs,
+			typename Outputs,
+			typename Parameters,
+			typename ComponentRef >
 		void enable(
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
+			optional_component< ComponentRef > component,
 			std::string_view location
 		){
 			state_.emplace(module_init_fn_(module_init_ref< TypeList,
@@ -188,14 +180,10 @@ namespace disposer{
 		}
 
 		/// \brief Get pointer to state object
-		state_type* object()noexcept{
+		StateType* object()noexcept{
 			assert(state_);
 			return &*state_;
 		}
-
-
-		/// \brief Reference to component or empty struct
-		optional_component< ComponentRef > component;
 
 
 	private:
@@ -203,34 +191,30 @@ namespace disposer{
 		module_init_fn< ModuleInitFn > module_init_fn_;
 
 		/// \brief The function object that is called in exec()
-		std::optional< state_type > state_;
+		std::optional< StateType > state_;
 	};
 
 
 	/// \brief Specialization for stateless modules
-	template <
-		typename TypeList,
-		typename Inputs,
-		typename Outputs,
-		typename Parameters,
-		typename ComponentRef >
-	class module_state<
-		TypeList, Inputs, Outputs, Parameters, void, ComponentRef
-	>{
+	template <>
+	class module_state< void, void >{
 	public:
 		/// \brief Type of the module state object
 		using state_type = void;
 
 		/// \brief Constructor
-		module_state(
-			module_init_fn< void > const&,
-			optional_component< ComponentRef > component
-		)noexcept
-			: component(component) {}
+		module_state(module_init_fn< void > const&)noexcept{}
 
 		/// \brief Module is stateless, do nothing
+		template <
+			typename TypeList,
+			typename Inputs,
+			typename Outputs,
+			typename Parameters,
+			typename ComponentRef >
 		void enable(
 			module_data< TypeList, Inputs, Outputs, Parameters > const&,
+			optional_component< ComponentRef >,
 			std::string_view
 		)noexcept{}
 
@@ -239,10 +223,6 @@ namespace disposer{
 
 		/// \brief Module is stateless, return nullptr
 		void* object()noexcept{ return nullptr; }
-
-
-		/// \brief Reference to component or empty struct
-		optional_component< ComponentRef > component;
 	};
 
 
