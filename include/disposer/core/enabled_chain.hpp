@@ -38,7 +38,7 @@ namespace disposer{
 		}
 
 		/// \brief Exec chain
-		bool exec()noexcept{
+		exec_info exec()noexcept{
 			return chain_.exec();
 		}
 
