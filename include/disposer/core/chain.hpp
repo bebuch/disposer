@@ -10,6 +10,7 @@
 #define _disposer__core__chain__hpp_INCLUDED_
 
 #include "id_generator.hpp"
+#include "exec_info.hpp"
 
 #include "../config/chain_module_list.hpp"
 #include "../config/embedded_config.hpp"
@@ -25,25 +26,6 @@ namespace disposer{
 		chain_not_lockable(std::string const& chain_name)
 			: std::runtime_error("chain(" + chain_name
 				+ ") is enabled, can't lock") {}
-	};
-
-
-	/// \brief Returned by an exec call
-	struct exec_info{
-		/// \brief true if exec was successfully executed, false otherwise
-		bool success;
-
-		/// \brief Disposer global execution ID
-		std::size_t id;
-
-		/// \brief Chain local execution ID
-		std::size_t exec_id;
-
-
-		/// \brief Implicit conversion to bool
-		constexpr operator bool()const noexcept{
-			return success;
-		}
 	};
 
 
