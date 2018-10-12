@@ -48,7 +48,7 @@ namespace disposer{
 		void operator()(Ref const& ref)const
 		noexcept(calc_noexcept< Ref >()){
 			ref.log([](logsys::stdlogb& os){
-					os << "verfiy";
+					os << "verify";
 				}, [&]{ std::invoke(fn_, ref); });
 		}
 
