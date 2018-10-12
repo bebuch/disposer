@@ -113,15 +113,21 @@ namespace disposer{
 			DimensionList,
 			iops_ref< RefList ... > const& list,
 			module_make_data const& data
-		)noexcept
+		)
 			: optional_component< Component >(component)
 			, logsys::log_base(data.log_prefix())
 			, data_(data)
 			, list_(list) {}
 
-		module_make_ref(module_make_ref const& other)noexcept
+		module_make_ref(module_make_ref const& other)
 			: optional_component< Component >(other)
 			, logsys::log_base(other)
+			, data_(other.data_)
+			, list_(other.list_) {}
+
+		module_make_ref(module_make_ref&& other)noexcept
+			: optional_component< Component >(other)
+			, logsys::log_base(std::move(other))
 			, data_(other.data_)
 			, list_(other.list_) {}
 
@@ -202,8 +208,12 @@ namespace disposer{
 			: logsys::log_base(std::move(log_prefix))
 			, list_(list) {}
 
-		component_make_ref(component_make_ref const& other)noexcept
+		component_make_ref(component_make_ref const& other)
 			: logsys::log_base(other)
+			, list_(other.list_) {}
+
+		component_make_ref(component_make_ref&& other)noexcept
+			: logsys::log_base(std::move(other))
 			, list_(other.list_) {}
 
 
