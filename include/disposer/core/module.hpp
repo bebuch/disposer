@@ -165,7 +165,7 @@ namespace disposer{
 				manager(*this, exec_module.exec_id());
 			return logsys::exception_catching_log(
 				[this, id](logsys::stdlogb& os){
-					os << "id(" << id << ") " << this->location << "exec";
+					os << "id(" << id << ") " << this->log_prefix() << "exec";
 				}, [this, &ref]{ exec_fn_(ref); });
 		}
 
@@ -175,7 +175,7 @@ namespace disposer{
 		/// Build a users state object.
 		virtual void enable()override{
 			state_.enable(static_cast< module_data_type const& >(data_),
-				component_, this->location);
+				component_, this->log_prefix());
 		}
 
 		/// \brief Disables the module for exec calls
@@ -200,7 +200,7 @@ namespace disposer{
 					hana::transform(data_.outputs,
 						[this, id, &output_map](auto& output){
 							return exec_output_init_data(
-								output, output_map, id, location);
+								output, output_map, id, this->log_prefix());
 						}), id, exec_id
 				);
 		}

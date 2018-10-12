@@ -121,25 +121,25 @@ namespace disposer{ namespace{
 			for(auto& wait_on: module.wait_ons){
 				auto const module_number = module_types.size();
 
-				auto location = [&result_chain, &module, module_number]{
+				auto log_prefix_fn = [&result_chain, &module, module_number]{
 					return "in chain(" + result_chain.name + ") module("
 						+ std::to_string(module_number) + ":"
 						+ module.type_name + "): ";
 				};
 
 				if(wait_on.number == 0){
-					throw std::logic_error(location() +
+					throw std::logic_error(log_prefix_fn() +
 						"wait_on number must not be 0");
 				}
 
 				if(wait_on.number > module_number){
-					throw std::logic_error(location() + "wait_on number "
+					throw std::logic_error(log_prefix_fn() + "wait_on number "
 						+ std::to_string(wait_on.number)
 						+ " is greater than current module number");
 				}
 
 				if(wait_on.type_name != module_types[wait_on.number - 1]){
-					throw std::logic_error(location()
+					throw std::logic_error(log_prefix_fn()
 						+ "wait_on referes to module("
 						+ std::to_string(wait_on.number) + ":"
 						+ wait_on.type_name +

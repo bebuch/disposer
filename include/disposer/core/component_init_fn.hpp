@@ -19,16 +19,16 @@ namespace disposer{
 
 	/// \brief Ref of a component
 	template < typename TypeList, typename Parameters >
-	class component_init_ref: public logsys::log_ref{
+	class component_init_ref: public logsys::log_base{
 	public:
 		/// \brief Constructor
 		component_init_ref(
 			component_data< TypeList, Parameters > const& data,
 			std::string_view component_name,
 			disposer::system& system,
-			std::string_view location
+			std::string&& log_prefix
 		)
-			: logsys::log_ref(location)
+			: logsys::log_base(log_prefix)
 			, data_(data)
 			, system_(system, component_name) {}
 

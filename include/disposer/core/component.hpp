@@ -48,10 +48,10 @@ namespace disposer{
 		)
 			: component_base(name, type_name)
 			, ref(type_list< Ts ... >{},
-				state_, data_.parameters, name, system, location)
+				state_, data_.parameters, name, system, log_prefix())
 			, data_(std::move(ref_list))
 			, state_(component_fn(ref_type(
-				data_, this->name, system, location))) {}
+				data_, this->name, system, log_prefix()))) {}
 
 
 		/// \brief Components are not copyable

@@ -24,16 +24,16 @@ namespace disposer{
 		typename ComponentRef >
 	class module_init_ref
 		: public optional_component< ComponentRef >
-		, public logsys::log_ref{
+		, public logsys::log_base{
 	public:
 		/// \brief Constructor
 		module_init_ref(
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
-			std::string_view location,
+			std::string&& log_prefix,
 			optional_component< ComponentRef > component
 		)
 			: optional_component< ComponentRef >(component)
-			, logsys::log_ref(location)
+			, logsys::log_base(std::move(log_prefix))
 			, data_(data) {}
 
 
@@ -167,11 +167,11 @@ namespace disposer{
 		void enable(
 			module_data< TypeList, Inputs, Outputs, Parameters > const& data,
 			optional_component< ComponentRef > component,
-			std::string_view location
+			std::string&& log_prefix
 		){
 			state_.emplace(module_init_fn_(module_init_ref< TypeList,
 				Inputs, Outputs, Parameters, ComponentRef >(
-					data, location, component)));
+					data, std::move(log_prefix), component)));
 		}
 
 		/// \brief Disables the module for exec calls

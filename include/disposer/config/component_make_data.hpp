@@ -28,13 +28,13 @@ namespace disposer{
 		parameter_list const parameters;
 
 		/// \brief Header for convolved log messages
-		std::string basic_location()const{
+		std::string basic_log_prefix()const{
 			return "component(" + name + ":" + type_name + ")";
 		}
 
 		/// \brief Header for log messages
-		std::string location()const{
-			return basic_location() + ": ";
+		std::string log_prefix()const{
+			return basic_log_prefix() + ": ";
 		}
 	};
 

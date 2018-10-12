@@ -12,6 +12,8 @@
 #include "exec_input_base.hpp"
 #include "module_base.hpp"
 
+#include <logsys/log_base.hpp>
+
 #include <io_tools/make_string.hpp>
 
 
@@ -19,7 +21,7 @@ namespace disposer{
 
 
 	/// \brief Base class for module exec object
-	class exec_module_base{
+	class exec_module_base: public logsys::log_base{
 	public:
 		/// \brief Constructor
 		exec_module_base(
@@ -27,12 +29,12 @@ namespace disposer{
 			std::size_t id,
 			std::size_t exec_id
 		)noexcept
-			: module_(module)
-			, id_(id)
-			, exec_id_(exec_id)
-			, location_(io_tools::make_string(
+			: logsys::log_base(io_tools::make_string(
 				"id(", id, ") chain(", chain(), ") module(",
-				number(), ":", type_name(), ") exec: ")) {}
+				number(), ":", type_name(), ") exec: "))
+			, module_(module)
+			, id_(id)
+			, exec_id_(exec_id) {}
 
 		/// \brief Modules are not copyable
 		exec_module_base(exec_module_base const&) = delete;
@@ -72,12 +74,6 @@ namespace disposer{
 		}
 
 
-		/// \brief Location for log messages
-		std::string_view location()const noexcept{
-			return location_;
-		}
-
-
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string_view chain()const noexcept{
 			return module_.chain;
@@ -111,9 +107,6 @@ namespace disposer{
 		///
 		/// This id is bound to the chain.
 		std::size_t exec_id_;
-
-		/// \brief Location for log messages
-		std::string location_;
 	};
 
 

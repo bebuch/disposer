@@ -206,7 +206,7 @@ namespace disposer{
 						maker.parser,
 						maker.default_value_generator,
 						maker.verify_value,
-						component_make_ref{dims, iops, data.location()},
+						component_make_ref{dims, iops, data.log_prefix()},
 						param_data_ptr
 					)};
 
@@ -227,7 +227,7 @@ namespace disposer{
 			detail::config_queue< Offset, Config ... > const configs,
 			iops_ref< IOPs ... >&& iops
 		)const{
-			fn(component_make_ref{dims, iops, data.location()});
+			fn(component_make_ref{dims, iops, data.log_prefix()});
 			return make_component(dims, configs, std::move(iops));
 		}
 
@@ -247,7 +247,7 @@ namespace disposer{
 				base{*this};
 
 			return base.make(configs, std::move(iops),
-				fn(component_make_ref{dims, iops, data.location()}));
+				fn(component_make_ref{dims, iops, data.log_prefix()}));
 		}
 
 
@@ -381,9 +381,9 @@ namespace disposer{
 		)const{
 			// Check config file data for undefined inputs, outputs and
 			// parameters, warn about parameters, throw for inputs and outputs
-			auto const location = data.location();
+			auto const log_prefix = data.log_prefix();
 			validate_iop< parameter_maker_tag >(
-				location, configuration, data.parameters);
+				log_prefix, configuration, data.parameters);
 
 			// Create the component
 			return make_component_ptr(dimensions, configuration,

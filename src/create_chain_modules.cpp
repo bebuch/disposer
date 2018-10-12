@@ -42,7 +42,7 @@ namespace disposer{ namespace{
 
 			if(iter == module_makers.end()){
 				throw std::logic_error(
-					data.location() + "module type(" + data.type_name
+					data.log_prefix() + "module type(" + data.type_name
 					+ ") is unknown!"
 				);
 			}
@@ -51,7 +51,7 @@ namespace disposer{ namespace{
 				return iter->second(data);
 			}catch(std::exception const& error){
 				throw std::runtime_error(
-					data.location() + error.what()
+					data.log_prefix() + error.what()
 				);
 			}
 		}else{
@@ -62,7 +62,7 @@ namespace disposer{ namespace{
 			auto const iter = modules.find(module_type_name);
 			if(iter == modules.end()){
 				throw std::logic_error(
-					data.location() + "component module type(" + data.type_name
+					data.log_prefix() + "component module type(" + data.type_name
 					+ ") is unknown!"
 				);
 			}
@@ -72,7 +72,7 @@ namespace disposer{ namespace{
 				return module.fn(data, module.usage_count);
 			}catch(std::exception const& error){
 				throw std::runtime_error(
-					data.location() + error.what()
+					data.log_prefix() + error.what()
 				);
 			}
 		}

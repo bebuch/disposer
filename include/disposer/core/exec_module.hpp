@@ -50,14 +50,14 @@ namespace disposer{
 		/// \brief Constructor
 		exec_module(
 			module_type& module,
-			to_exec_init_list_t< Inputs > const& inputs,
-			to_exec_init_list_t< Outputs > const& outputs,
+			to_exec_init_list_t< Inputs >&& inputs,
+			to_exec_init_list_t< Outputs >&& outputs,
 			std::size_t id,
 			std::size_t exec_id
 		)noexcept
 			: exec_module_base(module, id, exec_id)
-			, inputs_(inputs)
-			, outputs_(outputs) {}
+			, inputs_(std::move(inputs))
+			, outputs_(std::move(outputs)) {}
 
 
 		/// \brief hana::tuple of exec_inputs

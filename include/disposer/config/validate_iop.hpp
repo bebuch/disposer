@@ -54,7 +54,7 @@ namespace disposer{
 
 	template < typename MakerTag, typename Configuration, typename List >
 	std::set< std::string > validate_iop(
-		std::string const& location,
+		std::string const& log_prefix,
 		Configuration const& configuration,
 		List const& list
 	){
@@ -74,8 +74,8 @@ namespace disposer{
 			});
 
 		for(auto const& name: name_list){
-			logsys::log([&location, &name](logsys::stdlogb& os){
-				os << location;
+			logsys::log([&log_prefix, &name](logsys::stdlogb& os){
+				os << log_prefix;
 				os << iop_string_view< MakerTag >();
 				os << "(" << name << ") doesn't exist";
 				if constexpr(std::is_same_v< MakerTag, parameter_maker_tag >){

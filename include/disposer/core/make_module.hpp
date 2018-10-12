@@ -500,16 +500,16 @@ namespace disposer{
 		Configuration const& configuration,
 		module_make_data const& data
 	){
-		auto const location = data.location();
+		auto const log_prefix = data.log_prefix();
 		auto const inputs = validate_iop< input_maker_tag >(
-			location, configuration, data.inputs);
+			log_prefix, configuration, data.inputs);
 		auto const outputs = validate_iop< output_maker_tag >(
-			location, configuration, data.outputs);
+			log_prefix, configuration, data.outputs);
 		validate_iop< parameter_maker_tag >(
-			location, configuration, data.parameters);
+			log_prefix, configuration, data.parameters);
 
 		if(!inputs.empty() || !outputs.empty()){
-			throw std::logic_error(location + "some inputs or "
+			throw std::logic_error(log_prefix + "some inputs or "
 				"outputs don't exist, see previos log messages for "
 				"more details");
 		}

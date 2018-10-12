@@ -11,21 +11,23 @@
 
 #include <string>
 
+#include <logsys/log_base.hpp>
+
 
 namespace disposer{
 
 
 	/// \brief Base class for all components
-	class component_base{
+	class component_base: public logsys::log_base{
 	public:
 		/// \brief Constructor
 		component_base(
 			std::string const& name,
 			std::string const& type_name
 		)
-			: name(name)
-			, type_name(type_name)
-			, location("component(" + name + ":" + type_name + "): ") {}
+			: logsys::log_base("component(" + name + ":" + type_name + "): ")
+			, name(name)
+			, type_name(type_name) {}
 
 
 		/// \brief Components are not copyable
@@ -56,9 +58,6 @@ namespace disposer{
 		/// \brief Name of the component type given via class
 		///        declarant
 		std::string const type_name;
-
-		/// \brief Location text for log-messages
-		std::string const location;
 	};
 
 

@@ -13,7 +13,7 @@
 
 #include "../tool/false_c.hpp"
 
-#include <logsys/log_ref.hpp>
+#include <logsys/log_base.hpp>
 
 #include <boost/hana/core/is_a.hpp>
 #include <boost/hana/index_if.hpp>
@@ -30,7 +30,7 @@ namespace disposer{
 		typename TypeList,
 		typename State,
 		typename Parameters >
-	class component_ref: public logsys::log_ref{
+	class component_ref: public logsys::log_base{
 	public:
 		/// \brief Constructor
 		component_ref(
@@ -39,9 +39,9 @@ namespace disposer{
 			Parameters const& parameters,
 			std::string_view component_name,
 			disposer::system& system,
-			std::string_view location
+			std::string&& log_prefix
 		)noexcept
-			: logsys::log_ref(location)
+			: logsys::log_base(log_prefix)
 			, state_(state)
 			, parameters_(parameters)
 			, system_(system, component_name) {}

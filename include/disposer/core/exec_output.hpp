@@ -18,8 +18,7 @@
 
 #include <io_tools/make_string.hpp>
 
-#include <logsys/stdlogb.hpp>
-#include <logsys/log.hpp>
+#include <logsys/log_base.hpp>
 
 #include <boost/hana/tuple.hpp>
 
@@ -32,7 +31,9 @@ namespace disposer{
 
 	/// \brief The output type while exec
 	template < typename T >
-	class unnamed_exec_output: public exec_output_base{
+	class unnamed_exec_output
+		: public exec_output_base
+		, public logsys::log_base{
 	public:
 		/// \brief The actual type
 		using type = T;
@@ -41,13 +42,13 @@ namespace disposer{
 		/// \brief Constructor
 		unnamed_exec_output(
 			std::size_t const id,
-			std::string_view module_location,
+			std::string&& log_prefix,
 			std::string_view name,
 			std::size_t use_count
 		)noexcept
 			: exec_output_base(use_count)
-			, location_(io_tools::make_string("id(", id, ") ", module_location,
-				"output(", name, ") cleanup")) {}
+			, logsys::log_base(io_tools::make_string("id(", id, ") ",
+				std::move(log_prefix), "output(", name, ") ")) {}
 
 
 		/// \brief Add given data to \ref data_
@@ -80,17 +81,14 @@ namespace disposer{
 		/// \brief Remove data on last cleanup call
 		void cleanup()noexcept{
 			if(is_cleanup()){
-				logsys::log(
-					[this](logsys::stdlogb& os){ os << location_; },
+				log(
+					[](logsys::stdlogb& os){ os << "cleanup"; },
 					[this]{ data_.clear(); });
 			}
 		}
 
 
 	private:
-		/// \brief Log string for cleanup
-		std::string const location_;
-
 		/// \brief Putted data of the output
 		std::vector< T > data_;
 	};
@@ -102,17 +100,17 @@ namespace disposer{
 			disposer::output< Name, T >& output,
 			output_map_type& output_map,
 			std::size_t const id,
-			std::string_view module_location
+			std::string&& module_log_prefix
 		)noexcept
 			: output(output)
 			, output_map(output_map)
 			, id(id)
-			, module_location(module_location) {}
+			, module_log_prefix(std::move(module_log_prefix)) {}
 
 		disposer::output< Name, T >& output;
 		output_map_type& output_map;
-		std::size_t const id;
-		std::string_view module_location;
+		std::size_t id;
+		std::string module_log_prefix;
 	};
 
 	/// \brief The output type while exec
@@ -120,10 +118,10 @@ namespace disposer{
 	class exec_output: public unnamed_exec_output< T >{
 	public:
 		/// \brief Constructor
-		exec_output(exec_output_init_data< Name, T > const& data)noexcept
+		exec_output(exec_output_init_data< Name, T >&& data)noexcept
 			: unnamed_exec_output< T >(
-				data.id,
-				data.module_location,
+				std::move(data.id),
+				std::move(data.module_log_prefix),
 				detail::to_std_string_view(name),
 				data.output.use_count()
 			)

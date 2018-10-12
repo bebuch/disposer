@@ -16,12 +16,14 @@
 
 #include "../tool/module_ptr.hpp"
 
+#include <logsys/log_base.hpp>
+
 
 namespace disposer{
 
 
 	/// \brief Base class for all modules
-	class module_base{
+	class module_base: public logsys::log_base{
 	public:
 		/// \brief Constructor
 		module_base(
@@ -29,11 +31,11 @@ namespace disposer{
 			std::string const& type_name,
 			std::size_t number
 		)
-			: chain(chain)
+			: logsys::log_base("chain(" + chain + ") module("
+				+ std::to_string(number) + ":" + type_name + "): ")
+			, chain(chain)
 			, type_name(type_name)
-			, number(number)
-			, location("chain(" + chain + ") module(" + std::to_string(number)
-				+ ":" + type_name + "): "){}
+			, number(number) {}
 
 		/// \brief Modules are not copyable
 		module_base(module_base const&) = delete;
@@ -81,9 +83,6 @@ namespace disposer{
 		///
 		/// The first module has number 1.
 		std::size_t const number;
-
-		/// \brief Location text for log-messages
-		std::string const location;
 	};
 
 

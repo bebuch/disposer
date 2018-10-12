@@ -49,7 +49,7 @@ namespace disposer{
 			State* state
 		)noexcept
 			: optional_component< Component >(module.component())
-			, logsys::log_ref(module.location())
+			, logsys::log_ref(module)
 			, module_(module)
 			, state_(state)
 			, inputs_(module.inputs())
@@ -94,12 +94,6 @@ namespace disposer{
 		/// \brief Chain local ID of this exec
 		std::size_t exec_id()const noexcept{
 			return module_.exec_id();
-		}
-
-
-		/// \brief Location for log messages
-		std::string_view location()const noexcept{
-			return module_.location();
 		}
 
 

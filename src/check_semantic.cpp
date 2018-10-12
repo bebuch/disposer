@@ -16,16 +16,16 @@
 namespace disposer{ namespace{
 
 
-	template < typename LocationFn >
+	template < typename LogPrefixFn >
 	void check_params(
-		LocationFn const& location_fn,
+		LogPrefixFn const& log_prefix_fn,
 		std::vector< types::parse::parameter > const& params
 	){
 		std::unordered_set< std::string > keys;
 		for(auto& param: params){
 			if(!keys.insert(param.key).second){
 				throw std::logic_error(
-					location_fn() + "duplicate key '" + param.key + "'"
+					log_prefix_fn() + "duplicate key '" + param.key + "'"
 				);
 			}
 
@@ -33,7 +33,7 @@ namespace disposer{ namespace{
 			for(auto& specialization: param.specialized_values){
 				if(!keys.insert(specialization.type).second){
 					throw std::logic_error(
-						location_fn() + "duplicate parameter "
+						log_prefix_fn() + "duplicate parameter "
 						"specialization type '" + specialization.type
 						+ "' for parameter '" + param.key + "'"
 					);
@@ -42,9 +42,9 @@ namespace disposer{ namespace{
 		}
 	}
 
-	template < typename LocationFn >
+	template < typename LogPrefixFn >
 	void check_param_sets(
-		LocationFn const& location_fn,
+		LogPrefixFn const& log_prefix_fn,
 		std::unordered_set< std::string > const& known_sets,
 		std::vector< std::string > const& param_sets
 	){
@@ -52,13 +52,13 @@ namespace disposer{ namespace{
 		for(auto& set: param_sets){
 			if(known_sets.find(set) == known_sets.end()){
 				throw std::logic_error(
-					location_fn() + "unknown parameter_set '" + set + "'"
+					log_prefix_fn() + "unknown parameter_set '" + set + "'"
 				);
 			}
 
 			if(!sets.insert(set).second){
 				throw std::logic_error(
-					location_fn() + "duplicate use of parameter_set '"
+					log_prefix_fn() + "duplicate use of parameter_set '"
 					+ set + "'"
 				);
 			}
@@ -122,14 +122,14 @@ namespace disposer{ namespace{
 				);
 			}
 
-			auto location = [&component]{
+			auto log_prefix_fn = [&component]{
 				return "in component(" + component.name + ") of type("
 					+ component.type_name + "): ";
 			};
 
-			check_param_sets(location, known_sets,
+			check_param_sets(log_prefix_fn, known_sets,
 				component.parameters.parameter_sets);
-			check_params(location, component.parameters.parameters);
+			check_params(log_prefix_fn, component.parameters.parameters);
 		}
 	}
 
@@ -140,21 +140,21 @@ namespace disposer{ namespace{
 		std::unordered_map< std::string, connected > variables;
 		std::size_t module_number = 1;
 		for(auto& module: chain.modules){
-			auto location = [&chain, &module, module_number]{
+			auto log_prefix_fn = [&chain, &module, module_number]{
 				return "in chain(" + chain.name + ") module("
 					+ std::to_string(module_number) + ":"
 					+ module.type_name + "): ";
 			};
 
-			check_param_sets(location, known_sets,
+			check_param_sets(log_prefix_fn, known_sets,
 				module.parameters.parameter_sets);
-			check_params(location, module.parameters.parameters);
+			check_params(log_prefix_fn, module.parameters.parameters);
 
 			std::unordered_set< std::string > inputs;
 			for(auto& input: module.inputs){
 				if(!inputs.insert(input.name).second){
 					throw std::logic_error(
-						location() + "duplicate input '" + input.name + "'"
+						log_prefix_fn() + "duplicate input '" + input.name + "'"
 					);
 				}
 			}
@@ -163,7 +163,7 @@ namespace disposer{ namespace{
 				auto const iter = variables.find(input.variable);
 				if(iter == variables.end()){
 					throw std::logic_error(
-						location() + "unknown variable '" +
+						log_prefix_fn() + "unknown variable '" +
 						input.variable + "' as input of '" + input.name +
 						"'"
 					);
@@ -178,7 +178,7 @@ namespace disposer{ namespace{
 			for(auto& output: module.outputs){
 				if(!outputs.insert(output.name).second){
 					throw std::logic_error(
-						location() + "duplicate output '" +
+						log_prefix_fn() + "duplicate output '" +
 						output.name + "'"
 					);
 				}
@@ -192,7 +192,7 @@ namespace disposer{ namespace{
 					).second
 				){
 					throw std::logic_error(
-						location() + "duplicate use of variable '" +
+						log_prefix_fn() + "duplicate use of variable '" +
 						output.variable + "' as output of '" +
 						output.name + "'"
 					);
@@ -246,7 +246,7 @@ namespace disposer{
 		types::parse::parameter_sets const& sets,
 		types::parse::component const& component
 	){
-		auto location = [&component]{
+		auto log_prefix_fn = [&component]{
 			return "in component(" + component.name + ") of type("
 				+ component.type_name + "): ";
 		};
@@ -256,9 +256,9 @@ namespace disposer{
 			known_sets.insert(set.name);
 		}
 
-		check_param_sets(location, known_sets,
+		check_param_sets(log_prefix_fn, known_sets,
 			component.parameters.parameter_sets);
-		check_params(location, component.parameters.parameters);
+		check_params(log_prefix_fn, component.parameters.parameters);
 	}
 
 	void check_semantic(

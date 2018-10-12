@@ -22,7 +22,7 @@
 #include "../tool/to_std_string.hpp"
 #include "../tool/to_std_string_view.hpp"
 
-#include <logsys/log_ref.hpp>
+#include <logsys/log_base.hpp>
 
 #include <boost/hana/map.hpp>
 
@@ -104,7 +104,7 @@ namespace disposer{
 		typename ... RefList >
 	class module_make_ref
 		: public optional_component< Component >
-		, public logsys::log_ref{
+		, public logsys::log_base{
 	public:
 		using dimension_list = DimensionList;
 
@@ -115,13 +115,13 @@ namespace disposer{
 			module_make_data const& data
 		)noexcept
 			: optional_component< Component >(component)
-			, logsys::log_ref(data.location())
+			, logsys::log_base(data.log_prefix())
 			, data_(data)
 			, list_(list) {}
 
 		module_make_ref(module_make_ref const& other)noexcept
 			: optional_component< Component >(other)
-			, logsys::log_ref(other)
+			, logsys::log_base(other)
 			, data_(other.data_)
 			, list_(other.list_) {}
 
@@ -162,12 +162,6 @@ namespace disposer{
 		}
 
 
-		/// \brief Location for log messages
-		std::string_view location()const noexcept{
-			return data_.location();
-		}
-
-
 		/// \brief Name of the process chain in config file section 'chain'
 		std::string_view chain()const noexcept{
 			return data_.chain;
@@ -196,20 +190,20 @@ namespace disposer{
 
 
 	template < typename DimensionList, typename ... RefList >
-	class component_make_ref: public logsys::log_ref{
+	class component_make_ref: public logsys::log_base{
 	public:
 		using dimension_list = DimensionList;
 
 		component_make_ref(
 			DimensionList,
 			iops_ref< RefList ... > const& list,
-			std::string_view location
+			std::string&& log_prefix
 		)noexcept
-			: logsys::log_ref(location)
+			: logsys::log_base(std::move(log_prefix))
 			, list_(list) {}
 
 		component_make_ref(component_make_ref const& other)noexcept
-			: logsys::log_ref(other)
+			: logsys::log_base(other)
 			, list_(other.list_) {}
 
 

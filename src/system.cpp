@@ -33,14 +33,14 @@ namespace disposer{ namespace{
 
 		if(iter == module_makers.end()){
 			throw std::logic_error(
-				data.location() + "component type(" + data.type_name
+				data.log_prefix() + "component type(" + data.type_name
 				+ ") is unknown!");
 		}
 
 		try{
 			return iter->second(data, system);
 		}catch(std::exception const& error){
-			throw std::runtime_error(data.location() + error.what());
+			throw std::runtime_error(data.log_prefix() + error.what());
 		}
 	}
 
