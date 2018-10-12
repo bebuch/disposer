@@ -28,7 +28,7 @@ namespace disposer{
 			disposer::system& system,
 			std::string&& log_prefix
 		)
-			: logsys::log_base(log_prefix)
+			: logsys::log_base(std::move(log_prefix))
 			, data_(data)
 			, system_(system, component_name) {}
 

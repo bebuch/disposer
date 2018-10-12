@@ -41,7 +41,7 @@ namespace disposer{
 			disposer::system& system,
 			std::string&& log_prefix
 		)noexcept
-			: logsys::log_base(log_prefix)
+			: logsys::log_base(std::move(log_prefix))
 			, state_(state)
 			, parameters_(parameters)
 			, system_(system, component_name) {}
