@@ -22,12 +22,12 @@ namespace disposer{
 	public:
 		/// \brief Constructor
 		component_base(
-			std::string const& name,
-			std::string const& type_name
+			std::string&& name,
+			std::string&& type_name
 		)
 			: logsys::log_base("component(" + name + ":" + type_name + "): ")
-			, name(name)
-			, type_name(type_name) {}
+			, name(std::move(name))
+			, type_name(std::move(type_name)) {}
 
 
 		/// \brief Components are not copyable

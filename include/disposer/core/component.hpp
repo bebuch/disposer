@@ -40,13 +40,13 @@ namespace disposer{
 		template < typename ... Ts, typename ... RefList >
 		component(
 			type_list< Ts ... >,
-			std::string const& name,
-			std::string const& type_name,
+			std::string&& name,
+			std::string&& type_name,
 			system& system,
 			hana::tuple< RefList ... >&& ref_list,
 			component_init_fn< ComponentInitFn > const& component_fn
 		)
-			: component_base(name, type_name)
+			: component_base(std::move(name), std::move(type_name))
 			, ref(type_list< Ts ... >{},
 				state_, data_.parameters, name, system, log_prefix())
 			, data_(std::move(ref_list))

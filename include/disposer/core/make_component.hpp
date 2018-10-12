@@ -269,7 +269,8 @@ namespace disposer{
 				// information then immediately transfer the ownership to a
 				// unique_ptr of the base class
 				auto const component_ptr = new component{
-					type_list{dims}, data.name, data.type_name, system,
+					type_list{dims}, std::string(data.name),
+					std::string(data.type_name), system,
 					std::move(iops).flat(), component_init};
 
 				std::unique_ptr< component_base > result(component_ptr);
