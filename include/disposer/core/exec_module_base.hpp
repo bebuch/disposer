@@ -30,8 +30,8 @@ namespace disposer{
 			std::size_t exec_id
 		)noexcept
 			: logsys::log_base(io_tools::make_string(
-				"id(", id, ") chain(", chain(), ") module(",
-				number(), ":", type_name(), ") exec: "))
+				"id(", id, ") chain(", module.chain, ") module(",
+				module.number, ":", module.type_name, ") exec: "))
 			, module_(module)
 			, id_(id)
 			, exec_id_(exec_id) {}
