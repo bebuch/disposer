@@ -23,6 +23,8 @@ project disposer
 	<toolset>clang:<cxxflags>-std=c++1z
 	<toolset>clang:<cxxflags>-fconstexpr-depth=1024
 	<toolset>clang:<cxxflags>-stdlib=libc++
+	<toolset>clang:<variant>debug:<cxxflags>-fstandalone-debug
+	<toolset>clang:<variant>debug:<cxxflags>-fno-limit-debug-info
 	<toolset>clang:<variant>debug:<define>_LIBCPP_DEBUG
 	<toolset>clang:<linkflags>-lpthread
 	<toolset>clang:<linkflags>-lc++abi
