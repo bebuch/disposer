@@ -111,7 +111,6 @@ namespace disposer{
 	system::~system(){
 		for(auto& [name, component]: components_){
 			logsys::exception_catching_log(
-				// TODO: clang BUG 34749
 				[&name = name](logsys::stdlogb& os){
 					os << "component(" << name << ") shutdown";
 				},
