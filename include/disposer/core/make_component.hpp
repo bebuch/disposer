@@ -345,7 +345,7 @@ namespace disposer{
 			help << "  * component: " << component_type << "\n";
 			help << help_text << "\n";
 			hana::for_each(configuration.config_list, [&help](auto const& iop){
-					auto const is_iop = hana::is_a< parameter_tag >(iop);
+					auto const is_iop = hana::is_a< parameter_maker_tag >(iop);
 					if constexpr(is_iop){
 						help << iop.help_text_fn(DimensionList{});
 					}

@@ -562,9 +562,9 @@ namespace disposer{
 
 			hana::for_each(configuration.config_list, [&help](auto const& iop){
 				auto const is_iop =
-					hana::is_a< input_tag >(iop) ||
-					hana::is_a< output_tag >(iop) ||
-					hana::is_a< parameter_tag >(iop);
+					hana::is_a< input_maker_tag >(iop) ||
+					hana::is_a< output_maker_tag >(iop) ||
+					hana::is_a< parameter_maker_tag >(iop);
 				if constexpr(is_iop){
 					help << iop.help_text_fn(DimensionList{});
 				}
