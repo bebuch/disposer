@@ -56,24 +56,27 @@ namespace disposer{ namespace{
 
 		for(auto& config_chain: config){
 			bool const chain_is_active = logsys::log(
-				[&config_chain](logsys::stdlogb& os, bool const* active){
-						os << "chain(" << config_chain.name << ") analysed";
-						if(!active || *active) return;
-						os << " and deactivated because it refers to at least "
-							"one unknown component module (WARNING)";
-					}, [&config_chain, &component_module_makers]{
-						for(auto const& module: config_chain.modules){
-							auto const& name = module.type_name;
-							auto const pos = name.find("//");
-							if(pos == std::string::npos) continue;
-							auto const component_name = name.substr(0, pos);
-							if(component_module_makers.find(component_name)
-								!= component_module_makers.end()) continue;
-							return false;
-						}
+				[&config_chain](
+					logsys::stdlogb& os,
+					std::optional< bool > active
+				){
+					os << "chain(" << config_chain.name << ") analysed";
+					if(!active || *active) return;
+					os << " and deactivated because it refers to at least "
+						"one unknown component module (WARNING)";
+				}, [&config_chain, &component_module_makers]{
+					for(auto const& module: config_chain.modules){
+						auto const& name = module.type_name;
+						auto const pos = name.find("//");
+						if(pos == std::string::npos) continue;
+						auto const component_name = name.substr(0, pos);
+						if(component_module_makers.find(component_name)
+							!= component_module_makers.end()) continue;
+						return false;
+					}
 
-						return true;
-					});
+					return true;
+				});
 
 			if(!chain_is_active){
 				inactive_chains.emplace(config_chain.name);
