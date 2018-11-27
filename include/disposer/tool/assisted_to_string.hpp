@@ -11,8 +11,6 @@
 
 #include "remove_optional.hpp"
 
-#include <logsys/is_valid.hpp>
-
 #include <sstream>
 #include <utility>
 
@@ -23,7 +21,7 @@ namespace disposer::detail{
 	struct valid_output_expr_t{
 		template < typename T >
 		auto operator()(T const& x)const
-			->decltype((void)(std::declval< std::ostream& >() << x)){}
+			->decltype(std::declval< std::ostream& >() << x){}
 	};
 
 	constexpr auto valid_output_expr = valid_output_expr_t{};
@@ -35,8 +33,9 @@ namespace disposer::detail{
 namespace disposer{
 
 
-	template < typename T, typename =
-		std::enable_if_t< logsys::is_valid< T >(detail::valid_output_expr) > >
+	template < typename T, typename = decltype(
+			(void)detail::valid_output_expr(std::declval< T >())
+		) >
 	std::string to_string(T const& v){
 		std::ostringstream os;
 		os << std::boolalpha << v;
@@ -51,6 +50,10 @@ namespace disposer{
 		return std::to_string(v);
 	}
 
+	inline std::string to_string(std::string v){
+		return v;
+	}
+
 
 	template < typename T, bool Assert = false >
 	std::string assisted_to_string(
@@ -62,8 +65,9 @@ namespace disposer{
 		using std::end;
 
 		if constexpr(
-			logsys::is_valid< T >([](auto const& x)
-				->decltype(std::string(to_string(x))){})
+			auto is_to_string_valid = hana::is_valid([](auto const& x)
+				->decltype(std::string(to_string(x))){})(v);
+			is_to_string_valid
 		){
 			return to_string(v);
 		}else if constexpr(detail::is_optional_v< T >){
