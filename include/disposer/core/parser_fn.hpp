@@ -83,7 +83,10 @@ namespace disposer{
 			Ref const& ref
 		)const noexcept(calc_noexcept< T, Ref >()){
 			return ref.log(
-				[parameter_name](logsys::stdlogb& os, T const* value){
+				[parameter_name](
+					logsys::stdlogb& os,
+					 std::optional< T > const& value
+				){
 					os << "parameter(" << parameter_name << ") parsed value";
 					if(value){
 						os << ": " << assisted_to_string(*value);

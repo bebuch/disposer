@@ -352,7 +352,10 @@ namespace disposer{
 		)const noexcept(calc_noexcept< T, Ref >()){
 			(void)type; // Silance GCC
 			return ref.log(
-				[parameter_name](logsys::stdlogb& os, T const* value){
+				[parameter_name](
+					logsys::stdlogb& os,
+					std::optional< T > const& value
+				){
 					os << "parameter(" << parameter_name << ") ";
 					if(value){
 						os << "generated default value: "
