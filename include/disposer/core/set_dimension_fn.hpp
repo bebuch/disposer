@@ -124,18 +124,24 @@ namespace disposer{
 				return hana::size(types(ic));
 			};
 
+			using solved_type = std::invoke_result_t< Fn const, Ref >;
+
 			return ref.log(
-				[types](logsys::stdlogb& os, auto* solved_dims_ptr){
+				[types](
+					logsys::stdlogb& os,
+					std::optional< solved_type > const& solved_dims
+				){
 					os << "set dimension number";
 
-					using type =
-						std::remove_pointer_t< decltype(solved_dims_ptr) >;
-					if constexpr(type::index_count > 1) os << "s";
+					if constexpr(solved_type::index_count > 1){
+						os << "s";
+					}
 
 					os << " ";
 
-					if(solved_dims_ptr == nullptr){
-						hana::unpack(type::dimension_numbers(),
+					if(!solved_dims){
+						hana::unpack(
+							solved_type::dimension_numbers(),
 							[&os](auto ... d){
 								detail::comma_separated_output(
 									os, std::size_t(d) ...);
@@ -143,7 +149,7 @@ namespace disposer{
 						return;
 					}
 
-					hana::unpack(solved_dims_ptr->indexes,
+					hana::unpack(solved_dims->indexes,
 						[&os, types](auto ... ic){
 							detail::comma_separated_output(os,
 								std::make_tuple(ic.d, " to ",

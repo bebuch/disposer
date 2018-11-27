@@ -85,7 +85,7 @@ namespace disposer{
 			return ref.log(
 				[parameter_name](
 					logsys::stdlogb& os,
-					 std::optional< T > const& value
+					std::optional< T > const& value
 				){
 					os << "parameter(" << parameter_name << ") parsed value";
 					if(value){
