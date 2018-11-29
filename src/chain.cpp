@@ -123,9 +123,10 @@ namespace disposer{
 				std::transform(next_module.begin(), next_module.end(),
 					std::back_inserter(exec_list),
 					[success](chain_exec_module_data* ptr){
-						return std::async([success, ptr]{
-							return ptr->exec_next(success);
-						});
+						return std::async(
+							[success, ptr]{
+								return ptr->exec_next(success);
+							});
 					});
 				for(auto& exec: exec_list){
 					auto success_exec = exec.get();
@@ -163,7 +164,8 @@ namespace disposer{
 				chain_module_list const& module_list,
 				std::vector< exec_module_ptr >&& list
 			)
-				: modules([&]{
+				: modules(
+					[&]{
 						std::vector< chain_exec_module_data > init;
 						init.reserve(list.size());
 						std::transform(
@@ -180,7 +182,8 @@ namespace disposer{
 							});
 						return init;
 					}())
-				, start_modules([this, &module_list]{
+				, start_modules(
+					[this, &module_list]{
 						std::vector< chain_exec_module_data* > init;
 						init.reserve(module_list.start_indexes.size());
 						for(std::size_t const i: module_list.start_indexes){
@@ -258,17 +261,19 @@ namespace disposer{
 		std::size_t const exec_id = generate_exec_id_();
 
 		// exec any module, call cleanup instead if the module throw
-		return logsys::log([this, id](logsys::stdlogb& os){
-			os << "id(" << id << ") chain(" << name << ")";
-		}, [this, id, exec_id]{
-			auto modules = logsys::log([this, id](logsys::stdlogb& os){
-					os << "id(" << id << ") chain(" << name << ") prepared";
-				}, [this, id, exec_id]{
-					return make_exec_modules(modules_, id, exec_id);
-				});
+		return logsys::log(
+			[this, id](logsys::stdlogb& os){
+				os << "id(" << id << ") chain(" << name << ")";
+			}, [this, id, exec_id]{
+				auto modules = logsys::log(
+					[this, id](logsys::stdlogb& os){
+						os << "id(" << id << ") chain(" << name << ") prepared";
+					}, [this, id, exec_id]{
+						return make_exec_modules(modules_, id, exec_id);
+					});
 
-			return exec_info{modules.exec(), id, exec_id};
-		});
+				return exec_info{modules.exec(), id, exec_id};
+			});
 	}
 
 
@@ -326,7 +331,9 @@ namespace disposer{
 		assert(enable_count_ > 0);
 
 		if(--enable_count_ == 0){
-			enable_cv_.wait(lock, [this]{ return exec_calls_count_ == 0; });
+			enable_cv_.wait(lock, [this]{
+				return exec_calls_count_ == 0;
+			});
 
 			logsys::log(
 				[this](logsys::stdlogb& os){

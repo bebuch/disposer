@@ -89,8 +89,7 @@ namespace disposer{ namespace{
 		auto print_identifier =
 			[&os](chain_module_data const& data){
 				os << data.module->type_name << ":"
-					<< data.module->number << " ("
-					<< data.precursor_count << ")";
+					<< data.module->number;
 			};
 
 		for(auto const& config: dependencies){
