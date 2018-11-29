@@ -86,22 +86,19 @@ namespace disposer{ namespace{
 		std::ostringstream os;
 		os << "digraph \"" << chain << "\" { ";
 
-		auto get_module =
-			[&dependencies](std::size_t const i)->module_base const&{
-				return *dependencies[i].module;
-			};
-
 		auto print_identifier =
-			[&os](module_base const& module){
-				os << module.type_name << ":" << module.number;
+			[&os](chain_module_data const& data){
+				os << data.module->type_name << ":"
+					<< data.module->number << " ("
+					<< data.precursor_count << ")";
 			};
 
 		for(auto const& config: dependencies){
 			for(auto const i: config.next_indexes){
 				os << "\"";
-				print_identifier(*config.module);
+				print_identifier(config);
 				os << "\" -> \"";
-				print_identifier(get_module(i));
+				print_identifier(dependencies[i]);
 				os << "\" ";
 			}
 		}
@@ -133,9 +130,12 @@ namespace disposer{
 				os << "chain(" << config_chain.name << ") module("
 					<< i + 1 << ":" << config_module.type_name << ") created";
 			}, [&]{
+				std::size_t precursor_count = 0;
+
 				// add the number of this module to all its wait_on modules
 				for(auto wait_on: config_module.wait_ons){
 					result.modules[wait_on].next_indexes.push_back(i);
+					++precursor_count;
 				}
 
 				// create input list
@@ -159,6 +159,7 @@ namespace disposer{
 
 						result.modules[output_data.output_module_number]
 							.next_indexes.push_back(i);
+						++precursor_count;
 
 						// remove config file variable if final use
 						if(config_input.transfer == in_transfer::move){
@@ -187,7 +188,7 @@ namespace disposer{
 							std::move(config_inputs),
 							std::move(config_outputs),
 							config_module.parameters
-						}), config_module.inputs.size(), {}});
+						}), precursor_count, {}});
 
 				// get a reference to the new module
 				auto& module = *result.modules.back().module;
