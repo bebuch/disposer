@@ -82,8 +82,12 @@ namespace disposer{
 		void cleanup()noexcept{
 			if(is_cleanup()){
 				log(
-					[](logsys::stdlogb& os){ os << "cleanup"; },
-					[this]{ data_.clear(); });
+					[](logsys::stdlogb& os){
+						os << "cleanup";
+					},
+					[this]{
+						data_.clear();
+					});
 			}
 		}
 

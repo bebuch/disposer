@@ -78,6 +78,39 @@ namespace disposer{ namespace{
 		}
 	}
 
+
+	std::string make_digraph(
+		std::string_view chain,
+		std::vector< chain_module_data > const& dependencies
+	){
+		std::ostringstream os;
+		os << "digraph \"" << chain << "\" { ";
+
+		auto get_module =
+			[&dependencies](std::size_t const i)->module_base const&{
+				return *dependencies[i].module;
+			};
+
+		auto print_identifier =
+			[&os](module_base const& module){
+				os << module.type_name << ":" << module.number;
+			};
+
+		for(auto const& config: dependencies){
+			for(auto const i: config.next_indexes){
+				os << "\"";
+				print_identifier(*config.module);
+				os << "\" -> \"";
+				print_identifier(get_module(i));
+				os << "\" ";
+			}
+		}
+
+		os << "}";
+		return os.str();
+	}
+
+
 } }
 
 
@@ -183,6 +216,13 @@ namespace disposer{
 			module.next_indexes.erase(end, last);
 			module.precursor_count -= last - end;
 		}
+
+		logsys::log([
+				chain = std::string_view(config_chain.name),
+				digraph = make_digraph(config_chain.name, result.modules)
+			](logsys::stdlogb& os){
+				os << "chain(" << chain << ") digraph: " << digraph;
+			});
 
 		return result;
 	}
