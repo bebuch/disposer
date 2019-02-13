@@ -1,0 +1,6 @@
+[submodule "3rdparty/io_tools"]
+	path = 3rdparty/io_tools
+	url = https://github.com/bebuch/io_tools.git
+[submodule "3rdparty/logsys"]
+	path = 3rdparty/logsys
+	url = https://github.com/bebuch/logsys.git
